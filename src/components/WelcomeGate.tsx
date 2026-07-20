@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { User, Neighborhood } from '../types';
 import { BAFOUSSAM_NEIGHBORHOODS } from '../data/mockData';
-import { Check, ShieldCheck, HelpCircle, Phone, ArrowRight, Loader2, Sparkles } from 'lucide-react';
+import { Check, ShieldCheck, HelpCircle, Phone, ArrowRight, Loader2, Sparkles, MapPin, Mail, User as UserIcon, Lock } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
 interface WelcomeGateProps {
@@ -305,24 +305,41 @@ export default function WelcomeGate({ onSuccess }: WelcomeGateProps) {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4 font-sans selection:bg-indigo-100 selection:text-indigo-900" id="welcome-gate-container">
-      {/* Background Decorative Elements */}
-      <div className="absolute inset-0 bg-[radial-gradient(#e2e8f0_1px,transparent_1px)] [background-size:16px_16px] pointer-events-none opacity-60"></div>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-indigo-50/30 to-slate-100 flex items-center justify-center p-4 font-sans selection:bg-indigo-100 selection:text-indigo-900 relative overflow-hidden" id="welcome-gate-container">
+      {/* Background Decorative Orbs */}
+      <div className="absolute top-0 left-0 w-[500px] h-[500px] bg-indigo-200/20 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2 pointer-events-none"></div>
+      <div className="absolute bottom-0 right-0 w-[600px] h-[600px] bg-amber-100/20 rounded-full blur-3xl translate-x-1/3 translate-y-1/3 pointer-events-none"></div>
       
-      <div className="w-full max-w-xl bg-white rounded-3xl shadow-xl border border-slate-100 overflow-hidden relative z-10">
+      {/* Background Grid Pattern */}
+      <div className="absolute inset-0 bg-[radial-gradient(#c7d2fe_1px,transparent_1px)] [background-size:24px_24px] pointer-events-none opacity-40"></div>
+      
+      <div className="w-full max-w-xl bg-white/90 backdrop-blur-md rounded-3xl shadow-xl border border-slate-100 overflow-hidden relative z-10 transition-shadow hover:shadow-2xl duration-300">
         
         {/* Banner with sleek indigo gradient */}
         <div className="h-3 bg-gradient-to-r from-indigo-500 via-indigo-600 to-indigo-700"></div>
 
         <div className="p-8">
-          {/* Logo */}
-          <div className="flex flex-col items-center text-center mb-8" id="logo-header">
-            <div className="w-16 h-16 bg-indigo-50 rounded-2xl flex items-center justify-center border border-indigo-100 shadow-sm mb-4">
-              <span className="text-3xl">🏔️</span>
+          {/* Logo & Header */}
+          <div className="flex flex-col items-center text-center mb-6" id="logo-header">
+            <div className="relative mb-3">
+              {/* Outer soft glow ring */}
+              <div className="absolute inset-0 bg-indigo-500/10 rounded-2xl blur-md scale-110"></div>
+              <div className="w-14 h-14 bg-gradient-to-tr from-indigo-50 to-white rounded-2xl flex items-center justify-center border border-indigo-100 shadow-sm relative z-10 hover:scale-105 transition-transform duration-300">
+                <span className="text-2xl animate-pulse">🏔️</span>
+              </div>
             </div>
-            <h1 className="text-2xl font-extrabold tracking-tight text-slate-900 font-display">Bafoussam<span className="text-indigo-600">Direct</span></h1>
-            <p className="text-sm text-slate-500 mt-1 max-w-md">
-              La plateforme d'achat et vente locale de la capitale de l'Ouest Cameroun.
+
+            {/* Live Operational Badge */}
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 text-[11px] font-semibold border border-emerald-100/60 mb-3 animate-pulse">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+              <span>Service de livraison 100% actif à Bafoussam</span>
+            </div>
+
+            <h1 className="text-3xl font-black tracking-tight text-slate-900 font-display">
+              Bafoussam<span className="text-indigo-600 bg-gradient-to-r from-indigo-600 to-indigo-800 bg-clip-text text-transparent">Direct</span>
+            </h1>
+            <p className="text-xs text-slate-500 mt-1.5 max-w-sm leading-relaxed">
+              La plateforme d'achat et livraison rapide de la capitale de l'Ouest Cameroun. Épicerie, vêtements, pharmacie et plus encore.
             </p>
           </div>
 
@@ -335,79 +352,90 @@ export default function WelcomeGate({ onSuccess }: WelcomeGateProps) {
                 exit={{ opacity: 0, y: -15 }}
                 transition={{ duration: 0.2 }}
               >
-                <div className="bg-indigo-50/70 border border-indigo-100 rounded-2xl p-5 mb-6 text-slate-800 text-sm">
-                  <div className="flex items-start gap-3">
-                    <div className="p-1 bg-indigo-100 rounded-lg text-indigo-800 mt-0.5">
-                      <Sparkles className="w-4 h-4" />
-                    </div>
-                    <div>
-                      <p className="font-semibold text-indigo-900 mb-1">Inscription obligatoire requise</p>
-                      <p className="text-slate-600 leading-relaxed">
-                        Pour visiter et utiliser tous les services de la plateforme (achat, livraison rapide à domicile, support), une participation de <strong className="text-indigo-900">4 000 FCFA</strong> (versée directement sur le numéro Orange Money <strong className="text-indigo-900">640406412</strong>) est requise pour une durée d'accès complète de <strong className="text-indigo-900">trois (3) mois</strong>.
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
                 <form onSubmit={handleNextStep} className="space-y-4">
                   <div>
-                    <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">Nom Complet</label>
-                    <input
-                      type="text"
-                      required
-                      placeholder="Ex: Jean Kamdem"
-                      className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 text-slate-950 text-sm transition"
-                      value={formData.name}
-                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    />
+                    <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Nom Complet</label>
+                    <div className="relative rounded-xl shadow-sm">
+                      <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+                        <UserIcon className="h-4.5 w-4.5 text-slate-400" />
+                      </div>
+                      <input
+                        type="text"
+                        required
+                        placeholder="Ex: Jean Kamdem"
+                        className="w-full pl-10 pr-4 py-3 bg-slate-50/50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/10 focus:border-indigo-500 text-slate-950 text-sm transition focus:bg-white"
+                        value={formData.name}
+                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                      />
+                    </div>
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">Adresse E-mail</label>
-                      <input
-                        type="email"
-                        required
-                        placeholder="jean.kamdem@mail.com"
-                        className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 text-slate-950 text-sm transition"
-                        value={formData.email}
-                        onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                      />
+                      <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Adresse E-mail</label>
+                      <div className="relative rounded-xl shadow-sm">
+                        <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+                          <Mail className="h-4.5 w-4.5 text-slate-400" />
+                        </div>
+                        <input
+                          type="email"
+                          required
+                          placeholder="jean.kamdem@mail.com"
+                          className="w-full pl-10 pr-4 py-3 bg-slate-50/50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/10 focus:border-indigo-500 text-slate-950 text-sm transition focus:bg-white"
+                          value={formData.email}
+                          onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                        />
+                      </div>
                     </div>
 
                     <div>
-                      <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">Numéro de Téléphone</label>
-                      <input
-                        type="tel"
-                        required
-                        placeholder="Ex: 677894512"
-                        className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 text-slate-950 text-sm transition"
-                        value={formData.phone}
-                        onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                      />
+                      <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Numéro de Téléphone</label>
+                      <div className="relative rounded-xl shadow-sm">
+                        <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+                          <Phone className="h-4.5 w-4.5 text-slate-400" />
+                        </div>
+                        <input
+                          type="tel"
+                          required
+                          placeholder="Ex: 677894512"
+                          className="w-full pl-10 pr-4 py-3 bg-slate-50/50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/10 focus:border-indigo-500 text-slate-950 text-sm transition focus:bg-white font-mono"
+                          value={formData.phone}
+                          onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                        />
+                      </div>
                     </div>
                   </div>
 
                   <div>
-                    <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">Votre Quartier à Bafoussam</label>
-                    <select
-                      className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 text-slate-950 text-sm transition"
-                      value={formData.neighborhood}
-                      onChange={(e) => setFormData({ ...formData, neighborhood: e.target.value })}
-                    >
-                      {BAFOUSSAM_NEIGHBORHOODS.map((nh) => (
-                        <option key={nh.id} value={nh.id}>
-                          {nh.name} (Livraison sous {nh.estMinutes} min)
-                        </option>
-                      ))}
-                    </select>
+                    <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Votre Quartier à Bafoussam</label>
+                    <div className="relative rounded-xl shadow-sm">
+                      <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+                        <MapPin className="h-4.5 w-4.5 text-slate-400" />
+                      </div>
+                      <select
+                        className="w-full pl-10 pr-4 py-3 bg-slate-50/50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/10 focus:border-indigo-500 text-slate-950 text-sm transition focus:bg-white appearance-none cursor-pointer"
+                        value={formData.neighborhood}
+                        onChange={(e) => setFormData({ ...formData, neighborhood: e.target.value })}
+                      >
+                        {BAFOUSSAM_NEIGHBORHOODS.map((nh) => (
+                          <option key={nh.id} value={nh.id}>
+                            {nh.name} (Livraison sous {nh.estMinutes} min)
+                          </option>
+                        ))}
+                      </select>
+                      <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none text-slate-400">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                        </svg>
+                      </div>
+                    </div>
                   </div>
 
                   {validationError && (
                     <div className="text-red-600 text-xs font-medium p-3 bg-red-50 border border-red-100 rounded-xl space-y-1">
                       <p>{validationError}</p>
                       {gpsDetails?.distance !== undefined && (
-                        <p className="text-[10px] text-red-500 font-normal">
+                        <p className="text-[10px] text-red-500 font-normal font-mono">
                           Détails : Distance calculée de {gpsDetails.distance.toFixed(1)} km (Limitation de rayon de couverture de {rayonMaxKm} km). Position détectée : Lat {gpsDetails.latitude?.toFixed(4)}, Lng {gpsDetails.longitude?.toFixed(4)}.
                         </p>
                       )}
@@ -449,17 +477,17 @@ export default function WelcomeGate({ onSuccess }: WelcomeGateProps) {
                   <button
                     type="submit"
                     disabled={isVerifyingLocation}
-                    className="w-full bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-400 text-white font-semibold py-3.5 px-4 rounded-xl flex items-center justify-center gap-2 cursor-pointer transition shadow-sm mt-6"
+                    className="w-full bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-400 text-white font-bold py-3.5 px-4 rounded-xl flex items-center justify-center gap-2 cursor-pointer transition shadow-sm mt-6"
                     id="btn-submit-registration"
                   >
                     {isVerifyingLocation ? (
                       <>
                         <Loader2 className="w-4 h-4 animate-spin" />
-                        <span>Vérification de la position (Serveur)...</span>
+                        <span>Vérification de la position (GPS)...</span>
                       </>
                     ) : (
                       <>
-                        <span>Procéder au paiement de 4 000 FCFA</span>
+                        <span>S'inscrire et Continuer (4 000 FCFA)</span>
                         <ArrowRight className="w-4 h-4" />
                       </>
                     )}
@@ -604,15 +632,15 @@ export default function WelcomeGate({ onSuccess }: WelcomeGateProps) {
                 exit={{ opacity: 0, y: -15 }}
                 transition={{ duration: 0.2 }}
               >
-                <div className="bg-indigo-50/70 border border-indigo-100 rounded-2xl p-5 mb-6 text-slate-800 text-sm">
-                  <div className="flex items-start gap-3">
-                    <div className="p-1 bg-indigo-100 rounded-lg text-indigo-800 mt-0.5 animate-pulse">
+                <div className="bg-indigo-50/50 border border-indigo-100/60 rounded-2xl p-4 mb-6 text-slate-800 text-xs">
+                  <div className="flex items-start gap-2.5">
+                    <div className="p-1 bg-indigo-100 text-indigo-800 rounded-lg mt-0.5">
                       <ShieldCheck className="w-4 h-4" />
                     </div>
                     <div>
-                      <p className="font-semibold text-indigo-900 mb-1">Espace Connexion Abonné</p>
+                      <p className="font-bold text-indigo-900 mb-0.5">Espace Connexion Abonné</p>
                       <p className="text-slate-600 leading-relaxed">
-                        Entrez le numéro de téléphone utilisé lors de votre inscription pour retrouver instantanément votre accès de 3 mois de manière sécurisée et éviter de repayer.
+                        Entrez votre numéro de téléphone pour récupérer instantanément et de façon sécurisée votre accès de 3 mois sans frais supplémentaires.
                       </p>
                     </div>
                   </div>
@@ -620,21 +648,23 @@ export default function WelcomeGate({ onSuccess }: WelcomeGateProps) {
 
                 <form onSubmit={handleLoginSubmit} className="space-y-5">
                   <div>
-                    <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
+                    <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">
                       Votre Numéro de Téléphone Enregistré
                     </label>
-                    <div className="relative">
-                      <Phone className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                    <div className="relative rounded-xl shadow-sm">
+                      <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+                        <Phone className="h-4.5 w-4.5 text-slate-400" />
+                      </div>
                       <input
                         type="tel"
                         required
                         placeholder="Ex: 677894512 ou 640406412"
-                        className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 text-slate-950 text-sm transition font-mono"
+                        className="w-full pl-10 pr-4 py-3 bg-slate-50/50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/10 focus:border-indigo-500 text-slate-950 text-sm transition font-mono focus:bg-white"
                         value={loginPhone}
                         onChange={(e) => setLoginPhone(e.target.value)}
                       />
                     </div>
-                    <span className="text-[10px] text-slate-400 mt-1.5 block">
+                    <span className="text-[10px] text-slate-400 mt-1.5 block leading-relaxed">
                       Numéros de démo pré-enregistrés : <strong className="text-slate-600 font-semibold">677894512</strong> ou <strong className="text-slate-600 font-semibold">640406412</strong>. Vous pouvez aussi saisir n'importe quel autre numéro pour simuler une récupération automatique.
                     </span>
                   </div>
@@ -652,13 +682,13 @@ export default function WelcomeGate({ onSuccess }: WelcomeGateProps) {
                         setValidationError('');
                         setStep('form');
                       }}
-                      className="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold py-3 px-4 rounded-xl text-xs cursor-pointer transition text-center"
+                      className="flex-1 bg-slate-50 hover:bg-slate-100 text-slate-600 font-semibold py-3 px-4 rounded-xl text-xs cursor-pointer transition border border-slate-200 text-center"
                     >
                       Retour à l'inscription
                     </button>
                     <button
                       type="submit"
-                      className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 px-4 rounded-xl text-xs flex items-center justify-center gap-2 cursor-pointer transition shadow-sm"
+                      className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-4 rounded-xl text-xs flex items-center justify-center gap-2 cursor-pointer transition shadow-sm"
                       id="btn-submit-login"
                     >
                       <span>Se connecter</span>
