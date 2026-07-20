@@ -101,16 +101,16 @@ export default function SubscriptionExpiredScreen({
                 </div>
               </div>
 
-              <div className="bg-gradient-to-r from-indigo-950/40 to-slate-900 border border-indigo-500/20 rounded-2xl p-5 flex justify-between items-center">
-                <div>
-                  <span className="text-[9px] font-bold text-indigo-400 uppercase tracking-widest block">Tarif de Renouvellement</span>
-                  <span className="text-xl font-black text-white mt-0.5 block">3 000 FCFA</span>
-                  <span className="text-[10px] text-slate-400 block">Pour 3 mois d'accès illimité</span>
-                </div>
-                <div className="bg-indigo-600/20 text-indigo-300 font-bold text-[10px] py-1.5 px-3 rounded-lg border border-indigo-500/30">
-                  Sécurisé MoMo/Orange
-                </div>
-              </div>
+               <div className="bg-gradient-to-r from-indigo-950/40 to-slate-900 border border-indigo-500/20 rounded-2xl p-5 flex justify-between items-center">
+                 <div>
+                   <span className="text-[9px] font-bold text-indigo-400 uppercase tracking-widest block">Tarif de Renouvellement</span>
+                   <span className="text-xl font-black text-white mt-0.5 block">3 000 FCFA</span>
+                   <span className="text-[10px] text-orange-400 font-semibold block">Versé directement sur Orange : 640406412</span>
+                 </div>
+                 <div className="bg-indigo-600/20 text-indigo-300 font-bold text-[10px] py-1.5 px-3 rounded-lg border border-indigo-500/30">
+                   Sécurisé MoMo/Orange
+                 </div>
+               </div>
 
               <div className="space-y-3 pt-2">
                 <button
@@ -148,7 +148,7 @@ export default function SubscriptionExpiredScreen({
             >
               <div className="text-center space-y-1">
                 <h3 className="text-lg font-black text-white">Mode de Paiement local</h3>
-                <p className="text-xs text-slate-400">Sélectionnez votre opérateur de paiement mobile au Cameroun</p>
+                <p className="text-xs text-slate-400">Le montant de 3 000 FCFA sera versé directement sur le numéro Orange Money <strong className="text-orange-500">640406412</strong></p>
               </div>
 
               <div className="grid grid-cols-1 gap-3.5">
@@ -242,7 +242,6 @@ export default function SubscriptionExpiredScreen({
               exit={{ opacity: 0, y: -15 }}
               className="bg-slate-900 border border-slate-800 rounded-3xl p-8 shadow-2xl space-y-6"
             >
-              {/* Operator Indicator */}
               <div className="flex items-center gap-3 bg-slate-950/80 p-3.5 rounded-2xl border border-slate-800">
                 <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-xs font-black shadow-sm shrink-0 ${
                   operator === 'momo' ? 'bg-amber-400 text-slate-950' : 'bg-orange-500 text-white'
@@ -251,7 +250,7 @@ export default function SubscriptionExpiredScreen({
                 </div>
                 <div>
                   <p className="font-extrabold text-slate-200 text-xs uppercase">Autorisation requise</p>
-                  <p className="text-[10px] text-slate-400">Prélèvement de 3 000 FCFA sur le numéro <span className="font-bold text-amber-400">{phone}</span></p>
+                  <p className="text-[10px] text-slate-400">Transfert de 3 000 FCFA directement vers Orange Money <span className="font-bold text-amber-400">640406412</span></p>
                 </div>
               </div>
 
@@ -314,7 +313,7 @@ export default function SubscriptionExpiredScreen({
                 <span className="text-[10px] font-black tracking-widest text-emerald-400 uppercase">Paiement Approuvé 🎉</span>
                 <h3 className="text-xl font-black text-white">Abonnement Réactivé !</h3>
                 <p className="text-xs text-slate-400 leading-relaxed max-w-xs mx-auto">
-                  Votre transaction de 3 000 FCFA a été validée avec succès. Votre accès illimité de 3 mois à Bafoussam Direct est de nouveau opérationnel !
+                  Votre versement de 3 000 FCFA sur le numéro Orange <strong className="text-emerald-400">640406412</strong> a été validé avec succès. Votre accès illimité de 3 mois à Bafoussam Direct est de nouveau opérationnel !
                 </p>
               </div>
 

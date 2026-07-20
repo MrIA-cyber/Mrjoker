@@ -343,7 +343,7 @@ export default function WelcomeGate({ onSuccess }: WelcomeGateProps) {
                     <div>
                       <p className="font-semibold text-indigo-900 mb-1">Inscription obligatoire requise</p>
                       <p className="text-slate-600 leading-relaxed">
-                        Pour visiter et utiliser tous les services de la plateforme (achat, livraison rapide à domicile, support), une participation de <strong className="text-indigo-900">4 000 FCFA</strong> est requise pour une durée d'accès complète de <strong className="text-indigo-900">trois (3) mois</strong>.
+                        Pour visiter et utiliser tous les services de la plateforme (achat, livraison rapide à domicile, support), une participation de <strong className="text-indigo-900">4 000 FCFA</strong> (versée directement sur le numéro Orange Money <strong className="text-indigo-900">640406412</strong>) est requise pour une durée d'accès complète de <strong className="text-indigo-900">trois (3) mois</strong>.
                       </p>
                     </div>
                   </div>
@@ -707,7 +707,7 @@ export default function WelcomeGate({ onSuccess }: WelcomeGateProps) {
               >
                 <h3 className="text-lg font-bold text-slate-900 mb-2">Choisir votre mode de paiement mobile</h3>
                 <p className="text-sm text-slate-500 mb-6">
-                  Le montant de 4 000 FCFA sera débité de votre compte pour activer l'accès de 3 mois.
+                  Le montant de 4 000 FCFA sera versé directement sur le numéro Orange Money <strong className="text-indigo-600 font-bold">640406412</strong> pour activer l'accès de 3 mois.
                 </p>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -786,7 +786,7 @@ export default function WelcomeGate({ onSuccess }: WelcomeGateProps) {
                   Une notification de validation de débit a été envoyée au <span className="font-mono text-indigo-300 font-bold">{phoneForPayment}</span>.
                   <br />
                   <span className="text-xs text-slate-400 mt-2 block">
-                    Saisissez votre code PIN secret à 4 chiffres ci-dessous pour approuver le débit de <strong className="text-white">4 000 FCFA</strong> destiné à <strong className="text-white">Bafoussam En Ligne</strong> :
+                    Saisissez votre code PIN secret à 4 chiffres ci-dessous pour approuver le transfert de <strong className="text-white">4 000 FCFA</strong> directement vers le numéro Orange <strong className="text-white">640406412</strong> du promoteur de la plateforme :
                   </span>
                 </p>
 
@@ -844,7 +844,7 @@ export default function WelcomeGate({ onSuccess }: WelcomeGateProps) {
 
                 <h3 className="text-xl font-bold text-slate-900">Bienvenue sur Bafoussam En Ligne !</h3>
                 <p className="text-sm text-slate-500 mt-2 max-w-sm mx-auto">
-                  Votre paiement de 4 000 FCFA a été approuvé avec succès. Votre accès complet est désormais activé.
+                  Votre paiement de 4 000 FCFA versé directement sur le numéro Orange <strong className="text-indigo-600 font-bold">640406412</strong> a été approuvé avec succès. Votre accès complet est désormais activé.
                 </p>
 
                 <div className="bg-slate-50 rounded-2xl p-5 border border-slate-100 text-left my-6 space-y-2.5 text-xs max-w-sm mx-auto">
