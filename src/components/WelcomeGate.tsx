@@ -1,11 +1,14 @@
 import React, { useState } from 'react';
 import { User, Neighborhood } from '../types';
 import { BAFOUSSAM_NEIGHBORHOODS } from '../data/mockData';
-import { Check, ShieldCheck, HelpCircle, Phone, ArrowRight, Loader2, Sparkles, MapPin, Mail, User as UserIcon, Lock } from 'lucide-react';
+import { Check, ShieldCheck, HelpCircle, Phone, ArrowRight, Loader2, Sparkles, MapPin, Mail, User as UserIcon, Lock, Globe } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import { translations, Language } from '../translations';
 
 interface WelcomeGateProps {
   onSuccess: (user: User) => void;
+  lang: Language;
+  onLangChange: (lang: Language) => void;
 }
 
 const refLat = 5.475;
@@ -23,7 +26,15 @@ function distanceKm(lat1: number, lon1: number, lat2: number, lon2: number): num
   return R * c;
 }
 
-export default function WelcomeGate({ onSuccess }: WelcomeGateProps) {
+export default function WelcomeGate({ onSuccess, lang, onLangChange }: WelcomeGateProps) {
+  const getTranslation = (key: string, replacements: Record<string, string | number> = {}) => {
+    let val = (translations[lang] as any)[key] || '';
+    Object.entries(replacements).forEach(([k, v]) => {
+      val = val.replace(`{${k}}`, String(v));
+    });
+    return val;
+  };
+
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -139,7 +150,7 @@ export default function WelcomeGate({ onSuccess }: WelcomeGateProps) {
       } catch (err) {
         console.error(err);
         setStep('login');
-        setValidationError('Erreur lors de la récupération de la session.');
+        setValidationError(lang === 'fr' ? 'Erreur lors de la récupération de la session.' : 'Error retrieving session.');
       }
     }, 1500);
   };
@@ -147,7 +158,7 @@ export default function WelcomeGate({ onSuccess }: WelcomeGateProps) {
   const handleNextStep = (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.name || !formData.phone || !formData.email) {
-      setValidationError('Veuillez remplir tous les champs obligatoires.');
+      setValidationError(getTranslation('fillRequiredFields'));
       return;
     }
 
@@ -162,7 +173,7 @@ export default function WelcomeGate({ onSuccess }: WelcomeGateProps) {
              cleanFormPhone.endsWith(u.phone.replace(/\s+/g, ''))
       );
       if (phoneExists) {
-        setValidationError('Ce numéro de téléphone est déjà abonné. Veuillez utiliser un autre numéro ou vous connecter.');
+        setValidationError(getTranslation('phoneAlreadyRegistered'));
         return;
       }
     } catch (err) {
@@ -186,7 +197,7 @@ export default function WelcomeGate({ onSuccess }: WelcomeGateProps) {
     // Real GPS Geolocation Check
     if (!navigator.geolocation) {
       setIsVerifyingLocation(false);
-      setValidationError("La géolocalisation n'est pas supportée par votre navigateur. Vous pouvez confirmer manuellement pour continuer.");
+      setValidationError(getTranslation('gpsNotSupported'));
       setShowBypassOption(true);
       return;
     }
@@ -203,21 +214,21 @@ export default function WelcomeGate({ onSuccess }: WelcomeGateProps) {
           proceedWithOtp();
         } else {
           setIsVerifyingLocation(false);
-          setValidationError(`Vous semblez être en dehors de la Région de l'Ouest (à ${dist.toFixed(1)} km du centre de la zone couverte). Ce service est actuellement réservé à cette région.`);
+          setValidationError(getTranslation('outsideWestRegion', { dist: dist.toFixed(1) }));
           setShowBypassOption(true);
         }
       },
       (error) => {
         setIsVerifyingLocation(false);
-        let errMsg = 'Erreur de géolocalisation.';
+        let errMsg = lang === 'fr' ? 'Erreur de géolocalisation.' : 'Geolocation error.';
         if (error.code === error.PERMISSION_DENIED) {
-          errMsg = "Accès GPS refusé par le navigateur. Veuillez autoriser l'accès à votre position pour continuer ou utiliser l'option manuelle ci-dessous.";
+          errMsg = getTranslation('gpsDenied');
         } else if (error.code === error.POSITION_UNAVAILABLE) {
-          errMsg = "Position GPS indisponible. Veuillez activer votre localisation ou utiliser l'option manuelle ci-dessous.";
+          errMsg = getTranslation('gpsUnavailable');
         } else if (error.code === error.TIMEOUT) {
-          errMsg = "Le délai de détection GPS a expiré. Veuillez réessayer ou utiliser l'option manuelle ci-dessous.";
+          errMsg = getTranslation('gpsTimeout');
         }
-        setValidationError(`Vérification de position échouée : ${errMsg}`);
+        setValidationError(errMsg);
         setShowBypassOption(true);
       },
       { enableHighAccuracy: true, timeout: 25000, maximumAge: 0 }
@@ -227,7 +238,7 @@ export default function WelcomeGate({ onSuccess }: WelcomeGateProps) {
   const handleVerifyOtp = (e: React.FormEvent) => {
     e.preventDefault();
     if (inputOtp !== generatedOtp) {
-      setValidationError('Le code de vérification SMS est incorrect. Veuillez réessayer ou renvoyer un code.');
+      setValidationError(getTranslation('incorrectCode'));
       return;
     }
     setValidationError('');
@@ -259,7 +270,7 @@ export default function WelcomeGate({ onSuccess }: WelcomeGateProps) {
   const handleConfirmPIN = (e: React.FormEvent) => {
     e.preventDefault();
     if (pin.length !== 4) {
-      setValidationError('Le code PIN doit comporter 4 chiffres.');
+      setValidationError(getTranslation('pinLengthError'));
       return;
     }
     setValidationError('');
@@ -315,6 +326,19 @@ export default function WelcomeGate({ onSuccess }: WelcomeGateProps) {
       
       <div className="w-full max-w-xl bg-white/90 backdrop-blur-md rounded-3xl shadow-xl border border-slate-100 overflow-hidden relative z-10 transition-shadow hover:shadow-2xl duration-300">
         
+        {/* Floating Language Selector at the top right of the card */}
+        <div className="absolute top-5 right-6 z-20 flex gap-2">
+          <button
+            type="button"
+            onClick={() => onLangChange(lang === 'fr' ? 'en' : 'fr')}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-slate-50 hover:bg-slate-100 text-slate-700 hover:text-slate-900 border border-slate-200 text-xs font-semibold shadow-sm transition cursor-pointer"
+            title="Switch Language"
+          >
+            <Globe className="w-3.5 h-3.5" />
+            <span>{lang === 'fr' ? 'EN' : 'FR'}</span>
+          </button>
+        </div>
+
         {/* Banner with sleek indigo gradient */}
         <div className="h-3 bg-gradient-to-r from-indigo-500 via-indigo-600 to-indigo-700"></div>
 
@@ -332,14 +356,14 @@ export default function WelcomeGate({ onSuccess }: WelcomeGateProps) {
             {/* Live Operational Badge */}
             <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 text-[11px] font-semibold border border-emerald-100/60 mb-3 animate-pulse">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-              <span>Service de livraison 100% actif à Bafoussam</span>
+              <span>{getTranslation('deliveryActiveBadge')}</span>
             </div>
 
             <h1 className="text-3xl font-black tracking-tight text-slate-900 font-display">
               Bafoussam<span className="text-indigo-600 bg-gradient-to-r from-indigo-600 to-indigo-800 bg-clip-text text-transparent">Direct</span>
             </h1>
             <p className="text-xs text-slate-500 mt-1.5 max-w-sm leading-relaxed">
-              Vos courses livrées en 15 minutes, partout à Bafoussam.
+              {getTranslation('taglineWelcome')}
             </p>
           </div>
 
@@ -354,7 +378,7 @@ export default function WelcomeGate({ onSuccess }: WelcomeGateProps) {
               >
                 <form onSubmit={handleNextStep} className="space-y-4">
                   <div>
-                    <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Nom Complet</label>
+                    <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">{getTranslation('fullNameLabel')}</label>
                     <div className="relative rounded-xl shadow-sm">
                       <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
                         <UserIcon className="h-4.5 w-4.5 text-slate-400" />
@@ -372,7 +396,7 @@ export default function WelcomeGate({ onSuccess }: WelcomeGateProps) {
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Adresse E-mail</label>
+                      <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">{getTranslation('emailAddressLabel')}</label>
                       <div className="relative rounded-xl shadow-sm">
                         <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
                           <Mail className="h-4.5 w-4.5 text-slate-400" />
@@ -389,7 +413,7 @@ export default function WelcomeGate({ onSuccess }: WelcomeGateProps) {
                     </div>
 
                     <div>
-                      <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Numéro de Téléphone</label>
+                      <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">{getTranslation('phoneNumberLabel')}</label>
                       <div className="relative rounded-xl shadow-sm">
                         <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
                           <Phone className="h-4.5 w-4.5 text-slate-400" />
@@ -407,7 +431,7 @@ export default function WelcomeGate({ onSuccess }: WelcomeGateProps) {
                   </div>
 
                   <div>
-                    <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Votre Quartier à Bafoussam</label>
+                    <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">{getTranslation('yourNeighborhoodLabel')}</label>
                     <div className="relative rounded-xl shadow-sm">
                       <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
                         <MapPin className="h-4.5 w-4.5 text-slate-400" />
@@ -419,7 +443,7 @@ export default function WelcomeGate({ onSuccess }: WelcomeGateProps) {
                       >
                         {BAFOUSSAM_NEIGHBORHOODS.map((nh) => (
                           <option key={nh.id} value={nh.id}>
-                            {nh.name} (Livraison sous {nh.estMinutes} min)
+                            {nh.name} ({getTranslation('deliveryTimeInMinutes', { minutes: nh.estMinutes })})
                           </option>
                         ))}
                       </select>
@@ -447,9 +471,9 @@ export default function WelcomeGate({ onSuccess }: WelcomeGateProps) {
                       <div className="flex items-start gap-2">
                         <span className="text-amber-600 text-lg">💡</span>
                         <div>
-                          <p className="text-amber-900 font-bold text-xs">Confirmation de position manuelle</p>
+                          <p className="text-amber-900 font-bold text-xs">{getTranslation('manualBypassTitle')}</p>
                           <p className="text-amber-800 text-[11px] leading-relaxed mt-0.5">
-                            Si vous êtes à proximité de la Région de l'Ouest du Cameroun, ou si l'accès GPS rencontre des imprécisions (ex. refus d'autorisation, mauvaise réception), certifiez manuellement votre quartier pour continuer.
+                            {getTranslation('manualBypassDesc')}
                           </p>
                         </div>
                       </div>
@@ -469,7 +493,7 @@ export default function WelcomeGate({ onSuccess }: WelcomeGateProps) {
                         className="w-full bg-amber-600 hover:bg-amber-700 text-white font-semibold py-2.5 px-4 rounded-xl text-xs transition cursor-pointer text-center flex items-center justify-center gap-1.5"
                       >
                         <Check className="w-4 h-4" />
-                        <span>Confirmer manuellement mon quartier et continuer</span>
+                        <span>{getTranslation('manualBypassBtn')}</span>
                       </button>
                     </div>
                   )}
@@ -483,24 +507,24 @@ export default function WelcomeGate({ onSuccess }: WelcomeGateProps) {
                     {isVerifyingLocation ? (
                       <>
                         <Loader2 className="w-4 h-4 animate-spin" />
-                        <span>Vérification de la position (GPS)...</span>
+                        <span>{lang === 'fr' ? 'Vérification de la position (GPS)...' : 'Verifying location (GPS)...'}</span>
                       </>
                     ) : (
                       <>
-                        <span>Débloquer mon accès 3 mois (4 000 FCFA)</span>
+                        <span>{getTranslation('unlockAccessBtn')}</span>
                         <ArrowRight className="w-4 h-4" />
                       </>
                     )}
                   </button>
 
                   <p className="text-[10px] text-slate-400 text-center mt-2.5 leading-relaxed max-w-sm mx-auto">
-                    Achats illimités, livraison prioritaire et support client — pendant 3 mois.
+                    {getTranslation('unlockAccessHint')}
                   </p>
                 </form>
 
                 <div className="mt-5 text-center">
                   <p className="text-xs text-slate-500">
-                    Déjà inscrit ?{' '}
+                    {getTranslation('alreadyRegistered')}{' '}
                     <button
                       type="button"
                       onClick={() => {
@@ -509,7 +533,7 @@ export default function WelcomeGate({ onSuccess }: WelcomeGateProps) {
                       }}
                       className="text-indigo-600 font-bold hover:underline cursor-pointer"
                     >
-                      Connectez-vous à votre compte ici
+                      {getTranslation('loginHere')}
                     </button>
                   </p>
                 </div>
@@ -517,11 +541,11 @@ export default function WelcomeGate({ onSuccess }: WelcomeGateProps) {
                 <div className="mt-6 flex justify-center gap-6 text-xs text-slate-400 border-t border-slate-100 pt-5">
                   <div className="flex items-center gap-1.5">
                     <ShieldCheck className="w-4 h-4 text-emerald-500" />
-                    <span>Sécurisé de bout en bout</span>
+                    <span>{getTranslation('securedConnection')}</span>
                   </div>
                   <div className="flex items-center gap-1.5">
                     <HelpCircle className="w-4 h-4 text-slate-300" />
-                    <span>Support Bafoussam: 640 40 64 12</span>
+                    <span>{lang === 'fr' ? 'Support Bafoussam: 640 40 64 12' : 'Bafoussam Support: 640 40 64 12'}</span>
                   </div>
                 </div>
               </motion.div>
@@ -542,27 +566,31 @@ export default function WelcomeGate({ onSuccess }: WelcomeGateProps) {
                     <span className="text-xl animate-bounce">📱</span>
                     <div className="flex-1">
                       <div className="flex items-center justify-between">
-                        <span className="text-[10px] font-extrabold text-indigo-400 uppercase tracking-widest">Nouveau SMS de "Bafoussam Direct"</span>
-                        <span className="text-[9px] text-slate-400">À l'instant</span>
+                        <span className="text-[10px] font-extrabold text-indigo-400 uppercase tracking-widest">{getTranslation('smsNotification')}</span>
+                        <span className="text-[9px] text-slate-400">{getTranslation('smsJustNow')}</span>
                       </div>
                       <p className="text-xs text-slate-100 font-mono mt-1 font-semibold">
-                        "Votre code de validation de numéro est : <span className="text-yellow-400 text-sm font-black underline decoration-2">{generatedOtp}</span>. Ne le partagez avec personne."
+                        {getTranslation('smsCodeText', { code: `<span className="text-yellow-400 text-sm font-black underline decoration-2">${generatedOtp}</span>` }).split('<span')[0]}
+                        <span className="text-yellow-400 text-sm font-black underline decoration-2">{generatedOtp}</span>
+                        {getTranslation('smsCodeText', { code: generatedOtp }).split(generatedOtp)[1]}
                       </p>
                     </div>
                   </div>
                 </div>
 
                 <div className="text-center mb-6">
-                  <h3 className="font-extrabold text-slate-900 text-base">Vérification de sécurité</h3>
+                  <h3 className="font-extrabold text-slate-900 text-base">{getTranslation('securityVerification')}</h3>
                   <p className="text-xs text-slate-500 mt-1 max-w-sm mx-auto">
-                    Nous avons envoyé un code de vérification au <span className="font-mono text-indigo-600 font-extrabold">{formData.phone}</span> pour nous assurer de la validité de votre numéro de téléphone.
+                    {getTranslation('smsCodeSentText', { phone: `<span className="font-mono text-indigo-600 font-extrabold">${formData.phone}</span>` }).split('<span')[0]}
+                    <span className="font-mono text-indigo-600 font-extrabold">{formData.phone}</span>
+                    {getTranslation('smsCodeSentText', { phone: formData.phone }).split(formData.phone)[1]}
                   </p>
                 </div>
 
                 <form onSubmit={handleVerifyOtp} className="space-y-5">
                   <div>
                     <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-2 text-center">
-                      Saisissez le code à 4 chiffres reçu par SMS
+                      {getTranslation('enterSmsCode')}
                     </label>
                     <div className="max-w-[200px] mx-auto">
                       <input
@@ -593,7 +621,7 @@ export default function WelcomeGate({ onSuccess }: WelcomeGateProps) {
                       }}
                       className="bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold py-3 px-4 rounded-xl text-xs cursor-pointer transition text-center"
                     >
-                      Retour
+                      {lang === 'fr' ? 'Retour' : 'Back'}
                     </button>
                     
                     <button
@@ -602,14 +630,14 @@ export default function WelcomeGate({ onSuccess }: WelcomeGateProps) {
                       onClick={handleResendOtp}
                       className="bg-slate-50 hover:bg-slate-100 text-slate-600 font-semibold py-3 px-4 rounded-xl text-xs cursor-pointer transition text-center border border-slate-200 disabled:opacity-50"
                     >
-                      {isOtpResending ? 'Génération...' : 'Renvoyer le code'}
+                      {isOtpResending ? (lang === 'fr' ? 'Génération...' : 'Generating...') : getTranslation('resendCodeBtn')}
                     </button>
 
                     <button
                       type="submit"
                       className="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 px-6 rounded-xl text-xs flex items-center justify-center gap-2 cursor-pointer transition shadow-sm flex-1"
                     >
-                      <span>Valider le numéro</span>
+                      <span>{getTranslation('validateNumBtn')}</span>
                       <ArrowRight className="w-4 h-4" />
                     </button>
                   </div>
@@ -618,11 +646,11 @@ export default function WelcomeGate({ onSuccess }: WelcomeGateProps) {
                 <div className="mt-6 flex justify-center gap-6 text-xs text-slate-400 border-t border-slate-100 pt-5">
                   <div className="flex items-center gap-1.5">
                     <ShieldCheck className="w-4 h-4 text-emerald-500" />
-                    <span>Numéro vérifié</span>
+                    <span>{lang === 'fr' ? 'Numéro vérifié' : 'Number verified'}</span>
                   </div>
                   <div className="flex items-center gap-1.5">
                     <HelpCircle className="w-4 h-4 text-slate-300" />
-                    <span>Besoin d'aide ? 640 40 64 12</span>
+                    <span>{getTranslation('needHelp')} : 640 40 64 12</span>
                   </div>
                 </div>
               </motion.div>
@@ -642,9 +670,9 @@ export default function WelcomeGate({ onSuccess }: WelcomeGateProps) {
                       <ShieldCheck className="w-4 h-4" />
                     </div>
                     <div>
-                      <p className="font-bold text-indigo-900 mb-0.5">Espace Connexion Abonné</p>
+                      <p className="font-bold text-indigo-900 mb-0.5">{getTranslation('subscriberLoginArea')}</p>
                       <p className="text-slate-600 leading-relaxed">
-                        Entrez votre numéro de téléphone pour récupérer instantanément et de façon sécurisée votre accès de 3 mois sans frais supplémentaires.
+                        {getTranslation('subscriberLoginDesc')}
                       </p>
                     </div>
                   </div>
@@ -653,7 +681,7 @@ export default function WelcomeGate({ onSuccess }: WelcomeGateProps) {
                 <form onSubmit={handleLoginSubmit} className="space-y-5">
                   <div>
                     <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">
-                      Votre Numéro de Téléphone Enregistré
+                      {getTranslation('registeredPhoneLabel')}
                     </label>
                     <div className="relative rounded-xl shadow-sm">
                       <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
@@ -669,7 +697,7 @@ export default function WelcomeGate({ onSuccess }: WelcomeGateProps) {
                       />
                     </div>
                     <span className="text-[10px] text-slate-400 mt-1.5 block leading-relaxed">
-                      Numéros de démo pré-enregistrés : <strong className="text-slate-600 font-semibold">677894512</strong> ou <strong className="text-slate-600 font-semibold">640406412</strong>. Vous pouvez aussi saisir n'importe quel autre numéro pour simuler une récupération automatique.
+                      {getTranslation('demoNumbersHint')}
                     </span>
                   </div>
 
@@ -688,14 +716,14 @@ export default function WelcomeGate({ onSuccess }: WelcomeGateProps) {
                       }}
                       className="flex-1 bg-slate-50 hover:bg-slate-100 text-slate-600 font-semibold py-3 px-4 rounded-xl text-xs cursor-pointer transition border border-slate-200 text-center"
                     >
-                      Retour à l'inscription
+                      {getTranslation('backToRegister')}
                     </button>
                     <button
                       type="submit"
                       className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-4 rounded-xl text-xs flex items-center justify-center gap-2 cursor-pointer transition shadow-sm"
                       id="btn-submit-login"
                     >
-                      <span>Se connecter</span>
+                      <span>{getTranslation('loginBtnWelcome')}</span>
                       <ArrowRight className="w-4 h-4" />
                     </button>
                   </div>
@@ -704,11 +732,11 @@ export default function WelcomeGate({ onSuccess }: WelcomeGateProps) {
                 <div className="mt-6 flex justify-center gap-6 text-xs text-slate-400 border-t border-slate-100 pt-5">
                   <div className="flex items-center gap-1.5">
                     <ShieldCheck className="w-4 h-4 text-emerald-500" />
-                    <span>Connexion Cryptée</span>
+                    <span>{lang === 'fr' ? 'Connexion Cryptée' : 'Encrypted Connection'}</span>
                   </div>
                   <div className="flex items-center gap-1.5">
                     <HelpCircle className="w-4 h-4 text-slate-300" />
-                    <span>Assistance : 640 40 64 12</span>
+                    <span>{lang === 'fr' ? 'Assistance : 640 40 64 12' : 'Assistance: 640 40 64 12'}</span>
                   </div>
                 </div>
               </motion.div>
@@ -723,9 +751,11 @@ export default function WelcomeGate({ onSuccess }: WelcomeGateProps) {
                 className="flex flex-col items-center justify-center py-12"
               >
                 <Loader2 className="w-12 h-12 text-indigo-600 animate-spin mb-4" />
-                <h3 className="font-bold text-slate-900 text-lg">Recherche d'abonnement actif...</h3>
+                <h3 className="font-bold text-slate-900 text-lg">{getTranslation('searchingSubscription')}</h3>
                 <p className="text-sm text-slate-500 text-center max-w-sm mt-1">
-                  Vérification en cours auprès de la base centrale Bafoussam Direct pour le numéro de téléphone <span className="font-mono text-indigo-600 font-bold">{loginPhone}</span>...
+                  {getTranslation('searchingSubscriptionDesc', { phone: `<span className="font-mono text-indigo-600 font-bold">${loginPhone}</span>` }).split('<span')[0]}
+                  <span className="font-mono text-indigo-600 font-bold">{loginPhone}</span>
+                  {getTranslation('searchingSubscriptionDesc', { phone: loginPhone }).split(loginPhone)[1]}
                 </p>
               </motion.div>
             )}
@@ -739,9 +769,11 @@ export default function WelcomeGate({ onSuccess }: WelcomeGateProps) {
                 transition={{ duration: 0.2 }}
                 className="text-center"
               >
-                <h3 className="text-lg font-bold text-slate-900 mb-2">Choisir votre mode de paiement mobile</h3>
+                <h3 className="text-lg font-bold text-slate-900 mb-2">{getTranslation('chooseMobilePayment')}</h3>
                 <p className="text-sm text-slate-500 mb-6">
-                  Le montant de 4 000 FCFA sera versé directement sur le numéro Orange Money <strong className="text-indigo-600 font-bold">640406412</strong> pour activer l'accès de 3 mois.
+                  {getTranslation('paymentInstructions', { orangePhone: '640406412' }).split('640406412')[0]}
+                  <strong className="text-indigo-600 font-bold">640406412</strong>
+                  {getTranslation('paymentInstructions', { orangePhone: '640406412' }).split('640406412')[1]}
                 </p>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -754,7 +786,7 @@ export default function WelcomeGate({ onSuccess }: WelcomeGateProps) {
                       MTN
                     </div>
                     <span className="font-bold text-slate-900 text-sm">MTN Mobile Money</span>
-                    <span className="text-xs text-slate-400 mt-1">Opérateur réseau MTN</span>
+                    <span className="text-xs text-slate-400 mt-1">{lang === 'fr' ? 'Opérateur réseau MTN' : 'MTN network operator'}</span>
                   </button>
 
                   {/* Orange Money */}
@@ -766,7 +798,7 @@ export default function WelcomeGate({ onSuccess }: WelcomeGateProps) {
                       OM
                     </div>
                     <span className="font-bold text-slate-900 text-sm">Orange Money</span>
-                    <span className="text-xs text-slate-400 mt-1">Opérateur réseau Orange</span>
+                    <span className="text-xs text-slate-400 mt-1">{lang === 'fr' ? 'Opérateur réseau Orange' : 'Orange network operator'}</span>
                   </button>
                 </div>
 
@@ -775,7 +807,7 @@ export default function WelcomeGate({ onSuccess }: WelcomeGateProps) {
                     onClick={() => setStep('form')}
                     className="text-sm text-slate-500 hover:text-slate-950 underline cursor-pointer"
                   >
-                    Retour aux informations d'inscription
+                    {getTranslation('backToRegister')}
                   </button>
                 </div>
               </motion.div>
@@ -790,9 +822,9 @@ export default function WelcomeGate({ onSuccess }: WelcomeGateProps) {
                 className="flex flex-col items-center justify-center py-12"
               >
                 <Loader2 className="w-12 h-12 text-indigo-600 animate-spin mb-4" />
-                <h3 className="font-bold text-slate-900 text-lg">Traitement sécurisé...</h3>
+                <h3 className="font-bold text-slate-900 text-lg">{getTranslation('processingPayment')}</h3>
                 <p className="text-sm text-slate-500 text-center max-w-sm mt-1">
-                  Connexion avec la passerelle Mobile Money locale de Bafoussam. Veuillez patienter une seconde.
+                  {getTranslation('processingPaymentDesc')}
                 </p>
               </motion.div>
             )}
@@ -817,10 +849,14 @@ export default function WelcomeGate({ onSuccess }: WelcomeGateProps) {
                 </div>
 
                 <p className="text-sm leading-relaxed mb-5 text-slate-100">
-                  Une notification de validation de débit a été envoyée au <span className="font-mono text-indigo-300 font-bold">{phoneForPayment}</span>.
+                  {lang === 'fr' 
+                    ? `Une notification de validation de débit a été envoyée au ${phoneForPayment}.` 
+                    : `A debit validation notification has been sent to ${phoneForPayment}.`}
                   <br />
                   <span className="text-xs text-slate-400 mt-2 block">
-                    Saisissez votre code PIN secret à 4 chiffres ci-dessous pour approuver le transfert de <strong className="text-white">4 000 FCFA</strong> directement vers le numéro Orange <strong className="text-white">640406412</strong> du promoteur de la plateforme :
+                    {getTranslation('pinDescription', { orangePhone: '640406412' }).split('640406412')[0]}
+                    <strong className="text-white">640406412</strong>
+                    {getTranslation('pinDescription', { orangePhone: '640406412' }).split('640406412')[1]}
                   </span>
                 </p>
 
@@ -840,7 +876,7 @@ export default function WelcomeGate({ onSuccess }: WelcomeGateProps) {
                   </div>
 
                   {validationError && (
-                    <div className="text-red-400 text-xs text-center font-medium bg-red-950/40 border border-red-900/50 py-2 rounded-lg">
+                    <div className="text-red-400 text-xs text-center font-medium bg-red-950/40 border border-red-1000/50 py-2 rounded-lg">
                       {validationError}
                     </div>
                   )}
@@ -851,13 +887,13 @@ export default function WelcomeGate({ onSuccess }: WelcomeGateProps) {
                       onClick={() => setStep('payment-select')}
                       className="flex-1 bg-slate-800 hover:bg-slate-700 text-slate-300 text-sm py-3 rounded-xl cursor-pointer transition"
                     >
-                      Annuler
+                      {getTranslation('cancelBtn')}
                     </button>
                     <button
                       type="submit"
                       className="flex-1 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-sm py-3 rounded-xl cursor-pointer transition shadow-lg shadow-indigo-600/10"
                     >
-                      Confirmer (4 000 F)
+                      {getTranslation('confirmBtn')}
                     </button>
                   </div>
                 </form>
@@ -876,24 +912,26 @@ export default function WelcomeGate({ onSuccess }: WelcomeGateProps) {
                   <Check className="w-8 h-8 stroke-[3]" />
                 </div>
 
-                <h3 className="text-xl font-bold text-slate-900">Bienvenue sur Bafoussam En Ligne !</h3>
+                <h3 className="text-xl font-bold text-slate-900">{getTranslation('welcomeTitle')}</h3>
                 <p className="text-sm text-slate-500 mt-2 max-w-sm mx-auto">
-                  Votre paiement de 4 000 FCFA versé directement sur le numéro Orange <strong className="text-indigo-600 font-bold">640406412</strong> a été approuvé avec succès. Votre accès complet est désormais activé.
+                  {getTranslation('paymentApprovedDesc', { orangePhone: '640406412' }).split('640406412')[0]}
+                  <strong className="text-indigo-600 font-bold">640406412</strong>
+                  {getTranslation('paymentApprovedDesc', { orangePhone: '640406412' }).split('640406412')[1]}
                 </p>
 
                 <div className="bg-slate-50 rounded-2xl p-5 border border-slate-100 text-left my-6 space-y-2.5 text-xs max-w-sm mx-auto">
                   <div className="flex justify-between">
-                    <span className="text-slate-400">Abonné</span>
+                    <span className="text-slate-400">{getTranslation('subscriberLabel')}</span>
                     <span className="font-semibold text-slate-800">{formData.name}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-slate-400">Durée d'accès</span>
-                    <span className="font-semibold text-emerald-600">3 Mois (Inclus)</span>
+                    <span className="text-slate-400">{getTranslation('accessDurationLabel')}</span>
+                    <span className="font-semibold text-emerald-600">{getTranslation('monthsValidity')}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-slate-400">Date d'expiration</span>
+                    <span className="text-slate-400">{getTranslation('expiryDateLabel')}</span>
                     <span className="font-semibold text-slate-800">
-                      {new Date(Date.now() + 3 * 30 * 24 * 60 * 60 * 1000).toLocaleDateString('fr-FR', {
+                      {new Date(Date.now() + 3 * 30 * 24 * 60 * 60 * 1000).toLocaleDateString(lang === 'fr' ? 'fr-FR' : 'en-US', {
                         year: 'numeric',
                         month: 'long',
                         day: 'numeric',
@@ -901,7 +939,7 @@ export default function WelcomeGate({ onSuccess }: WelcomeGateProps) {
                     </span>
                   </div>
                   <div className="flex justify-between border-t border-slate-200/60 pt-2 text-slate-500">
-                    <span>Référence</span>
+                    <span>{getTranslation('referenceLabel')}</span>
                     <span className="font-mono">{transactionRef}</span>
                   </div>
                 </div>
@@ -910,7 +948,7 @@ export default function WelcomeGate({ onSuccess }: WelcomeGateProps) {
                   onClick={handleFinish}
                   className="w-full bg-slate-900 hover:bg-slate-800 text-white font-medium py-3.5 px-4 rounded-xl cursor-pointer transition shadow-sm"
                 >
-                  Entrer dans la boutique de Bafoussam
+                  {getTranslation('enterStoreBtn')}
                 </button>
               </motion.div>
             )}

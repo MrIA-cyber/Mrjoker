@@ -2,17 +2,20 @@ import React, { useState } from 'react';
 import { User } from '../types';
 import { AlertTriangle, CreditCard, ArrowRight, Loader2, Phone, CheckCircle2, ShieldAlert } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import { Language } from '../translations';
 
 interface SubscriptionExpiredScreenProps {
   currentUser: User;
   onRenewSuccess: () => void;
   onLogout: () => void;
+  lang: Language;
 }
 
 export default function SubscriptionExpiredScreen({
   currentUser,
   onRenewSuccess,
   onLogout,
+  lang,
 }: SubscriptionExpiredScreenProps) {
   const [operator, setOperator] = useState<'momo' | 'orange' | null>(null);
   const [phone, setPhone] = useState(currentUser.phone || '');
@@ -38,7 +41,7 @@ export default function SubscriptionExpiredScreen({
   const handleConfirmPIN = (e: React.FormEvent) => {
     e.preventDefault();
     if (pin.length !== 4) {
-      setError('Le code PIN doit comporter exactement 4 chiffres.');
+      setError(lang === 'fr' ? 'Le code PIN doit comporter exactement 4 chiffres.' : 'The PIN code must be exactly 4 digits.');
       return;
     }
 
@@ -82,33 +85,47 @@ export default function SubscriptionExpiredScreen({
               </div>
 
               <div className="text-center space-y-2">
-                <span className="text-[10px] font-black tracking-widest text-red-500 uppercase">Accès Interrompu</span>
-                <h2 className="text-2xl font-black text-white tracking-tight">Abonnement Expiré ⚠️</h2>
+                <span className="text-[10px] font-black tracking-widest text-red-500 uppercase">
+                  {lang === 'fr' ? 'Accès Interrompu' : 'Access Interrupted'}
+                </span>
+                <h2 className="text-2xl font-black text-white tracking-tight">
+                  {lang === 'fr' ? 'Abonnement Expiré ⚠️' : 'Subscription Expired ⚠️'}
+                </h2>
                 <p className="text-xs text-slate-400 leading-relaxed">
-                  Bonjour <strong className="text-white">{currentUser.name}</strong>, votre accès membre de 3 mois à la plateforme <strong className="text-indigo-400">Bafoussam Direct</strong> est arrivé à son terme.
+                  {lang === 'fr' ? (
+                    <>Bonjour <strong className="text-white">{currentUser.name}</strong>, votre accès membre de 3 mois à la plateforme <strong className="text-indigo-400">Bafoussam Direct</strong> est arrivé à son terme.</>
+                  ) : (
+                    <>Hello <strong className="text-white">{currentUser.name}</strong>, your 3-month member access to the <strong className="text-indigo-400">Bafoussam Direct</strong> platform has come to an end.</>
+                  )}
                 </p>
               </div>
 
               <div className="bg-slate-950/60 border border-slate-800/80 rounded-2xl p-4 space-y-3">
                 <p className="text-[11px] text-slate-400 leading-normal">
-                  Conformément aux règles de la plateforme locale, pour contrer l'arnaque et assurer le maintien du service de livraison rapide dans Bafoussam, un abonnement actif est obligatoire pour utiliser le site.
+                  {lang === 'fr' 
+                    ? "Conformément aux règles de la plateforme locale, pour contrer l'arnaque et assurer le maintien du service de livraison rapide dans Bafoussam, un abonnement actif est obligatoire pour utiliser le site."
+                    : "In accordance with local platform rules, to prevent scams and ensure the maintenance of fast delivery services in Bafoussam, an active subscription is required to use the site."}
                 </p>
                 <div className="pt-2 border-t border-slate-800 flex justify-between text-xs">
-                  <span className="text-slate-500 font-semibold">Ancien accès expiré le :</span>
+                  <span className="text-slate-500 font-semibold">{lang === 'fr' ? 'Ancien accès expiré le :' : 'Old access expired on:'}</span>
                   <span className="font-mono text-red-400 font-bold">
-                    {currentUser.subscriptionExpiryDate ? new Date(currentUser.subscriptionExpiryDate).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' }) : 'Récemment'}
+                    {currentUser.subscriptionExpiryDate ? new Date(currentUser.subscriptionExpiryDate).toLocaleDateString(lang === 'fr' ? 'fr-FR' : 'en-US', { day: 'numeric', month: 'short', year: 'numeric' }) : 'Récemment'}
                   </span>
                 </div>
               </div>
 
                <div className="bg-gradient-to-r from-indigo-950/40 to-slate-900 border border-indigo-500/20 rounded-2xl p-5 flex justify-between items-center">
                  <div>
-                   <span className="text-[9px] font-bold text-indigo-400 uppercase tracking-widest block">Tarif de Renouvellement</span>
+                   <span className="text-[9px] font-bold text-indigo-400 uppercase tracking-widest block">
+                     {lang === 'fr' ? 'Tarif de Renouvellement' : 'Renewal Fee'}
+                   </span>
                    <span className="text-xl font-black text-white mt-0.5 block">3 000 FCFA</span>
-                   <span className="text-[10px] text-orange-400 font-semibold block">Versé directement sur Orange : 640406412</span>
+                   <span className="text-[10px] text-orange-400 font-semibold block">
+                     {lang === 'fr' ? 'Versé directement sur Orange : 640406412' : 'Paid directly on Orange: 640406412'}
+                   </span>
                  </div>
                  <div className="bg-indigo-600/20 text-indigo-300 font-bold text-[10px] py-1.5 px-3 rounded-lg border border-indigo-500/30">
-                   Sécurisé MoMo/Orange
+                   {lang === 'fr' ? 'Sécurisé MoMo/Orange' : 'Secure MoMo/Orange'}
                  </div>
                </div>
 
@@ -118,7 +135,7 @@ export default function SubscriptionExpiredScreen({
                   className="w-full bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-black py-3.5 rounded-xl transition shadow-lg shadow-indigo-600/15 flex items-center justify-center gap-2 cursor-pointer"
                 >
                   <CreditCard className="w-4 h-4" />
-                  <span>Renouveler mon abonnement maintenant</span>
+                  <span>{lang === 'fr' ? 'Renouveler mon abonnement maintenant' : 'Renew my subscription now'}</span>
                   <ArrowRight className="w-3.5 h-3.5" />
                 </button>
 
@@ -126,13 +143,15 @@ export default function SubscriptionExpiredScreen({
                   onClick={onLogout}
                   className="w-full bg-slate-950 border border-slate-800 text-slate-400 hover:text-white text-xs font-bold py-3 rounded-xl transition cursor-pointer"
                 >
-                  Se déconnecter
+                  {lang === 'fr' ? 'Se déconnecter' : 'Log Out'}
                 </button>
               </div>
 
               <div className="pt-3 border-t border-slate-800 text-center text-[10px] text-slate-500 font-semibold flex items-center justify-center gap-2">
                 <Phone className="w-3.5 h-3.5 text-indigo-400" />
-                <span>Support d'assistance de la Mifi : <a href="tel:640406412" className="text-indigo-400 underline">640 40 64 12</a></span>
+                <span>
+                  {lang === 'fr' ? 'Support d\'assistance de la Mifi :' : 'Mifi support helpline:'} <a href="tel:640406412" className="text-indigo-400 underline">640 40 64 12</a>
+                </span>
               </div>
             </motion.div>
           )}
@@ -147,8 +166,12 @@ export default function SubscriptionExpiredScreen({
               className="bg-slate-900 border border-slate-800 rounded-3xl p-8 shadow-2xl space-y-6"
             >
               <div className="text-center space-y-1">
-                <h3 className="text-lg font-black text-white">Mode de Paiement local</h3>
-                <p className="text-xs text-slate-400">Le montant de 3 000 FCFA sera versé directement sur le numéro Orange Money <strong className="text-orange-500">640406412</strong></p>
+                <h3 className="text-lg font-black text-white">{lang === 'fr' ? 'Mode de Paiement local' : 'Local Payment Method'}</h3>
+                <p className="text-xs text-slate-400">
+                  {lang === 'fr' 
+                    ? <>Le montant de 3 000 FCFA sera versé directement sur le numéro Orange Money <strong className="text-orange-500">640406412</strong></>
+                    : <>The amount of 3,000 FCFA will be paid directly to Orange Money number <strong className="text-orange-500">640406412</strong></>}
+                </p>
               </div>
 
               <div className="grid grid-cols-1 gap-3.5">
@@ -163,7 +186,7 @@ export default function SubscriptionExpiredScreen({
                     </div>
                     <div>
                       <p className="font-extrabold text-white text-sm">MTN Mobile Money</p>
-                      <p className="text-[10px] text-slate-400">Paiement instantané par USSD MTN Cameroun</p>
+                      <p className="text-[10px] text-slate-400">{lang === 'fr' ? 'Paiement instantané par USSD MTN Cameroun' : 'Instant payment via MTN Cameroon USSD'}</p>
                     </div>
                   </div>
                   <ArrowRight className="w-4 h-4 text-amber-500 group-hover:translate-x-1 transition" />
@@ -180,7 +203,7 @@ export default function SubscriptionExpiredScreen({
                     </div>
                     <div>
                       <p className="font-extrabold text-white text-sm">Orange Money</p>
-                      <p className="text-[10px] text-slate-400">Paiement rapide via USSD Orange Cameroun</p>
+                      <p className="text-[10px] text-slate-400">{lang === 'fr' ? 'Paiement rapide via USSD Orange Cameroun' : 'Fast payment via Orange Cameroon USSD'}</p>
                     </div>
                   </div>
                   <ArrowRight className="w-4 h-4 text-orange-500 group-hover:translate-x-1 transition" />
@@ -189,7 +212,7 @@ export default function SubscriptionExpiredScreen({
 
               <div>
                 <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">
-                  Numéro de débit de la souscription
+                  {lang === 'fr' ? 'Numéro de débit de la souscription' : 'Debit number for the subscription'}
                 </label>
                 <input
                   type="tel"
@@ -205,7 +228,7 @@ export default function SubscriptionExpiredScreen({
                   onClick={() => setStep('details')}
                   className="flex-1 bg-slate-950 border border-slate-800 text-slate-400 hover:text-white text-xs font-bold py-3 rounded-xl transition cursor-pointer"
                 >
-                  Retour
+                  {lang === 'fr' ? 'Retour' : 'Back'}
                 </button>
               </div>
             </motion.div>
@@ -225,9 +248,11 @@ export default function SubscriptionExpiredScreen({
               </div>
 
               <div className="space-y-2">
-                <h3 className="text-base font-extrabold text-white">Connexion à la passerelle de l'Ouest...</h3>
+                <h3 className="text-base font-extrabold text-white">{lang === 'fr' ? 'Connexion à la passerelle de l\'Ouest...' : 'Connecting to the West gateway...'}</h3>
                 <p className="text-xs text-slate-400 max-w-xs mx-auto leading-normal">
-                  Génération de la facture et initialisation du prélèvement sécurisé de 3 000 FCFA. Veuillez ne pas quitter.
+                  {lang === 'fr' 
+                    ? 'Génération de la facture et initialisation du prélèvement sécurisé de 3 000 FCFA. Veuillez ne pas quitter.'
+                    : 'Generating bill and initiating secure collection of 3,000 FCFA. Please do not leave.'}
                 </p>
               </div>
             </motion.div>
@@ -249,15 +274,23 @@ export default function SubscriptionExpiredScreen({
                   {operator === 'momo' ? 'momo' : 'Orange'}
                 </div>
                 <div>
-                  <p className="font-extrabold text-slate-200 text-xs uppercase">Autorisation requise</p>
-                  <p className="text-[10px] text-slate-400">Transfert de 3 000 FCFA directement vers Orange Money <span className="font-bold text-amber-400">640406412</span></p>
+                  <p className="font-extrabold text-slate-200 text-xs uppercase">{lang === 'fr' ? 'Autorisation requise' : 'Authorization required'}</p>
+                  <p className="text-[10px] text-slate-400">
+                    {lang === 'fr'
+                      ? <>Transfert de 3 000 FCFA directement vers Orange Money <span className="font-bold text-amber-400">640406412</span></>
+                      : <>Transfer of 3,000 FCFA directly to Orange Money <span className="font-bold text-amber-400">640406412</span></>}
+                  </p>
                 </div>
               </div>
 
               <form onSubmit={handleConfirmPIN} className="space-y-4">
                 <div className="text-center space-y-1">
-                  <h4 className="text-sm font-bold text-white">Saisissez votre code PIN de Test</h4>
-                  <p className="text-[11px] text-slate-400">Pour simuler la validation Mobile Money locale (entrez n'importe quel code à 4 chiffres)</p>
+                  <h4 className="text-sm font-bold text-white">{lang === 'fr' ? 'Saisissez votre code PIN de Test' : 'Enter your Test PIN code'}</h4>
+                  <p className="text-[11px] text-slate-400">
+                    {lang === 'fr' 
+                      ? 'Pour simuler la validation Mobile Money locale (entrez n\'importe quel code à 4 chiffres)'
+                      : 'To simulate local Mobile Money validation (enter any 4-digit code)'}
+                  </p>
                 </div>
 
                 <div className="relative max-w-[180px] mx-auto">
@@ -283,13 +316,13 @@ export default function SubscriptionExpiredScreen({
                     onClick={handleBackToSelect}
                     className="flex-1 bg-slate-950 border border-slate-800 text-slate-400 hover:text-white text-xs font-bold py-2.5 rounded-xl transition cursor-pointer"
                   >
-                    Changer d'opérateur
+                    {lang === 'fr' ? "Changer d'opérateur" : "Change operator"}
                   </button>
                   <button
                     type="submit"
                     className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-black py-2.5 rounded-xl transition shadow-md shadow-indigo-600/10 cursor-pointer"
                   >
-                    Valider le Paiement
+                    {lang === 'fr' ? 'Valider le Paiement' : 'Validate Payment'}
                   </button>
                 </div>
               </form>
@@ -310,10 +343,14 @@ export default function SubscriptionExpiredScreen({
               </div>
 
               <div className="space-y-2">
-                <span className="text-[10px] font-black tracking-widest text-emerald-400 uppercase">Paiement Approuvé 🎉</span>
-                <h3 className="text-xl font-black text-white">Abonnement Réactivé !</h3>
+                <span className="text-[10px] font-black tracking-widest text-emerald-400 uppercase">{lang === 'fr' ? 'Paiement Approuvé 🎉' : 'Payment Approved 🎉'}</span>
+                <h3 className="text-xl font-black text-white">{lang === 'fr' ? 'Abonnement Réactivé !' : 'Subscription Reactivated!'}</h3>
                 <p className="text-xs text-slate-400 leading-relaxed max-w-xs mx-auto">
-                  Votre versement de 3 000 FCFA sur le numéro Orange <strong className="text-emerald-400">640406412</strong> a été validé avec succès. Votre accès illimité de 3 mois à Bafoussam Direct est de nouveau opérationnel !
+                  {lang === 'fr' ? (
+                    <>Votre versement de 3 000 FCFA sur le numéro Orange <strong className="text-emerald-400">640406412</strong> a été validé avec succès. Votre accès illimité de 3 mois à Bafoussam Direct est de nouveau opérationnel !</>
+                  ) : (
+                    <>Your payment of 3,000 FCFA to Orange number <strong className="text-emerald-400">640406412</strong> was successfully validated. Your 3-month unlimited access to Bafoussam Direct is active once again!</>
+                  )}
                 </p>
               </div>
 
@@ -321,7 +358,7 @@ export default function SubscriptionExpiredScreen({
                 onClick={onRenewSuccess}
                 className="w-full bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black py-3.5 rounded-xl transition shadow-lg shadow-emerald-600/10 cursor-pointer flex items-center justify-center gap-2"
               >
-                <span>Accéder à la plateforme</span>
+                <span>{lang === 'fr' ? 'Accéder à la plateforme' : 'Access the platform'}</span>
                 <ArrowRight className="w-3.5 h-3.5" />
               </button>
             </motion.div>

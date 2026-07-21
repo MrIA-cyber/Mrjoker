@@ -4,8 +4,9 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { User, Product, Merchant, Order, CartItem } from './types';
-import { INITIAL_PRODUCTS, INITIAL_MERCHANTS, BAFOUSSAM_NEIGHBORHOODS } from './data/mockData';
+import { User, Product, Merchant, Order, CartItem, Review } from './types';
+import { INITIAL_PRODUCTS, INITIAL_MERCHANTS, BAFOUSSAM_NEIGHBORHOODS, INITIAL_REVIEWS } from './data/mockData';
+import { Language, translations } from './translations';
 import WelcomeGate from './components/WelcomeGate';
 import StoreHeader from './components/StoreHeader';
 import ProductCard from './components/ProductCard';
@@ -96,6 +97,53 @@ export default function App() {
   const [theme, setTheme] = useState<'light' | 'dark'>(() => {
     return (localStorage.getItem('bafoussam_theme') as 'light' | 'dark') || 'light';
   });
+
+  const [lang, setLang] = useState<Language>(() => {
+    return (localStorage.getItem('bafoussam_lang') as Language) || 'fr';
+  });
+
+  const [reviews, setReviews] = useState<Review[]>(() => {
+    try {
+      const saved = localStorage.getItem('bafoussam_reviews');
+      return saved ? JSON.parse(saved) : INITIAL_REVIEWS;
+    } catch (e) {
+      console.error("Erreur de lecture de reviews depuis localStorage:", e);
+      return INITIAL_REVIEWS;
+    }
+  });
+
+  const handleLangChange = (newLang: Language) => {
+    setLang(newLang);
+    localStorage.setItem('bafoussam_lang', newLang);
+  };
+
+  const handleAddReview = (orderId: string, rating: number, comment: string, clientName: string) => {
+    const order = orders.find(o => o.id === orderId);
+    if (!order) return;
+    
+    // Find merchantId of the products in the order
+    const merchantId = order.items[0]?.product.merchantId || '';
+    if (!merchantId) return;
+
+    const newReview: Review = {
+      id: `r-${Date.now()}`,
+      merchantId,
+      orderId,
+      clientName: clientName.trim() || 'Client anonyme',
+      rating,
+      comment,
+      createdAt: new Date().toISOString()
+    };
+
+    setReviews(prev => [newReview, ...prev]);
+
+    // Mark the order as reviewed so the user cannot review it again
+    setOrders(prev => prev.map(o => o.id === orderId ? { ...o, isReviewed: true } : o));
+  };
+
+  useEffect(() => {
+    localStorage.setItem('bafoussam_reviews', JSON.stringify(reviews));
+  }, [reviews]);
 
   const handleToggleTheme = () => {
     setTheme((prev) => {
@@ -415,9 +463,27 @@ export default function App() {
   };
 
   // Order state transition triggers (from tracker to completed)
-  const handleUpdateOrderStatus = (orderId: string, status: 'pending' | 'preparing' | 'delivering' | 'completed') => {
+  const handleUpdateOrderStatus = (orderId: string, status: 'pending' | 'preparing' | 'picked_up' | 'delivering' | 'completed') => {
     setOrders((prev) =>
-      prev.map((o) => (o.id === orderId ? { ...o, status } : o))
+      prev.map((o) => {
+        if (o.id === orderId) {
+          let commissionFields = {};
+          if (status === 'completed' && o.status !== 'completed') {
+            const currentRate = parseFloat(localStorage.getItem('bafoussam_commission_rate') || '10') / 100;
+            // Delivery fee is fixed 500 FCFA. Let's make sure we exclude it!
+            const subtotal = Math.max(0, o.total - 500);
+            const commissionAmount = Math.round(subtotal * currentRate);
+            const netToMerchant = subtotal - commissionAmount;
+            commissionFields = {
+              commissionRate: currentRate,
+              commissionAmount,
+              netToMerchant
+            };
+          }
+          return { ...o, status, ...commissionFields };
+        }
+        return o;
+      })
     );
   };
 
@@ -450,6 +516,22 @@ export default function App() {
     // Boost all products belonging to this upgraded merchant instantly!
     setProducts((prev) =>
       prev.map((p) => (p.merchantId === merchantId ? { ...p, isBoosted: true } : p))
+    );
+  };
+
+  const handleBoostProduct = (productId: string) => {
+    setProducts((prev) =>
+      prev.map((p) => {
+        if (p.id === productId) {
+          return {
+            ...p,
+            isBoosted: true,
+            boostExpiryDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+            boostCount: (p.boostCount || 0) + 1,
+          };
+        }
+        return p;
+      })
     );
   };
 
@@ -559,7 +641,11 @@ export default function App() {
   if (!currentUser) {
     return (
       <div className="relative min-h-screen">
-        <WelcomeGate onSuccess={handleUserSubscriptionSuccess} />
+        <WelcomeGate 
+          onSuccess={handleUserSubscriptionSuccess} 
+          lang={lang}
+          onLangChange={handleLangChange}
+        />
         
         {/* Custom session disconnection overlay notification */}
         <AnimatePresence>
@@ -576,7 +662,7 @@ export default function App() {
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center justify-between">
-                  <h4 className="font-extrabold text-sm">Session Expirée ⏰</h4>
+                  <h4 className="font-extrabold text-sm">{lang === 'fr' ? 'Session Expirée ⏰' : 'Session Expired ⏰'}</h4>
                   <button 
                     onClick={() => setShowSessionExpiredToast(false)}
                     className="text-white/70 hover:text-white p-1 hover:bg-white/10 rounded-lg transition cursor-pointer"
@@ -585,7 +671,9 @@ export default function App() {
                   </button>
                 </div>
                 <p className="text-xs text-rose-100 leading-relaxed mt-1">
-                  Votre session a été automatiquement déconnectée car aucun achat n'a été effectué dans le délai imparti de 10 minutes.
+                  {lang === 'fr'
+                    ? "Votre session a été automatiquement déconnectée car aucun achat n'a été effectué dans le délai imparti de 10 minutes."
+                    : "Your session has been automatically disconnected because no purchase was made within the allotted 10 minutes."}
                 </p>
               </div>
             </motion.div>
@@ -603,6 +691,7 @@ export default function App() {
         currentUser={currentUser}
         onRenewSuccess={handleRenewUserSubscription}
         onLogout={handleLogout}
+        lang={lang}
       />
     );
   }
@@ -649,6 +738,8 @@ export default function App() {
           theme={theme}
           onToggleTheme={handleToggleTheme}
           onSimulateUserExpiration={handleSimulateUserExpiration}
+          lang={lang}
+          onLangChange={handleLangChange}
         />
 
         {/* Session Expiry Countdown Alert Banner */}
@@ -756,6 +847,8 @@ export default function App() {
                   products={products}
                   onSelectProduct={handleSelectProduct}
                   onAddToCart={handleAddToCart}
+                  reviews={reviews}
+                  lang={lang}
                 />
               )}
 
@@ -767,7 +860,54 @@ export default function App() {
                 currentUser={currentUser}
                 onAddToCart={handleAddToCart}
                 onSelectProduct={handleSelectProduct}
+                lang={lang}
               />
+
+              {/* Recommended / Boosted Products Section */}
+              {selectedCategory === 'Tous' && !searchTerm && (
+                (() => {
+                  const activeBoosted = products.filter(p => 
+                    p.isBoosted && 
+                    (!p.boostExpiryDate || new Date(p.boostExpiryDate) >= new Date()) &&
+                    !isMerchantSubscriptionExpired(p.merchantId)
+                  );
+                  if (activeBoosted.length === 0) return null;
+
+                  return (
+                    <div className="space-y-5 bg-gradient-to-br from-amber-500/5 to-orange-500/5 dark:from-amber-500/10 dark:to-orange-500/10 p-6 rounded-3xl border border-amber-500/10 dark:border-amber-500/20 shadow-xs" id="recommended-products-section">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <div className="bg-amber-500 text-white p-1.5 rounded-xl">
+                            <Sparkles className="w-4 h-4 fill-white" />
+                          </div>
+                          <div>
+                            <h3 className="font-extrabold text-slate-900 dark:text-white text-base tracking-tight flex items-center gap-1.5">
+                              {translations[lang].recommendedProducts}
+                            </h3>
+                            <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                              Sélection exclusive mise en avant par nos commerçants de confiance
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                        {activeBoosted.map((p) => (
+                          <ProductCard
+                            key={`boosted-${p.id}`}
+                            product={p}
+                            isMerchantVerified={merchants.find(m => m.id === p.merchantId)?.isVerified ?? false}
+                            onAddToCart={handleAddToCart}
+                            onSelect={handleSelectProduct}
+                            reviews={reviews}
+                            lang={lang}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })()
+              )}
 
               {/* Store Grid Section */}
               <div className="space-y-5">
@@ -805,6 +945,8 @@ export default function App() {
                         isMerchantVerified={merchants.find(m => m.id === p.merchantId)?.isVerified ?? false}
                         onAddToCart={handleAddToCart}
                         onSelect={handleSelectProduct}
+                        reviews={reviews}
+                        lang={lang}
                       />
                     ))}
                   </div>
@@ -829,6 +971,8 @@ export default function App() {
                 onUpgradeMerchant={handleUpgradeMerchantToPremium}
                 onRegisterMerchant={(newMerchant) => setMerchants((prev) => [...prev, newMerchant])}
                 onSimulateMerchantExpiration={handleSimulateMerchantExpiration}
+                onBoostProduct={handleBoostProduct}
+                lang={lang}
               />
             </motion.div>
           )}
@@ -841,7 +985,12 @@ export default function App() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
             >
-              <DeliveryTracker orders={orders} onUpdateOrderStatus={handleUpdateOrderStatus} />
+              <DeliveryTracker 
+                orders={orders} 
+                onUpdateOrderStatus={handleUpdateOrderStatus} 
+                lang={lang}
+                onAddReview={handleAddReview}
+              />
             </motion.div>
           )}
 
@@ -853,7 +1002,7 @@ export default function App() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
             >
-              <CityNews />
+              <CityNews lang={lang} />
             </motion.div>
           )}
 
@@ -883,6 +1032,7 @@ export default function App() {
                   onUpdateCurrentUser={setCurrentUser}
                   orders={orders}
                   onUpdateOrders={setOrders}
+                  lang={lang}
                 />
               ) : (
                 <div className="max-w-md mx-auto my-16 bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-2xl p-8 text-center space-y-6 relative overflow-hidden" id="admin-lock-screen">
@@ -1008,6 +1158,8 @@ export default function App() {
             isMerchantVerified={merchants.find(m => m.id === selectedProduct.merchantId)?.isVerified ?? false}
             onClose={() => setSelectedProduct(null)}
             onAddToCart={handleAddToCart}
+            reviews={reviews}
+            lang={lang}
           />
         )}
 
@@ -1020,6 +1172,7 @@ export default function App() {
             onClose={() => setIsCartOpen(false)}
             onCheckoutSuccess={handleCheckoutSuccess}
             currentUser={currentUser}
+            lang={lang}
           />
         )}
 

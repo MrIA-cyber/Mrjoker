@@ -1,15 +1,15 @@
-import { Product, Merchant, Neighborhood } from '../types';
+import { Product, Merchant, Neighborhood, Review } from '../types';
 
 export const BAFOUSSAM_NEIGHBORHOODS: Neighborhood[] = [
   { id: 'tamdja', name: 'Tamdja', deliveryFee: 500, estMinutes: 15, coordinates: { x: 120, y: 150 } },
-  { id: 'bamendzi', name: 'Bamendzi', deliveryFee: 700, estMinutes: 20, coordinates: { x: 250, y: 110 } },
-  { id: 'banengo', name: 'Banengo', deliveryFee: 800, estMinutes: 25, coordinates: { x: 280, y: 220 } },
-  { id: 'djeleng', name: 'Djeleng', deliveryFee: 600, estMinutes: 18, coordinates: { x: 100, y: 260 } },
-  { id: 'famla', name: 'Famla', deliveryFee: 700, estMinutes: 22, coordinates: { x: 180, y: 310 } },
-  { id: 'ndiangdam', name: 'Ndiangdam', deliveryFee: 1000, estMinutes: 30, coordinates: { x: 340, y: 330 } },
+  { id: 'bamendzi', name: 'Bamendzi', deliveryFee: 500, estMinutes: 20, coordinates: { x: 250, y: 110 } },
+  { id: 'banengo', name: 'Banengo', deliveryFee: 500, estMinutes: 25, coordinates: { x: 280, y: 220 } },
+  { id: 'djeleng', name: 'Djeleng', deliveryFee: 500, estMinutes: 18, coordinates: { x: 100, y: 260 } },
+  { id: 'famla', name: 'Famla', deliveryFee: 500, estMinutes: 22, coordinates: { x: 180, y: 310 } },
+  { id: 'ndiangdam', name: 'Ndiangdam', deliveryFee: 500, estMinutes: 30, coordinates: { x: 340, y: 330 } },
   { id: 'carrefour-bamiléké', name: 'Carrefour Bamiléké', deliveryFee: 500, estMinutes: 15, coordinates: { x: 190, y: 200 } },
-  { id: 'marche-a', name: 'Marché A (Centre-ville)', deliveryFee: 400, estMinutes: 12, coordinates: { x: 150, y: 180 } },
-  { id: 'autre-ouest', name: 'Autre quartier (Ouest Cameroun)', deliveryFee: 1200, estMinutes: 35, coordinates: { x: 220, y: 280 } },
+  { id: 'marche-a', name: 'Marché A (Centre-ville)', deliveryFee: 500, estMinutes: 12, coordinates: { x: 150, y: 180 } },
+  { id: 'autre-ouest', name: 'Autre quartier (Ouest Cameroun)', deliveryFee: 500, estMinutes: 35, coordinates: { x: 220, y: 280 } },
 ];
 
 export const INITIAL_MERCHANTS: Merchant[] = [
@@ -104,6 +104,8 @@ export const INITIAL_PRODUCTS: Product[] = [
     merchantId: 'm1',
     merchantName: 'Maison du Café de l\'Ouest',
     isBoosted: true,
+    boostExpiryDate: '2026-07-28T10:00:00.000Z',
+    boostCount: 1,
     stock: 50,
     rating: 4.8,
     reviewsCount: 24,
@@ -119,6 +121,8 @@ export const INITIAL_PRODUCTS: Product[] = [
     merchantId: 'm2',
     merchantName: 'Ndop & Traditions Bamiléké',
     isBoosted: true,
+    boostExpiryDate: '2026-07-28T10:00:00.000Z',
+    boostCount: 1,
     stock: 8,
     rating: 4.9,
     reviewsCount: 12,
@@ -134,6 +138,8 @@ export const INITIAL_PRODUCTS: Product[] = [
     merchantId: 'm3',
     merchantName: 'Bafoussam Tech Hub & Électronique',
     isBoosted: true,
+    boostExpiryDate: '2026-07-28T10:00:00.000Z',
+    boostCount: 1,
     stock: 15,
     rating: 4.7,
     reviewsCount: 42,
@@ -194,6 +200,8 @@ export const INITIAL_PRODUCTS: Product[] = [
     merchantId: 'm2',
     merchantName: 'Ndop & Traditions Bamiléké',
     isBoosted: true,
+    boostExpiryDate: '2026-07-28T10:00:00.000Z',
+    boostCount: 1,
     stock: 5,
     rating: 4.9,
     reviewsCount: 18,
@@ -209,6 +217,8 @@ export const INITIAL_PRODUCTS: Product[] = [
     merchantId: 'm3',
     merchantName: 'Bafoussam Tech Hub & Électronique',
     isBoosted: true,
+    boostExpiryDate: '2026-07-28T10:00:00.000Z',
+    boostCount: 1,
     stock: 8,
     rating: 4.5,
     reviewsCount: 30,
@@ -237,3 +247,43 @@ export const CATEGORIES = [
   'Artisanat & Mode',
   'Électronique & Tech',
 ];
+
+export const INITIAL_REVIEWS: Review[] = [
+  {
+    id: 'r1',
+    merchantId: 'm1',
+    orderId: 'o-mock-1',
+    clientName: 'Jean-Pierre T.',
+    rating: 5,
+    comment: 'Le meilleur café du Cameroun, torréfaction parfaite ! Livraison rapide à Tamdja.',
+    createdAt: '2026-07-15T14:30:00Z'
+  },
+  {
+    id: 'r2',
+    merchantId: 'm1',
+    orderId: 'o-mock-2',
+    clientName: 'Client anonyme',
+    rating: 4,
+    comment: 'Très bon goût, sachet bien scellé. Je recommande vivement pour le petit déjeuner.',
+    createdAt: '2026-07-18T09:15:00Z'
+  },
+  {
+    id: 'r3',
+    merchantId: 'm2',
+    orderId: 'o-mock-3',
+    clientName: 'Nathalie M.',
+    rating: 5,
+    comment: 'Le tissu Ndop est magnifique, d\'une qualité exceptionnelle et les motifs sont authentiques ! Parfait pour la dot.',
+    createdAt: '2026-07-10T11:45:00Z'
+  },
+  {
+    id: 'r4',
+    merchantId: 'm3',
+    orderId: 'o-mock-4',
+    clientName: 'Arthur K.',
+    rating: 4,
+    comment: 'Téléphone de qualité, bon service après-vente. Le vendeur est très sérieux et m\'a aidé à transférer mes données.',
+    createdAt: '2026-07-12T16:20:00Z'
+  }
+];
+

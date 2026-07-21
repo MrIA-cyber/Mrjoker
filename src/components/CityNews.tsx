@@ -20,6 +20,7 @@ import {
   Clock,
   Heart
 } from 'lucide-react';
+import { translations } from '../translations';
 
 interface NewsArticle {
   id: string;
@@ -35,6 +36,10 @@ interface NewsArticle {
   tags: string[];
 }
 
+interface CityNewsProps {
+  lang: 'fr' | 'en';
+}
+
 // Helper to remove accents and convert to lowercase for robust, accent-insensitive search
 function normalizeString(str: string): string {
   if (!str) return '';
@@ -44,7 +49,24 @@ function normalizeString(str: string): string {
     .toLowerCase();
 }
 
-export default function CityNews() {
+const categoryTranslations: Record<string, Record<string, string>> = {
+  fr: {
+    'Tous': 'Tous',
+    'Économie': 'Économie',
+    'Culture': 'Culture',
+    'Infrastructures': 'Infrastructures',
+    'Sport & Vie locale': 'Sport & Vie locale',
+  },
+  en: {
+    'Tous': 'All',
+    'Économie': 'Economy',
+    'Culture': 'Culture',
+    'Infrastructures': 'Infrastructure',
+    'Sport & Vie locale': 'Sport & Local Life',
+  }
+};
+
+export default function CityNews({ lang }: CityNewsProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('Tous');
   const [activeArticle, setActiveArticle] = useState<NewsArticle | null>(null);
@@ -58,103 +80,113 @@ export default function CityNews() {
     'news-5': 115,
   });
 
+  const getTranslation = (key: string, replacements?: Record<string, string | number>) => {
+    let text = (translations[lang] as any)[key] || (translations['fr'] as any)[key] || key;
+    if (replacements) {
+      Object.entries(replacements).forEach(([k, v]) => {
+        text = text.replace(`{${k}}`, String(v));
+      });
+    }
+    return text;
+  };
+
   const newsCategories = ['Tous', 'Économie', 'Culture', 'Infrastructures', 'Sport & Vie locale'];
 
   const articles: NewsArticle[] = [
     {
       id: 'news-1',
-      title: "Campagne Caféière 2026 : Bafoussam se dote d'un nouveau centre de torréfaction moderne",
-      excerpt: "La coopérative des planteurs de café de la Mifi a inauguré ce samedi une unité de transformation de pointe pour valoriser l'Arabica local sur place au Marché A.",
-      content: `Le café Arabica de Bafoussam s'apprête à conquérir de nouveaux sommets. Ce samedi matin, la coopérative agricole des producteurs de la Mifi a officiellement mis en service sa nouvelle usine pilote de torréfaction au cœur de la zone artisanale de Bafoussam. 
-
-Cet investissement d'envergure, soutenu par les acteurs de la communauté de l'Ouest, vise à transformer au moins 45% de la récolte annuelle directement sur place, plutôt que d'exporter les grains verts à l'état brut. 
-
-"C'est une révolution pour nos familles de planteurs", explique Paul Mbiandou, propriétaire de la Maison du Café de l'Ouest et membre de la coopérative. "Grâce à cette torréfaction de précision gérée localement, nous pouvons garantir une fraîcheur absolue à nos clients de Bafoussam Direct et multiplier par trois la marge laissée aux producteurs de nos collines." 
-
-L'unité dispose d'un laboratoire de dégustation ("cupping room") ouvert au public tous les vendredis après-midi, favorisant ainsi la culture de la dégustation du café de spécialité auprès des jeunes résidents.`,
+      title: lang === 'fr' 
+        ? "Campagne Caféière 2026 : Bafoussam se dote d'un nouveau centre de torréfaction moderne"
+        : "2026 Coffee Campaign: Bafoussam gets a new modern roasting center",
+      excerpt: lang === 'fr'
+        ? "La coopérative des planteurs de café de la Mifi a inauguré ce samedi une unité de transformation de pointe pour valoriser l'Arabica local sur place au Marché A."
+        : "The Mifi coffee farmers' cooperative inaugurated a state-of-the-art processing unit this Saturday to add value to local Arabica on-site at Marché A.",
+      content: lang === 'fr'
+        ? `Le café Arabica de Bafoussam s'apprête à conquérir de nouveaux sommets. Ce samedi matin, la coopérative agricole des producteurs de la Mifi a officiellement mis en service sa nouvelle usine pilote de torréfaction au cœur de la zone artisanale de Bafoussam. \n\nCet investissement d'envergure, soutenu par les acteurs de la communauté de l'Ouest, vise à transformer au moins 45% de la récolte annuelle directement sur place, plutôt que d'exporter les grains verts à l'état brut. \n\n"C'est une révolution pour nos familles de planteurs", explique Paul Mbiandou, propriétaire de la Maison du Café de l'Ouest et membre de la coopérative. "Grâce à cette torréfaction de précision gérée localement, nous pouvons garantir une fraîcheur absolue à nos clients de Bafoussam Direct et multiplier par trois la marge laissée aux producteurs de nos collines." \n\nL'unité dispose d'un laboratoire de dégustation ("cupping room") ouvert au public tous les vendredis après-midi, favorisant ainsi la culture de la dégustation du café de spécialité auprès des jeunes résidents.`
+        : `Bafoussam's Arabica coffee is about to conquer new heights. This Saturday morning, the agricultural cooperative of Mifi producers officially commissioned its new pilot roasting plant in the heart of Bafoussam's artisanal zone.\n\nThis major investment, supported by Western community players, aims to process at least 45% of the annual harvest directly on-site, rather than exporting green beans raw.\n\n"This is a revolution for our farming families," explains Paul Mbiandou, owner of Maison du Café de l'Ouest and cooperative member. "Thanks to this locally-managed precision roasting, we can guarantee absolute freshness to Bafoussam Direct customers and triple the margin left to our hillside growers."\n\nThe unit features a tasting lab ("cupping room") open to the public every Friday afternoon, promoting specialty coffee appreciation among young residents.`,
       category: 'Économie',
-      date: '18 Juillet 2026',
+      date: lang === 'fr' ? '18 Juillet 2026' : 'July 18, 2026',
       author: 'Emile Tchoute',
-      readTime: '4 min',
+      readTime: lang === 'fr' ? '4 min' : '4 min read',
       image: 'https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?w=800&auto=format&fit=crop&q=60',
       likes: 142,
-      tags: ['Café', 'Mifi', 'Agriculture', 'Marché A']
+      tags: lang === 'fr' ? ['Café', 'Mifi', 'Agriculture', 'Marché A'] : ['Coffee', 'Mifi', 'Agriculture', 'Market A']
     },
     {
       id: 'news-2',
-      title: "Festival Fussep 2026 : La cour royale de la Chefferie supérieure prépare de grandes célébrations",
-      excerpt: "Les préparatifs s'accélèrent à la Chefferie Bafoussam pour le rassemblement biennal des communautés de l'Ouest sous le signe de l'unité et du tissu Ndop.",
-      content: `La cour d'honneur de la Chefferie supérieure de Bafoussam résonne déjà au son des tam-tams traditionnels. Sa Majesté le Chef Supérieur vient d'annoncer les dates officielles des célébrations biennales du peuple Fussep, qui se tiendront du 12 au 18 Novembre prochain.
-
-Placée sous le thème de "La transmission des rites ancestraux à l'ère du digital", l'édition 2026 promet de rassembler plus de 50 000 visiteurs venant de tout le Cameroun et de la diaspora.
-
-Le point d'orgue de l'événement sera la grande parade des sociétés secrètes, arborant les plus prestigieux tissus Ndop teints à l'indigo naturel. "Nous voulons redonner au Ndop sa noblesse historique tout en éduquant la jeunesse sur la signification sacrée de chaque motif", confie Nguemgne Florence, créatrice et gardienne de la boutique Ndop & Traditions Bamiléké. 
-
-Un marché artisanal géant sera aménagé le long de la colline de la chefferie, et les visiteurs pourront assister en direct à des démonstrations de tissage traditionnel, de perlage royal et de dégustation du taro à la sauce jaune (Achou) préparé selon les règles sacrées de l'art culinaire de l'Ouest.`,
+      title: lang === 'fr'
+        ? "Festival Fussep 2026 : La cour royale de la Chefferie supérieure prépare de grandes célébrations"
+        : "2026 Fussep Festival: Royal Court of the Chiefdom prepares grand celebrations",
+      excerpt: lang === 'fr'
+        ? "Les préparatifs s'accélèrent à la Chefferie Bafoussam pour le rassemblement biennal des communautés de l'Ouest sous le signe de l'unité et du tissu Ndop."
+        : "Preparations are accelerating at the Bafoussam Chiefdom for the biennial gathering of Western communities under the banner of unity and Ndop fabric.",
+      content: lang === 'fr'
+        ? `La cour d'honneur de la Chefferie supérieure de Bafoussam résonne déjà au son des tam-tams traditionnels. Sa Majesté le Chef Supérieur vient d'annoncer les dates officielles des célébrations biennales du peuple Fussep, qui se tiendront du 12 au 18 Novembre prochain. \n\nPlacée sous le thème de "La transmission des rites ancestraux à l'ère du digital", l'édition 2026 promet de rassembler plus de 50 000 visiteurs venant de tout le Cameroun et de la diaspora. \n\nLe point d'orgue de l'événement sera la grande parade des sociétés secrètes, arborant les plus prestigieux tissus Ndop teints à l'indigo naturel. "Nous voulons redonner au Ndop sa noblesse historique tout en éduquant la jeunesse sur la signification sacrée de chaque motif", confie Nguemgne Florence, créatrice et gardienne de la boutique Ndop & Traditions Bamiléké. \n\nUn marché artisanal géant sera aménagé le long de la colline de la chefferie, et les visiteurs pourront assister en direct à des démonstrations de tissage traditionnel, de perlage royal et de dégustation du taro à la sauce jaune (Achou) préparé selon les règles sacrées de l'art culinaire de l'Ouest.`
+        : `The main courtyard of Bafoussam's Royal Palace is already vibrating with traditional drums. His Majesty the Paramount Chief has just announced the official dates for the Fussep people's biennial celebrations, which will take place from November 12 to 18.\n\nUnder the theme "Transmission of ancestral rites in the digital age," the 2026 edition promises to bring together more than 50,000 visitors from across Cameroon and the diaspora.\n\nThe highlight of the event will be the grand parade of secret societies, showing off the most prestigious Ndop fabrics dyed with natural indigo. "We want to restore Ndop to its historical nobility while educating youth about the sacred meaning of each motif," shares Nguemgne Florence, designer and guardian of the Ndop & Bamiléké Traditions shop.\n\nA giant craft market will be set up along the palace hill, and visitors will be able to watch live demonstrations of traditional weaving, royal beadwork, and culinary tastings of taro with yellow sauce (Achou) prepared according to ancestral West culinary arts rules.`,
       category: 'Culture',
-      date: '15 Juillet 2026',
+      date: lang === 'fr' ? '15 Juillet 2026' : 'July 15, 2026',
       author: 'Florence Nguemgne',
-      readTime: '5 min',
+      readTime: lang === 'fr' ? '5 min' : '5 min read',
       image: 'https://images.unsplash.com/photo-1544816155-12df9643f363?w=800&auto=format&fit=crop&q=60',
       likes: 98,
-      tags: ['Chefferie', 'Ndop', 'Fussep', 'Coup de Cœur']
+      tags: lang === 'fr' ? ['Chefferie', 'Ndop', 'Fussep', 'Coup de Cœur'] : ['Chiefdom', 'Ndop', 'Fussep', 'Top Choice']
     },
     {
       id: 'news-3',
-      title: "Pavages de la voirie : Les travaux de désenclavement avancent à Tamdja et Bamendzi",
-      excerpt: "La mairie de ville de Bafoussam poursuit son vaste programme de pavage des axes secondaires. Les moto-taxis saluent une circulation fluidifiée.",
-      content: `Fini la boue tenace de la saison des pluies et la poussière étouffante de la saison sèche sur les axes de desserte interne ! Les travaux de pavage en béton lourd autobloquant avancent à un rythme soutenu à Bafoussam. 
-
-La mairie de ville a fait le point ce mercredi sur le chantier de Tamdja (tronçon Carrefour Bamiléké - Lycée Classique) et sur la boucle de Bamendzi, deux zones névralgiques pour le transport local de marchandises.
-
-Au total, ce sont près de 7,8 kilomètres de rues de quartier qui ont été entièrement terrassés, canalisés et pavés au cours des quatre derniers mois. Une bénédiction pour nos livreurs moto-taxis qui assurent la liaison entre les marchands et les consommateurs de l'application Bafoussam Direct.
-
-"Avant, il nous fallait parfois 20 minutes pour traverser Bamendzi après une forte pluie sous peine de glisser", témoigne Jean-Marc, coursier moto à Bafoussam. "Aujourd'hui, on livre en moins de 10 minutes en toute sécurité pour les colis." Le maire a annoncé que la prochaine étape concernera les axes menant au Marché Congo et à Banengo.`,
+      title: lang === 'fr'
+        ? "Pavages de la voirie : Les travaux de désenclavement avancent à Tamdja et Bamendzi"
+        : "Road Paving: Infrastructure works advancing in Tamdja and Bamendzi",
+      excerpt: lang === 'fr'
+        ? "La mairie de ville de Bafoussam poursuit son vaste programme de pavage des axes secondaires. Les moto-taxis saluent une circulation fluidifiée."
+        : "Bafoussam's city council continues its major program to pave secondary roads. Moto-taxi drivers welcome smoother traffic.",
+      content: lang === 'fr'
+        ? `Fini la boue tenace de la saison des pluies et la poussière étouffante de la saison sèche sur les axes de desserte interne ! Les travaux de pavage en béton lourd autobloquant avancent à un rythme soutenu à Bafoussam. \n\nLa mairie de ville a fait le point ce mercredi sur le chantier de Tamdja (tronçon Carrefour Bamiléké - Lycée Classique) et sur la boucle de Bamendzi, deux zones névralgiques pour le transport local de marchandises. \n\nAu total, ce sont près de 7,8 kilomètres de rues de quartier qui ont été entièrement terrassés, canalisés et pavés au cours des quatre derniers mois. Une bénédiction pour nos livreurs moto-taxis qui assurent la liaison entre les marchands et les consommateurs de l'application Bafoussam Direct. \n\n"Avant, il nous fallait parfois 20 minutes pour traverser Bamendzi après une forte pluie sous peine de glisser", témoigne Jean-Marc, coursier moto à Bafoussam. "Aujourd'hui, on livre en moins de 10 minutes en toute sécurité pour les colis." Le maire a annoncé que la prochaine étape concernera les axes menant au Marché Congo et à Banengo.`
+        : `Gone is the sticky mud of the rainy season and the suffocating dust of the dry season on internal roads! Heavy-duty interlocking concrete paving works are progressing steadily in Bafoussam.\n\nThe city council assessed progress this Wednesday on the Tamdja site (Carrefour Bamiléké - Lycée Classique stretch) and the Bamendzi loop, two critical areas for local freight transport.\n\nIn total, nearly 7.8 kilometers of neighborhood streets have been completely cleared, drained, and paved over the last four months. A blessing for our moto-taxi delivery riders who connect merchants and consumers through Bafoussam Direct.\n\n"Before, it sometimes took us 20 minutes to cross Bamendzi after a heavy rain without slipping," testifies Jean-Marc, a courier in Bafoussam. "Today, we deliver in less than 10 minutes safely." The Mayor announced the next phase will focus on roads to Marché Congo and Banengo.`,
       category: 'Infrastructures',
-      date: '14 Juillet 2026',
+      date: lang === 'fr' ? '14 Juillet 2026' : 'July 14, 2026',
       author: 'Sylvain Kengne',
-      readTime: '3 min',
+      readTime: lang === 'fr' ? '3 min' : '3 min read',
       image: 'https://images.unsplash.com/photo-1515162305285-0293e4767cc2?w=800&auto=format&fit=crop&q=60',
       likes: 210,
-      tags: ['Mairie', 'Routes', 'Tamdja', 'Bamendzi']
+      tags: lang === 'fr' ? ['Mairie', 'Routes', 'Tamdja', 'Bamendzi'] : ['City Hall', 'Roads', 'Tamdja', 'Bamendzi']
     },
     {
       id: 'news-4',
-      title: "Innovation : Les jeunes développeurs du Carrefour Bamiléké récompensés au challenge national",
-      excerpt: "Une équipe de start-up basée au Tech Hub de Bafoussam a décroché la 3ème place nationale grâce à un algorithme d'optimisation de trajets agricoles.",
-      content: `Le génie numérique de la capitale de l'Ouest s'illustre à l'échelle nationale. L'équipe du "Bafoussam Tech Hub", située à l'étage du complexe du Carrefour Bamiléké, a reçu les félicitations officielles du gouverneur de la région de l'Ouest pour son parcours exceptionnel lors du Hackathon national de Yaoundé.
-
-Ces trois jeunes ingénieurs formés localement ont développé une solution mobile ingénieuse permettant d'optimiser les flux de livraison des denrées périssables des champs de Bamendzi vers les marchés de gros de la ville.
-
-"Nous avons conçu cet outil pour aider les agriculteurs à ne plus perdre leurs récoltes de tomates et de légumes faute de transporteurs disponibles au bon moment", explique Sylvain Kengne, mentor de l'équipe. 
-
-Cette distinction confirme le dynamisme croissant de l'écosystème technologique à Bafoussam, qui attire de plus en plus de jeunes diplômés désireux d'apporter des réponses concrètes et connectées aux problématiques spécifiques de la communauté locale.`,
+      title: lang === 'fr'
+        ? "Innovation : Les jeunes développeurs du Carrefour Bamiléké récompensés au challenge national"
+        : "Innovation: Young developers from Carrefour Bamiléké rewarded at national challenge",
+      excerpt: lang === 'fr'
+        ? "Une équipe de start-up basée au Tech Hub de Bafoussam a décroché la 3ème place nationale grâce à un algorithme d'optimisation de trajets agricoles."
+        : "A startup team based in Bafoussam Tech Hub grabbed 3rd place nationally thanks to a routing algorithm for agricultural distribution.",
+      content: lang === 'fr'
+        ? `Le génie numérique de la capitale de l'Ouest s'illustre à l'échelle nationale. L'équipe du "Bafoussam Tech Hub", située à l'étage du complexe du Carrefour Bamiléké, a reçu les félicitations officielles du gouverneur de la région de l'Ouest pour son parcours exceptionnel lors du Hackathon national de Yaoundé. \n\nCes trois jeunes ingénieurs formés localement ont développé une solution mobile ingénieuse permettant d'optimiser les flux de livraison des denrées périssables des champs de Bamendzi vers les marchés de gros de la ville. \n\n"Nous avons conçu cet outil pour aider les agriculteurs à ne plus perdre leurs récoltes de tomates et de légumes faute de transporteurs disponibles au bon moment", explique Sylvain Kengne, mentor de l'équipe. \n\nCette distinction confirme le dynamisme croissant de l'écosystème technologique à Bafoussam, qui attire de plus en plus de jeunes diplômés désireux d'apporter des réponses concrètes et connectées aux problématiques spécifiques de la communauté locale.`
+        : `Digital genius from the capital of the West shines on the national stage. The team from the "Bafoussam Tech Hub," located upstairs at the Carrefour Bamiléké complex, received official congratulations from the West Regional Governor for their outstanding achievement at the National Hackathon in Yaoundé.\n\nThese three locally trained young engineers developed an ingenious mobile solution to optimize delivery flows of perishable foods from Bamendzi fields to city wholesale markets.\n\n"We designed this tool to help farmers stop losing tomato and vegetable harvests due to unavailable transport at the right time," explains Sylvain Kengne, team mentor.\n\nThis award confirms the growing momentum of Bafoussam's technological ecosystem, attracting more and more young graduates eager to provide concrete, connected answers to local community issues.`,
       category: 'Sport & Vie locale',
-      date: '10 Juillet 2026',
+      date: lang === 'fr' ? '10 Juillet 2026' : 'July 10, 2026',
       author: 'Patricia Mafouo',
-      readTime: '3 min',
+      readTime: lang === 'fr' ? '3 min' : '3 min read',
       image: 'https://images.unsplash.com/photo-1531482615713-2afd69097998?w=800&auto=format&fit=crop&q=60',
       likes: 76,
-      tags: ['Tech', 'Innovation', 'Jeunesse', 'Bamiléké']
+      tags: lang === 'fr' ? ['Tech', 'Innovation', 'Jeunesse', 'Bamiléké'] : ['Tech', 'Innovation', 'Youth', 'Bamiléké']
     },
     {
       id: 'news-5',
-      title: "Prix des denrées : Stabilisation progressive au Marché A et Marché B après les récoltes",
-      excerpt: "Le taro de choix, le piment de la Mifi et le panier de tomates enregistrent une baisse favorable du panier de la ménagère ce mois-ci.",
-      content: `Excellente nouvelle pour les consommateurs et les foyers de Bafoussam. Le dernier relevé mensuel de l'Observatoire des Prix des Marchés de la Mifi indique une baisse sensible et bienvenue des prix des produits de grande consommation locale.
-
-Le sac de taro de choix de 10kg, indispensable pour la confection de l'Achou national, s'échange désormais entre 11 000 et 12 500 FCFA au Marché A, contre près de 15 000 FCFA le trimestre dernier.
-
-Cette accalmie tarifaire s'explique par l'abondance des récoltes maraîchères dans les zones agricoles périurbaines et par la facilitation logistique apportée par les initiatives de vente directe connectée. 
-
-Du côté des épices, le panier d'assortiment de sauce jaune reste stable à 3 000 FCFA, tandis que la grande cagette de tomates bio de Bamendzi se négocie dorénavant autour de 4 500 FCFA, pour le plus grand bonheur des restauratrices de Tamdja et Djeleng.`,
+      title: lang === 'fr'
+        ? "Prix des denrées : Stabilisation progressive au Marché A et Marché B après les récoltes"
+        : "Food Prices: Gradual stabilization at Marché A and Marché B post-harvest",
+      excerpt: lang === 'fr'
+        ? "Le taro de choix, le piment de la Mifi et le panier de tomates enregistrent une baisse favorable du panier de la ménagère ce mois-ci."
+        : "Premium taro, Mifi pepper, and tomato baskets see a favorable decline for the consumer's basket this month.",
+      content: lang === 'fr'
+        ? `Excellente nouvelle pour les consommateurs et les foyers de Bafoussam. Le dernier relevé mensuel de l'Observatoire des Prix des Marchés de la Mifi indique une baisse sensible et bienvenue des prix des produits de grande consommation locale. \n\nLe sac de taro de choix de 10kg, indispensable pour la confection de l'Achou national, s'échange désormais entre 11 000 et 12 500 FCFA au Marché A, contre près de 15 000 FCFA le trimestre dernier. \n\nCette accalmie tarifaire s'explique par l'abondance des récoltes maraîchères dans les zones agricoles périurbaines et par la facilitation logistique apportée par les initiatives de vente directe connectée. \n\nDu côté des épices, le panier d'assortiment de sauce jaune reste stable à 3 000 FCFA, tandis que la grande cagette de tomates bio de Bamendzi se négocie dorénavant autour de 4 500 FCFA, pour le plus grand bonheur des restauratrices de Tamdja et Djeleng.`
+        : `Excellent news for Bafoussam consumers and households. The latest monthly report from the Mifi Market Price Observatory indicates a significant and welcome decline in prices of major local consumer goods.\n\nThe 10kg premium taro bag, essential for the national Achou dish, is now trading between 11,000 and 12,500 FCFA at Marché A, down from nearly 15,000 FCFA last quarter.\n\nThis price relief is explained by the abundance of market garden harvests in peri-urban farming areas and logistic facilitation provided by direct connected selling initiatives.\n\nAs for spices, the yellow sauce assortment basket remains stable at 3,000 FCFA, while the large box of organic tomatoes from Bamendzi is now negotiating around 4,500 FCFA, much to the joy of restaurateurs in Tamdja and Djeleng.`,
       category: 'Économie',
-      date: '08 Juillet 2026',
+      date: lang === 'fr' ? '08 Juillet 2026' : 'July 8, 2026',
       author: 'David Tchoffo',
-      readTime: '4 min',
+      readTime: lang === 'fr' ? '4 min' : '4 min read',
       image: 'https://images.unsplash.com/photo-1590779033100-9f60a05a013d?w=800&auto=format&fit=crop&q=60',
       likes: 115,
-      tags: ['Marché B', 'Taro', 'Prix', 'Consommation']
+      tags: lang === 'fr' ? ['Marché B', 'Taro', 'Prix', 'Consommation'] : ['Market B', 'Taro', 'Prices', 'Consumption']
     }
   ];
 
@@ -182,11 +214,11 @@ Du côté des épices, le panier d'assortiment de sauce jaune reste stable à 3 
 
   // Local market real-time price state index
   const marketPrices = [
-    { name: 'Café Arabica Pur (250g)', price: '2 500 F', trend: 'stable', market: 'Marché A' },
-    { name: 'Sac de Taro Sélectionné (10kg)', price: '12 000 F', trend: 'down', market: 'Marché B' },
-    { name: 'Tissu Ndop Royal (Mètre)', price: '45 000 F', trend: 'stable', market: 'Marché Congo' },
-    { name: 'Tomates Bio (Cagette)', price: '4 500 F', trend: 'down', market: 'Bamendzi' },
-    { name: 'Épices Sauce Jaune (Lot)', price: '3 000 F', trend: 'up', market: 'Marché B' },
+    { name: lang === 'fr' ? 'Café Arabica Pur (250g)' : 'Pure Arabica Coffee (250g)', price: '2 500 F', trend: 'stable', market: lang === 'fr' ? 'Marché A' : 'Market A' },
+    { name: lang === 'fr' ? 'Sac de Taro Sélectionné (10kg)' : 'Selected Taro Bag (10kg)', price: '12 000 F', trend: 'down', market: lang === 'fr' ? 'Marché B' : 'Market B' },
+    { name: lang === 'fr' ? 'Tissu Ndop Royal (Mètre)' : 'Royal Ndop Fabric (Meter)', price: '45 000 F', trend: 'stable', market: lang === 'fr' ? 'Marché Congo' : 'Congo Market' },
+    { name: lang === 'fr' ? 'Tomates Bio (Cagette)' : 'Organic Tomatoes (Crate)', price: '4 500 F', trend: 'down', market: 'Bamendzi' },
+    { name: lang === 'fr' ? 'Épices Sauce Jaune (Lot)' : 'Yellow Sauce Spices (Lot)', price: '3 000 F', trend: 'up', market: lang === 'fr' ? 'Marché B' : 'Market B' },
   ];
 
   return (
@@ -197,13 +229,13 @@ Du côté des épices, le panier d'assortiment de sauce jaune reste stable à 3 
         <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
           <div className="space-y-3 max-w-xl">
             <span className="bg-indigo-600 text-white font-bold text-[10px] uppercase tracking-widest px-3.5 py-1 rounded-full inline-block">
-              Journal Communautaire Bafoussam Direct
+              {lang === 'fr' ? 'Journal Communautaire Bafoussam Direct' : 'Bafoussam Direct Community Journal'}
             </span>
             <h1 className="text-2xl sm:text-3.5xl font-black tracking-tight leading-none text-white font-display">
-              L'Actualité de notre Ville
+              {getTranslation('newsWidgetTitle')}
             </h1>
             <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
-              Restez connecté à la vie sociale, aux célébrations traditionnelles, aux cours des prix des marchés et aux projets de développement de Bafoussam.
+              {getTranslation('newsWidgetDesc')}
             </p>
           </div>
 
@@ -214,9 +246,9 @@ Du côté des épices, le panier d'assortiment de sauce jaune reste stable à 3 
                 <CloudRain className="w-6 h-6 animate-bounce" />
               </div>
               <div>
-                <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">Météo Bafoussam</span>
-                <span className="text-base font-extrabold text-white block">21°C • Climat Doux</span>
-                <span className="text-[9px] text-indigo-300 font-medium block">Pluies fines passagères sur la colline</span>
+                <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">{getTranslation('weatherWidgetTitle')}</span>
+                <span className="text-base font-extrabold text-white block">{getTranslation('weatherWidgetStatus')}</span>
+                <span className="text-[9px] text-indigo-300 font-medium block">{getTranslation('weatherWidgetDesc')}</span>
               </div>
             </div>
 
@@ -225,9 +257,9 @@ Du côté des épices, le panier d'assortiment de sauce jaune reste stable à 3 
                 <Compass className="w-6 h-6 animate-pulse" />
               </div>
               <div>
-                <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">Activité Locale</span>
-                <span className="text-base font-extrabold text-white block">100% Fluide</span>
-                <span className="text-[9px] text-emerald-400 font-medium block">Pavages achevés à Tamdja</span>
+                <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">{getTranslation('localActivityTitle')}</span>
+                <span className="text-base font-extrabold text-white block">{getTranslation('localActivityStatus')}</span>
+                <span className="text-[9px] text-emerald-400 font-medium block">{getTranslation('localActivityDesc')}</span>
               </div>
             </div>
           </div>
@@ -253,7 +285,7 @@ Du côté des épices, le panier d'assortiment de sauce jaune reste stable à 3 
                       : 'bg-slate-50 dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-slate-800 dark:hover:text-white'
                   }`}
                 >
-                  {cat}
+                  {categoryTranslations[lang][cat] || cat}
                 </button>
               ))}
             </div>
@@ -263,7 +295,7 @@ Du côté des épices, le panier d'assortiment de sauce jaune reste stable à 3 
               <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
               <input
                 type="text"
-                placeholder="Rechercher une actualité, tag..."
+                placeholder={getTranslation('newsSearchPlaceholder')}
                 className="w-full pl-8.5 pr-3 py-1.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500/10 focus:border-indigo-500 rounded-lg text-slate-950 dark:text-slate-100 text-xs transition"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
@@ -273,11 +305,11 @@ Du côté des épices, le panier d'assortiment de sauce jaune reste stable à 3 
 
           {/* Articles list */}
           {filteredArticles.length === 0 ? (
-            <div className="bg-white rounded-3xl p-12 text-center border border-slate-100 shadow-sm max-w-md mx-auto">
+            <div className="bg-white dark:bg-slate-900 rounded-3xl p-12 text-center border border-slate-100 dark:border-slate-800 shadow-sm max-w-md mx-auto">
               <span className="text-4xl block mb-2">📰</span>
-              <p className="font-bold text-slate-800 text-sm">Aucun article trouvé</p>
-              <p className="text-xs text-slate-400 mt-1">
-                Aucune actualité ne correspond à vos critères de recherche. Essayez d'autres mots-clés.
+              <p className="font-bold text-slate-800 dark:text-slate-200 text-sm">{getTranslation('newsNoArticles')}</p>
+              <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">
+                {getTranslation('newsNoArticlesDesc')}
               </p>
             </div>
           ) : (
@@ -300,7 +332,7 @@ Du côté des épices, le panier d'assortiment de sauce jaune reste stable à 3 
                       className="w-full h-full object-cover group-hover:scale-105 transition duration-500" 
                     />
                     <div className="absolute top-3 left-3 bg-indigo-600 text-white text-[9px] font-extrabold px-2.5 py-1 rounded-md uppercase tracking-wider shadow-sm">
-                      {article.category}
+                      {categoryTranslations[lang][article.category] || article.category}
                     </div>
                   </div>
 
@@ -315,7 +347,7 @@ Du côté des épices, le panier d'assortiment de sauce jaune reste stable à 3 
                         <span>•</span>
                         <span className="flex items-center gap-1">
                           <Clock className="w-3 h-3" />
-                          <span>{article.readTime} de lecture</span>
+                          <span>{article.readTime} {lang === 'fr' ? 'de lecture' : ''}</span>
                         </span>
                       </div>
 
@@ -350,7 +382,7 @@ Du côté des épices, le panier d'assortiment de sauce jaune reste stable à 3 
                         </button>
 
                         <span className="text-xs font-bold text-indigo-600 dark:text-indigo-400 group-hover:translate-x-0.5 transition flex items-center gap-0.5">
-                          <span>Lire</span>
+                          <span>{getTranslation('newsReadBtn')}</span>
                           <ChevronRight className="w-3.5 h-3.5" />
                         </span>
                       </div>
@@ -371,8 +403,8 @@ Du côté des épices, le panier d'assortiment de sauce jaune reste stable à 3 
                 <Newspaper className="w-4 h-4" />
               </div>
               <div>
-                <h3 className="font-extrabold text-slate-900 dark:text-slate-100 text-xs uppercase tracking-wider">Prix des Marchés</h3>
-                <p className="text-[10px] text-slate-400 dark:text-slate-500">Le cours de Bafoussam • Mis à jour aujourd'hui</p>
+                <h3 className="font-extrabold text-slate-900 dark:text-slate-100 text-xs uppercase tracking-wider">{getTranslation('marketPricesTitle')}</h3>
+                <p className="text-[10px] text-slate-400 dark:text-slate-500">{getTranslation('marketPricesDesc')}</p>
               </div>
             </div>
 
@@ -408,7 +440,7 @@ Du côté des épices, le panier d'assortiment de sauce jaune reste stable à 3 
             <div className="bg-amber-50/70 dark:bg-amber-950/20 border border-amber-100/80 dark:border-amber-900/40 rounded-2xl p-3.5 text-[10px] text-amber-900 dark:text-amber-300 leading-relaxed flex gap-2.5">
               <Info className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
               <span>
-                <strong>Avis aux acheteurs :</strong> Ces prix de référence sont relevés en direct auprès des syndicats de commerçants de la Mifi pour lutter contre la spéculation.
+                <strong>{getTranslation('buyerNoticeTitle')}</strong> {getTranslation('buyerNoticeDesc')}
               </span>
             </div>
           </div>
@@ -421,19 +453,19 @@ Du côté des épices, le panier d'assortiment de sauce jaune reste stable à 3 
                 <Award className="w-4 h-4" />
               </div>
               <div>
-                <h3 className="font-bold text-xs uppercase tracking-wider text-white">Culture & Coutumes</h3>
-                <p className="text-[9px] text-slate-400">Patrimoine Fussep & Ouest</p>
+                <h3 className="font-bold text-xs uppercase tracking-wider text-white">{getTranslation('cultureCornerTitle')}</h3>
+                <p className="text-[9px] text-slate-400">{getTranslation('cultureCornerDesc')}</p>
               </div>
             </div>
 
             <div className="space-y-3.5">
               <p className="text-xs text-slate-300 leading-relaxed">
-                Bafoussam (Fussep) abrite l'une des plus prestigieuses chefferies traditionnelles du Cameroun. Fondée au XIIIe siècle, elle incarne la richesse de l'art du bronze, du perlage et des étoffes de cour.
+                {getTranslation('cultureText1')}
               </p>
               <div className="p-3 bg-slate-800/60 rounded-xl border border-slate-700/50">
-                <span className="text-[10px] text-amber-400 font-bold block uppercase tracking-wider mb-0.5">Le saviez-vous ?</span>
+                <span className="text-[10px] text-amber-400 font-bold block uppercase tracking-wider mb-0.5">{getTranslation('didYouKnow')}</span>
                 <p className="text-[11px] text-slate-300 leading-normal">
-                  Le tissu <strong>Ndop</strong> royal bamiléké est entièrement cousu de fil de raphia puis teint à l'indigo avant que les fils ne soient décousus pour révéler les motifs géométriques mystiques sacrés.
+                  {getTranslation('cultureText2')}
                 </p>
               </div>
             </div>
@@ -488,7 +520,7 @@ Du côté des épices, le panier d'assortiment de sauce jaune reste stable à 3 
                     </div>
                     <div>
                       <span className="text-xs font-bold text-slate-800 block">{activeArticle.author}</span>
-                      <span className="text-[10px] text-slate-400">Rédacteur Bafoussam Direct</span>
+                      <span className="text-[10px] text-slate-400">{getTranslation('newsAuthorRole')}</span>
                     </div>
                   </div>
 
@@ -536,13 +568,13 @@ Du côté des épices, le panier d'assortiment de sauce jaune reste stable à 3 
                   }`}
                 >
                   <Heart className={`w-4 h-4 ${likedArticles[activeArticle.id] ? 'fill-red-600 stroke-red-600' : ''}`} />
-                  <span>{likedArticles[activeArticle.id] ? 'J\'adore !' : 'Aimer cet article'} ({likesCount[activeArticle.id]})</span>
+                  <span>{likedArticles[activeArticle.id] ? getTranslation('lovedBtn') : getTranslation('loveBtn')} ({likesCount[activeArticle.id]})</span>
                 </button>
 
                 <div className="flex items-center gap-2">
                   {showCopied && (
                     <span className="text-[10px] text-emerald-600 font-bold bg-emerald-50 px-2 py-1.5 rounded-lg border border-emerald-100 animate-pulse">
-                      Lien copié !
+                      {getTranslation('copiedBtn')}
                     </span>
                   )}
                   <button
@@ -553,7 +585,7 @@ Du côté des épices, le panier d'assortiment de sauce jaune reste stable à 3 
                       setTimeout(() => setShowCopied(false), 2000);
                     }}
                     className="bg-white hover:bg-slate-100 text-slate-600 p-2.5 border border-slate-200 rounded-xl transition cursor-pointer flex items-center justify-center"
-                    title="Partager l'article"
+                    title={getTranslation('shareTooltip')}
                   >
                     <Share2 className="w-4 h-4" />
                   </button>
@@ -561,7 +593,7 @@ Du côté des épices, le panier d'assortiment de sauce jaune reste stable à 3 
                     onClick={() => setActiveArticle(null)}
                     className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs py-2 px-5 rounded-xl transition cursor-pointer shadow-sm h-[38px]"
                   >
-                    Fermer la lecture
+                    {getTranslation('closeBtn')}
                   </button>
                 </div>
               </div>

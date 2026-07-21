@@ -1,23 +1,43 @@
 import React from 'react';
-import { Product } from '../types';
+import { Product, Review } from '../types';
 import { X, Star, ShoppingCart, ShieldCheck, MapPin, Sparkles, Truck } from 'lucide-react';
 import VerifiedBadge from './VerifiedBadge';
+import { translations, Language } from '../translations';
 
 interface ProductDetailsModalProps {
   product: Product;
   isMerchantVerified?: boolean;
   onClose: () => void;
   onAddToCart: (product: Product) => void;
+  reviews: Review[];
+  lang: Language;
 }
 
-export default function ProductDetailsModal({ product, isMerchantVerified = false, onClose, onAddToCart }: ProductDetailsModalProps) {
+export default function ProductDetailsModal({ 
+  product, 
+  isMerchantVerified = false, 
+  onClose, 
+  onAddToCart,
+  reviews,
+  lang,
+}: ProductDetailsModalProps) {
+  const t = translations[lang];
+
+  // Calculate merchant specific average rating & total count from live reviews
+  const merchantReviews = reviews.filter(r => r.merchantId === product.merchantId);
+  const avgRating = merchantReviews.length > 0 
+    ? (merchantReviews.reduce((sum, r) => sum + r.rating, 0) / merchantReviews.length).toFixed(1)
+    : "5.0";
+  const totalReviewsCount = merchantReviews.length;
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs font-sans animate-fade-in" id="product-details-modal-overlay">
-      <div className="bg-white rounded-3xl w-full max-w-2xl overflow-hidden shadow-2xl border border-slate-100 max-h-[90vh] flex flex-col relative animate-scale-up">
+      <div className="bg-white dark:bg-slate-900 rounded-3xl w-full max-w-2xl overflow-hidden shadow-2xl border border-slate-100 dark:border-slate-800 max-h-[90vh] flex flex-col relative animate-scale-up transition-colors duration-200">
+        
         {/* Close Button */}
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 z-10 bg-slate-100 hover:bg-slate-200 text-slate-800 p-2 rounded-full cursor-pointer transition"
+          className="absolute top-4 right-4 z-10 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 p-2 rounded-full cursor-pointer transition"
           id="btn-close-details-modal"
         >
           <X className="w-5 h-5" />
@@ -27,7 +47,7 @@ export default function ProductDetailsModal({ product, isMerchantVerified = fals
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
             
             {/* Product Image */}
-            <div className="aspect-square bg-slate-50 rounded-2xl overflow-hidden relative border border-slate-100">
+            <div className="aspect-square bg-slate-50 dark:bg-slate-950 rounded-2xl overflow-hidden relative border border-slate-100 dark:border-slate-800">
               <img
                 src={product.image}
                 alt={product.name}
@@ -46,12 +66,16 @@ export default function ProductDetailsModal({ product, isMerchantVerified = fals
             <div className="flex flex-col justify-between">
               <div>
                 {/* Category & Origin */}
-                <span className="bg-slate-100 text-slate-600 font-bold text-[10px] uppercase tracking-wider px-2.5 py-1 rounded-md inline-block mb-3">
-                  {product.category}
+                <span className="bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-bold text-[10px] uppercase tracking-wider px-2.5 py-1 rounded-md inline-block mb-3">
+                  {lang === 'fr' ? product.category : (
+                    product.category === 'Alimentation & Épicerie' ? 'Food & Grocery' :
+                    product.category === 'Artisanat & Mode' ? 'Crafts & Fashion' :
+                    product.category === 'Électronique & Tech' ? 'Electronics & Tech' : product.category
+                  )}
                 </span>
 
                 {/* Name */}
-                <h3 className="text-xl font-bold text-slate-900 tracking-tight leading-snug">
+                <h3 className="text-xl font-bold text-slate-900 dark:text-white tracking-tight leading-snug">
                   {product.name}
                 </h3>
 
@@ -64,48 +88,59 @@ export default function ProductDetailsModal({ product, isMerchantVerified = fals
                         className={`w-4 h-4 ${
                           i < Math.floor(product.rating)
                             ? 'fill-amber-500 stroke-amber-500'
-                            : 'text-slate-200'
+                            : 'text-slate-200 dark:text-slate-700'
                         }`}
                       />
                     ))}
-                    <span className="text-xs font-bold text-slate-700 ml-1">
+                    <span className="text-xs font-bold text-slate-700 dark:text-slate-300 ml-1">
                       {product.rating.toFixed(1)} / 5
                     </span>
                   </div>
-                  <span className="text-xs text-slate-400">({product.reviewsCount} avis clients)</span>
+                  <span className="text-xs text-slate-400">({product.reviewsCount} {lang === 'fr' ? 'avis clients' : 'customer reviews'})</span>
                 </div>
 
-                {/* Location */}
-                <div className="flex items-center gap-2 text-xs text-slate-500 mb-4 bg-slate-50 p-2.5 rounded-xl border border-slate-100">
-                  <MapPin className="w-4 h-4 text-indigo-600 shrink-0" />
-                  <div>
-                    <div className="flex items-center gap-1.5 flex-wrap">
-                      <p className="font-semibold text-slate-800">{product.merchantName}</p>
-                      {isMerchantVerified && (
-                        <VerifiedBadge id="verified-badge-modal" />
-                      )}
+                {/* Location & Shop info block with average rating */}
+                <div className="flex flex-col gap-2 text-xs text-slate-500 dark:text-slate-400 mb-4 bg-slate-50 dark:bg-slate-800/50 p-3 rounded-xl border border-slate-100 dark:border-slate-800">
+                  <div className="flex items-start gap-2">
+                    <MapPin className="w-4 h-4 text-indigo-600 shrink-0 mt-0.5" />
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <p className="font-extrabold text-slate-800 dark:text-slate-200 text-sm">{product.merchantName}</p>
+                        {isMerchantVerified && (
+                          <VerifiedBadge id="verified-badge-modal" />
+                        )}
+                      </div>
+                      
+                      {/* Shop Rating Display right below shop name */}
+                      <div className="flex items-center gap-1 text-xs text-amber-600 dark:text-amber-400 font-extrabold mt-1" id="shop-rating-display">
+                        <span className="text-sm">★</span>
+                        <span>{avgRating}</span>
+                        <span className="text-[10px] text-slate-400 font-bold ml-1">
+                          ({totalReviewsCount} {totalReviewsCount > 1 ? (lang === 'fr' ? 'avis' : 'reviews') : (lang === 'fr' ? 'avis' : 'review')})
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-slate-400 dark:text-slate-500 mt-1">Boutique locale à {product.origin}</p>
                     </div>
-                    <p className="text-[11px] text-slate-400">Boutique locale à {product.origin}</p>
                   </div>
                 </div>
 
                 {/* Features list */}
                 <div className="space-y-2 mb-6">
-                  <div className="flex items-center gap-2 text-xs text-slate-600">
+                  <div className="flex items-center gap-2 text-xs text-slate-600 dark:text-slate-300">
                     <Truck className="w-4 h-4 text-emerald-500 shrink-0" />
-                    <span>Livraison moto-taxi express dans tout Bafoussam</span>
+                    <span>{lang === 'fr' ? 'Livraison moto-taxi express dans tout Bafoussam' : 'Express moto-taxi delivery across Bafoussam'}</span>
                   </div>
-                  <div className="flex items-center gap-2 text-xs text-slate-600">
+                  <div className="flex items-center gap-2 text-xs text-slate-600 dark:text-slate-300">
                     <ShieldCheck className="w-4 h-4 text-emerald-500 shrink-0" />
-                    <span>Paiement à la livraison ou par Mobile Money sécurisé</span>
+                    <span>{lang === 'fr' ? 'Paiement à la livraison ou par Mobile Money sécurisé' : 'Pay on delivery or secure Mobile Money'}</span>
                   </div>
                 </div>
               </div>
 
               {/* Price & Purchase controls */}
-              <div className="pt-4 border-t border-slate-100">
+              <div className="pt-4 border-t border-slate-100 dark:border-slate-800">
                 <div className="flex items-baseline gap-1.5 mb-4">
-                  <span className="text-2xl font-extrabold text-slate-900">
+                  <span className="text-2xl font-extrabold text-slate-900 dark:text-white">
                     {product.price.toLocaleString('fr-FR')}
                   </span>
                   <span className="text-xs font-extrabold text-slate-500">FCFA</span>
@@ -120,13 +155,13 @@ export default function ProductDetailsModal({ product, isMerchantVerified = fals
                     disabled={product.stock === 0}
                     className={`flex-1 py-3 px-4 rounded-xl font-bold text-sm text-center flex items-center justify-center gap-2 cursor-pointer transition ${
                       product.stock === 0
-                        ? 'bg-slate-100 text-slate-400 cursor-not-allowed'
+                        ? 'bg-slate-100 text-slate-400 cursor-not-allowed dark:bg-slate-800 dark:text-slate-600'
                         : 'bg-indigo-600 hover:bg-indigo-700 text-white shadow-md'
                     }`}
                     id={`btn-modal-add-to-cart-${product.id}`}
                   >
                     <ShoppingCart className="w-4 h-4" />
-                    <span>Ajouter au panier</span>
+                    <span>{t.addToCart}</span>
                   </button>
                 </div>
               </div>
@@ -134,37 +169,53 @@ export default function ProductDetailsModal({ product, isMerchantVerified = fals
           </div>
 
           {/* Description section */}
-          <div className="border-t border-slate-100 pt-6">
-            <h4 className="font-bold text-sm text-slate-900 uppercase tracking-wider mb-2">Description du Produit</h4>
-            <p className="text-slate-600 text-sm leading-relaxed whitespace-pre-line">
+          <div className="border-t border-slate-100 dark:border-slate-800 pt-6">
+            <h4 className="font-bold text-xs text-slate-900 dark:text-white uppercase tracking-wider mb-2">Description du Produit</h4>
+            <p className="text-slate-600 dark:text-slate-300 text-sm leading-relaxed whitespace-pre-line">
               {product.description}
             </p>
           </div>
 
-          {/* Localized reviews section */}
-          <div className="border-t border-slate-100 pt-6">
-            <h4 className="font-bold text-sm text-slate-900 uppercase tracking-wider mb-3">Avis de résidents de Bafoussam</h4>
-            <div className="space-y-4">
-              <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 text-xs">
-                <div className="flex items-center justify-between mb-1">
-                  <span className="font-bold text-slate-800">Alain Fogué (Quartier Tamdja)</span>
-                  <span className="text-amber-500 font-semibold">★ 5.0</span>
-                </div>
-                <p className="text-slate-500 leading-relaxed">
-                  "Produit livré par moto-taxi en moins de 15 minutes à Tamdja. La qualité est irréprochable, très bon service sécurisé et rapide."
-                </p>
+          {/* Real Live Boutique Reviews list */}
+          <div className="border-t border-slate-100 dark:border-slate-800 pt-6">
+            <h4 className="font-extrabold text-xs text-slate-900 dark:text-white uppercase tracking-wider mb-3">
+              {t.recentReviews}
+            </h4>
+            
+            {merchantReviews.length === 0 ? (
+              <p className="text-xs text-slate-400 dark:text-slate-500 italic py-4 bg-slate-50 dark:bg-slate-800/30 rounded-2xl text-center">
+                {t.noReviews}
+              </p>
+            ) : (
+              <div className="space-y-3.5">
+                {merchantReviews.map((review) => (
+                  <div 
+                    key={review.id} 
+                    className="bg-slate-50 dark:bg-slate-800/30 p-4 rounded-2xl border border-slate-100 dark:border-slate-800/80 text-xs"
+                  >
+                    <div className="flex items-center justify-between mb-1.5">
+                      <span className="font-bold text-slate-800 dark:text-slate-200">
+                        {review.clientName || t.clientAnonymous}
+                      </span>
+                      <div className="flex items-center gap-0.5 text-amber-500">
+                        {[...Array(5)].map((_, starIdx) => (
+                          <Star 
+                            key={starIdx} 
+                            className={`w-3.5 h-3.5 ${starIdx < review.rating ? 'fill-amber-500 stroke-amber-500' : 'text-slate-200 dark:text-slate-700'}`} 
+                          />
+                        ))}
+                      </div>
+                    </div>
+                    <p className="text-slate-600 dark:text-slate-300 leading-relaxed font-medium">
+                      "{review.comment}"
+                    </p>
+                    <span className="text-[10px] text-slate-400 dark:text-slate-500 block mt-2 font-semibold">
+                      {new Date(review.createdAt).toLocaleDateString(lang === 'fr' ? 'fr-FR' : 'en-US', { day: 'numeric', month: 'short', year: 'numeric' })}
+                    </span>
+                  </div>
+                ))}
               </div>
-              
-              <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 text-xs">
-                <div className="flex items-center justify-between mb-1">
-                  <span className="font-bold text-slate-800">Sandrine Ngo (Bamendzi)</span>
-                  <span className="text-amber-500 font-semibold">★ 4.8</span>
-                </div>
-                <p className="text-slate-500 leading-relaxed">
-                  "Très contente de mon achat ! Inscription à 4000 F rentabilisée dès la première commande. C'est génial pour acheter directement auprès des commerçants du Marché A sans se déplacer."
-                </p>
-              </div>
-            </div>
+            )}
           </div>
         </div>
       </div>

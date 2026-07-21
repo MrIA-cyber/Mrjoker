@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import VerifiedBadge from './VerifiedBadge';
+import { Language, translations } from '../translations';
 
 interface MerchantDashboardProps {
   products: Product[];
@@ -17,6 +18,8 @@ interface MerchantDashboardProps {
   onUpgradeMerchant: (merchantId: string) => void;
   onRegisterMerchant?: (merchant: Merchant) => void; // clean React state propagation
   onSimulateMerchantExpiration?: (merchantId: string) => void;
+  onBoostProduct?: (productId: string) => void;
+  lang: Language;
 }
 
 export default function MerchantDashboard({
@@ -27,7 +30,10 @@ export default function MerchantDashboard({
   onUpgradeMerchant,
   onRegisterMerchant,
   onSimulateMerchantExpiration,
+  onBoostProduct,
+  lang,
 }: MerchantDashboardProps) {
+  const t = translations[lang];
   const [activeMerchantId, setActiveMerchantId] = useState<string | null>(null);
   
   // Password security login state
@@ -60,6 +66,14 @@ export default function MerchantDashboard({
   const [merchantRenewalOperator, setMerchantRenewalOperator] = useState<'momo' | 'orange'>('momo');
   const [merchantRenewalPhone, setMerchantRenewalPhone] = useState('');
   const [merchantRenewalPin, setMerchantRenewalPin] = useState('');
+
+  // Product boosting states
+  const [showBoostModal, setShowBoostModal] = useState(false);
+  const [productToBoost, setProductToBoost] = useState<Product | null>(null);
+  const [boostOperator, setBoostOperator] = useState<'momo' | 'orange'>('momo');
+  const [boostPhone, setBoostPhone] = useState('');
+  const [boostStep, setBoostStep] = useState<'details' | 'processing' | 'success'>('details');
+  const [boostError, setBoostError] = useState('');
 
   // New Campaign state
   const [campaignTitle, setCampaignTitle] = useState('');
@@ -265,6 +279,24 @@ export default function MerchantDashboard({
     }
   };
 
+  const handleBoostPaymentSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!productToBoost) return;
+    if (!boostPhone || boostPhone.replace(/\D/g, '').length < 9) {
+      setBoostError('Veuillez saisir un numéro de téléphone valide à 9 chiffres.');
+      return;
+    }
+    setBoostStep('processing');
+    setBoostError('');
+
+    setTimeout(() => {
+      if (onBoostProduct) {
+        onBoostProduct(productToBoost.id);
+      }
+      setBoostStep('success');
+    }, 1500);
+  };
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 font-sans" id="merchant-portal-container">
       
@@ -284,15 +316,17 @@ export default function MerchantDashboard({
               
               <div className="relative z-10 space-y-6">
                 <span className="bg-indigo-600 text-white font-bold text-[10px] uppercase tracking-wider px-3 py-1 rounded-full inline-block">
-                  Espace Commerçants Bafoussam
+                  {lang === 'fr' ? 'Espace Commerçants Bafoussam' : 'Bafoussam Merchant Space'}
                 </span>
 
                 <h2 className="text-3xl lg:text-4xl font-extrabold tracking-tight leading-tight">
-                  Propulsez vos ventes en ligne dans toute la capitale de l'Ouest.
+                  {lang === 'fr' ? "Propulsez vos ventes en ligne dans toute la capitale de l'Ouest." : "Propel your online sales across the Western Capital."}
                 </h2>
                 
                 <p className="text-slate-400 text-sm leading-relaxed max-w-lg">
-                  Rejoignez des centaines de commerçants du Marché A, Marché Congo, et Carrefour Bamiléké. Proposez vos produits aux résidents de Bafoussam avec paiement mobile sécurisé et une livraison en moto-taxi ultra-rapide.
+                  {lang === 'fr' 
+                    ? "Rejoignez des centaines de commerçants du Marché A, Marché Congo, et Carrefour Bamiléké. Proposez vos produits aux résidents de Bafoussam avec paiement mobile sécurisé et une livraison en moto-taxi ultra-rapide."
+                    : "Join hundreds of merchants from Market A, Congo Market, and Carrefour Bamiléké. Offer your products to Bafoussam residents with secure mobile payment and ultra-fast motorcycle delivery."}
                 </p>
 
                 {/* Features Highlights */}
@@ -302,8 +336,14 @@ export default function MerchantDashboard({
                       <Sparkles className="w-5 h-5" />
                     </div>
                     <div>
-                      <h4 className="font-bold text-sm text-slate-100">Visibilité Boostée Premium</h4>
-                      <p className="text-xs text-slate-400 mt-1">Vos articles affichés en tête de liste avec le badge indigo de confiance.</p>
+                      <h4 className="font-bold text-sm text-slate-100">
+                        {lang === 'fr' ? 'Visibilité Boostée Premium' : 'Premium Boosted Visibility'}
+                      </h4>
+                      <p className="text-xs text-slate-400 mt-1">
+                        {lang === 'fr' 
+                          ? "Vos articles affichés en tête de liste avec le badge indigo de confiance."
+                          : "Your items displayed at the top of the list with the blue trust badge."}
+                      </p>
                     </div>
                   </div>
 
@@ -312,8 +352,14 @@ export default function MerchantDashboard({
                       <BarChart3 className="w-5 h-5" />
                     </div>
                     <div>
-                      <h4 className="font-bold text-sm text-slate-100">Marketing Avancé</h4>
-                      <p className="text-xs text-slate-400 mt-1">Générez des rapports de vente, analysez l'intérêt de vos clients à Bafoussam.</p>
+                      <h4 className="font-bold text-sm text-slate-100">
+                        {lang === 'fr' ? 'Marketing Avancé' : 'Advanced Marketing'}
+                      </h4>
+                      <p className="text-xs text-slate-400 mt-1">
+                        {lang === 'fr'
+                          ? "Générez des rapports de vente, analysez l'intérêt de vos clients à Bafoussam."
+                          : "Generate sales reports, analyze customer interest in Bafoussam."}
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -321,12 +367,18 @@ export default function MerchantDashboard({
                 {/* Pricing banner */}
                 <div className="bg-slate-800/60 rounded-2xl border border-slate-700 p-5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                   <div>
-                    <span className="text-xs font-bold text-indigo-400 uppercase tracking-widest block">Abonnement Premium Obligatoire</span>
-                    <span className="text-2xl font-extrabold text-white mt-1 block">100 000 FCFA <span className="text-xs font-medium text-slate-400">/ an</span></span>
-                    <p className="text-[10px] text-slate-400 mt-1">Pour accéder aux fonctionnalités marketing avancées et au boost de visibilité.</p>
+                    <span className="text-xs font-bold text-indigo-400 uppercase tracking-widest block">
+                      {lang === 'fr' ? 'Abonnement Premium Obligatoire' : 'Mandatory Premium Subscription'}
+                    </span>
+                    <span className="text-2xl font-extrabold text-white mt-1 block">100 000 FCFA <span className="text-xs font-medium text-slate-400">/ {lang === 'fr' ? 'an' : 'year'}</span></span>
+                    <p className="text-[10px] text-slate-400 mt-1">
+                      {lang === 'fr'
+                        ? "Pour accéder aux fonctionnalités marketing avancées et au boost de visibilité."
+                        : "To access advanced marketing features and visibility boosts."}
+                    </p>
                   </div>
                   <div className="bg-indigo-600 text-white font-bold text-xs py-2 px-4 rounded-xl shadow-md">
-                    Rentable dès le 1er mois
+                    {lang === 'fr' ? 'Rentable dès le 1er mois' : 'Profitable from the first month'}
                   </div>
                 </div>
               </div>
@@ -341,7 +393,7 @@ export default function MerchantDashboard({
                   <>
                     <h3 className="font-bold text-slate-900 text-base mb-4 flex items-center gap-2">
                       <Store className="w-4 h-4 text-indigo-600" />
-                      <span>Se connecter à votre boutique</span>
+                      <span>{lang === 'fr' ? 'Se connecter à votre boutique' : 'Log in to your shop'}</span>
                     </h3>
 
                     <div className="space-y-3">
@@ -953,75 +1005,146 @@ export default function MerchantDashboard({
             {/* Dashboard main split content: Products vs Advanced Marketing */}
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
               
-              {/* Left Column (Catalog manager) - Col 7 */}
-              <div className="lg:col-span-7 bg-white p-6 rounded-3xl border border-slate-100 shadow-sm space-y-6">
-                <div className="flex items-center justify-between">
-                  <h3 className="font-extrabold text-slate-900 text-base">Gestion de votre Catalogue</h3>
-                  <button
-                    onClick={() => setShowAddProductModal(true)}
-                    className="bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs py-2 px-3 rounded-xl flex items-center gap-1.5 cursor-pointer transition shadow-sm"
-                    id="btn-add-product-trigger"
-                  >
-                    <Plus className="w-4 h-4" />
-                    <span>Ajouter un Article</span>
-                  </button>
+              {/* Left Column (Catalog manager & Boost) - Col 7 */}
+              <div className="lg:col-span-7 space-y-6">
+                
+                <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm space-y-6">
+                  <div className="flex items-center justify-between">
+                    <h3 className="font-extrabold text-slate-900 text-base">Gestion de votre Catalogue</h3>
+                    <button
+                      onClick={() => setShowAddProductModal(true)}
+                      className="bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs py-2 px-3 rounded-xl flex items-center gap-1.5 cursor-pointer transition shadow-sm"
+                      id="btn-add-product-trigger"
+                    >
+                      <Plus className="w-4 h-4" />
+                      <span>Ajouter un Article</span>
+                    </button>
+                  </div>
+
+                  {merchantProducts.length === 0 ? (
+                    <div className="text-center py-16 border-2 border-dashed border-slate-100 rounded-2xl">
+                      <span className="text-4xl">📦</span>
+                      <p className="font-semibold text-slate-800 mt-2.5 text-sm">Aucun produit en ligne</p>
+                      <p className="text-xs text-slate-400 max-w-[220px] mx-auto mt-1">
+                        Commencez à ajouter vos articles pour qu'ils soient visibles par tous les clients de Bafoussam.
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {merchantProducts.map((p) => (
+                        <div
+                          key={p.id}
+                          className="flex items-center gap-3.5 bg-slate-50/50 p-3 rounded-2xl border border-slate-100 relative group"
+                        >
+                          <img
+                            src={p.image}
+                            alt={p.name}
+                            referrerPolicy="no-referrer"
+                            className="w-14 h-14 rounded-xl object-cover border border-slate-100 shrink-0"
+                          />
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-1.5">
+                              <h4 className="font-bold text-slate-900 text-xs truncate">{p.name}</h4>
+                              {p.isBoosted && (
+                                <span className="bg-indigo-100 text-indigo-800 font-extrabold text-[8px] px-1.5 py-0.5 rounded-md flex items-center gap-0.5">
+                                  <Sparkles className="w-2.5 h-2.5 fill-indigo-800 stroke-none" />
+                                  <span>BOOST</span>
+                                </span>
+                              )}
+                            </div>
+                            <p className="text-[10px] text-slate-400 mt-0.5 uppercase tracking-wider font-semibold">{p.category}</p>
+                            <div className="flex items-center gap-3 mt-1.5 text-[11px]">
+                              <span className="font-extrabold text-slate-950">{p.price.toLocaleString('fr-FR')} F</span>
+                              <span className="text-slate-300">|</span>
+                              <span className="font-semibold text-slate-500">Stock: {p.stock} unités</span>
+                              <span className="text-slate-300">|</span>
+                              <span className="text-slate-400">★ {p.rating.toFixed(1)}</span>
+                            </div>
+                          </div>
+
+                          {/* Action controllers */}
+                          <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition">
+                            <button
+                              onClick={() => onDeleteProduct(p.id)}
+                              className="p-1.5 bg-white hover:bg-red-50 text-slate-400 hover:text-red-500 rounded-lg border border-slate-100 cursor-pointer shadow-sm transition"
+                              title="Supprimer l'article"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
 
-                {merchantProducts.length === 0 ? (
-                  <div className="text-center py-16 border-2 border-dashed border-slate-100 rounded-2xl">
-                    <span className="text-4xl">📦</span>
-                    <p className="font-semibold text-slate-800 mt-2.5 text-sm">Aucun produit en ligne</p>
-                    <p className="text-xs text-slate-400 max-w-[220px] mx-auto mt-1">
-                      Commencez à ajouter vos articles pour qu'ils soient visibles par tous les clients de Bafoussam.
-                    </p>
+                {/* Booster mes produits Section */}
+                <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm space-y-5">
+                  <div className="flex items-center gap-2">
+                    <div className="bg-amber-500 text-white p-1.5 rounded-xl">
+                      <Sparkles className="w-4 h-4 fill-white animate-pulse" />
+                    </div>
+                    <div>
+                      <h3 className="font-extrabold text-slate-900 text-base">Booster mes produits</h3>
+                      <p className="text-xs text-slate-400 mt-0.5">
+                        Mettez vos articles en vedette en haut de la page d'accueil pendant 7 jours pour maximiser vos ventes.
+                      </p>
+                    </div>
                   </div>
-                ) : (
-                  <div className="space-y-3">
-                    {merchantProducts.map((p) => (
-                      <div
-                        key={p.id}
-                        className="flex items-center gap-3.5 bg-slate-50/50 p-3 rounded-2xl border border-slate-100 relative group"
-                      >
-                        <img
-                          src={p.image}
-                          alt={p.name}
-                          referrerPolicy="no-referrer"
-                          className="w-14 h-14 rounded-xl object-cover border border-slate-100 shrink-0"
-                        />
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-1.5">
-                            <h4 className="font-bold text-slate-900 text-xs truncate">{p.name}</h4>
-                            {p.isBoosted && (
-                              <span className="bg-indigo-100 text-indigo-800 font-extrabold text-[8px] px-1.5 py-0.5 rounded-md flex items-center gap-0.5">
-                                <Sparkles className="w-2.5 h-2.5 fill-indigo-800 stroke-none" />
-                                <span>BOOST</span>
-                              </span>
-                            )}
-                          </div>
-                          <p className="text-[10px] text-slate-400 mt-0.5 uppercase tracking-wider font-semibold">{p.category}</p>
-                          <div className="flex items-center gap-3 mt-1.5 text-[11px]">
-                            <span className="font-extrabold text-slate-950">{p.price.toLocaleString('fr-FR')} F</span>
-                            <span className="text-slate-300">|</span>
-                            <span className="font-semibold text-slate-500">Stock: {p.stock} unités</span>
-                            <span className="text-slate-300">|</span>
-                            <span className="text-slate-400">★ {p.rating.toFixed(1)}</span>
-                          </div>
-                        </div>
 
-                        {/* Action controllers */}
-                        <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition">
-                          <button
-                            onClick={() => onDeleteProduct(p.id)}
-                            className="p-1.5 bg-white hover:bg-red-50 text-slate-400 hover:text-red-500 rounded-lg border border-slate-100 cursor-pointer shadow-sm transition"
-                            title="Supprimer l'article"
+                  {merchantProducts.length === 0 ? (
+                    <p className="text-xs text-slate-400 text-center py-6">Aucun produit disponible à booster.</p>
+                  ) : (
+                    <div className="space-y-3">
+                      {merchantProducts.map((p) => {
+                        const isBoostActive = p.isBoosted && (!p.boostExpiryDate || new Date(p.boostExpiryDate) >= new Date());
+                        return (
+                          <div
+                            key={`boost-row-${p.id}`}
+                            className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-slate-50/50 p-4 rounded-2xl border border-slate-100"
                           >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
+                            <div className="flex items-center gap-3">
+                              <img
+                                src={p.image}
+                                alt={p.name}
+                                referrerPolicy="no-referrer"
+                                className="w-12 h-12 rounded-xl object-cover border border-slate-100 shrink-0"
+                              />
+                              <div className="min-w-0">
+                                <h4 className="font-bold text-slate-900 text-xs truncate">{p.name}</h4>
+                                <p className="text-[10px] text-slate-400 mt-0.5">{p.price.toLocaleString('fr-FR')} FCFA</p>
+                                {isBoostActive && p.boostExpiryDate && (
+                                  <span className="inline-flex items-center gap-1 text-[9px] text-emerald-600 font-bold mt-1">
+                                    ✓ Boost actif jusqu'au {new Date(p.boostExpiryDate).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+
+                            <button
+                              disabled={isBoostActive}
+                              onClick={() => {
+                                setProductToBoost(p);
+                                setBoostStep('details');
+                                setBoostPhone('');
+                                setBoostError('');
+                                setShowBoostModal(true);
+                              }}
+                              className={`text-xs font-black py-2 px-3.5 rounded-xl transition shrink-0 cursor-pointer ${
+                                isBoostActive
+                                  ? 'bg-slate-100 text-slate-400 border border-slate-200 cursor-not-allowed'
+                                  : 'bg-indigo-600 hover:bg-indigo-700 text-white shadow-sm'
+                              }`}
+                            >
+                              {isBoostActive ? 'Déjà mis en avant' : 'Mettre en avant (1 500 FCFA / 7 jours)'}
+                            </button>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+
               </div>
 
               {/* Right Column (Advanced Marketing / Analytics & Campaigns) - Col 5 */}
@@ -1544,6 +1667,138 @@ export default function MerchantDashboard({
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* 6. Modal Product Boost Payment Simulation */}
+      {showBoostModal && productToBoost && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs">
+          <div className="bg-white rounded-3xl w-full max-w-md p-6 overflow-hidden shadow-2xl border border-slate-100 max-h-[90vh] flex flex-col relative">
+            <button
+              onClick={() => setShowBoostModal(false)}
+              className="absolute top-4 right-4 text-slate-400 hover:text-slate-800 p-1 rounded-full cursor-pointer transition"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            <div className="flex items-center gap-2 border-b border-slate-100 pb-3 mb-4">
+              <div className="bg-amber-100 text-amber-600 p-1.5 rounded-xl">
+                <Sparkles className="w-5 h-5 fill-amber-500 stroke-none" />
+              </div>
+              <div>
+                <h3 className="font-bold text-slate-900 text-sm">Booster un produit</h3>
+                <p className="text-[10px] text-slate-400">Paiement Mobile Money Sécurisé (Simulé)</p>
+              </div>
+            </div>
+
+            {boostStep === 'details' && (
+              <form onSubmit={handleBoostPaymentSubmit} className="space-y-4">
+                <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 flex items-center gap-3">
+                  <img
+                    src={productToBoost.image}
+                    alt={productToBoost.name}
+                    referrerPolicy="no-referrer"
+                    className="w-12 h-12 rounded-xl object-cover border border-slate-100 shrink-0"
+                  />
+                  <div className="min-w-0">
+                    <h4 className="font-bold text-slate-900 text-xs truncate">{productToBoost.name}</h4>
+                    <p className="text-[10px] text-slate-400 mt-0.5">Visibilité max pendant 7 jours</p>
+                    <p className="text-xs font-extrabold text-amber-600 mt-1">1 500 FCFA</p>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Opérateur de Paiement</label>
+                  <div className="grid grid-cols-2 gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setBoostOperator('momo')}
+                      className={`py-2 px-3 rounded-xl border flex items-center justify-center gap-2 font-bold text-xs transition cursor-pointer ${
+                        boostOperator === 'momo' ? 'border-indigo-400 bg-indigo-50/20 text-indigo-900' : 'border-slate-100 bg-slate-50 text-slate-500'
+                      }`}
+                    >
+                      <span className="w-4 h-4 bg-indigo-600 rounded-full flex items-center justify-center text-[8px] font-extrabold text-white">Mo</span>
+                      <span>MTN MoMo</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setBoostOperator('orange')}
+                      className={`py-2 px-3 rounded-xl border flex items-center justify-center gap-2 font-bold text-xs transition cursor-pointer ${
+                        boostOperator === 'orange' ? 'border-orange-500 bg-orange-50/20 text-orange-950' : 'border-slate-100 bg-slate-50 text-slate-500'
+                      }`}
+                    >
+                      <span className="w-4 h-4 bg-orange-500 rounded-full flex items-center justify-center text-[8px] font-extrabold text-white">Om</span>
+                      <span>Orange OM</span>
+                    </button>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Numéro de Téléphone Mobile Money *</label>
+                  <input
+                    type="tel"
+                    required
+                    placeholder="Ex: 677894512"
+                    className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/10 text-xs text-slate-950 font-mono transition"
+                    value={boostPhone}
+                    onChange={(e) => setBoostPhone(e.target.value)}
+                  />
+                </div>
+
+                {boostError && (
+                  <div className="text-red-600 text-xs font-semibold bg-red-50 p-2 border border-red-100 rounded-xl text-center">
+                    {boostError}
+                  </div>
+                )}
+
+                <div className="flex gap-2 pt-2">
+                  <button
+                    type="button"
+                    onClick={() => setShowBoostModal(false)}
+                    className="flex-1 border border-slate-200 hover:bg-slate-50 text-slate-600 text-xs font-bold py-2.5 rounded-xl cursor-pointer transition"
+                  >
+                    Annuler
+                  </button>
+                  <button
+                    type="submit"
+                    className="flex-1 bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold py-2.5 rounded-xl cursor-pointer transition"
+                  >
+                    Payer 1 500 FCFA
+                  </button>
+                </div>
+              </form>
+            )}
+
+            {boostStep === 'processing' && (
+              <div className="flex flex-col items-center justify-center py-12 text-center">
+                <Loader2 className="w-10 h-10 text-slate-800 animate-spin mb-4" />
+                <h4 className="font-bold text-slate-900 text-xs">Validation du paiement...</h4>
+                <p className="text-[10px] text-slate-400 mt-1 max-w-[220px]">
+                  Veuillez confirmer la transaction de 1 500 FCFA sur votre téléphone.
+                </p>
+              </div>
+            )}
+
+            {boostStep === 'success' && (
+              <div className="text-center py-6">
+                <div className="w-12 h-12 bg-emerald-50 text-emerald-500 rounded-full flex items-center justify-center mx-auto mb-4 border border-emerald-100">
+                  <Check className="w-6 h-6 stroke-[2.5]" />
+                </div>
+
+                <h3 className="text-sm font-bold text-slate-900">Produit boosté avec succès !</h3>
+                <p className="text-xs text-slate-500 mt-2 max-w-xs mx-auto leading-relaxed">
+                  L'article <strong className="text-slate-900">"{productToBoost.name}"</strong> est maintenant sponsorisé et apparaîtra en tête d'affiche sur l'accueil pendant 7 jours.
+                </p>
+
+                <button
+                  onClick={() => setShowBoostModal(false)}
+                  className="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold py-2.5 px-4 rounded-xl cursor-pointer transition text-xs shadow-sm mt-5"
+                >
+                  Fermer
+                </button>
+              </div>
+            )}
           </div>
         </div>
       )}

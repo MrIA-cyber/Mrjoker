@@ -16,6 +16,7 @@ import {
   CheckCircle2,
   AlertCircle
 } from 'lucide-react';
+import { translations, Language } from '../translations';
 
 interface SmartRecommendationBannerProps {
   searchTerm: string;
@@ -24,6 +25,7 @@ interface SmartRecommendationBannerProps {
   currentUser: User;
   onAddToCart: (product: Product) => void;
   onSelectProduct: (product: Product) => void;
+  lang: Language;
 }
 
 // Helper to remove accents and convert to lowercase for robust, accent-insensitive search
@@ -61,6 +63,7 @@ export default function SmartRecommendationBanner({
   currentUser,
   onAddToCart,
   onSelectProduct,
+  lang,
 }: SmartRecommendationBannerProps) {
   // Active delivery neighborhood state - defaults to user's registered neighborhood or Marché A
   const [activeNeighborhoodId, setActiveNeighborhoodId] = useState<string>(() => {
@@ -210,14 +213,16 @@ export default function SmartRecommendationBanner({
           <div className="flex items-center gap-2">
             <span className="bg-indigo-500/20 text-indigo-300 text-[10px] font-extrabold uppercase tracking-widest px-3 py-1 rounded-full border border-indigo-400/20 flex items-center gap-1.5">
               <Sparkles className="w-3.5 h-3.5 text-amber-400 fill-amber-400 animate-pulse" />
-              Moteur de Comparaison Bafoussam Direct
+              {lang === 'fr' ? 'Moteur de Comparaison Bafoussam Direct' : 'Bafoussam Direct Comparison Engine'}
             </span>
           </div>
           <h2 className="text-xl font-black tracking-tight text-white flex items-center gap-2">
-            Analyse intelligente pour : <span className="text-amber-400">"{searchTerm}"</span>
+            {lang === 'fr' ? 'Analyse intelligente pour :' : 'Smart analysis for:'} <span className="text-amber-400">"{searchTerm}"</span>
           </h2>
           <p className="text-xs text-slate-300">
-            Nous avons analysé {count} article{count > 1 ? 's' : ''} en stock. Voici les meilleures options de la Mifi basées sur le prix, la distance et la fiabilité.
+            {lang === 'fr' 
+              ? `Nous avons analysé ${count} article${count > 1 ? 's' : ''} en stock. Voici les meilleures options de la Mifi basées sur le prix, la distance et la fiabilité.`
+              : `We analyzed ${count} item${count > 1 ? 's' : ''} in stock. Here are the best options from the Mifi based on price, distance, and reliability.`}
           </p>
         </div>
 
@@ -226,8 +231,8 @@ export default function SmartRecommendationBanner({
           <div className="flex items-center gap-2">
             <Compass className="w-4 h-4 text-amber-400 shrink-0" />
             <div className="flex flex-col">
-              <span className="text-[10px] text-slate-400 font-bold uppercase leading-none">Votre position de livraison</span>
-              <span className="text-xs font-semibold text-slate-200 mt-1">Actuel : {currentNeighborhood.name}</span>
+              <span className="text-[10px] text-slate-400 font-bold uppercase leading-none">{lang === 'fr' ? 'Votre position de livraison' : 'Your delivery location'}</span>
+              <span className="text-xs font-semibold text-slate-200 mt-1">{lang === 'fr' ? `Actuel : ${currentNeighborhood.name}` : `Current: ${currentNeighborhood.name}`}</span>
             </div>
           </div>
           <select
@@ -253,7 +258,7 @@ export default function SmartRecommendationBanner({
           {/* Top highlight badge */}
           <div className="absolute -top-3 left-4 bg-amber-400 text-slate-950 text-[9px] font-black uppercase tracking-widest px-3 py-1 rounded-full shadow-sm flex items-center gap-1">
             <Award className="w-3.5 h-3.5 fill-slate-950" />
-            Boutique la plus qualifiée du moment
+            {lang === 'fr' ? 'Boutique la plus qualifiée du moment' : 'Most Qualified Shop'}
           </div>
 
           <div className="space-y-4 pt-1.5">
@@ -274,7 +279,7 @@ export default function SmartRecommendationBanner({
                 </div>
               </div>
               <div className="bg-slate-900/60 rounded-lg px-2 py-1 text-right shrink-0 border border-indigo-500/20">
-                <span className="text-[8px] text-slate-400 block font-bold uppercase leading-none">Score Qualité</span>
+                <span className="text-[8px] text-slate-400 block font-bold uppercase leading-none">{lang === 'fr' ? 'Score Qualité' : 'Quality Score'}</span>
                 <span className="text-xs font-black text-amber-400 leading-none mt-1 inline-block">{qualified.score}/100</span>
               </div>
             </div>
@@ -292,10 +297,10 @@ export default function SmartRecommendationBanner({
                 <div className="flex items-center gap-1 text-xs font-semibold text-amber-400">
                   <Star className="w-3.5 h-3.5 fill-amber-400 stroke-amber-400" />
                   <span>{qualified.product.rating.toFixed(1)}</span>
-                  <span className="text-slate-400 font-medium text-[10px]">({qualified.product.reviewsCount} avis)</span>
+                  <span className="text-slate-400 font-medium text-[10px]">({qualified.product.reviewsCount} {lang === 'fr' ? 'avis' : 'reviews'})</span>
                 </div>
                 <div className="text-right">
-                  <span className="text-[10px] text-slate-400 block">Prix Direct</span>
+                  <span className="text-[10px] text-slate-400 block">{lang === 'fr' ? 'Prix Direct' : 'Direct Price'}</span>
                   <span className="font-mono text-xs font-black text-white leading-none">
                     {qualified.product.price.toLocaleString('fr-FR')} F
                   </span>
@@ -307,11 +312,11 @@ export default function SmartRecommendationBanner({
             <div className="flex justify-between items-center text-[11px] text-slate-200 px-1">
               <div className="flex items-center gap-1">
                 <Navigation className="w-3.5 h-3.5 text-indigo-300" />
-                <span>Distance : <strong className="text-white">{qualified.distanceKm} km</strong></span>
+                <span>{lang === 'fr' ? `Distance : ` : `Distance: `}<strong className="text-white">{qualified.distanceKm} km</strong></span>
               </div>
               <div className="flex items-center gap-1">
                 <Clock className="w-3.5 h-3.5 text-indigo-300" />
-                <span>Livraison : <strong className="text-white">{qualified.estDeliveryMinutes} min</strong></span>
+                <span>{lang === 'fr' ? `Livraison : ` : `Delivery: `}<strong className="text-white">{qualified.estDeliveryMinutes} min</strong></span>
               </div>
             </div>
           </div>
@@ -321,14 +326,14 @@ export default function SmartRecommendationBanner({
               onClick={() => onSelectProduct(qualified.product)}
               className="flex-1 bg-slate-800 hover:bg-slate-700 text-white font-bold text-[11px] py-2 rounded-xl transition cursor-pointer text-center"
             >
-              Fiche Produit
+              {lang === 'fr' ? 'Fiche Produit' : 'Details'}
             </button>
             <button
               onClick={() => onAddToCart(qualified.product)}
               className="flex-1 bg-amber-400 hover:bg-amber-500 text-slate-950 font-black text-[11px] py-2 rounded-xl transition cursor-pointer flex items-center justify-center gap-1.5"
             >
               <ShoppingBag className="w-3.5 h-3.5" />
-              Prendre
+              {lang === 'fr' ? 'Prendre' : 'Add'}
             </button>
           </div>
         </div>
@@ -337,7 +342,7 @@ export default function SmartRecommendationBanner({
         <div className="bg-slate-900/80 border border-slate-800 rounded-2xl p-5 flex flex-col justify-between relative hover:border-emerald-500/40 transition duration-300">
           <div className="absolute -top-3 left-4 bg-emerald-500 text-white text-[9px] font-bold uppercase tracking-widest px-3 py-1 rounded-full shadow-sm flex items-center gap-1">
             <Coins className="w-3.5 h-3.5" />
-            Tarif le plus bas trouvé
+            {lang === 'fr' ? 'Tarif le plus bas trouvé' : 'Lowest Price Found'}
           </div>
 
           <div className="space-y-4 pt-1.5">
@@ -354,7 +359,7 @@ export default function SmartRecommendationBanner({
               </div>
               {savings > 0 && (
                 <div className="bg-emerald-950/60 rounded-lg px-2 py-1 text-right shrink-0 border border-emerald-500/20">
-                  <span className="text-[8px] text-emerald-400 block font-bold uppercase leading-none">Économie</span>
+                  <span className="text-[8px] text-emerald-400 block font-bold uppercase leading-none">{lang === 'fr' ? 'Économie' : 'Savings'}</span>
                   <span className="text-xs font-bold text-emerald-400 leading-none mt-1 inline-block">-{savings.toLocaleString('fr-FR')} F</span>
                 </div>
               )}
@@ -375,7 +380,7 @@ export default function SmartRecommendationBanner({
                   <span>{cheapest.product.rating.toFixed(1)}</span>
                 </div>
                 <div className="text-right">
-                  <span className="text-[9px] text-slate-500 block">Meilleur Prix Cash</span>
+                  <span className="text-[9px] text-slate-500 block">{lang === 'fr' ? 'Meilleur Prix Cash' : 'Best Cash Price'}</span>
                   <span className="font-mono text-sm font-black text-emerald-400 leading-none">
                     {cheapest.product.price.toLocaleString('fr-FR')} FCFA
                   </span>
@@ -387,11 +392,11 @@ export default function SmartRecommendationBanner({
             <div className="flex justify-between items-center text-[11px] text-slate-300 px-1">
               <div className="flex items-center gap-1">
                 <Navigation className="w-3.5 h-3.5 text-slate-500" />
-                <span>Distance : <strong>{cheapest.distanceKm} km</strong></span>
+                <span>{lang === 'fr' ? `Distance : ` : `Distance: `}<strong>{cheapest.distanceKm} km</strong></span>
               </div>
               <div className="flex items-center gap-1">
                 <Clock className="w-3.5 h-3.5 text-slate-500" />
-                <span>Livraison : <strong>{cheapest.estDeliveryMinutes} min</strong></span>
+                <span>{lang === 'fr' ? `Livraison : ` : `Delivery: `}<strong>{cheapest.estDeliveryMinutes} min</strong></span>
               </div>
             </div>
           </div>
@@ -401,14 +406,14 @@ export default function SmartRecommendationBanner({
               onClick={() => onSelectProduct(cheapest.product)}
               className="flex-1 bg-slate-800 hover:bg-slate-700 text-white font-bold text-[11px] py-2 rounded-xl transition cursor-pointer text-center"
             >
-              Fiche
+              {lang === 'fr' ? 'Fiche' : 'Details'}
             </button>
             <button
               onClick={() => onAddToCart(cheapest.product)}
               className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[11px] py-2 rounded-xl transition cursor-pointer flex items-center justify-center gap-1.5"
             >
               <ShoppingBag className="w-3.5 h-3.5" />
-              Prendre
+              {lang === 'fr' ? 'Prendre' : 'Add'}
             </button>
           </div>
         </div>
@@ -417,7 +422,7 @@ export default function SmartRecommendationBanner({
         <div className="bg-slate-900/80 border border-slate-800 rounded-2xl p-5 flex flex-col justify-between relative hover:border-indigo-500/40 transition duration-300">
           <div className="absolute -top-3 left-4 bg-indigo-500 text-white text-[9px] font-bold uppercase tracking-widest px-3 py-1 rounded-full shadow-sm flex items-center gap-1">
             <Navigation className="w-3.5 h-3.5" />
-            La boutique la plus proche
+            {lang === 'fr' ? 'La boutique la plus proche' : 'Closest Shop'}
           </div>
 
           <div className="space-y-4 pt-1.5">
@@ -453,7 +458,7 @@ export default function SmartRecommendationBanner({
                   <span>{closest.product.rating.toFixed(1)}</span>
                 </div>
                 <div className="text-right">
-                  <span className="text-[9px] text-slate-500 block">Prix Direct</span>
+                  <span className="text-[9px] text-slate-500 block">{lang === 'fr' ? 'Prix Direct' : 'Direct Price'}</span>
                   <span className="font-mono text-xs font-black text-white leading-none">
                     {closest.product.price.toLocaleString('fr-FR')} F
                   </span>
@@ -465,7 +470,7 @@ export default function SmartRecommendationBanner({
             <div className="flex justify-between items-center text-[11px] text-slate-300 px-1">
               <div className="flex items-center gap-1">
                 <Navigation className="w-3.5 h-3.5 text-indigo-400" />
-                <span>Distance : <strong className="text-indigo-300">{closest.distanceKm} km (Ultra-proche)</strong></span>
+                <span>{lang === 'fr' ? `Distance : ` : `Distance: `}<strong className="text-indigo-300">{closest.distanceKm} km {lang === 'fr' ? '(Ultra-proche)' : '(Ultra-close)'}</strong></span>
               </div>
             </div>
           </div>
@@ -475,14 +480,14 @@ export default function SmartRecommendationBanner({
               onClick={() => onSelectProduct(closest.product)}
               className="flex-1 bg-slate-800 hover:bg-slate-700 text-white font-bold text-[11px] py-2 rounded-xl transition cursor-pointer text-center"
             >
-              Fiche
+              {lang === 'fr' ? 'Fiche' : 'Details'}
             </button>
             <button
               onClick={() => onAddToCart(closest.product)}
               className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-[11px] py-2 rounded-xl transition cursor-pointer flex items-center justify-center gap-1.5"
             >
               <ShoppingBag className="w-3.5 h-3.5" />
-              Prendre
+              {lang === 'fr' ? 'Prendre' : 'Add'}
             </button>
           </div>
         </div>
@@ -494,12 +499,16 @@ export default function SmartRecommendationBanner({
         <div className="flex items-center gap-2">
           <AlertCircle className="w-4 h-4 text-amber-400 shrink-0" />
           <span>
-            Le saviez-vous ? Le calcul du <strong>Meilleur compromis</strong> pondère le tarif d'achat, le délai de livraison à moto, l'accréditation du vendeur et sa réputation auprès des résidents de l'Ouest.
+            {lang === 'fr' ? (
+              <>Le saviez-vous ? Le calcul du <strong>Meilleur compromis</strong> pondère le tarif d'achat, le délai de livraison à moto, l'accréditation du vendeur et sa réputation auprès des résidents de l'Ouest.</>
+            ) : (
+              <>Did you know? The <strong>Best Compromise</strong> calculation factors in the purchase price, motorcycle delivery time, seller credentials, and their reputation among West Region residents.</>
+            )}
           </span>
         </div>
         <div className="flex items-center gap-1 text-slate-300">
           <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
-          <span>Garantie Bafoussam Direct</span>
+          <span>{lang === 'fr' ? 'Garantie Bafoussam Direct' : 'Bafoussam Direct Guarantee'}</span>
         </div>
       </div>
     </div>

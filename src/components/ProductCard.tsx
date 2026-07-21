@@ -1,5 +1,5 @@
 import React from 'react';
-import { Product } from '../types';
+import { Product, Review } from '../types';
 import { Star, ShoppingCart, Sparkles, MapPin } from 'lucide-react';
 import VerifiedBadge from './VerifiedBadge';
 
@@ -9,13 +9,30 @@ interface ProductCardProps {
   isMerchantVerified?: boolean;
   onAddToCart: (product: Product) => void;
   onSelect: (product: Product) => void;
+  reviews?: Review[];
+  lang?: string;
 }
 
-export default function ProductCard({ product, isMerchantVerified = false, onAddToCart, onSelect }: ProductCardProps) {
+export default function ProductCard({ 
+  product, 
+  isMerchantVerified = false, 
+  onAddToCart, 
+  onSelect,
+  reviews = [],
+  lang = 'fr',
+}: ProductCardProps) {
+  const isBoostedActive = product.isBoosted && (!product.boostExpiryDate || new Date(product.boostExpiryDate) >= new Date());
+
+  // Compute merchant rating if reviews are provided
+  const merchantReviews = reviews.filter(r => r.merchantId === product.merchantId);
+  const avgRating = merchantReviews.length > 0
+    ? (merchantReviews.reduce((sum, r) => sum + r.rating, 0) / merchantReviews.length).toFixed(1)
+    : null;
+
   return (
     <div
       className={`bg-white dark:bg-slate-900 rounded-2xl border transition duration-300 flex flex-col overflow-hidden group relative ${
-        product.isBoosted
+        isBoostedActive
           ? 'border-indigo-200 dark:border-indigo-900 shadow-md shadow-indigo-500/5 hover:shadow-indigo-500/10 bg-indigo-50/5 dark:bg-indigo-950/10'
           : 'border-slate-100 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 hover:shadow-lg hover:shadow-slate-100 dark:hover:shadow-none'
       }`}
@@ -26,6 +43,13 @@ export default function ProductCard({ product, isMerchantVerified = false, onAdd
         <div className="absolute top-3 left-3 z-10 flex items-center gap-1 bg-indigo-600 text-white text-[10px] font-bold px-2.5 py-1 rounded-full shadow-md">
           <Sparkles className="w-3 h-3 text-white fill-white" />
           <span>PREMIUM • Ouest</span>
+        </div>
+      )}
+
+      {/* Discrete Sponsored Badge */}
+      {isBoostedActive && (
+        <div className="absolute top-3 right-3 z-10 flex items-center gap-0.5 bg-amber-500 text-white text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md shadow-xs">
+          <span>{lang === 'en' ? 'Sponsored' : 'Sponsorisé'}</span>
         </div>
       )}
 
@@ -46,13 +70,21 @@ export default function ProductCard({ product, isMerchantVerified = false, onAdd
       {/* Details Box */}
       <div className="p-4 flex-1 flex flex-col justify-between">
         <div>
-          {/* Merchant & Market */}
+          {/* Merchant & Market with Shop Rating */}
           <div className="flex items-center gap-1.5 flex-wrap text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-1.5">
             <MapPin className="w-3 h-3 text-slate-300 dark:text-slate-600 shrink-0" />
-            <span className="truncate max-w-[120px]">{product.merchantName}</span>
+            <span className="truncate max-w-[100px]">{product.merchantName}</span>
             {isMerchantVerified && (
               <VerifiedBadge id={`verified-badge-card-${product.id}`} />
             )}
+            
+            {/* Live boutique shop rating & total reviews */}
+            {avgRating && (
+              <span className="text-amber-500 flex items-center gap-0.5 ml-1 font-extrabold" title={`${merchantReviews.length} avis sur la boutique`}>
+                ★ {avgRating}
+              </span>
+            )}
+
             <span className="text-slate-300 dark:text-slate-700 font-normal">({product.origin.includes('Local') ? 'Local' : 'Import'})</span>
           </div>
 

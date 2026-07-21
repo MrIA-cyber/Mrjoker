@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { Merchant, Product } from '../types';
+import { Merchant, Product, Review } from '../types';
 import { 
   Award, 
   TrendingUp, 
@@ -13,24 +13,40 @@ import {
   Sparkles,
   Percent,
   CheckCircle,
-  HelpCircle
+  HelpCircle,
+  Star
 } from 'lucide-react';
 import { motion } from 'motion/react';
 import VerifiedBadge from './VerifiedBadge';
+import { translations, Language } from '../translations';
 
 interface BestMerchantWidgetProps {
   merchants: Merchant[];
   products: Product[];
   onSelectProduct: (product: Product) => void;
   onAddToCart: (product: Product) => void;
+  reviews?: Review[];
+  lang: Language;
 }
 
 export default function BestMerchantWidget({ 
   merchants, 
   products, 
   onSelectProduct, 
-  onAddToCart 
+  onAddToCart,
+  reviews = [],
+  lang
 }: BestMerchantWidgetProps) {
+
+  const getTranslation = (key: keyof typeof translations['fr'], replacements?: Record<string, string | number>) => {
+    let text = translations[lang]?.[key] || translations['fr'][key] || '';
+    if (replacements) {
+      Object.entries(replacements).forEach(([k, v]) => {
+        text = text.replace(`{${k}}`, String(v));
+      });
+    }
+    return text;
+  };
 
   // Dynamic computation of the best merchant based on Sales + Clicks + Views weights
   const bestMerchantInfo = useMemo(() => {
@@ -73,6 +89,17 @@ export default function BestMerchantWidget({
     return ((clicks / views) * 100).toFixed(1);
   }
 
+  // Compute live average rating for this best merchant
+  const merchantReviews = useMemo(() => {
+    if (!bestMerchantInfo) return [];
+    return reviews.filter(r => r.merchantId === bestMerchantInfo.merchant.id);
+  }, [bestMerchantInfo, reviews]);
+
+  const avgRating = useMemo(() => {
+    if (merchantReviews.length === 0) return "5.0";
+    return (merchantReviews.reduce((sum, r) => sum + r.rating, 0) / merchantReviews.length).toFixed(1);
+  }, [merchantReviews]);
+
   if (!bestMerchantInfo) return null;
 
   const { merchant, products: topProducts, starProduct, conversionRate, totalItemsCount } = bestMerchantInfo;
@@ -82,7 +109,7 @@ export default function BestMerchantWidget({
       {/* Absolute top decorative badge */}
       <div className="absolute top-0 right-0 bg-indigo-600 text-white text-[10px] font-extrabold uppercase tracking-widest px-6 py-2 rounded-bl-2xl flex items-center gap-1.5 shadow-sm">
         <Award className="w-3.5 h-3.5" />
-        <span>N°1 de la Mifi</span>
+        <span>{getTranslation('bestMerchantAward')}</span>
       </div>
 
       <div className="flex flex-col lg:flex-row gap-8 items-start">
@@ -95,7 +122,7 @@ export default function BestMerchantWidget({
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
               </span>
               <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-extrabold uppercase tracking-widest">
-                Activité Instantanée en Direct
+                {lang === 'fr' ? 'Activité Instantanée en Direct' : 'Live Instant Activity'}
               </span>
             </div>
 
@@ -111,6 +138,13 @@ export default function BestMerchantWidget({
                   {merchant.isVerified && (
                     <VerifiedBadge id="verified-badge-best-merchant" size="md" />
                   )}
+                  
+                  {/* Shop Star Rating under name or right beside */}
+                  <div className="flex items-center gap-1 bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 font-extrabold text-xs px-2.5 py-1 rounded-full border border-amber-100/30 dark:border-amber-900/30">
+                    <Star className="w-3.5 h-3.5 fill-amber-500 stroke-amber-500" />
+                    <span>{avgRating}</span>
+                    <span className="text-[10px] text-slate-400 font-semibold ml-0.5">({merchantReviews.length} {lang === 'fr' ? 'avis' : 'reviews'})</span>
+                  </div>
                 </div>
                 <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400 mt-1.5">
                   <span className="flex items-center gap-1">
@@ -118,7 +152,7 @@ export default function BestMerchantWidget({
                     <span>{merchant.location}</span>
                   </span>
                   <span>•</span>
-                  <span className="text-slate-700 dark:text-slate-300 font-semibold">Géré par {merchant.name}</span>
+                  <span className="text-slate-700 dark:text-slate-300 font-semibold">{lang === 'fr' ? `Géré par ${merchant.name}` : `Managed by ${merchant.name}`}</span>
                 </div>
               </div>
             </div>
@@ -126,7 +160,9 @@ export default function BestMerchantWidget({
 
           {/* Quick descriptive text based on merchant */}
           <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed max-w-xl">
-            Cette boutique est actuellement classée première à Bafoussam grâce à son volume exceptionnel de ventes directes, son service de préparation ultra-rapide et l'excellent taux de satisfaction de la communauté de l'Ouest.
+            {lang === 'fr' 
+              ? "Cette boutique est actuellement classée première à Bafoussam grâce à son volume exceptionnel de ventes directes, son service de préparation ultra-rapide et l'excellent taux de satisfaction de la communauté de l'Ouest."
+              : "This shop is currently ranked first in Bafoussam thanks to its exceptional volume of direct sales, its ultra-fast preparation service, and the excellent satisfaction rate from the Western community."}
           </p>
 
           {/* Elegant, seamless stats horizontal bar */}
@@ -136,7 +172,7 @@ export default function BestMerchantWidget({
                 <TrendingUp className="w-4 h-4" />
               </div>
               <div>
-                <span className="text-[10px] text-slate-400 dark:text-slate-500 uppercase font-bold tracking-wider block">Ventes Directes</span>
+                <span className="text-[10px] text-slate-400 dark:text-slate-500 uppercase font-bold tracking-wider block">{lang === 'fr' ? 'Ventes Directes' : 'Direct Sales'}</span>
                 <span className="font-mono text-xs font-black text-slate-800 dark:text-slate-200">
                   {merchant.sales.toLocaleString('fr-FR')} <span className="text-[9px] font-bold text-slate-500">FCFA</span>
                 </span>
@@ -148,7 +184,7 @@ export default function BestMerchantWidget({
                 <Eye className="w-4 h-4" />
               </div>
               <div>
-                <span className="text-[10px] text-slate-400 dark:text-slate-500 uppercase font-bold tracking-wider block">Visites Produits</span>
+                <span className="text-[10px] text-slate-400 dark:text-slate-500 uppercase font-bold tracking-wider block">{lang === 'fr' ? 'Visites Produits' : 'Product Views'}</span>
                 <span className="font-mono text-xs font-black text-slate-800 dark:text-slate-200">
                   {merchant.views.toLocaleString('fr-FR')}
                 </span>
@@ -160,7 +196,7 @@ export default function BestMerchantWidget({
                 <MousePointerClick className="w-4 h-4" />
               </div>
               <div>
-                <span className="text-[10px] text-slate-400 dark:text-slate-500 uppercase font-bold tracking-wider block">Clicks Clients</span>
+                <span className="text-[10px] text-slate-400 dark:text-slate-500 uppercase font-bold tracking-wider block">{lang === 'fr' ? 'Clicks Clients' : 'Customer Clicks'}</span>
                 <span className="font-mono text-xs font-black text-slate-800 dark:text-slate-200">
                   {merchant.clicks.toLocaleString('fr-FR')}
                 </span>
@@ -172,7 +208,7 @@ export default function BestMerchantWidget({
                 <Percent className="w-4 h-4" />
               </div>
               <div>
-                <span className="text-[10px] text-slate-400 dark:text-slate-500 uppercase font-bold tracking-wider block">Taux d'Intérêt</span>
+                <span className="text-[10px] text-slate-400 dark:text-slate-500 uppercase font-bold tracking-wider block">{lang === 'fr' ? "Taux d'Intérêt" : 'Interest Rate'}</span>
                 <span className="font-mono text-xs font-black text-slate-800 dark:text-slate-200">
                   {conversionRate}%
                 </span>
@@ -184,18 +220,18 @@ export default function BestMerchantWidget({
           <div className="flex flex-wrap items-center gap-3 pt-1">
             <span className="bg-amber-50 dark:bg-amber-950/20 border border-amber-100 dark:border-amber-900/40 text-amber-800 dark:text-amber-300 text-[10px] font-bold px-2.5 py-1 rounded-md flex items-center gap-1 shadow-2xs">
               <Sparkles className="w-3 h-3 text-amber-500" />
-              <span>Membre Élite Premium</span>
+              <span>{lang === 'fr' ? 'Membre Élite Premium' : 'Elite Premium Member'}</span>
             </span>
             <span className="bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 text-[10px] font-bold px-2.5 py-1 rounded-md flex items-center gap-1 shadow-2xs">
               <ShoppingBag className="w-3 h-3" />
-              <span>{totalItemsCount} articles en ligne</span>
+              <span>{totalItemsCount} {lang === 'fr' ? 'articles en ligne' : 'items online'}</span>
             </span>
             <a 
               href={`tel:${merchant.phone.replace(/\s+/g, '')}`} 
               className="bg-indigo-50 dark:bg-indigo-950/35 hover:bg-indigo-100 dark:hover:bg-indigo-900/45 border border-indigo-100 dark:border-indigo-900/55 text-indigo-700 dark:text-indigo-300 text-[10px] font-extrabold px-3 py-1 rounded-md flex items-center gap-1 shadow-2xs transition"
             >
               <Phone className="w-3 h-3" />
-              <span>Appeler : {merchant.phone}</span>
+              <span>{lang === 'fr' ? `Appeler : ${merchant.phone}` : `Call: ${merchant.phone}`}</span>
             </a>
           </div>
         </div>
@@ -205,9 +241,9 @@ export default function BestMerchantWidget({
           <div className="flex items-center justify-between">
             <h3 className="font-extrabold text-slate-900 dark:text-white text-xs uppercase tracking-wider flex items-center gap-1.5">
               <Zap className="w-4 h-4 text-amber-500" />
-              <span>Top Ventes de la Boutique</span>
+              <span>{lang === 'fr' ? 'Top Ventes de la Boutique' : 'Shop Top Sales'}</span>
             </h3>
-            <span className="text-[10px] text-slate-400 dark:text-slate-500 font-bold">Livré express</span>
+            <span className="text-[10px] text-slate-400 dark:text-slate-500 font-bold">{lang === 'fr' ? 'Livré express' : 'Express delivery'}</span>
           </div>
 
           <div className="space-y-3.5">
@@ -250,7 +286,7 @@ export default function BestMerchantWidget({
                   }}
                   disabled={p.stock <= 0}
                   className="bg-indigo-600 hover:bg-indigo-700 disabled:bg-slate-200 dark:disabled:bg-slate-800 text-white p-2 rounded-lg transition shadow-2xs cursor-pointer shrink-0"
-                  title="Ajouter au panier instantanément"
+                  title={lang === 'fr' ? 'Ajouter au panier instantanément' : 'Add to cart instantly'}
                 >
                   <ShoppingBag className="w-3.5 h-3.5" />
                 </button>
@@ -262,7 +298,11 @@ export default function BestMerchantWidget({
             <div className="bg-indigo-50 dark:bg-indigo-950/20 border border-indigo-100 dark:border-indigo-900/50 rounded-2xl p-3.5 text-[10.5px] text-indigo-900 dark:text-indigo-300 leading-normal flex gap-2">
               <CheckCircle className="w-4 h-4 text-indigo-600 dark:text-indigo-400 shrink-0 mt-0.5" />
               <span>
-                <strong>Recommandation :</strong> Le <strong>{starProduct.name}</strong> est actuellement le produit vedette avec une note de <strong>{starProduct.rating}/5</strong> par nos clients.
+                {lang === 'fr' ? (
+                  <><strong>Recommandation :</strong> Le <strong>{starProduct.name}</strong> est actuellement le produit de choix avec une note de <strong>{starProduct.rating}/5</strong> par nos clients.</>
+                ) : (
+                  <><strong>Recommendation:</strong> The <strong>{starProduct.name}</strong> is currently the product of choice with a rating of <strong>{starProduct.rating}/5</strong> from our customers.</>
+                )}
               </span>
             </div>
           )}

@@ -29,9 +29,12 @@ import {
   Truck,
   Bike,
   Clock,
-  Package
+  Package,
+  Coins,
+  CreditCard
 } from 'lucide-react';
-import { User, Merchant, Product, Order } from '../types';
+import { User, Merchant, Product, Order, Review } from '../types';
+import { translations, Language } from '../translations';
 import VerifiedBadge from './VerifiedBadge';
 
 interface AdminPanelProps {
@@ -45,6 +48,7 @@ interface AdminPanelProps {
   onUpdateCurrentUser?: (user: User) => void;
   orders?: Order[];
   onUpdateOrders?: React.Dispatch<React.SetStateAction<Order[]>>;
+  lang: Language;
 }
 
 export default function AdminPanel({ 
@@ -57,12 +61,20 @@ export default function AdminPanel({
   onLogout,
   onUpdateCurrentUser,
   orders = [],
-  onUpdateOrders
+  onUpdateOrders,
+  lang
 }: AdminPanelProps) {
-  const [activeTab, setActiveTab] = useState<'users' | 'merchants' | 'products' | 'logs' | 'settings' | 'verifications' | 'orders'>('users');
+  const [activeTab, setActiveTab] = useState<'users' | 'merchants' | 'products' | 'logs' | 'settings' | 'verifications' | 'orders' | 'revenue' | 'boosts'>('users');
   const [searchTerm, setSearchTerm] = useState('');
   const [merchantSearchTerm, setMerchantSearchTerm] = useState('');
   const [rejectionReasons, setRejectionReasons] = useState<{[mId: string]: string}>({});
+
+  // Revenue/Payout Tracking States
+  const [commRate, setCommRate] = useState(() => parseFloat(localStorage.getItem('bafoussam_commission_rate') || '10'));
+  const [period, setPeriod] = useState<'all' | 'week' | 'month'>('all');
+  const [selectedMerchantForPayout, setSelectedMerchantForPayout] = useState<Merchant | null>(null);
+  const [payoutRefText, setPayoutRefText] = useState('');
+  const [payoutDateText, setPayoutDateText] = useState(() => new Date().toISOString().split('T')[0]);
 
   const pendingVerificationsCount = merchants.filter(m => m.verificationStatus === 'pending_verification').length;
   const activeOrdersCount = orders.filter(o => o.status !== 'completed').length;
@@ -141,9 +153,25 @@ export default function AdminPanel({
               { id: Date.now().toString(), time: now, msg: `Statut de la commande #${orderId.slice(-6)} changé en "${status}" par l'administrateur.`, type: 'info' },
               ...prevLogs
             ]);
+            
+            let commissionFields = {};
+            if (status === 'completed' && o.status !== 'completed') {
+              const currentRate = parseFloat(localStorage.getItem('bafoussam_commission_rate') || '10') / 100;
+              // Delivery fee is fixed 500 FCFA. Let's make sure we exclude it!
+              const subtotal = Math.max(0, o.total - 500);
+              const commissionAmount = Math.round(subtotal * currentRate);
+              const netToMerchant = subtotal - commissionAmount;
+              commissionFields = {
+                commissionRate: currentRate,
+                commissionAmount,
+                netToMerchant
+              };
+            }
+
             return {
               ...o,
-              status
+              status,
+              ...commissionFields
             };
           }
           return o;
@@ -627,7 +655,7 @@ export interface Merchant {
         {/* Left tabs menu selection */}
         <div className="lg:col-span-3 space-y-3">
           <div className="bg-white rounded-2xl border border-slate-100 p-4 shadow-2xs space-y-1.5">
-            <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest px-1 block mb-2">Navigation Console</span>
+            <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest px-1 block mb-2">{lang === 'fr' ? 'Navigation Console' : 'Console Navigation'}</span>
             
             <button
               onClick={() => setActiveTab('users')}
@@ -639,7 +667,7 @@ export interface Merchant {
             >
               <span className="flex items-center gap-2.5">
                 <Users className="w-4 h-4" />
-                <span>Base Abonnés</span>
+                <span>{translations[lang].tabUsers}</span>
               </span>
               <span className="bg-slate-100 text-slate-600 text-[9px] px-1.5 py-0.5 rounded font-mono">{totalUsersCount}</span>
             </button>
@@ -654,7 +682,7 @@ export interface Merchant {
             >
               <span className="flex items-center gap-2.5">
                 <Database className="w-4 h-4" />
-                <span>Boutiques de la Ville</span>
+                <span>{translations[lang].tabMerchants}</span>
               </span>
               <span className="bg-slate-100 text-slate-600 text-[9px] px-1.5 py-0.5 rounded font-mono">{merchants.length}</span>
             </button>
@@ -669,7 +697,7 @@ export interface Merchant {
             >
               <span className="flex items-center gap-2.5">
                 <ShoppingBag className="w-4 h-4" />
-                <span>Catalogue Produits</span>
+                <span>{translations[lang].tabProducts}</span>
               </span>
               <span className="bg-slate-100 text-slate-600 text-[9px] px-1.5 py-0.5 rounded font-mono">{products.length}</span>
             </button>
@@ -684,7 +712,7 @@ export interface Merchant {
             >
               <span className="flex items-center gap-2.5">
                 <ShieldCheck className="w-4 h-4" />
-                <span>Demandes en attente</span>
+                <span>{translations[lang].tabVerifications}</span>
               </span>
               {pendingVerificationsCount > 0 ? (
                 <span className="bg-amber-500 text-white text-[9px] px-1.5 py-0.5 rounded-full font-black animate-pulse">{pendingVerificationsCount}</span>
@@ -703,13 +731,47 @@ export interface Merchant {
             >
               <span className="flex items-center gap-2.5">
                 <Truck className="w-4 h-4" />
-                <span>Suivi des commandes</span>
+                <span>{translations[lang].tabOrders}</span>
               </span>
               {activeOrdersCount > 0 ? (
                 <span className="bg-indigo-600 text-white text-[9px] px-1.5 py-0.5 rounded-full font-black">{activeOrdersCount}</span>
               ) : (
                 <span className="bg-slate-100 text-slate-400 text-[9px] px-1.5 py-0.5 rounded font-mono">0</span>
               )}
+            </button>
+
+            <button
+              onClick={() => setActiveTab('revenue')}
+              className={`w-full flex items-center justify-between p-3 rounded-xl font-bold text-xs cursor-pointer transition ${
+                activeTab === 'revenue'
+                  ? 'bg-slate-900 text-white'
+                  : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+              }`}
+            >
+              <span className="flex items-center gap-2.5">
+                <TrendingUp className="w-4 h-4 text-emerald-500" />
+                <span>{translations[lang].tabRevenue}</span>
+              </span>
+              <span className="bg-emerald-100 text-emerald-800 text-[10px] px-1.5 py-0.5 rounded font-mono font-black">
+                {localStorage.getItem('bafoussam_commission_rate') || '10'}%
+              </span>
+            </button>
+
+            <button
+              onClick={() => setActiveTab('boosts')}
+              className={`w-full flex items-center justify-between p-3 rounded-xl font-bold text-xs cursor-pointer transition ${
+                activeTab === 'boosts'
+                  ? 'bg-slate-900 text-white'
+                  : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+              }`}
+            >
+              <span className="flex items-center gap-2.5">
+                <Plus className="w-4 h-4 text-amber-500 fill-amber-500/10" />
+                <span>{lang === 'fr' ? 'Mises en avant' : 'Sponsored (Boosts)'}</span>
+              </span>
+              <span className="bg-amber-100 text-amber-800 text-[9px] px-1.5 py-0.5 rounded font-mono font-bold">
+                {products.filter(p => p.isBoosted).length}
+              </span>
             </button>
 
             <button
@@ -722,7 +784,7 @@ export interface Merchant {
             >
               <span className="flex items-center gap-2.5">
                 <Terminal className="w-4 h-4" />
-                <span>Logs Système</span>
+                <span>{translations[lang].tabLogs}</span>
               </span>
               <span className="bg-amber-100 text-amber-800 text-[9px] px-1.5 py-0.5 rounded font-bold">LIVE</span>
             </button>
@@ -737,7 +799,7 @@ export interface Merchant {
             >
               <span className="flex items-center gap-2.5">
                 <Settings className="w-4 h-4" />
-                <span>Paramètres & Code</span>
+                <span>{translations[lang].tabSettings}</span>
               </span>
               <span className="bg-indigo-100 text-indigo-800 text-[9px] px-1.5 py-0.5 rounded font-black">CODE</span>
             </button>
@@ -1638,6 +1700,625 @@ export interface Merchant {
                     ))}
                   </div>
                 )}
+              </motion.div>
+            )}
+
+            {/* TAB REVENUE & FINANCES */}
+            {activeTab === 'revenue' && (
+              <motion.div
+                key="tab-revenue-content"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.15 }}
+                className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-xs p-6 space-y-6"
+              >
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-100 dark:border-slate-800 pb-5">
+                  <div>
+                    <h3 className="text-base font-black text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-2">
+                      <Coins className="w-5 h-5 text-emerald-500" />
+                      <span>{translations[lang].revenueSectionTitle}</span>
+                    </h3>
+                    <p className="text-xs text-slate-500 dark:text-slate-400">
+                      Gérez le taux de commission de Bafoussam Direct, suivez les ventes globales, et gérez les reversements aux commerçants de la Mifi.
+                    </p>
+                  </div>
+
+                  {/* Commission Rate Configurator Card */}
+                  <div className="bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-2xl p-4 flex items-center gap-4 max-w-sm">
+                    <div className="bg-amber-100 dark:bg-amber-950/40 p-2 rounded-xl text-amber-600 dark:text-amber-400">
+                      <Settings className="w-5 h-5" />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                        {translations[lang].commissionRateLabel}
+                      </label>
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="range"
+                          min="0"
+                          max="30"
+                          step="1"
+                          value={commRate}
+                          onChange={(e) => {
+                            const val = parseFloat(e.target.value);
+                            setCommRate(val);
+                            localStorage.setItem('bafoussam_commission_rate', val.toString());
+                          }}
+                          className="w-24 accent-emerald-600 cursor-pointer h-1 bg-slate-200 rounded-lg appearance-none"
+                        />
+                        <span className="text-sm font-extrabold text-slate-800 dark:text-white font-mono">{commRate}%</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Filters and KPI cards */}
+                <div className="space-y-4">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-slate-400 font-bold uppercase">{translations[lang].periodFilter} :</span>
+                    <div className="flex items-center bg-slate-100 dark:bg-slate-800 rounded-lg p-1 text-[11px] font-bold">
+                      <button
+                        onClick={() => setPeriod('all')}
+                        className={`px-3 py-1 rounded-md transition ${period === 'all' ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-xs' : 'text-slate-500 hover:text-slate-800'}`}
+                      >
+                        {translations[lang].allTime}
+                      </button>
+                      <button
+                        onClick={() => setPeriod('week')}
+                        className={`px-3 py-1 rounded-md transition ${period === 'week' ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-xs' : 'text-slate-500 hover:text-slate-800'}`}
+                      >
+                        {translations[lang].thisWeek}
+                      </button>
+                      <button
+                        onClick={() => setPeriod('month')}
+                        className={`px-3 py-1 rounded-md transition ${period === 'month' ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-xs' : 'text-slate-500 hover:text-slate-800'}`}
+                      >
+                        {translations[lang].thisMonth}
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* KPIs cards */}
+                  {(() => {
+                    // Compute statistics based on period
+                    const completedOrdersInPeriod = orders.filter(o => {
+                      if (o.status !== 'completed') return false;
+                      if (period === 'all') return true;
+                      
+                      const orderDate = new Date(o.createdAt || Date.now());
+                      const diffTime = Math.abs(Date.now() - orderDate.getTime());
+                      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                      
+                      if (period === 'week') return diffDays <= 7;
+                      if (period === 'month') return diffDays <= 30;
+                      return true;
+                    });
+
+                    // 1. Total Commissions
+                    const totalCommissions = completedOrdersInPeriod.reduce((sum, o) => {
+                      if (o.commissionAmount !== undefined) {
+                        return sum + o.commissionAmount;
+                      }
+                      const subtotal = Math.max(0, o.total - 500);
+                      const rate = o.commissionRate !== undefined ? o.commissionRate : (commRate / 100);
+                      return sum + Math.round(subtotal * rate);
+                    }, 0);
+
+                    // 2. Total Delivery Fees
+                    const totalDeliveryFees = completedOrdersInPeriod.length * 500;
+
+                    // 3. Gross Sales
+                    const totalGrossSales = completedOrdersInPeriod.reduce((sum, o) => sum + o.total, 0);
+
+                    return (
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+                        <div className="bg-gradient-to-br from-emerald-500 to-teal-600 rounded-2xl p-5 text-white shadow-md relative overflow-hidden">
+                          <div className="absolute right-0 bottom-0 translate-x-2 translate-y-2 opacity-10">
+                            <Coins className="w-32 h-32" />
+                          </div>
+                          <p className="text-[10px] font-extrabold uppercase tracking-widest text-emerald-100">
+                            {translations[lang].commissionsCollected}
+                          </p>
+                          <h4 className="text-2xl font-black mt-2 font-mono">
+                            {totalCommissions.toLocaleString('fr-FR')} FCFA
+                          </h4>
+                          <p className="text-[10px] text-emerald-100 mt-1">
+                            Revenus générés sur la base du taux de {commRate}%
+                          </p>
+                        </div>
+
+                        <div className="bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-2xl p-5 relative overflow-hidden">
+                          <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500">
+                            {translations[lang].deliveryFeesCollected}
+                          </p>
+                          <h4 className="text-2xl font-black text-slate-900 dark:text-white mt-2 font-mono">
+                            {totalDeliveryFees.toLocaleString('fr-FR')} FCFA
+                          </h4>
+                          <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-1">
+                            Rémunération cumulée des coursiers ({completedOrdersInPeriod.length} courses)
+                          </p>
+                        </div>
+
+                        <div className="bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-2xl p-5 relative overflow-hidden">
+                          <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500">
+                            Volume Brut des Ventes
+                          </p>
+                          <h4 className="text-2xl font-black text-slate-900 dark:text-white mt-2 font-mono">
+                            {totalGrossSales.toLocaleString('fr-FR')} FCFA
+                          </h4>
+                          <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-1">
+                            Montant global commandé (avec livraisons incluses)
+                          </p>
+                        </div>
+                      </div>
+                    );
+                  })()}
+                </div>
+
+                {/* Merchant Sales, Commissions & Payout status list */}
+                <div className="space-y-4 pt-4">
+                  <h4 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider">
+                    {translations[lang].merchantSalesTitle}
+                  </h4>
+
+                  <div className="overflow-x-auto border border-slate-100 dark:border-slate-800 rounded-2xl bg-slate-50/30 dark:bg-slate-900/30">
+                    <table className="w-full text-left border-collapse text-xs">
+                      <thead>
+                        <tr className="bg-slate-100/50 dark:bg-slate-800/50 border-b border-slate-100 dark:border-slate-800 text-slate-500 font-bold uppercase text-[9px] tracking-wider">
+                          <th className="p-3">Boutique</th>
+                          <th className="p-3">Ventes réalisées</th>
+                          <th className="p-3">Commissions dues</th>
+                          <th className="p-3">Net à reverser</th>
+                          <th className="p-3">Statut & Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                        {merchants.map(merchant => {
+                          // Find all completed orders with items for this merchant
+                          const merchantCompletedOrders = orders.filter(o => {
+                            if (o.status !== 'completed') return false;
+                            
+                            // Apply date filters if not "all"
+                            if (period !== 'all') {
+                              const orderDate = new Date(o.createdAt || Date.now());
+                              const diffTime = Math.abs(Date.now() - orderDate.getTime());
+                              const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                              if (period === 'week' && diffDays > 7) return false;
+                              if (period === 'month' && diffDays > 30) return false;
+                            }
+
+                            return o.items.some(it => it.product.merchantId === merchant.id);
+                          });
+
+                          // Calculate totals for this merchant
+                          let totalSales = 0;
+                          let totalCommission = 0;
+                          let unpaidNet = 0;
+                          let paidNet = 0;
+
+                          merchantCompletedOrders.forEach(o => {
+                            // Subtotal of items for this merchant in this order
+                            const subtotal = o.items
+                              .filter(it => it.product.merchantId === merchant.id)
+                              .reduce((sum, it) => sum + it.product.price * it.quantity, 0);
+
+                            totalSales += subtotal;
+
+                            // Commission calculation
+                            const rate = o.commissionRate !== undefined ? o.commissionRate : (commRate / 100);
+                            const commission = Math.round(subtotal * rate);
+                            totalCommission += commission;
+
+                            const net = subtotal - commission;
+                            if (o.payoutDate) {
+                              paidNet += net;
+                            } else {
+                              unpaidNet += net;
+                            }
+                          });
+
+                          const totalNet = totalSales - totalCommission;
+
+                          return (
+                            <tr key={merchant.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/40 transition">
+                              <td className="p-3 font-sans">
+                                <div className="flex items-center gap-2.5">
+                                  <div className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center font-bold text-slate-500">
+                                    {merchant.shopName.charAt(0)}
+                                  </div>
+                                  <div>
+                                    <span className="font-extrabold text-slate-900 dark:text-white block">{merchant.shopName}</span>
+                                    <span className="text-[10px] text-slate-400">{merchant.location}</span>
+                                  </div>
+                                </div>
+                              </td>
+                              <td className="p-3 font-mono font-bold text-slate-700 dark:text-slate-300">
+                                {totalSales.toLocaleString('fr-FR')} F
+                              </td>
+                              <td className="p-3 font-mono font-bold text-amber-600 dark:text-amber-400">
+                                {totalCommission.toLocaleString('fr-FR')} F
+                              </td>
+                              <td className="p-3 font-mono font-bold text-emerald-600 dark:text-emerald-400">
+                                {totalNet.toLocaleString('fr-FR')} F
+                              </td>
+                              <td className="p-3 font-sans">
+                                {unpaidNet > 0 ? (
+                                  <div className="flex items-center gap-2">
+                                    <span className="text-[10px] text-rose-500 font-extrabold block">
+                                      Dû : {unpaidNet.toLocaleString('fr-FR')} F
+                                    </span>
+                                    <button
+                                      onClick={() => setSelectedMerchantForPayout(merchant)}
+                                      className="bg-emerald-500 hover:bg-emerald-600 text-white font-extrabold text-[10px] px-2.5 py-1 rounded-lg transition shadow-xs flex items-center gap-1 cursor-pointer"
+                                    >
+                                      <CreditCard className="w-3 h-3" />
+                                      <span>Reverser</span>
+                                    </button>
+                                  </div>
+                                ) : totalSales > 0 ? (
+                                  <span className="inline-flex items-center gap-1 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 font-extrabold text-[9.5px] px-2 py-0.5 rounded-full uppercase">
+                                    <Check className="w-3 h-3" />
+                                    <span>Reversements à jour</span>
+                                  </span>
+                                ) : (
+                                  <span className="text-slate-400 italic text-[11px]">Aucune vente</span>
+                                )}
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+
+                {/* Payout History Section */}
+                {(() => {
+                  // Re-evaluate payout items list from all completed & paid orders
+                  const payoutHistoryItems = orders.reduce((acc: any[], o) => {
+                    if (o.status === 'completed' && o.payoutDate) {
+                      // Get all unique merchant IDs in this order
+                      const merchantIds = Array.from(new Set(o.items.map(it => it.product.merchantId)));
+                      merchantIds.forEach(mId => {
+                        const merchant = merchants.find(m => m.id === mId);
+                        if (merchant) {
+                          const mItems = o.items.filter(it => it.product.merchantId === mId);
+                          const subtotal = mItems.reduce((sum, it) => sum + it.product.price * it.quantity, 0);
+                          const rate = o.commissionRate !== undefined ? o.commissionRate : (commRate / 100);
+                          const commission = Math.round(subtotal * rate);
+                          const net = subtotal - commission;
+
+                          // Group by merchant, date and reference
+                          const existing = acc.find(item => item.merchantId === mId && item.payoutDate === o.payoutDate && item.payoutRef === o.payoutRef);
+                          if (existing) {
+                            existing.netAmount += net;
+                          } else {
+                            acc.push({
+                              id: `${o.id}-${mId}`,
+                              merchantId: mId,
+                              shopName: merchant.shopName,
+                              netAmount: net,
+                              payoutDate: o.payoutDate,
+                              payoutRef: o.payoutRef || 'N/A'
+                            });
+                          }
+                        }
+                      });
+                    }
+                    return acc;
+                  }, []);
+
+                  return (
+                    <div className="space-y-4 pt-4 border-t border-slate-100 dark:border-slate-800">
+                      <h4 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-1.5">
+                        <Clock className="w-4 h-4 text-slate-400" />
+                        <span>{translations[lang].payoutHistory}</span>
+                      </h4>
+
+                      {payoutHistoryItems.length === 0 ? (
+                        <div className="text-center py-8 bg-slate-50 dark:bg-slate-900/50 rounded-2xl border border-dashed border-slate-200 dark:border-slate-800">
+                          <p className="text-xs text-slate-400 dark:text-slate-500 font-medium">Aucun reversement enregistré pour le moment.</p>
+                        </div>
+                      ) : (
+                        <div className="overflow-x-auto border border-slate-100 dark:border-slate-800 rounded-2xl">
+                          <table className="w-full text-left border-collapse text-xs">
+                            <thead>
+                              <tr className="bg-slate-100/50 dark:bg-slate-800/50 border-b border-slate-100 dark:border-slate-800 text-slate-500 font-bold uppercase text-[9px] tracking-wider">
+                                <th className="p-3">Date</th>
+                                <th className="p-3">Boutique</th>
+                                <th className="p-3">Montant reversé</th>
+                                <th className="p-3">Référence Transaction</th>
+                              </tr>
+                            </thead>
+                            <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                              {payoutHistoryItems.map((item, idx) => (
+                                <tr key={idx} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/40 transition">
+                                  <td className="p-3 font-mono font-medium text-slate-600 dark:text-slate-400">
+                                    {new Date(item.payoutDate).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' })}
+                                  </td>
+                                  <td className="p-3 font-bold text-slate-900 dark:text-white">
+                                    {item.shopName}
+                                  </td>
+                                  <td className="p-3 font-mono font-black text-emerald-600 dark:text-emerald-400">
+                                    {item.netAmount.toLocaleString('fr-FR')} F
+                                  </td>
+                                  <td className="p-3 font-mono text-slate-500 dark:text-slate-400">
+                                    <span className="bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded font-bold text-[10px]">
+                                      {item.payoutRef}
+                                    </span>
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })()}
+
+                {/* MODAL: Enregistrer un versement / reversement de fonds */}
+                <AnimatePresence>
+                  {selectedMerchantForPayout && (
+                    <div className="fixed inset-0 bg-slate-950/70 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+                      <motion.div
+                        initial={{ opacity: 0, scale: 0.95, y: 15 }}
+                        animate={{ opacity: 1, scale: 1, y: 0 }}
+                        exit={{ opacity: 0, scale: 0.95, y: 15 }}
+                        className="bg-white dark:bg-slate-900 rounded-3xl shadow-2xl border border-slate-100 dark:border-slate-800 w-full max-w-md p-6 space-y-5 text-left relative overflow-hidden"
+                      >
+                        <div className="absolute top-0 left-0 right-0 h-1 bg-emerald-500"></div>
+
+                        <div>
+                          <h3 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-wider">
+                            {translations[lang].payoutConfirmation}
+                          </h3>
+                          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                            {translations[lang].payoutConfirmDesc.replace('{shopName}', selectedMerchantForPayout.shopName)}
+                          </p>
+                        </div>
+
+                        {(() => {
+                          // Compute exact sum being paid out
+                          const unpaidOrdersForMerchant = orders.filter(o => {
+                            if (o.status !== 'completed' || o.payoutDate) return false;
+                            return o.items.some(it => it.product.merchantId === selectedMerchantForPayout.id);
+                          });
+
+                          let unpaidNetValue = 0;
+                          unpaidOrdersForMerchant.forEach(o => {
+                            const subtotal = o.items
+                              .filter(it => it.product.merchantId === selectedMerchantForPayout.id)
+                              .reduce((sum, it) => sum + it.product.price * it.quantity, 0);
+                            const rate = o.commissionRate !== undefined ? o.commissionRate : (commRate / 100);
+                            const commission = Math.round(subtotal * rate);
+                            unpaidNetValue += (subtotal - commission);
+                          });
+
+                          return (
+                            <div className="space-y-4 font-sans">
+                              {/* Highlight Amount Box */}
+                              <div className="bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-100 dark:border-emerald-900/50 rounded-2xl p-4 text-center">
+                                <span className="block text-[10px] text-emerald-700 dark:text-emerald-400 font-extrabold uppercase tracking-widest">
+                                  {translations[lang].totalDueToMe}
+                                </span>
+                                <span className="text-2xl font-black text-emerald-600 dark:text-emerald-400 font-mono mt-1 block">
+                                  {unpaidNetValue.toLocaleString('fr-FR')} FCFA
+                                </span>
+                                <span className="text-[10px] text-slate-400 block mt-1">
+                                  Basé sur {unpaidOrdersForMerchant.length} commandes livrées en attente
+                                </span>
+                              </div>
+
+                              <div className="space-y-3 text-xs">
+                                <div>
+                                  <label className="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">
+                                    {translations[lang].payoutDate}
+                                  </label>
+                                  <input
+                                    type="date"
+                                    className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2.5 text-slate-800 dark:text-white font-bold"
+                                    value={payoutDateText}
+                                    onChange={(e) => setPayoutDateText(e.target.value)}
+                                  />
+                                </div>
+
+                                <div>
+                                  <label className="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">
+                                    {translations[lang].reference} MoMo/Orange Money (optionnel)
+                                  </label>
+                                  <input
+                                    type="text"
+                                    placeholder={translations[lang].payoutRefPlaceholder}
+                                    className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2.5 text-slate-800 dark:text-white font-bold placeholder-slate-400"
+                                    value={payoutRefText}
+                                    onChange={(e) => setPayoutRefText(e.target.value)}
+                                  />
+                                </div>
+                              </div>
+
+                              <div className="flex gap-3 pt-2">
+                                <button
+                                  onClick={() => setSelectedMerchantForPayout(null)}
+                                  className="w-1/2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold py-3 rounded-xl transition text-xs cursor-pointer"
+                                >
+                                  {translations[lang].cancel}
+                                </button>
+                                <button
+                                  onClick={() => {
+                                    if (onUpdateOrders) {
+                                      onUpdateOrders(prev => prev.map(o => {
+                                        const hasMerchantItems = o.items.some(it => it.product.merchantId === selectedMerchantForPayout.id);
+                                        if (o.status === 'completed' && !o.payoutDate && hasMerchantItems) {
+                                          return {
+                                            ...o,
+                                            payoutDate: payoutDateText,
+                                            payoutRef: payoutRefText.trim() || `PAY-${Date.now().toString().slice(-6)}`
+                                          };
+                                        }
+                                        return o;
+                                      }));
+
+                                      // Add log to Central Console
+                                      const nowTime = new Date().toLocaleTimeString('fr-FR');
+                                      setLogs(prev => [
+                                        {
+                                          id: Date.now().toString(),
+                                          time: nowTime,
+                                          msg: `Reversement de ${unpaidNetValue.toLocaleString('fr-FR')} FCFA enregistré pour la boutique "${selectedMerchantForPayout.shopName}" (${payoutRefText.trim() || 'Réf automatique'}).`,
+                                          type: 'success'
+                                        },
+                                        ...prev
+                                      ]);
+
+                                      alert(translations[lang].payoutSuccess);
+                                      setSelectedMerchantForPayout(null);
+                                      setPayoutRefText('');
+                                    }
+                                  }}
+                                  className="w-1/2 bg-emerald-500 hover:bg-emerald-600 text-white font-black py-3 rounded-xl transition shadow-lg shadow-emerald-500/20 text-xs cursor-pointer flex items-center justify-center gap-1.5"
+                                >
+                                  <Check className="w-4 h-4" />
+                                  <span>{translations[lang].confirm}</span>
+                                </button>
+                              </div>
+                            </div>
+                          );
+                        })()}
+                      </motion.div>
+                    </div>
+                  )}
+                </AnimatePresence>
+
+              </motion.div>
+            )}
+
+            {/* TAB BOOSTED PRODUCTS */}
+            {activeTab === 'boosts' && (
+              <motion.div
+                key="tab-boosts-content"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.15 }}
+                className="bg-white rounded-3xl border border-slate-100 shadow-xs p-6 space-y-6"
+              >
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-100 pb-5">
+                  <div>
+                    <h3 className="text-base font-black text-slate-900 uppercase tracking-wider flex items-center gap-2">
+                      <Plus className="w-5 h-5 text-amber-500 fill-amber-500/10" />
+                      <span>Campagnes de Produits Boostés</span>
+                    </h3>
+                    <p className="text-xs text-slate-500">
+                      Suivez les revenus générés par les boosts publicitaires et gérez les produits mis en avant sur l'accueil de Bafoussam Direct.
+                    </p>
+                  </div>
+
+                  {/* Total revenue generated KPI Card */}
+                  <div className="bg-amber-50 border border-amber-100 rounded-2xl p-4 flex items-center gap-4">
+                    <div className="bg-amber-100 text-amber-700 p-2.5 rounded-xl">
+                      <Coins className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <span className="block text-[10px] font-bold text-amber-800 uppercase tracking-wider">Revenu Total Boosts</span>
+                      <span className="text-lg font-black text-amber-700 font-mono">
+                        {products.reduce((acc, p) => acc + ((p.boostCount || 0) * 1500), 0).toLocaleString('fr-FR')} FCFA
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* List of currently boosted products or products with historical boosts */}
+                {(() => {
+                  const boostedProducts = products.filter(p => p.isBoosted || (p.boostCount || 0) > 0);
+                  
+                  if (boostedProducts.length === 0) {
+                    return (
+                      <div className="text-center py-12 border-2 border-dashed border-slate-100 rounded-2xl">
+                        <span className="text-4xl">🚀</span>
+                        <p className="font-semibold text-slate-800 mt-2.5 text-sm">Aucun produit boosté</p>
+                        <p className="text-xs text-slate-400 max-w-[240px] mx-auto mt-1">
+                          Les commerçants de Bafoussam n'ont pas encore sponsorisé d'articles pour le moment.
+                        </p>
+                      </div>
+                    );
+                  }
+
+                  return (
+                    <div className="space-y-4">
+                      <div className="overflow-x-auto border border-slate-100 rounded-2xl">
+                        <table className="w-full text-left text-xs text-slate-700">
+                          <thead className="bg-slate-50 text-[10px] font-bold text-slate-400 uppercase tracking-wider border-b border-slate-100">
+                            <tr>
+                              <th className="px-5 py-3">Produit</th>
+                              <th className="px-5 py-3">Commerçant</th>
+                              <th className="px-5 py-3">Date d'expiration</th>
+                              <th className="px-5 py-3 text-center">Nombre de Boosts</th>
+                              <th className="px-5 py-3">Revenus générés</th>
+                              <th className="px-5 py-3 text-right">Statut</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-slate-100 font-medium">
+                            {boostedProducts.map(p => {
+                              const isExpired = p.boostExpiryDate ? new Date(p.boostExpiryDate) < new Date() : true;
+                              const isCurrentlyBoosted = p.isBoosted && !isExpired;
+                              const revenue = (p.boostCount || 0) * 1500;
+
+                              return (
+                                <tr key={p.id} className="hover:bg-slate-50/50 transition">
+                                  <td className="px-5 py-4">
+                                    <div className="flex items-center gap-3">
+                                      <img
+                                        src={p.image}
+                                        alt={p.name}
+                                        referrerPolicy="no-referrer"
+                                        className="w-10 h-10 rounded-lg object-cover border border-slate-100 shrink-0"
+                                      />
+                                      <div className="min-w-0">
+                                        <span className="font-extrabold text-slate-900 block truncate">{p.name}</span>
+                                        <span className="text-[10px] text-slate-400 block mt-0.5">{p.price.toLocaleString('fr-FR')} FCFA</span>
+                                      </div>
+                                    </div>
+                                  </td>
+                                  <td className="px-5 py-4 font-semibold text-slate-600">
+                                    {p.merchantName || 'Boutique'}
+                                  </td>
+                                  <td className="px-5 py-4 font-mono font-semibold text-slate-600">
+                                    {p.boostExpiryDate ? (
+                                      new Date(p.boostExpiryDate).toLocaleDateString('fr-FR', {
+                                        day: 'numeric',
+                                        month: 'short',
+                                        year: 'numeric'
+                                      })
+                                    ) : (
+                                      'Non définie'
+                                    )}
+                                  </td>
+                                  <td className="px-5 py-4 text-center font-bold text-slate-800 font-mono">
+                                    {p.boostCount || 0}
+                                  </td>
+                                  <td className="px-5 py-4 font-mono font-bold text-emerald-600">
+                                    {revenue.toLocaleString('fr-FR')} F
+                                  </td>
+                                  <td className="px-5 py-4 text-right">
+                                    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-extrabold uppercase ${
+                                      isCurrentlyBoosted
+                                        ? 'bg-emerald-50 text-emerald-700 border border-emerald-100'
+                                        : 'bg-slate-100 text-slate-400 border border-slate-200'
+                                    }`}>
+                                      {isCurrentlyBoosted ? 'Actif' : 'Expiré'}
+                                    </span>
+                                  </td>
+                                </tr>
+                              );
+                            })}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  );
+                })()}
               </motion.div>
             )}
 

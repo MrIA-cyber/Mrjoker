@@ -44,6 +44,8 @@ export interface Product {
   merchantId: string;
   merchantName: string;
   isBoosted: boolean; // boosted via Premium subscription
+  boostExpiryDate?: string;
+  boostCount?: number;
   stock: number;
   rating: number;
   reviewsCount: number;
@@ -64,13 +66,29 @@ export interface Order {
   status: 'pending' | 'preparing' | 'picked_up' | 'delivering' | 'completed';
   deliveryNeighborhood: string;
   deliveryDetails: string;
-  paymentMethod: 'momo' | 'orange';
+  paymentMethod: 'momo' | 'orange' | 'cash_on_delivery';
   paymentPhone: string;
   createdAt: string;
   deliveryTimeEstimated: number; // in minutes
   currentLocation?: { x: number; y: number }; // coordinates for animated tracker map
   courierName?: string;
   courierPhone?: string;
+  isReviewed?: boolean;
+  commissionRate?: number; // e.g. 0.10 for 10%
+  commissionAmount?: number; // total minus delivery fee times rate
+  netToMerchant?: number; // subtotal minus commission
+  payoutDate?: string; // date marked as paid out
+  payoutRef?: string; // MoMo transaction ref for the payout
+}
+
+export interface Review {
+  id: string;
+  merchantId: string;
+  orderId: string;
+  clientName: string;
+  rating: number; // 1 to 5
+  comment: string;
+  createdAt: string;
 }
 
 export interface Neighborhood {
