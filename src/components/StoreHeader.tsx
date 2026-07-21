@@ -23,6 +23,48 @@ interface StoreHeaderProps {
   onLangChange: (lang: Language) => void;
 }
 
+function LogoImage() {
+  const [hasError, setHasError] = React.useState(false);
+
+  if (hasError) {
+    return (
+      <svg className="w-11 h-11 object-contain group-hover:scale-105 transition-transform shrink-0" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="hdrBgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#4f46e5" />
+            <stop offset="50%" stopColor="#3730a3" />
+            <stop offset="100%" stopColor="#1e1b4b" />
+          </linearGradient>
+          <linearGradient id="hdrAccentGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#f59e0b" />
+            <stop offset="100%" stopColor="#10b981" />
+          </linearGradient>
+        </defs>
+        <rect width="512" height="512" rx="128" fill="url(#hdrBgGrad)" />
+        <path d="M 60 380 L 180 260 L 260 320 L 360 210 L 452 380 Z" fill="#ffffff" fillOpacity="0.06" />
+        <rect x="24" y="24" width="464" height="464" rx="104" fill="none" stroke="url(#hdrAccentGrad)" strokeWidth="8" strokeOpacity="0.4" />
+        <g transform="translate(0, -10)">
+          <path d="M 196 180 C 196 120, 316 120, 316 180" fill="none" stroke="#f59e0b" strokeWidth="24" strokeLinecap="round" />
+          <path d="M 216 180 C 216 136, 296 136, 296 180" fill="none" stroke="#ffffff" strokeWidth="12" strokeLinecap="round" />
+          <path d="M 140 185 H 372 L 352 400 C 352 420, 336 436, 316 436 H 196 C 176 436, 160 420, 160 400 Z" fill="#ffffff" />
+          <path d="M 196 240 L 256 310 L 316 240 L 328 350 H 296 L 288 290 L 256 328 L 224 290 L 216 350 H 184 Z" fill="#4f46e5" />
+          <circle cx="256" cy="380" r="16" fill="#10b981" />
+          <path d="M 256 368 L 260 376 L 268 380 L 260 384 L 256 392 L 252 384 L 244 380 L 252 376 Z" fill="#ffffff" />
+        </g>
+      </svg>
+    );
+  }
+
+  return (
+    <img 
+      src="/logo-bafoussam-market.svg" 
+      alt="Bafoussam Market Logo" 
+      className="w-11 h-11 object-contain group-hover:scale-105 transition-transform shrink-0" 
+      onError={() => setHasError(true)}
+    />
+  );
+}
+
 export default function StoreHeader({
   currentUser,
   activeView,
@@ -126,11 +168,7 @@ export default function StoreHeader({
           {/* Logo & Platform Modes */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between md:justify-start gap-4 sm:gap-6 w-full md:w-auto">
             <div className="flex items-center gap-3 cursor-pointer self-start sm:self-auto group" onClick={() => onViewChange('shop')}>
-              <img 
-                src="/logo-bafoussam-market.svg" 
-                alt="Bafoussam Market Logo" 
-                className="w-11 h-11 object-contain group-hover:scale-105 transition-transform shrink-0" 
-              />
+              <LogoImage />
               <div className="flex flex-col justify-center">
                 <span className="text-xl font-bold tracking-tight text-slate-900 dark:text-white font-display leading-none">
                   Bafoussam <span className="text-indigo-600 dark:text-indigo-400">Market</span>
