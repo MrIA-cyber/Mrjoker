@@ -125,12 +125,19 @@ export default function StoreHeader({
           
           {/* Logo & Platform Modes */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between md:justify-start gap-4 sm:gap-6 w-full md:w-auto">
-            <div className="flex items-center gap-2.5 cursor-pointer self-start sm:self-auto" onClick={() => onViewChange('shop')}>
-              <div className="w-10 h-10 bg-indigo-600 rounded-lg flex items-center justify-center text-white font-bold text-xl font-display font-black">
-                B
-              </div>
-              <div>
-                <span className="text-xl font-black tracking-tight text-slate-800 dark:text-white font-display">Bafoussam<span className="text-indigo-600">Direct</span></span>
+            <div className="flex items-center gap-3 cursor-pointer self-start sm:self-auto group" onClick={() => onViewChange('shop')}>
+              <img 
+                src="/logo-bafoussam-market.svg" 
+                alt="Bafoussam Market Logo" 
+                className="w-11 h-11 object-contain group-hover:scale-105 transition-transform shrink-0" 
+              />
+              <div className="flex flex-col justify-center">
+                <span className="text-xl font-bold tracking-tight text-slate-900 dark:text-white font-display leading-none">
+                  Bafoussam <span className="text-indigo-600 dark:text-indigo-400">Market</span>
+                </span>
+                <span className="text-xs font-medium text-slate-500 dark:text-slate-400 tracking-normal mt-1 leading-none">
+                  {lang === 'fr' ? 'Livraison locale rapide' : 'Fast local delivery'}
+                </span>
               </div>
             </div>
 

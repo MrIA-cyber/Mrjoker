@@ -348,8 +348,8 @@ export default function WelcomeGate({ onSuccess, lang, onLangChange }: WelcomeGa
             <div className="relative mb-3">
               {/* Outer soft glow ring */}
               <div className="absolute inset-0 bg-indigo-500/10 rounded-2xl blur-md scale-110"></div>
-              <div className="w-14 h-14 bg-gradient-to-tr from-indigo-50 to-white rounded-2xl flex items-center justify-center border border-indigo-100 shadow-sm relative z-10 hover:scale-105 transition-transform duration-300">
-                <span className="text-2xl animate-pulse">🏔️</span>
+              <div className="w-16 h-16 bg-gradient-to-tr from-indigo-50 to-white rounded-2xl flex items-center justify-center border border-indigo-100 shadow-sm relative z-10 hover:scale-105 transition-transform duration-300 p-2">
+                <img src="/logo-bafoussam-market.svg" alt="Bafoussam Market Logo" className="w-full h-full object-contain" />
               </div>
             </div>
 
@@ -360,7 +360,7 @@ export default function WelcomeGate({ onSuccess, lang, onLangChange }: WelcomeGa
             </div>
 
             <h1 className="text-3xl font-black tracking-tight text-slate-900 font-display">
-              Bafoussam<span className="text-indigo-600 bg-gradient-to-r from-indigo-600 to-indigo-800 bg-clip-text text-transparent">Direct</span>
+              Bafoussam <span className="text-indigo-600 bg-gradient-to-r from-indigo-600 to-indigo-800 bg-clip-text text-transparent">Market</span>
             </h1>
             <p className="text-xs text-slate-500 mt-1.5 max-w-sm leading-relaxed">
               {getTranslation('taglineWelcome')}

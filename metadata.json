@@ -1,6 +1,6 @@
 {
-  "name": "Bafoussam En Ligne",
-  "description": "Application de vente en ligne locale pour la ville de Bafoussam, proposant des abonnements pour commerçants, une livraison rapide, et un accès sécurisé par inscription payante.",
+  "name": "Bafoussam Market",
+  "description": "Bafoussam Market - Livraison locale à Bafoussam. Plateforme de vente en ligne et de livraison rapide à Bafoussam.",
   "requestFramePermissions": ["geolocation"],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
+  <defs>
+    <!-- Background Gradient -->
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#4f46e5" />
+      <stop offset="50%" stop-color="#3730a3" />
+      <stop offset="100%" stop-color="#1e1b4b" />
+    </linearGradient>
+
+    <!-- Accent Gradient -->
+    <linearGradient id="accentGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#f59e0b" />
+      <stop offset="100%" stop-color="#10b981" />
+    </linearGradient>
+
+    <!-- Shield Glow -->
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="12" stdDeviation="16" flood-color="#312e81" flood-opacity="0.5"/>
+    </filter>
+  </defs>
+
+  <!-- Rounded Outer Container -->
+  <rect width="512" height="512" rx="128" fill="url(#bgGrad)" />
+
+  <!-- Subtle Mountain Silhouette (Bafoussam Highlands) -->
+  <path d="M 60 380 L 180 260 L 260 320 L 360 210 L 452 380 Z" fill="#ffffff" fill-opacity="0.06" />
+
+  <!-- Outer Ring Accent -->
+  <rect x="24" y="24" width="464" height="464" rx="104" fill="none" stroke="url(#accentGrad)" stroke-width="8" stroke-opacity="0.4" />
+
+  <!-- Shopping Bag / Store Icon Graphic -->
+  <g transform="translate(0, -10)" filter="url(#shadow)">
+    <!-- Bag Handles -->
+    <path d="M 196 180 C 196 120, 316 120, 316 180" fill="none" stroke="#f59e0b" stroke-width="24" stroke-linecap="round" />
+    <path d="M 216 180 C 216 136, 296 136, 296 180" fill="none" stroke="#ffffff" stroke-width="12" stroke-linecap="round" />
+
+    <!-- Main Bag Body -->
+    <path d="M 140 185 H 372 L 352 400 C 352 420, 336 436, 316 436 H 196 C 176 436, 160 420, 160 400 Z" fill="#ffffff" />
+
+    <!-- Stylized "M" & Location Pin inside Bag -->
+    <path d="M 196 240 L 256 310 L 316 240 L 328 350 H 296 L 288 290 L 256 328 L 224 290 L 216 350 H 184 Z" fill="#4f46e5" />
+
+    <!-- Location Pin / Speed Star Accent -->
+    <circle cx="256" cy="380" r="16" fill="#10b981" />
+    <path d="M 256 368 L 260 376 L 268 380 L 260 384 L 256 392 L 252 384 L 244 380 L 252 376 Z" fill="#ffffff" />
+  </g>
+</svg>
