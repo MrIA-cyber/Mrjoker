@@ -31,7 +31,15 @@ import {
   Clock,
   Package,
   Coins,
-  CreditCard
+  CreditCard,
+  MessageCircle,
+  Phone,
+  MapPin,
+  Calendar,
+  Filter,
+  CheckCircle,
+  MessageSquare,
+  Store
 } from 'lucide-react';
 import { User, Merchant, Product, Order, Review } from '../types';
 import { translations, Language } from '../translations';
@@ -68,6 +76,11 @@ export default function AdminPanel({
   const [searchTerm, setSearchTerm] = useState('');
   const [merchantSearchTerm, setMerchantSearchTerm] = useState('');
   const [rejectionReasons, setRejectionReasons] = useState<{[mId: string]: string}>({});
+
+  // Order Dashboard Filter States
+  const [orderStatusFilter, setOrderStatusFilter] = useState<'all' | 'pending' | 'preparing' | 'delivering' | 'completed'>('all');
+  const [orderDateFilter, setOrderDateFilter] = useState<'all' | 'today' | 'week'>('all');
+  const [orderNeighborhoodFilter, setOrderNeighborhoodFilter] = useState<string>('all');
 
   // Revenue/Payout Tracking States
   const [commRate, setCommRate] = useState(() => parseFloat(localStorage.getItem('bafoussam_commission_rate') || '10'));
@@ -1578,128 +1591,490 @@ export interface Merchant {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
                 transition={{ duration: 0.15 }}
-                className="bg-white rounded-3xl border border-slate-100 shadow-xs p-6 space-y-6"
+                className="space-y-6"
               >
-                <div>
-                  <h3 className="text-sm font-black text-slate-900 uppercase tracking-wider">Suivi & Logistique des Livraisons</h3>
-                  <p className="text-xs text-slate-500">Supervisez l'acheminement des commandes en cours, affectez des livreurs motos, et mettez à jour la timeline client</p>
-                </div>
+                {/* 1. TOP SUMMARY / RESUME CARDS */}
+                {(() => {
+                  const now = new Date();
+                  const todayOrders = orders.filter(o => {
+                    if (!o.createdAt) return false;
+                    const d = new Date(o.createdAt);
+                    return d.getDate() === now.getDate() &&
+                           d.getMonth() === now.getMonth() &&
+                           d.getFullYear() === now.getFullYear();
+                  });
+                  const todayOrdersCount = todayOrders.length;
+                  const todayRevenue = todayOrders.reduce((sum, o) => sum + (o.total || 0), 0);
+                  const pendingOrdersCount = orders.filter(o => o.status === 'pending' || o.status === 'preparing').length;
 
-                {(!orders || orders.length === 0) ? (
-                  <div className="text-center py-12 bg-slate-50 rounded-2xl border border-dashed border-slate-200">
-                    <Truck className="w-12 h-12 text-slate-300 mx-auto mb-3" />
-                    <p className="text-xs text-slate-500 font-bold">Aucune commande en cours dans la base de données.</p>
-                    <p className="text-[10px] text-slate-400 mt-1">Faites des achats fictifs ou connectez-vous comme client pour initier une commande.</p>
-                  </div>
-                ) : (
-                  <div className="space-y-4">
-                    {orders.slice().reverse().map(order => (
-                      <div key={order.id} className="border border-slate-100 rounded-2xl p-5 bg-slate-50/50 hover:border-slate-200 transition space-y-4">
-                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-200/60 pb-3">
-                          <div>
-                            <span className="text-[10px] font-bold text-indigo-600 uppercase tracking-wider font-mono">Commande #{order.id.slice(-6)}</span>
-                            <h4 className="font-extrabold text-slate-900 text-sm mt-0.5">Destinataire : {order.userName} ({order.deliveryNeighborhood})</h4>
-                          </div>
-                          
-                          <div className="flex items-center gap-2">
-                            <span className="text-[10.5px] font-mono font-bold text-slate-500">{order.total.toLocaleString('fr-FR')} F</span>
-                            <span className={`text-[9px] font-extrabold px-2.5 py-0.5 rounded-full uppercase ${
-                              order.status === 'completed' 
-                                ? 'bg-emerald-100 text-emerald-800'
-                                : order.status === 'delivering'
-                                ? 'bg-blue-100 text-blue-800 animate-pulse'
-                                : 'bg-slate-100 text-slate-700'
-                            }`}>
-                              {order.status === 'pending' && 'Commande reçue'}
-                              {order.status === 'preparing' && 'En préparation'}
-                              {order.status === 'picked_up' && 'Récupérée'}
-                              {order.status === 'delivering' && 'En route'}
-                              {order.status === 'completed' && 'Livrée ✓'}
-                            </span>
-                          </div>
+                  return (
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      {/* Card 1: Commandes du jour */}
+                      <div className="bg-white rounded-2xl border border-slate-100 p-5 shadow-xs flex items-center justify-between relative overflow-hidden">
+                        <div className="space-y-1">
+                          <p className="text-[10px] font-black uppercase tracking-wider text-slate-400">Commandes du Jour</p>
+                          <p className="text-2xl font-black text-slate-900 font-mono">{todayOrdersCount}</p>
+                          <p className="text-[10px] text-slate-500 font-medium">Reçues aujourd'hui à Bafoussam</p>
                         </div>
-
-                        <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
-                          {/* Left: items details and delivery coordinates */}
-                          <div className="lg:col-span-4 space-y-2 text-xs">
-                            <p className="text-slate-400 font-bold text-[9px] uppercase tracking-wider">Détails de livraison & Articles</p>
-                            <div className="bg-white border border-slate-100 p-3 rounded-xl space-y-1 text-[11px] leading-relaxed font-sans">
-                              <p className="font-semibold text-slate-800">📍 Quartier : {order.deliveryNeighborhood}</p>
-                              <p className="text-slate-500">📞 Tél Paiement : {order.paymentPhone} ({order.paymentMethod === 'momo' ? 'MTN MoMo' : 'Orange Money'})</p>
-                              {order.deliveryDetails && <p className="text-slate-500 italic mt-1">« {order.deliveryDetails} »</p>}
-                              
-                              <div className="border-t border-slate-100 pt-2.5 mt-2.5 space-y-1">
-                                {order.items.map((it, idx) => (
-                                  <div key={idx} className="flex justify-between text-slate-600">
-                                    <span>{it.product.name} <strong className="text-slate-900 font-bold font-sans">x{it.quantity}</strong></span>
-                                    <span>{(it.product.price * it.quantity).toLocaleString('fr-FR')} F</span>
-                                  </div>
-                                ))}
-                              </div>
-                            </div>
-                          </div>
-
-                          {/* Middle: change status dropdown */}
-                          <div className="lg:col-span-4 space-y-2">
-                            <p className="text-slate-400 font-bold text-[9px] uppercase tracking-wider">Changer le statut logistique</p>
-                            <div className="bg-white border border-slate-100 p-3 rounded-xl space-y-2.5">
-                              <div>
-                                <label className="block text-[9px] font-bold text-slate-500 uppercase mb-1">Statut actuel</label>
-                                <select
-                                  className="w-full bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs text-slate-900 font-bold focus:outline-none focus:ring-1 focus:ring-indigo-500"
-                                  value={order.status}
-                                  onChange={(e) => handleUpdateOrderStatusDirect(order.id, e.target.value as any)}
-                                >
-                                  <option value="pending">Commande reçue</option>
-                                  <option value="preparing">En préparation par le commerçant</option>
-                                  <option value="picked_up">Récupérée par le livreur</option>
-                                  <option value="delivering">En route vers le client</option>
-                                  <option value="completed">Livrée à destination</option>
-                                </select>
-                              </div>
-
-                              <p className="text-[10px] text-slate-400 leading-normal font-sans">
-                                En changeant ce statut, la timeline du client se mettra à jour instantanément sur son écran de suivi de commande.
-                              </p>
-                            </div>
-                          </div>
-
-                          {/* Right: courier name and phone number fields */}
-                          <div className="lg:col-span-4 space-y-2">
-                            <p className="text-slate-400 font-bold text-[9px] uppercase tracking-wider">Livreur assigné (Moto-taximan)</p>
-                            <div className="bg-white border border-slate-100 p-3 rounded-xl space-y-2.5">
-                              <div className="grid grid-cols-2 gap-2 font-sans">
-                                <div>
-                                  <label className="block text-[9px] font-bold text-slate-500 uppercase mb-1">Nom du coursier</label>
-                                  <input
-                                    type="text"
-                                    placeholder="Paul, Jean-Baptiste..."
-                                    className="w-full bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs text-slate-900 focus:outline-none"
-                                    value={order.courierName || ''}
-                                    onChange={(e) => handleUpdateOrderCourier(order.id, e.target.value, order.courierPhone || '')}
-                                  />
-                                </div>
-                                <div>
-                                  <label className="block text-[9px] font-bold text-slate-500 uppercase mb-1">Téléphone</label>
-                                  <input
-                                    type="tel"
-                                    placeholder="Ex: 640406412"
-                                    className="w-full bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs text-slate-900 focus:outline-none"
-                                    value={order.courierPhone || ''}
-                                    onChange={(e) => handleUpdateOrderCourier(order.id, order.courierName || '', e.target.value)}
-                                  />
-                                </div>
-                              </div>
-                              <p className="text-[9.5px] text-slate-400 leading-normal font-sans">
-                                Le nom et téléphone saisis s'afficheront sur la fiche du client dès que la commande passe à "Récupérée par le livreur" (étape 3).
-                              </p>
-                            </div>
-                          </div>
+                        <div className="w-12 h-12 rounded-2xl bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-600 font-black">
+                          <Package className="w-6 h-6" />
                         </div>
                       </div>
-                    ))}
+
+                      {/* Card 2: Chiffre d'affaires du jour */}
+                      <div className="bg-white rounded-2xl border border-slate-100 p-5 shadow-xs flex items-center justify-between relative overflow-hidden">
+                        <div className="space-y-1">
+                          <p className="text-[10px] font-black uppercase tracking-wider text-slate-400">Chiffre d'Affaires du Jour</p>
+                          <p className="text-2xl font-black text-emerald-600 font-mono">{todayRevenue.toLocaleString('fr-FR')} FCFA</p>
+                          <p className="text-[10px] text-slate-500 font-medium">Volume total généré aujourd'hui</p>
+                        </div>
+                        <div className="w-12 h-12 rounded-2xl bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-600 font-black">
+                          <Coins className="w-6 h-6" />
+                        </div>
+                      </div>
+
+                      {/* Card 3: Commandes en attente */}
+                      <div className="bg-white rounded-2xl border border-slate-100 p-5 shadow-xs flex items-center justify-between relative overflow-hidden">
+                        <div className="space-y-1">
+                          <p className="text-[10px] font-black uppercase tracking-wider text-slate-400">Commandes en Attente</p>
+                          <p className="text-2xl font-black text-amber-600 font-mono">{pendingOrdersCount}</p>
+                          <p className="text-[10px] text-slate-500 font-medium">À traiter ou en préparation</p>
+                        </div>
+                        <div className="w-12 h-12 rounded-2xl bg-amber-50 border border-amber-100 flex items-center justify-center text-amber-600 font-black">
+                          <Clock className="w-6 h-6" />
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })()}
+
+                {/* MAIN CONTENT CARD CONTAINER */}
+                <div className="bg-white rounded-3xl border border-slate-100 shadow-xs p-6 space-y-6">
+                  {/* Dashboard Header */}
+                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-100 pb-5">
+                    <div>
+                      <h3 className="text-base font-black text-slate-900 uppercase tracking-wider flex items-center gap-2">
+                        <Truck className="w-5 h-5 text-indigo-600" />
+                        <span>Gestion des Commandes & Logistique</span>
+                      </h3>
+                      <p className="text-xs text-slate-500 mt-0.5">
+                        Tableau de bord de suivi en temps réel des livraisons à Bafoussam Market
+                      </p>
+                    </div>
+
+                    <span className="bg-indigo-50 border border-indigo-100 text-indigo-700 text-xs font-extrabold px-3 py-1.5 rounded-xl self-start md:self-auto">
+                      Total: {orders.length} commande(s)
+                    </span>
                   </div>
-                )}
+
+                  {/* 2. FILTERS BAR */}
+                  <div className="bg-slate-50 border border-slate-200/80 rounded-2xl p-4 space-y-3">
+                    <div className="flex items-center gap-2 text-xs font-black uppercase text-slate-700 tracking-wider">
+                      <Filter className="w-4 h-4 text-indigo-600" />
+                      <span>Filtres de recherche</span>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                      {/* Filter by Status */}
+                      <div>
+                        <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">
+                          Filtrer par Statut
+                        </label>
+                        <select
+                          className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+                          value={orderStatusFilter}
+                          onChange={(e) => setOrderStatusFilter(e.target.value as any)}
+                        >
+                          <option value="all">Tous les statuts</option>
+                          <option value="pending">🟡 Nouvelle commande</option>
+                          <option value="preparing">🔵 En préparation</option>
+                          <option value="delivering">🟠 En livraison</option>
+                          <option value="completed">🟢 Livrée</option>
+                        </select>
+                      </div>
+
+                      {/* Filter by Date */}
+                      <div>
+                        <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">
+                          Filtrer par Date
+                        </label>
+                        <select
+                          className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+                          value={orderDateFilter}
+                          onChange={(e) => setOrderDateFilter(e.target.value as any)}
+                        >
+                          <option value="all">Toutes les dates</option>
+                          <option value="today">Aujourd'hui uniquement</option>
+                          <option value="week">Cette semaine (7 derniers jours)</option>
+                        </select>
+                      </div>
+
+                      {/* Filter by Neighborhood */}
+                      <div>
+                        <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">
+                          Filtrer par Quartier
+                        </label>
+                        <select
+                          className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+                          value={orderNeighborhoodFilter}
+                          onChange={(e) => setOrderNeighborhoodFilter(e.target.value)}
+                        >
+                          <option value="all">Tous les quartiers</option>
+                          {Array.from(
+                            new Set([
+                              'Tamdja', 'Bamendzi', 'Banengo', 'Djeleng', 'Famla', 'Ndiangdam', 'Carrefour Bamiléké', 'Marché A (Centre-ville)',
+                              ...orders.map(o => o.deliveryNeighborhood).filter(Boolean)
+                            ])
+                          ).map((n) => (
+                            <option key={n} value={n}>
+                              📍 {n}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* 3. ORDERS LIST / CARDS */}
+                  {(() => {
+                    const filteredOrders = orders.filter(order => {
+                      // 1. Status Filter
+                      if (orderStatusFilter !== 'all') {
+                        if (orderStatusFilter === 'delivering') {
+                          if (order.status !== 'delivering' && order.status !== 'picked_up') return false;
+                        } else if (order.status !== orderStatusFilter) {
+                          return false;
+                        }
+                      }
+
+                      // 2. Date Filter
+                      if (orderDateFilter === 'today') {
+                        const d = new Date(order.createdAt);
+                        const now = new Date();
+                        const isToday = d.getDate() === now.getDate() && d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+                        if (!isToday) return false;
+                      } else if (orderDateFilter === 'week') {
+                        const d = new Date(order.createdAt);
+                        const diffTime = Math.abs(Date.now() - d.getTime());
+                        const diffDays = diffTime / (1000 * 60 * 60 * 24);
+                        if (diffDays > 7) return false;
+                      }
+
+                      // 3. Neighborhood Filter
+                      if (orderNeighborhoodFilter !== 'all') {
+                        if (order.deliveryNeighborhood?.toLowerCase() !== orderNeighborhoodFilter.toLowerCase()) {
+                          return false;
+                        }
+                      }
+
+                      return true;
+                    });
+
+                    if (filteredOrders.length === 0) {
+                      return (
+                        <div className="text-center py-12 bg-slate-50 rounded-2xl border border-dashed border-slate-200">
+                          <Truck className="w-12 h-12 text-slate-300 mx-auto mb-3" />
+                          <p className="text-xs text-slate-600 font-bold">Aucune commande ne correspond aux filtres sélectionnés.</p>
+                          <p className="text-[10px] text-slate-400 mt-1">Essayez de réinitialiser vos filtres pour afficher toutes les commandes.</p>
+                          <button
+                            onClick={() => {
+                              setOrderStatusFilter('all');
+                              setOrderDateFilter('all');
+                              setOrderNeighborhoodFilter('all');
+                            }}
+                            className="mt-3 inline-flex items-center gap-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold text-xs px-3.5 py-1.5 rounded-xl transition cursor-pointer"
+                          >
+                            <RefreshCw className="w-3.5 h-3.5" />
+                            Réinitialiser les filtres
+                          </button>
+                        </div>
+                      );
+                    }
+
+                    return (
+                      <div className="space-y-5">
+                        {filteredOrders.slice().reverse().map(order => {
+                          // Find merchant for whatsapp contact button
+                          const firstProduct = order.items[0]?.product;
+                          const merchant = merchants.find(
+                            m => m.id === firstProduct?.merchantId || m.shopName === firstProduct?.merchantName
+                          );
+                          const merchantPhone = merchant?.phone || '+237 677 89 45 12';
+                          const merchantShopName = merchant?.shopName || firstProduct?.merchantName || 'le vendeur';
+                          
+                          // Clean phone for wa.me
+                          const cleanedMerchantPhone = merchantPhone.replace(/[^0-9]/g, '');
+                          const waMerchantPhone = cleanedMerchantPhone.startsWith('237') ? cleanedMerchantPhone : `237${cleanedMerchantPhone}`;
+                          const waMessage = `Bonjour ${merchantShopName}, je vous contacte depuis l'administration Bafoussam Market au sujet de la commande #${order.id.slice(-6).toUpperCase()} (${order.userName} - ${order.deliveryNeighborhood}). Pouvez-vous me donner un point d'avancement ?`;
+                          const whatsappMerchantUrl = `https://wa.me/${waMerchantPhone}?text=${encodeURIComponent(waMessage)}`;
+
+                          // Clean client phone for wa.me / call
+                          const rawClientPhone = order.paymentPhone || '690000000';
+                          const cleanedClientPhone = rawClientPhone.replace(/[^0-9]/g, '');
+                          const waClientPhone = cleanedClientPhone.startsWith('237') ? cleanedClientPhone : `237${cleanedClientPhone}`;
+                          const waClientMsg = `Bonjour ${order.userName}, nous suivons votre commande #${order.id.slice(-6).toUpperCase()} sur Bafoussam Market pour une livraison à ${order.deliveryNeighborhood}.`;
+                          const whatsappClientUrl = `https://wa.me/${waClientPhone}?text=${encodeURIComponent(waClientMsg)}`;
+
+                          // Format status badge details
+                          const getBadgeStyle = (status: Order['status']) => {
+                            switch (status) {
+                              case 'pending':
+                                return {
+                                  label: 'Nouvelle',
+                                  style: 'bg-amber-100 text-amber-900 border-amber-300',
+                                  dot: 'bg-amber-500'
+                                };
+                              case 'preparing':
+                                return {
+                                  label: 'En préparation',
+                                  style: 'bg-blue-100 text-blue-900 border-blue-300',
+                                  dot: 'bg-blue-500'
+                                };
+                              case 'picked_up':
+                              case 'delivering':
+                                return {
+                                  label: 'En livraison',
+                                  style: 'bg-orange-100 text-orange-900 border-orange-300',
+                                  dot: 'bg-orange-500 animate-pulse'
+                                };
+                              case 'completed':
+                                return {
+                                  label: 'Livrée',
+                                  style: 'bg-emerald-100 text-emerald-900 border-emerald-300',
+                                  dot: 'bg-emerald-500'
+                                };
+                              default:
+                                return {
+                                  label: status,
+                                  style: 'bg-slate-100 text-slate-800 border-slate-200',
+                                  dot: 'bg-slate-400'
+                                };
+                            }
+                          };
+
+                          const badgeInfo = getBadgeStyle(order.status);
+                          const formattedDate = order.createdAt 
+                            ? new Date(order.createdAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' }) + ' à ' + new Date(order.createdAt).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })
+                            : 'Date non spécifiée';
+
+                          return (
+                            <div
+                              key={order.id}
+                              className="border border-slate-200/80 rounded-2xl p-5 bg-white hover:border-slate-300 transition space-y-4 shadow-2xs"
+                            >
+                              {/* Order Card Header */}
+                              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-3">
+                                <div>
+                                  <div className="flex items-center gap-2 flex-wrap">
+                                    <span className="text-xs font-mono font-black text-indigo-700 bg-indigo-50 border border-indigo-100 px-2.5 py-0.5 rounded-lg">
+                                      #{order.id.slice(-6).toUpperCase()}
+                                    </span>
+                                    <span className="text-[10px] text-slate-400 font-bold flex items-center gap-1">
+                                      <Clock className="w-3 h-3 text-slate-400" />
+                                      {formattedDate}
+                                    </span>
+                                  </div>
+                                  <h4 className="font-extrabold text-slate-900 text-sm mt-1 flex items-center gap-2">
+                                    <span>Client : {order.userName}</span>
+                                    <a
+                                      href={`tel:${order.paymentPhone}`}
+                                      className="text-indigo-600 hover:text-indigo-800 text-xs font-mono font-bold hover:underline inline-flex items-center gap-0.5"
+                                      title="Appeler le client"
+                                    >
+                                      📞 {order.paymentPhone}
+                                    </a>
+                                  </h4>
+                                </div>
+
+                                <div className="flex items-center gap-3">
+                                  <div className="text-right">
+                                    <p className="text-[9px] text-slate-400 font-bold uppercase tracking-wider">Total Commande</p>
+                                    <p className="text-sm font-black text-slate-900 font-mono">
+                                      {order.total.toLocaleString('fr-FR')} FCFA
+                                    </p>
+                                  </div>
+
+                                  {/* Status Badge */}
+                                  <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider border ${badgeInfo.style}`}>
+                                    <span className={`w-2 h-2 rounded-full ${badgeInfo.dot}`} />
+                                    {badgeInfo.label}
+                                  </span>
+                                </div>
+                              </div>
+
+                              {/* Order Details Grid */}
+                              <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
+                                {/* Left Column: Client, Delivery Neighborhood & Ordered Items */}
+                                <div className="lg:col-span-5 space-y-3">
+                                  <div className="bg-slate-50 border border-slate-100 p-3.5 rounded-xl space-y-2 text-xs">
+                                    <div className="flex items-center gap-1.5 font-extrabold text-slate-900">
+                                      <MapPin className="w-4 h-4 text-red-500 shrink-0" />
+                                      <span>Livraison : {order.deliveryNeighborhood}</span>
+                                    </div>
+
+                                    {order.deliveryDetails && (
+                                      <p className="text-slate-600 text-[11px] italic bg-white p-2 rounded-lg border border-slate-100">
+                                        « {order.deliveryDetails} »
+                                      </p>
+                                    )}
+
+                                    <div className="text-[10px] text-slate-500 flex items-center justify-between pt-1">
+                                      <span>Mode de paiement : <strong>{order.paymentMethod === 'momo' ? 'MTN Mobile Money' : order.paymentMethod === 'orange' ? 'Orange Money' : 'Paiement à la livraison'}</strong></span>
+                                    </div>
+                                  </div>
+
+                                  {/* Products List */}
+                                  <div className="bg-white border border-slate-100 p-3.5 rounded-xl space-y-2">
+                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider flex items-center justify-between">
+                                      <span>Produits commandés</span>
+                                      <span>Quantité & Prix</span>
+                                    </p>
+                                    <div className="divide-y divide-slate-100 space-y-1.5 pt-1">
+                                      {order.items.map((item, idx) => (
+                                        <div key={idx} className="flex items-center justify-between text-xs pt-1.5">
+                                          <div className="flex items-center gap-2">
+                                            {item.product?.image ? (
+                                              <img src={item.product.image} alt="" className="w-7 h-7 rounded-lg object-cover shrink-0 border border-slate-200" referrerPolicy="no-referrer" />
+                                            ) : (
+                                              <div className="w-7 h-7 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold text-[10px]">
+                                                📦
+                                              </div>
+                                            )}
+                                            <div>
+                                              <p className="font-bold text-slate-800 line-clamp-1">{item.product?.name || 'Produit'}</p>
+                                              <p className="text-[9.5px] text-slate-400">{item.product?.merchantName}</p>
+                                            </div>
+                                          </div>
+                                          <div className="text-right font-mono text-xs">
+                                            <span className="font-bold text-slate-900">x{item.quantity}</span>
+                                            <span className="text-slate-400 block text-[10px]">{(item.product.price * item.quantity).toLocaleString('fr-FR')} FCFA</span>
+                                          </div>
+                                        </div>
+                                      ))}
+                                    </div>
+                                  </div>
+                                </div>
+
+                                {/* Middle Column: Manual Status Changer */}
+                                <div className="lg:col-span-4 space-y-3">
+                                  <div className="bg-slate-50 border border-slate-100 p-3.5 rounded-xl space-y-3">
+                                    <p className="text-[10px] font-black text-slate-500 uppercase tracking-wider">
+                                      Changer le Statut Manuel
+                                    </p>
+
+                                    <div>
+                                      <select
+                                        className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+                                        value={order.status}
+                                        onChange={(e) => handleUpdateOrderStatusDirect(order.id, e.target.value as any)}
+                                      >
+                                        <option value="pending">🟡 Nouvelle commande (Reçue)</option>
+                                        <option value="preparing">🔵 En préparation (Vendeur)</option>
+                                        <option value="picked_up">🟠 Récupérée par livreur</option>
+                                        <option value="delivering">🟠 En livraison (En route)</option>
+                                        <option value="completed">🟢 Livrée (Terminée)</option>
+                                      </select>
+                                    </div>
+
+                                    {/* Quick Actions Buttons */}
+                                    <div className="grid grid-cols-2 gap-1.5 pt-1">
+                                      <button
+                                        onClick={() => handleUpdateOrderStatusDirect(order.id, 'preparing')}
+                                        className="bg-blue-50 hover:bg-blue-100 border border-blue-200 text-blue-800 text-[10px] font-black py-1.5 rounded-lg cursor-pointer transition text-center"
+                                      >
+                                        En préparation
+                                      </button>
+                                      <button
+                                        onClick={() => handleUpdateOrderStatusDirect(order.id, 'delivering')}
+                                        className="bg-orange-50 hover:bg-orange-100 border border-orange-200 text-orange-800 text-[10px] font-black py-1.5 rounded-lg cursor-pointer transition text-center"
+                                      >
+                                        En livraison
+                                      </button>
+                                      <button
+                                        onClick={() => handleUpdateOrderStatusDirect(order.id, 'completed')}
+                                        className="col-span-2 bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-black py-1.5 rounded-lg cursor-pointer transition text-center shadow-xs"
+                                      >
+                                        ✓ Marquer comme Livrée
+                                      </button>
+                                    </div>
+                                  </div>
+
+                                  {/* Courier Assignment */}
+                                  <div className="bg-white border border-slate-100 p-3.5 rounded-xl space-y-2">
+                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider flex items-center gap-1">
+                                      <Bike className="w-3.5 h-3.5 text-slate-600" />
+                                      Livreur Moto Assigné
+                                    </p>
+                                    <div className="grid grid-cols-2 gap-2 text-xs">
+                                      <div>
+                                        <label className="block text-[8.5px] font-bold text-slate-400 uppercase">Nom</label>
+                                        <input
+                                          type="text"
+                                          placeholder="Ex: Jean-Baptiste"
+                                          className="w-full bg-slate-50 border border-slate-200 rounded-lg px-2 py-1 text-xs text-slate-900 focus:outline-none"
+                                          value={order.courierName || ''}
+                                          onChange={(e) => handleUpdateOrderCourier(order.id, e.target.value, order.courierPhone || '')}
+                                        />
+                                      </div>
+                                      <div>
+                                        <label className="block text-[8.5px] font-bold text-slate-400 uppercase">Téléphone</label>
+                                        <input
+                                          type="tel"
+                                          placeholder="Ex: 699001122"
+                                          className="w-full bg-slate-50 border border-slate-200 rounded-lg px-2 py-1 text-xs text-slate-900 focus:outline-none"
+                                          value={order.courierPhone || ''}
+                                          onChange={(e) => handleUpdateOrderCourier(order.id, order.courierName || '', e.target.value)}
+                                        />
+                                      </div>
+                                    </div>
+                                  </div>
+                                </div>
+
+                                {/* Right Column: WhatsApp & Contact Actions */}
+                                <div className="lg:col-span-3 space-y-3">
+                                  <div className="bg-emerald-50/60 border border-emerald-100 p-3.5 rounded-xl space-y-2.5">
+                                    <p className="text-[10px] font-black text-emerald-800 uppercase tracking-wider flex items-center gap-1">
+                                      <MessageCircle className="w-3.5 h-3.5 text-emerald-600" />
+                                      Actions de Communication
+                                    </p>
+
+                                    {/* WhatsApp Vendor Contact Button */}
+                                    <a
+                                      href={whatsappMerchantUrl}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs py-2.5 px-3 rounded-xl transition flex items-center justify-center gap-2 shadow-xs cursor-pointer"
+                                      title={`Contacter ${merchantShopName} sur WhatsApp (${merchantPhone})`}
+                                    >
+                                      <MessageCircle className="w-4 h-4 fill-white/20" />
+                                      <span>Contacter le vendeur</span>
+                                    </a>
+
+                                    {/* Contact Client WhatsApp Button */}
+                                    <a
+                                      href={whatsappClientUrl}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs py-2 px-3 rounded-xl transition flex items-center justify-center gap-2 cursor-pointer"
+                                    >
+                                      <MessageSquare className="w-3.5 h-3.5 text-indigo-400" />
+                                      <span>WhatsApp Client</span>
+                                    </a>
+
+                                    <div className="pt-1 border-t border-emerald-100 text-[10px] text-slate-500">
+                                      <span>Boutique : <strong>{merchantShopName}</strong></span>
+                                      <span className="block font-mono text-[9.5px]">Tél : {merchantPhone}</span>
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    );
+                  })()}
+                </div>
               </motion.div>
             )}
 

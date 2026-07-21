@@ -1,4 +1,4 @@
-import { Product, Merchant, Neighborhood, Review } from '../types';
+import { Product, Merchant, Neighborhood, Review, Order } from '../types';
 
 export const BAFOUSSAM_NEIGHBORHOODS: Neighborhood[] = [
   { id: 'tamdja', name: 'Tamdja', deliveryFee: 500, estMinutes: 15, coordinates: { x: 120, y: 150 } },
@@ -286,4 +286,94 @@ export const INITIAL_REVIEWS: Review[] = [
     createdAt: '2026-07-12T16:20:00Z'
   }
 ];
+
+export const INITIAL_ORDERS: Order[] = [
+  {
+    id: 'BM-9821',
+    userId: 'u1',
+    userName: 'Emmanuel Tagne',
+    items: [
+      { product: INITIAL_PRODUCTS[0], quantity: 2 },
+      { product: INITIAL_PRODUCTS[8], quantity: 1 }
+    ],
+    total: 9500,
+    status: 'pending',
+    deliveryNeighborhood: 'Tamdja',
+    deliveryDetails: 'Derrière la pharmacie de Tamdja, portail vert',
+    paymentMethod: 'momo',
+    paymentPhone: '675123456',
+    createdAt: new Date().toISOString(),
+    deliveryTimeEstimated: 15
+  },
+  {
+    id: 'BM-8842',
+    userId: 'u2',
+    userName: 'Chantal Foko',
+    items: [
+      { product: INITIAL_PRODUCTS[3], quantity: 1 },
+      { product: INITIAL_PRODUCTS[5], quantity: 1 }
+    ],
+    total: 17000,
+    status: 'preparing',
+    deliveryNeighborhood: 'Bamendzi',
+    deliveryDetails: 'Carrefour jeunesse Bamendzi',
+    paymentMethod: 'orange',
+    paymentPhone: '698887766',
+    createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
+    deliveryTimeEstimated: 20
+  },
+  {
+    id: 'BM-7619',
+    userId: 'u3',
+    userName: 'Serge Kamga',
+    items: [
+      { product: INITIAL_PRODUCTS[2], quantity: 1 }
+    ],
+    total: 85500,
+    status: 'delivering',
+    deliveryNeighborhood: 'Carrefour Bamiléké',
+    deliveryDetails: 'Immeuble face boulangerie',
+    paymentMethod: 'momo',
+    paymentPhone: '651223344',
+    createdAt: new Date(Date.now() - 3.5 * 60 * 60 * 1000).toISOString(),
+    deliveryTimeEstimated: 15,
+    courierName: 'Jean-Baptiste Moto',
+    courierPhone: '699001122'
+  },
+  {
+    id: 'BM-6510',
+    userId: 'u4',
+    userName: 'Bertrand Nguemgne',
+    items: [
+      { product: INITIAL_PRODUCTS[1], quantity: 1 }
+    ],
+    total: 45500,
+    status: 'completed',
+    deliveryNeighborhood: 'Banengo',
+    deliveryDetails: 'Près du lycée bilingue',
+    paymentMethod: 'orange',
+    paymentPhone: '677990011',
+    createdAt: new Date(Date.now() - 5 * 60 * 60 * 1000).toISOString(),
+    deliveryTimeEstimated: 25,
+    courierName: 'Paul Moto',
+    courierPhone: '670443322'
+  },
+  {
+    id: 'BM-5432',
+    userId: 'u5',
+    userName: 'Rosine Wambo',
+    items: [
+      { product: INITIAL_PRODUCTS[6], quantity: 1 }
+    ],
+    total: 28500,
+    status: 'completed',
+    deliveryNeighborhood: 'Famla',
+    deliveryDetails: 'Marché Famla, boutique coiffure',
+    paymentMethod: 'momo',
+    paymentPhone: '694556677',
+    createdAt: new Date(Date.now() - 26 * 60 * 60 * 1000).toISOString(),
+    deliveryTimeEstimated: 22
+  }
+];
+
 

@@ -5,7 +5,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { User, Product, Merchant, Order, CartItem, Review } from './types';
-import { INITIAL_PRODUCTS, INITIAL_MERCHANTS, BAFOUSSAM_NEIGHBORHOODS, INITIAL_REVIEWS } from './data/mockData';
+import { INITIAL_PRODUCTS, INITIAL_MERCHANTS, BAFOUSSAM_NEIGHBORHOODS, INITIAL_REVIEWS, INITIAL_ORDERS } from './data/mockData';
 import { Language, translations } from './translations';
 import WelcomeGate from './components/WelcomeGate';
 import StoreHeader from './components/StoreHeader';
@@ -76,10 +76,14 @@ export default function App() {
   const [orders, setOrders] = useState<Order[]>(() => {
     try {
       const saved = localStorage.getItem('bafoussam_orders');
-      return saved ? JSON.parse(saved) : [];
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
+      return INITIAL_ORDERS;
     } catch (e) {
       console.error("Erreur de lecture de orders depuis localStorage:", e);
-      return [];
+      return INITIAL_ORDERS;
     }
   });
 
