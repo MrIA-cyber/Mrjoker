@@ -7,6 +7,7 @@ import {
   Settings, Percent, Star, Tag, Compass, X, ShieldAlert
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import VerifiedBadge from './VerifiedBadge';
 
 interface MerchantDashboardProps {
   products: Product[];
@@ -78,6 +79,14 @@ export default function MerchantDashboard({
     }
   ]);
 
+  // Identity Verification and Document Upload state variables
+  const [regLegalName, setRegLegalName] = useState('');
+  const [regCniPhoto, setRegCniPhoto] = useState<string | null>(null);
+  const [regShopPhoto, setRegShopPhoto] = useState<string | null>(null);
+  const [regRegistryNumber, setRegRegistryNumber] = useState('');
+  const [regCniFileName, setRegCniFileName] = useState('');
+  const [regShopFileName, setRegShopFileName] = useState('');
+
   const activeMerchant = merchants.find(m => m.id === activeMerchantId);
   const isMerchantExpired = !!(activeMerchant && activeMerchant.isPremium && activeMerchant.premiumExpiryDate && new Date(activeMerchant.premiumExpiryDate) < new Date());
   const merchantProducts = products.filter(p => p.merchantId === activeMerchantId);
@@ -132,6 +141,12 @@ export default function MerchantDashboard({
       views: 0,
       clicks: 0,
       sales: 0,
+      isVerified: false,
+      verificationStatus: 'pending_verification',
+      legalName: regLegalName,
+      cniPhoto: regCniPhoto || undefined,
+      shopPhoto: regShopPhoto || undefined,
+      registryNumber: regRegistryNumber || undefined,
     };
 
     if (onRegisterMerchant) {
@@ -139,6 +154,15 @@ export default function MerchantDashboard({
     } else {
       merchants.push(newM); // Simulated addition fallback
     }
+
+    // Reset verification states
+    setRegLegalName('');
+    setRegCniPhoto(null);
+    setRegShopPhoto(null);
+    setRegRegistryNumber('');
+    setRegCniFileName('');
+    setRegShopFileName('');
+
     setActiveMerchantId(newM.id);
     setUpgradePhone(phone.replace(/[^0-9]/g, '').slice(-9));
   };
@@ -332,7 +356,12 @@ export default function MerchantDashboard({
                               {m.logo}
                             </div>
                             <div>
-                              <p className="font-bold text-slate-950 text-xs">{m.shopName}</p>
+                              <div className="flex items-center gap-1.5 flex-wrap">
+                                <p className="font-bold text-slate-950 text-xs">{m.shopName}</p>
+                                {m.isVerified && (
+                                  <VerifiedBadge id={`verified-badge-dash-login-${m.id}`} />
+                                )}
+                              </div>
                               <p className="text-[11px] text-slate-400">{m.location} • {m.name}</p>
                             </div>
                           </div>
@@ -458,6 +487,114 @@ export default function MerchantDashboard({
                     />
                   </div>
 
+                  {/* ID & Business Verification Fields */}
+                  <div className="bg-slate-50/80 p-4.5 rounded-2xl border border-slate-100 space-y-3.5">
+                    <span className="text-[10px] font-black text-slate-900 uppercase tracking-widest block border-b border-slate-200/60 pb-1.5">🛡️ Étape de Vérification Obligatoire</span>
+                    
+                    <div>
+                      <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1 flex items-center justify-between">
+                        <span>Nom légal du commerçant</span>
+                        <span className="text-indigo-600 font-bold text-[9px] uppercase">Strict (CNI)</span>
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        placeholder="Ex: Paul Tagne (Doit correspondre à la CNI)"
+                        className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/10 text-xs text-slate-950 transition"
+                        value={regLegalName}
+                        onChange={(e) => setRegLegalName(e.target.value)}
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1 flex items-center justify-between">
+                        <span>Numéro de Registre de Commerce</span>
+                        <span className="text-slate-400 font-normal text-[9px] uppercase">Optionnel</span>
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="Ex: RC/BAF/2026/B/142 (Si formalisé)"
+                        className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/10 text-xs text-slate-950 transition"
+                        value={regRegistryNumber}
+                        onChange={(e) => setRegRegistryNumber(e.target.value)}
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1 flex items-center justify-between">
+                          <span>Photo Recto CNI / Passeport</span>
+                          <span className="text-red-500 font-bold text-[9px] uppercase">Requis</span>
+                        </label>
+                        <div className="relative border-2 border-dashed border-slate-200 hover:border-indigo-500/50 rounded-xl p-2 bg-white text-center transition cursor-pointer flex flex-col items-center justify-center min-h-[85px]">
+                          <input
+                            type="file"
+                            accept="image/*"
+                            className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
+                            onChange={(e) => {
+                              const file = e.target.files?.[0];
+                              if (file) {
+                                setRegCniFileName(file.name);
+                                const reader = new FileReader();
+                                reader.onload = (event) => {
+                                  setRegCniPhoto(event.target?.result as string);
+                                };
+                                reader.readAsDataURL(file);
+                              }
+                            }}
+                          />
+                          {regCniPhoto ? (
+                            <div className="space-y-1">
+                              <img src={regCniPhoto} alt="CNI Preview" className="w-12 h-8 object-cover rounded mx-auto border border-slate-200" referrerPolicy="no-referrer" />
+                              <span className="text-[9px] text-slate-500 block truncate max-w-[100px] mx-auto">{regCniFileName}</span>
+                            </div>
+                          ) : (
+                            <div className="space-y-0.5 text-slate-400">
+                              <span className="text-lg block">🪪</span>
+                              <span className="text-[9px] block font-bold uppercase tracking-wider">Charger CNI</span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1 flex items-center justify-between">
+                          <span>Photo Boutique Physique</span>
+                          <span className="text-red-500 font-bold text-[9px] uppercase">Requis</span>
+                        </label>
+                        <div className="relative border-2 border-dashed border-slate-200 hover:border-indigo-500/50 rounded-xl p-2 bg-white text-center transition cursor-pointer flex flex-col items-center justify-center min-h-[85px]">
+                          <input
+                            type="file"
+                            accept="image/*"
+                            className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
+                            onChange={(e) => {
+                              const file = e.target.files?.[0];
+                              if (file) {
+                                setRegShopFileName(file.name);
+                                const reader = new FileReader();
+                                reader.onload = (event) => {
+                                  setRegShopPhoto(event.target?.result as string);
+                                };
+                                reader.readAsDataURL(file);
+                              }
+                            }}
+                          />
+                          {regShopPhoto ? (
+                            <div className="space-y-1">
+                              <img src={regShopPhoto} alt="Shop Preview" className="w-12 h-8 object-cover rounded mx-auto border border-slate-200" referrerPolicy="no-referrer" />
+                              <span className="text-[9px] text-slate-500 block truncate max-w-[100px] mx-auto">{regShopFileName}</span>
+                            </div>
+                          ) : (
+                            <div className="space-y-0.5 text-slate-400">
+                              <span className="text-lg block">🏪</span>
+                              <span className="text-[9px] block font-bold uppercase tracking-wider">Charger Photo</span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
                   <div>
                     <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1 flex items-center justify-between">
                       <span>Mot de passe de sécurité</span>
@@ -475,9 +612,20 @@ export default function MerchantDashboard({
                     </p>
                   </div>
 
+                  {!(regLegalName && regCniPhoto && regShopPhoto) && (
+                    <div className="text-amber-600 bg-amber-50 border border-amber-100 p-3 rounded-xl text-[10px] font-extrabold leading-normal" id="registration-warning-msg">
+                      ⚠️ Merci de fournir les documents requis pour valider votre boutique.
+                    </div>
+                  )}
+
                   <button
                     type="submit"
-                    className="w-full bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold py-3 rounded-xl cursor-pointer transition shadow-sm mt-3"
+                    disabled={!(regLegalName && regCniPhoto && regShopPhoto)}
+                    className={`w-full text-xs font-black py-3 rounded-xl cursor-pointer transition shadow-sm mt-3 uppercase tracking-wider ${
+                      (regLegalName && regCniPhoto && regShopPhoto)
+                        ? 'bg-slate-900 hover:bg-slate-800 text-white'
+                        : 'bg-slate-100 text-slate-400 border border-slate-200 cursor-not-allowed'
+                    }`}
                   >
                     Créer ma boutique et me connecter
                   </button>
@@ -503,8 +651,11 @@ export default function MerchantDashboard({
                   {activeMerchant?.logo}
                 </div>
                 <div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 flex-wrap">
                     <h2 className="text-xl font-bold text-slate-900 tracking-tight">{activeMerchant?.shopName}</h2>
+                    {activeMerchant?.isVerified && (
+                      <VerifiedBadge id="verified-badge-dash-header" size="md" />
+                    )}
                     {activeMerchant?.isPremium ? (
                       <span className="bg-gradient-to-r from-indigo-500 to-indigo-600 text-white text-[9px] font-extrabold px-2.5 py-1 rounded-full flex items-center gap-1 shadow-sm">
                         <Sparkles className="w-3 h-3 text-white fill-white animate-spin-slow" />
@@ -560,6 +711,43 @@ export default function MerchantDashboard({
                 </button>
               </div>
             </div>
+
+            {/* Status alerts for Identity Verification */}
+            {activeMerchant?.verificationStatus === 'pending_verification' && (
+              <div className="bg-amber-500/10 border border-amber-500/25 p-5 rounded-3xl flex items-start gap-3.5" id="dash-verification-pending-banner">
+                <div className="bg-amber-100 dark:bg-amber-950/20 p-2.5 rounded-2xl text-amber-700 dark:text-amber-400 shrink-0">
+                  <ShieldAlert className="w-5 h-5 animate-pulse" />
+                </div>
+                <div>
+                  <h4 className="font-extrabold text-sm text-amber-900 dark:text-amber-200">Boutique en attente de vérification administrative</h4>
+                  <p className="text-xs text-amber-700/80 dark:text-amber-300/90 leading-relaxed mt-1">
+                    Les documents d'identité (CNI de <strong className="font-bold">{activeMerchant.legalName}</strong>) et de votre établissement physique ont été soumis avec succès. Notre équipe examine votre dossier pour valider l'activité. Votre boutique et ses produits seront visibles publiquement dès approbation.
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {activeMerchant?.verificationStatus === 'rejected' && (
+              <div className="bg-red-500/10 border border-red-500/25 p-5 rounded-3xl flex items-start gap-3.5" id="dash-verification-rejected-banner">
+                <div className="bg-red-100 dark:bg-red-950/20 p-2.5 rounded-2xl text-red-700 dark:text-red-400 shrink-0">
+                  <ShieldAlert className="w-5 h-5" />
+                </div>
+                <div>
+                  <h4 className="font-extrabold text-sm text-red-900 dark:text-red-200">Dossier de vérification rejeté</h4>
+                  <p className="text-xs text-red-700/80 dark:text-red-300/90 leading-relaxed mt-1">
+                    Malheureusement, votre demande de vérification a été refusée par notre équipe de modération.
+                  </p>
+                  {activeMerchant.rejectionReason && (
+                    <div className="mt-2 bg-white/65 dark:bg-slate-900/40 p-3 rounded-xl border border-red-200/50 dark:border-red-900/60 text-xs text-red-950 dark:text-red-100 font-semibold">
+                      Motif du refus : "{activeMerchant.rejectionReason}"
+                    </div>
+                  )}
+                  <p className="text-[11px] text-red-600 dark:text-red-400 mt-2">
+                    Veuillez contacter l'administrateur de Bafoussam Direct ou réenregistrer votre boutique en fournissant des documents conformes.
+                  </p>
+                </div>
+              </div>
+            )}
 
             {isMerchantExpired ? (
               <div className="bg-white rounded-3xl p-8 border border-red-100 shadow-md max-w-2xl mx-auto text-center space-y-6 my-8" id="merchant-expiry-blocker">

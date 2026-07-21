@@ -339,7 +339,7 @@ export default function WelcomeGate({ onSuccess }: WelcomeGateProps) {
               Bafoussam<span className="text-indigo-600 bg-gradient-to-r from-indigo-600 to-indigo-800 bg-clip-text text-transparent">Direct</span>
             </h1>
             <p className="text-xs text-slate-500 mt-1.5 max-w-sm leading-relaxed">
-              La plateforme d'achat et livraison rapide de la capitale de l'Ouest Cameroun. Épicerie, vêtements, pharmacie et plus encore.
+              Vos courses livrées en 15 minutes, partout à Bafoussam.
             </p>
           </div>
 
@@ -487,11 +487,15 @@ export default function WelcomeGate({ onSuccess }: WelcomeGateProps) {
                       </>
                     ) : (
                       <>
-                        <span>S'inscrire et Continuer (4 000 FCFA)</span>
+                        <span>Débloquer mon accès 3 mois (4 000 FCFA)</span>
                         <ArrowRight className="w-4 h-4" />
                       </>
                     )}
                   </button>
+
+                  <p className="text-[10px] text-slate-400 text-center mt-2.5 leading-relaxed max-w-sm mx-auto">
+                    Achats illimités, livraison prioritaire et support client — pendant 3 mois.
+                  </p>
                 </form>
 
                 <div className="mt-5 text-center">

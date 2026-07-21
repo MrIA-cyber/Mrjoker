@@ -802,6 +802,7 @@ export default function App() {
                       <ProductCard
                         key={p.id}
                         product={p}
+                        isMerchantVerified={merchants.find(m => m.id === p.merchantId)?.isVerified ?? false}
                         onAddToCart={handleAddToCart}
                         onSelect={handleSelectProduct}
                       />
@@ -880,6 +881,8 @@ export default function App() {
                   currentUser={currentUser}
                   onLogout={handleLogout}
                   onUpdateCurrentUser={setCurrentUser}
+                  orders={orders}
+                  onUpdateOrders={setOrders}
                 />
               ) : (
                 <div className="max-w-md mx-auto my-16 bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-2xl p-8 text-center space-y-6 relative overflow-hidden" id="admin-lock-screen">
@@ -1002,6 +1005,7 @@ export default function App() {
         {selectedProduct && (
           <ProductDetailsModal
             product={selectedProduct}
+            isMerchantVerified={merchants.find(m => m.id === selectedProduct.merchantId)?.isVerified ?? false}
             onClose={() => setSelectedProduct(null)}
             onAddToCart={handleAddToCart}
           />

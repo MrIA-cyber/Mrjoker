@@ -16,6 +16,7 @@ import {
   HelpCircle
 } from 'lucide-react';
 import { motion } from 'motion/react';
+import VerifiedBadge from './VerifiedBadge';
 
 interface BestMerchantWidgetProps {
   merchants: Merchant[];
@@ -103,9 +104,14 @@ export default function BestMerchantWidget({
                 {merchant.logo || '🏪'}
               </div>
               <div>
-                <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight leading-none">
-                  {merchant.shopName}
-                </h2>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight leading-none">
+                    {merchant.shopName}
+                  </h2>
+                  {merchant.isVerified && (
+                    <VerifiedBadge id="verified-badge-best-merchant" size="md" />
+                  )}
+                </div>
                 <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400 mt-1.5">
                   <span className="flex items-center gap-1">
                     <MapPin className="w-3.5 h-3.5 text-indigo-500" />

@@ -21,10 +21,17 @@ export interface Merchant {
   isPremium: boolean; // 100,000 FCFA / year
   premiumStartDate?: string;
   premiumExpiryDate?: string;
+  isVerified?: boolean; // verified status badge
   logo: string;
   views: number;
   clicks: number;
   sales: number;
+  verificationStatus?: 'pending_verification' | 'verified' | 'rejected';
+  cniPhoto?: string;
+  shopPhoto?: string;
+  registryNumber?: string;
+  legalName?: string;
+  rejectionReason?: string;
 }
 
 export interface Product {
@@ -54,7 +61,7 @@ export interface Order {
   userName: string;
   items: CartItem[];
   total: number;
-  status: 'pending' | 'preparing' | 'delivering' | 'completed';
+  status: 'pending' | 'preparing' | 'picked_up' | 'delivering' | 'completed';
   deliveryNeighborhood: string;
   deliveryDetails: string;
   paymentMethod: 'momo' | 'orange';
@@ -62,6 +69,8 @@ export interface Order {
   createdAt: string;
   deliveryTimeEstimated: number; // in minutes
   currentLocation?: { x: number; y: number }; // coordinates for animated tracker map
+  courierName?: string;
+  courierPhone?: string;
 }
 
 export interface Neighborhood {

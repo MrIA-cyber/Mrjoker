@@ -1,15 +1,17 @@
 import React from 'react';
 import { Product } from '../types';
 import { Star, ShoppingCart, Sparkles, MapPin } from 'lucide-react';
+import VerifiedBadge from './VerifiedBadge';
 
 interface ProductCardProps {
   key?: string | number;
   product: Product;
+  isMerchantVerified?: boolean;
   onAddToCart: (product: Product) => void;
   onSelect: (product: Product) => void;
 }
 
-export default function ProductCard({ product, onAddToCart, onSelect }: ProductCardProps) {
+export default function ProductCard({ product, isMerchantVerified = false, onAddToCart, onSelect }: ProductCardProps) {
   return (
     <div
       className={`bg-white dark:bg-slate-900 rounded-2xl border transition duration-300 flex flex-col overflow-hidden group relative ${
@@ -45,9 +47,13 @@ export default function ProductCard({ product, onAddToCart, onSelect }: ProductC
       <div className="p-4 flex-1 flex flex-col justify-between">
         <div>
           {/* Merchant & Market */}
-          <div className="flex items-center gap-1 text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-1.5">
+          <div className="flex items-center gap-1.5 flex-wrap text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-1.5">
             <MapPin className="w-3 h-3 text-slate-300 dark:text-slate-600 shrink-0" />
-            <span className="truncate max-w-[180px]">{product.merchantName} ({product.origin.includes('Local') ? 'Local' : 'Import'})</span>
+            <span className="truncate max-w-[120px]">{product.merchantName}</span>
+            {isMerchantVerified && (
+              <VerifiedBadge id={`verified-badge-card-${product.id}`} />
+            )}
+            <span className="text-slate-300 dark:text-slate-700 font-normal">({product.origin.includes('Local') ? 'Local' : 'Import'})</span>
           </div>
 
           {/* Product Name */}

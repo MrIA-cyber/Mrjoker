@@ -25,9 +25,14 @@ import {
   ArrowRight,
   ShoppingBag,
   Tag,
-  Trash
+  Trash,
+  Truck,
+  Bike,
+  Clock,
+  Package
 } from 'lucide-react';
-import { User, Merchant, Product } from '../types';
+import { User, Merchant, Product, Order } from '../types';
+import VerifiedBadge from './VerifiedBadge';
 
 interface AdminPanelProps {
   onClose: () => void;
@@ -38,6 +43,8 @@ interface AdminPanelProps {
   currentUser?: User | null;
   onLogout?: () => void;
   onUpdateCurrentUser?: (user: User) => void;
+  orders?: Order[];
+  onUpdateOrders?: React.Dispatch<React.SetStateAction<Order[]>>;
 }
 
 export default function AdminPanel({ 
@@ -48,10 +55,102 @@ export default function AdminPanel({
   onUpdateProducts,
   currentUser,
   onLogout,
-  onUpdateCurrentUser
+  onUpdateCurrentUser,
+  orders = [],
+  onUpdateOrders
 }: AdminPanelProps) {
-  const [activeTab, setActiveTab] = useState<'users' | 'merchants' | 'products' | 'logs' | 'settings'>('users');
+  const [activeTab, setActiveTab] = useState<'users' | 'merchants' | 'products' | 'logs' | 'settings' | 'verifications' | 'orders'>('users');
   const [searchTerm, setSearchTerm] = useState('');
+  const [merchantSearchTerm, setMerchantSearchTerm] = useState('');
+  const [rejectionReasons, setRejectionReasons] = useState<{[mId: string]: string}>({});
+
+  const pendingVerificationsCount = merchants.filter(m => m.verificationStatus === 'pending_verification').length;
+  const activeOrdersCount = orders.filter(o => o.status !== 'completed').length;
+
+  const handleApproveVerification = (mId: string) => {
+    onUpdateMerchants(prev => {
+      return prev.map(m => {
+        if (m.id === mId) {
+          const now = new Date().toLocaleTimeString('fr-FR');
+          setLogs(prevLogs => [
+            { id: Date.now().toString(), time: now, msg: `Boutique "${m.shopName}" approuvée avec succès. Statut de vérification mis à jour.`, type: 'success' },
+            ...prevLogs
+          ]);
+          return { 
+            ...m, 
+            verificationStatus: 'verified', 
+            isVerified: true 
+          };
+        }
+        return m;
+      });
+    });
+  };
+
+  const handleRejectVerification = (mId: string) => {
+    const reason = rejectionReasons[mId]?.trim();
+    if (!reason) {
+      alert("Veuillez indiquer un motif de refus pour guider le commerçant.");
+      return;
+    }
+
+    onUpdateMerchants(prev => {
+      return prev.map(m => {
+        if (m.id === mId) {
+          const now = new Date().toLocaleTimeString('fr-FR');
+          setLogs(prevLogs => [
+            { id: Date.now().toString(), time: now, msg: `Boutique "${m.shopName}" rejetée : "${reason}"`, type: 'warn' },
+            ...prevLogs
+          ]);
+          return { 
+            ...m, 
+            verificationStatus: 'rejected', 
+            isVerified: false,
+            rejectionReason: reason 
+          };
+        }
+        return m;
+      });
+    });
+  };
+
+  const handleUpdateOrderCourier = (orderId: string, name: string, phone: string) => {
+    if (onUpdateOrders) {
+      onUpdateOrders(prev => {
+        return prev.map(o => {
+          if (o.id === orderId) {
+            return {
+              ...o,
+              courierName: name,
+              courierPhone: phone
+            };
+          }
+          return o;
+        });
+      });
+    }
+  };
+
+  const handleUpdateOrderStatusDirect = (orderId: string, status: any) => {
+    if (onUpdateOrders) {
+      onUpdateOrders(prev => {
+        return prev.map(o => {
+          if (o.id === orderId) {
+            const now = new Date().toLocaleTimeString('fr-FR');
+            setLogs(prevLogs => [
+              { id: Date.now().toString(), time: now, msg: `Statut de la commande #${orderId.slice(-6)} changé en "${status}" par l'administrateur.`, type: 'info' },
+              ...prevLogs
+            ]);
+            return {
+              ...o,
+              status
+            };
+          }
+          return o;
+        });
+      });
+    }
+  };
 
   // Simulated general settings
   const [serverPort, setServerPort] = useState('3000');
@@ -324,6 +423,23 @@ export interface Merchant {
     });
   };
 
+  const handleToggleVerifyMerchant = (mId: string) => {
+    onUpdateMerchants(prev => {
+      return prev.map(m => {
+        if (m.id === mId) {
+          const nextState = !m.isVerified;
+          const now = new Date().toLocaleTimeString('fr-FR');
+          setLogs(prevLogs => [
+            { id: Date.now().toString(), time: now, msg: `Statut vérification de la boutique "${m.shopName}" mis à jour : ${nextState ? 'VÉRIFIÉE' : 'NON VÉRIFIÉE'}.`, type: 'info' },
+            ...prevLogs
+          ]);
+          return { ...m, isVerified: nextState };
+        }
+        return m;
+      });
+    });
+  };
+
   const handleAdjustSales = (mId: string, amount: number) => {
     onUpdateMerchants(prev => {
       return prev.map(m => {
@@ -559,6 +675,44 @@ export interface Merchant {
             </button>
 
             <button
+              onClick={() => setActiveTab('verifications')}
+              className={`w-full flex items-center justify-between p-3 rounded-xl font-bold text-xs cursor-pointer transition ${
+                activeTab === 'verifications'
+                  ? 'bg-slate-900 text-white'
+                  : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+              }`}
+            >
+              <span className="flex items-center gap-2.5">
+                <ShieldCheck className="w-4 h-4" />
+                <span>Demandes en attente</span>
+              </span>
+              {pendingVerificationsCount > 0 ? (
+                <span className="bg-amber-500 text-white text-[9px] px-1.5 py-0.5 rounded-full font-black animate-pulse">{pendingVerificationsCount}</span>
+              ) : (
+                <span className="bg-slate-100 text-slate-400 text-[9px] px-1.5 py-0.5 rounded font-mono">0</span>
+              )}
+            </button>
+
+            <button
+              onClick={() => setActiveTab('orders')}
+              className={`w-full flex items-center justify-between p-3 rounded-xl font-bold text-xs cursor-pointer transition ${
+                activeTab === 'orders'
+                  ? 'bg-slate-900 text-white'
+                  : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+              }`}
+            >
+              <span className="flex items-center gap-2.5">
+                <Truck className="w-4 h-4" />
+                <span>Suivi des commandes</span>
+              </span>
+              {activeOrdersCount > 0 ? (
+                <span className="bg-indigo-600 text-white text-[9px] px-1.5 py-0.5 rounded-full font-black">{activeOrdersCount}</span>
+              ) : (
+                <span className="bg-slate-100 text-slate-400 text-[9px] px-1.5 py-0.5 rounded font-mono">0</span>
+              )}
+            </button>
+
+            <button
               onClick={() => setActiveTab('logs')}
               className={`w-full flex items-center justify-between p-3 rounded-xl font-bold text-xs cursor-pointer transition ${
                 activeTab === 'logs'
@@ -744,24 +898,45 @@ export interface Merchant {
                 transition={{ duration: 0.15 }}
                 className="bg-white rounded-3xl border border-slate-100 shadow-xs p-6 space-y-6"
               >
-                <div>
-                  <h3 className="text-sm font-black text-slate-900 uppercase tracking-wider">Trafic & Rang des Boutiques</h3>
-                  <p className="text-xs text-slate-500">Ajustez les volumes de ventes, les affichages et activez le statut Membre Élite de la Mifi</p>
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                  <div>
+                    <h3 className="text-sm font-black text-slate-900 uppercase tracking-wider">Trafic & Rang des Boutiques</h3>
+                    <p className="text-xs text-slate-500">Ajustez les volumes de ventes, activez le statut Membre Élite, ou gérez la vérification officielle</p>
+                  </div>
+
+                  <div className="relative">
+                    <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                    <input
+                      type="text"
+                      placeholder="Chercher une boutique..."
+                      className="pl-8.5 pr-3 py-1.5 bg-slate-50 border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/10 focus:border-indigo-500 rounded-lg text-slate-950 text-xs w-full sm:w-56 transition"
+                      value={merchantSearchTerm}
+                      onChange={(e) => setMerchantSearchTerm(e.target.value)}
+                    />
+                  </div>
                 </div>
 
                 <div className="space-y-4">
-                  {merchants.map(m => (
+                  {merchants
+                    .filter(m => {
+                      const query = merchantSearchTerm.toLowerCase();
+                      return m.shopName.toLowerCase().includes(query) || m.name.toLowerCase().includes(query);
+                    })
+                    .map(m => (
                     <div 
                       key={m.id}
-                      className="border border-slate-100 rounded-2xl p-4.5 flex flex-col md:flex-row md:items-center justify-between gap-5 hover:border-slate-200 transition bg-slate-50/40"
+                      className="border border-slate-100 rounded-2xl p-4.5 flex flex-col xl:flex-row xl:items-center justify-between gap-5 hover:border-slate-200 transition bg-slate-50/40"
                     >
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-indigo-50 border border-indigo-100 flex items-center justify-center text-xl shadow-2xs">
+                        <div className="w-10 h-10 rounded-xl bg-indigo-50 border border-indigo-100 flex items-center justify-center text-xl shadow-2xs shrink-0">
                           {m.logo || '🏪'}
                         </div>
                         <div>
-                          <h4 className="font-extrabold text-slate-900 text-sm flex items-center gap-2">
+                          <h4 className="font-extrabold text-slate-900 text-sm flex items-center gap-1.5 flex-wrap">
                             <span>{m.shopName}</span>
+                            {m.isVerified && (
+                              <VerifiedBadge id={`verified-badge-admin-${m.id}`} />
+                            )}
                             {m.isPremium && (
                               <span className="bg-amber-500/10 text-amber-600 border border-amber-500/20 text-[8px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded">
                                 ÉLITE N°1
@@ -770,6 +945,40 @@ export interface Merchant {
                           </h4>
                           <span className="text-[10px] text-slate-500">Propriétaire : {m.name} • {m.location}</span>
                         </div>
+                      </div>
+
+                      {/* Verification Status & Toggle Switch */}
+                      <div className="flex items-center gap-3 bg-white border border-slate-100 px-3 py-2 rounded-xl shadow-2xs shrink-0">
+                        <div className="flex flex-col">
+                          <span className="text-[8px] text-slate-400 font-bold uppercase tracking-wider">Statut Officiel</span>
+                          {m.isVerified ? (
+                            <span className="text-[10px] font-extrabold text-blue-600 flex items-center gap-1">
+                              <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse"></span>
+                              Vérifiée
+                            </span>
+                          ) : (
+                            <span className="text-[10px] font-extrabold text-slate-500 flex items-center gap-1">
+                              <span className="w-1.5 h-1.5 rounded-full bg-slate-400"></span>
+                              Non vérifiée
+                            </span>
+                          )}
+                        </div>
+
+                        {/* Toggle switch track */}
+                        <button
+                          onClick={() => handleToggleVerifyMerchant(m.id)}
+                          className={`w-10 h-5.5 flex items-center rounded-full p-0.5 cursor-pointer transition-colors duration-300 relative focus:outline-none ${
+                            m.isVerified ? 'bg-blue-600' : 'bg-slate-300'
+                          }`}
+                          aria-label={`Toggle verification status for ${m.shopName}`}
+                          title={m.isVerified ? "Désactiver la vérification" : "Activer la vérification"}
+                        >
+                          <div
+                            className={`bg-white w-4.5 h-4.5 rounded-full shadow-md transform transition-transform duration-300 ${
+                              m.isVerified ? 'translate-x-4.5' : 'translate-x-0'
+                            }`}
+                          />
+                        </button>
                       </div>
 
                       {/* Display / control views, sales, clicks weights */}
@@ -791,7 +1000,7 @@ export interface Merchant {
                       </div>
 
                       {/* Upgrade Elite and Sales injector controls */}
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
                         <button
                           onClick={() => handleAdjustSales(m.id, 50000)}
                           className="bg-white hover:bg-slate-100 border border-slate-200 text-slate-700 text-[10px] font-bold px-2.5 py-1.5 rounded-lg cursor-pointer transition shadow-3xs flex items-center gap-1"
@@ -1182,6 +1391,253 @@ export interface Merchant {
                     </div>
                   </div>
                 </div>
+              </motion.div>
+            )}
+
+            {activeTab === 'verifications' && (
+              <motion.div
+                key="tab-verifications-content"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.15 }}
+                className="bg-white rounded-3xl border border-slate-100 shadow-xs p-6 space-y-6"
+              >
+                <div>
+                  <h3 className="text-sm font-black text-slate-900 uppercase tracking-wider">Demandes de Vérification d'Identité</h3>
+                  <p className="text-xs text-slate-500">Examinez les documents officiels des commerçants de Bafoussam pour autoriser leur activité publique</p>
+                </div>
+
+                {merchants.filter(m => m.verificationStatus === 'pending_verification').length === 0 ? (
+                  <div className="text-center py-12 bg-slate-50 rounded-2xl border border-dashed border-slate-200">
+                    <ShieldCheck className="w-12 h-12 text-slate-300 mx-auto mb-3" />
+                    <p className="text-xs text-slate-500 font-bold">Aucune demande de vérification en attente pour le moment.</p>
+                    <p className="text-[10px] text-slate-400 mt-1">Toutes les boutiques opérationnelles sont déjà validées.</p>
+                  </div>
+                ) : (
+                  <div className="space-y-6">
+                    {merchants
+                      .filter(m => m.verificationStatus === 'pending_verification')
+                      .map(m => (
+                        <div key={m.id} className="border border-slate-200 rounded-2xl p-5 bg-slate-50/50 space-y-4">
+                          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200/60 pb-3">
+                            <div className="flex items-center gap-3">
+                              <span className="text-2xl">{m.logo || '🏪'}</span>
+                              <div>
+                                <h4 className="font-extrabold text-slate-900 text-sm">{m.shopName}</h4>
+                                <p className="text-[10px] text-slate-500">Enregistré par {m.name} • Tel: {m.phone} • Secteur: {m.location}</p>
+                              </div>
+                            </div>
+                            <span className="text-[9px] bg-amber-100 text-amber-800 font-extrabold px-2.5 py-1 rounded-full uppercase tracking-wider animate-pulse">En attente de revue</span>
+                          </div>
+
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                            {/* Legal Identity details */}
+                            <div className="space-y-2.5">
+                              <h5 className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">Informations Soumises</h5>
+                              <div className="bg-white border border-slate-100 p-4 rounded-xl space-y-2 text-xs font-sans">
+                                <div>
+                                  <span className="text-slate-400 block text-[9px] font-bold uppercase font-sans">Nom légal (CNI) :</span>
+                                  <span className="font-extrabold text-slate-900 font-sans">{m.legalName || 'Non spécifié'}</span>
+                                </div>
+                                <div>
+                                  <span className="text-slate-400 block text-[9px] font-bold uppercase font-sans">N° Registre de Commerce :</span>
+                                  <span className="font-mono font-bold text-slate-700">{m.registryNumber || 'Non formalisé (Individuel)'}</span>
+                                </div>
+                              </div>
+
+                              {/* Rejection form container */}
+                              <div className="bg-white border border-slate-100 p-4 rounded-xl space-y-3">
+                                <h6 className="text-[9.5px] font-extrabold text-red-600 uppercase tracking-wider">Refus de validation</h6>
+                                <textarea
+                                  placeholder="Indiquez le motif précis du refus (ex: Photo CNI illisible, nom légal incorrect, etc.)"
+                                  className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-red-500"
+                                  rows={2}
+                                  value={rejectionReasons[m.id] || ''}
+                                  onChange={(e) => setRejectionReasons(prev => ({ ...prev, [m.id]: e.target.value }))}
+                                />
+                                <button
+                                  onClick={() => handleRejectVerification(m.id)}
+                                  className="w-full bg-red-50 hover:bg-red-100 border border-red-200 text-red-600 text-[10px] font-extrabold py-2 rounded-lg cursor-pointer transition uppercase tracking-wider"
+                                >
+                                  ❌ Rejeter le dossier
+                                </button>
+                              </div>
+                            </div>
+
+                            {/* Documents photo gallery */}
+                            <div className="space-y-2.5">
+                              <h5 className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">Documents Pièces Jointes</h5>
+                              <div className="grid grid-cols-2 gap-3">
+                                <div>
+                                  <span className="text-[9px] text-slate-500 font-bold block mb-1">Recto CNI / Passeport</span>
+                                  {m.cniPhoto ? (
+                                    <div className="relative group border border-slate-200 rounded-xl overflow-hidden bg-white h-28 flex items-center justify-center">
+                                      <img src={m.cniPhoto} alt="CNI Recto" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                                      <a href={m.cniPhoto} target="_blank" rel="noreferrer" className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition text-white text-[10px] font-bold">Ouvrir l'image ↗</a>
+                                    </div>
+                                  ) : (
+                                    <div className="border border-dashed border-slate-200 rounded-xl h-28 bg-slate-100 flex items-center justify-center text-[10px] text-slate-400">Non fournie</div>
+                                  )}
+                                </div>
+
+                                <div>
+                                  <span className="text-[9px] text-slate-500 font-bold block mb-1">Photo Boutique Physique</span>
+                                  {m.shopPhoto ? (
+                                    <div className="relative group border border-slate-200 rounded-xl overflow-hidden bg-white h-28 flex items-center justify-center">
+                                      <img src={m.shopPhoto} alt="Façade Boutique" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                                      <a href={m.shopPhoto} target="_blank" rel="noreferrer" className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition text-white text-[10px] font-bold">Ouvrir l'image ↗</a>
+                                    </div>
+                                  ) : (
+                                    <div className="border border-dashed border-slate-200 rounded-xl h-28 bg-slate-100 flex items-center justify-center text-[10px] text-slate-400">Non fournie</div>
+                                  )}
+                                </div>
+                              </div>
+
+                              <button
+                                onClick={() => handleApproveVerification(m.id)}
+                                className="w-full bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-black py-3 rounded-xl cursor-pointer transition uppercase tracking-wider shadow-sm mt-2"
+                              >
+                                ✓ Approuver & Publier la Boutique
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                  </div>
+                )}
+              </motion.div>
+            )}
+
+            {activeTab === 'orders' && (
+              <motion.div
+                key="tab-orders-content"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.15 }}
+                className="bg-white rounded-3xl border border-slate-100 shadow-xs p-6 space-y-6"
+              >
+                <div>
+                  <h3 className="text-sm font-black text-slate-900 uppercase tracking-wider">Suivi & Logistique des Livraisons</h3>
+                  <p className="text-xs text-slate-500">Supervisez l'acheminement des commandes en cours, affectez des livreurs motos, et mettez à jour la timeline client</p>
+                </div>
+
+                {(!orders || orders.length === 0) ? (
+                  <div className="text-center py-12 bg-slate-50 rounded-2xl border border-dashed border-slate-200">
+                    <Truck className="w-12 h-12 text-slate-300 mx-auto mb-3" />
+                    <p className="text-xs text-slate-500 font-bold">Aucune commande en cours dans la base de données.</p>
+                    <p className="text-[10px] text-slate-400 mt-1">Faites des achats fictifs ou connectez-vous comme client pour initier une commande.</p>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {orders.slice().reverse().map(order => (
+                      <div key={order.id} className="border border-slate-100 rounded-2xl p-5 bg-slate-50/50 hover:border-slate-200 transition space-y-4">
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-200/60 pb-3">
+                          <div>
+                            <span className="text-[10px] font-bold text-indigo-600 uppercase tracking-wider font-mono">Commande #{order.id.slice(-6)}</span>
+                            <h4 className="font-extrabold text-slate-900 text-sm mt-0.5">Destinataire : {order.userName} ({order.deliveryNeighborhood})</h4>
+                          </div>
+                          
+                          <div className="flex items-center gap-2">
+                            <span className="text-[10.5px] font-mono font-bold text-slate-500">{order.total.toLocaleString('fr-FR')} F</span>
+                            <span className={`text-[9px] font-extrabold px-2.5 py-0.5 rounded-full uppercase ${
+                              order.status === 'completed' 
+                                ? 'bg-emerald-100 text-emerald-800'
+                                : order.status === 'delivering'
+                                ? 'bg-blue-100 text-blue-800 animate-pulse'
+                                : 'bg-slate-100 text-slate-700'
+                            }`}>
+                              {order.status === 'pending' && 'Commande reçue'}
+                              {order.status === 'preparing' && 'En préparation'}
+                              {order.status === 'picked_up' && 'Récupérée'}
+                              {order.status === 'delivering' && 'En route'}
+                              {order.status === 'completed' && 'Livrée ✓'}
+                            </span>
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
+                          {/* Left: items details and delivery coordinates */}
+                          <div className="lg:col-span-4 space-y-2 text-xs">
+                            <p className="text-slate-400 font-bold text-[9px] uppercase tracking-wider">Détails de livraison & Articles</p>
+                            <div className="bg-white border border-slate-100 p-3 rounded-xl space-y-1 text-[11px] leading-relaxed font-sans">
+                              <p className="font-semibold text-slate-800">📍 Quartier : {order.deliveryNeighborhood}</p>
+                              <p className="text-slate-500">📞 Tél Paiement : {order.paymentPhone} ({order.paymentMethod === 'momo' ? 'MTN MoMo' : 'Orange Money'})</p>
+                              {order.deliveryDetails && <p className="text-slate-500 italic mt-1">« {order.deliveryDetails} »</p>}
+                              
+                              <div className="border-t border-slate-100 pt-2.5 mt-2.5 space-y-1">
+                                {order.items.map((it, idx) => (
+                                  <div key={idx} className="flex justify-between text-slate-600">
+                                    <span>{it.product.name} <strong className="text-slate-900 font-bold font-sans">x{it.quantity}</strong></span>
+                                    <span>{(it.product.price * it.quantity).toLocaleString('fr-FR')} F</span>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Middle: change status dropdown */}
+                          <div className="lg:col-span-4 space-y-2">
+                            <p className="text-slate-400 font-bold text-[9px] uppercase tracking-wider">Changer le statut logistique</p>
+                            <div className="bg-white border border-slate-100 p-3 rounded-xl space-y-2.5">
+                              <div>
+                                <label className="block text-[9px] font-bold text-slate-500 uppercase mb-1">Statut actuel</label>
+                                <select
+                                  className="w-full bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs text-slate-900 font-bold focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                                  value={order.status}
+                                  onChange={(e) => handleUpdateOrderStatusDirect(order.id, e.target.value as any)}
+                                >
+                                  <option value="pending">Commande reçue</option>
+                                  <option value="preparing">En préparation par le commerçant</option>
+                                  <option value="picked_up">Récupérée par le livreur</option>
+                                  <option value="delivering">En route vers le client</option>
+                                  <option value="completed">Livrée à destination</option>
+                                </select>
+                              </div>
+
+                              <p className="text-[10px] text-slate-400 leading-normal font-sans">
+                                En changeant ce statut, la timeline du client se mettra à jour instantanément sur son écran de suivi de commande.
+                              </p>
+                            </div>
+                          </div>
+
+                          {/* Right: courier name and phone number fields */}
+                          <div className="lg:col-span-4 space-y-2">
+                            <p className="text-slate-400 font-bold text-[9px] uppercase tracking-wider">Livreur assigné (Moto-taximan)</p>
+                            <div className="bg-white border border-slate-100 p-3 rounded-xl space-y-2.5">
+                              <div className="grid grid-cols-2 gap-2 font-sans">
+                                <div>
+                                  <label className="block text-[9px] font-bold text-slate-500 uppercase mb-1">Nom du coursier</label>
+                                  <input
+                                    type="text"
+                                    placeholder="Paul, Jean-Baptiste..."
+                                    className="w-full bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs text-slate-900 focus:outline-none"
+                                    value={order.courierName || ''}
+                                    onChange={(e) => handleUpdateOrderCourier(order.id, e.target.value, order.courierPhone || '')}
+                                  />
+                                </div>
+                                <div>
+                                  <label className="block text-[9px] font-bold text-slate-500 uppercase mb-1">Téléphone</label>
+                                  <input
+                                    type="tel"
+                                    placeholder="Ex: 640406412"
+                                    className="w-full bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs text-slate-900 focus:outline-none"
+                                    value={order.courierPhone || ''}
+                                    onChange={(e) => handleUpdateOrderCourier(order.id, order.courierName || '', e.target.value)}
+                                  />
+                                </div>
+                              </div>
+                              <p className="text-[9.5px] text-slate-400 leading-normal font-sans">
+                                Le nom et téléphone saisis s'afficheront sur la fiche du client dès que la commande passe à "Récupérée par le livreur" (étape 3).
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </motion.div>
             )}
 

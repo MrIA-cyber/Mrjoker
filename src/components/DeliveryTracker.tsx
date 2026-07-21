@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { Order, Neighborhood } from '../types';
 import { BAFOUSSAM_NEIGHBORHOODS } from '../data/mockData';
-import { Truck, CheckCircle2, Clock, Phone, MapPin, Navigation, Sparkles, ShoppingBag } from 'lucide-react';
+import { Truck, CheckCircle2, Clock, Phone, MapPin, Navigation, Sparkles, ShoppingBag, Box, Bike, Home } from 'lucide-react';
 import { motion } from 'motion/react';
 
 interface DeliveryTrackerProps {
   orders: Order[];
-  onUpdateOrderStatus: (orderId: string, status: 'pending' | 'preparing' | 'delivering' | 'completed') => void;
+  onUpdateOrderStatus: (orderId: string, status: 'pending' | 'preparing' | 'picked_up' | 'delivering' | 'completed') => void;
 }
 
 export default function DeliveryTracker({ orders, onUpdateOrderStatus }: DeliveryTrackerProps) {
@@ -44,10 +44,15 @@ export default function DeliveryTracker({ orders, onUpdateOrderStatus }: Deliver
         onUpdateOrderStatus(activeOrder.id, 'preparing');
       }, 4000);
     } else if (activeOrder.status === 'preparing') {
-      // Auto transition to delivering in 6 seconds
+      // Auto transition to picked_up in 6 seconds
+      timer = setTimeout(() => {
+        onUpdateOrderStatus(activeOrder.id, 'picked_up');
+      }, 6000);
+    } else if (activeOrder.status === 'picked_up') {
+      // Auto transition to delivering in 4 seconds
       timer = setTimeout(() => {
         onUpdateOrderStatus(activeOrder.id, 'delivering');
-      }, 6000);
+      }, 4000);
     } else if (activeOrder.status === 'delivering') {
       // Animate moto-taxi movement along the path over 12 seconds
       let steps = 0;
@@ -218,103 +223,126 @@ export default function DeliveryTracker({ orders, onUpdateOrderStatus }: Deliver
           <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm space-y-6">
             <div className="flex justify-between items-start">
               <div>
-                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">ID Commande: #{activeOrder.id.slice(-6)}</span>
-                <h4 className="font-extrabold text-slate-900 text-base mt-0.5">Suivi de Livraison</h4>
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block font-mono">ID Commande: #{activeOrder.id.slice(-6)}</span>
+                <h4 className="font-extrabold text-slate-900 text-base mt-0.5 flex items-center gap-1.5">
+                  <Truck className="w-5 h-5 text-indigo-600 shrink-0" />
+                  <span>Suivi de Livraison</span>
+                </h4>
               </div>
-              <span className="text-xs bg-slate-100 text-slate-700 py-1 px-3 rounded-full font-bold">
-                {activeOrder.paymentMethod === 'momo' ? 'Payé par MoMo' : 'Payé par Orange OM'}
-              </span>
+              <div className="text-right">
+                <span className="text-xs bg-indigo-50 text-indigo-700 py-1 px-3 rounded-full font-bold inline-block">
+                  {activeOrder.paymentMethod === 'momo' ? 'MoMo' : 'Orange Money'}
+                </span>
+                
+                {/* Remaining Time estimation display */}
+                <div className="text-[10px] font-extrabold text-indigo-600 mt-1.5 flex items-center justify-end gap-1" id="remaining-delivery-time-badge">
+                  <Clock className="w-3 h-3 text-indigo-500 animate-pulse" />
+                  <span>
+                    {activeOrder.status === 'pending' && `Estimé: ~${activeOrder.deliveryTimeEstimated || 20} min`}
+                    {activeOrder.status === 'preparing' && `Estimé: ~${Math.round((activeOrder.deliveryTimeEstimated || 20) * 0.8)} min`}
+                    {activeOrder.status === 'picked_up' && `Estimé: ~${Math.round((activeOrder.deliveryTimeEstimated || 20) * 0.5)} min`}
+                    {activeOrder.status === 'delivering' && `Estimé: ~${Math.max(2, Math.round((activeOrder.deliveryTimeEstimated || 20) * (1 - progressPercent / 100)))} min`}
+                    {activeOrder.status === 'completed' && `Livrée !`}
+                  </span>
+                </div>
+              </div>
             </div>
 
             {/* Visual Timeline Nodes */}
-            <div className="relative pl-6 space-y-6">
+            <div className="relative pl-7 space-y-6">
               {/* vertical connecting line */}
-              <div className="absolute left-2.5 top-2 bottom-2 w-0.5 bg-slate-100"></div>
+              <div className="absolute left-3 top-2 bottom-2 w-0.5 bg-slate-100"></div>
 
-              {/* Node 1: Registered */}
-              <div className="relative">
-                <div className={`absolute -left-[21px] w-4.5 h-4.5 rounded-full border-2 flex items-center justify-center text-[8px] font-bold ${
-                  activeOrder.status !== 'pending' 
-                    ? 'bg-emerald-500 border-emerald-500 text-white' 
-                    : 'bg-white border-indigo-600 text-indigo-600 animate-pulse'
-                }`}>
-                  {activeOrder.status !== 'pending' ? '✓' : '1'}
-                </div>
-                <div>
-                  <h5 className="font-bold text-xs text-slate-900">Commande payée & enregistrée</h5>
-                  <p className="text-[11px] text-slate-400 mt-0.5">Passerelle mobile de {activeOrder.paymentMethod === 'momo' ? 'MTN' : 'Orange'} approuvée.</p>
-                </div>
-              </div>
+              {/* Helper variables to check active and already passed steps */}
+              {(() => {
+                const STATUS_ORDER = ['pending', 'preparing', 'picked_up', 'delivering', 'completed'];
+                const currentIdx = STATUS_ORDER.indexOf(activeOrder.status);
 
-              {/* Node 2: Preparing */}
-              <div className="relative">
-                <div className={`absolute -left-[21px] w-4.5 h-4.5 rounded-full border-2 flex items-center justify-center text-[8px] font-bold ${
-                  activeOrder.status === 'delivering' || activeOrder.status === 'completed'
-                    ? 'bg-emerald-500 border-emerald-500 text-white'
-                    : activeOrder.status === 'preparing'
-                    ? 'bg-white border-indigo-600 text-indigo-600 animate-pulse'
-                    : 'bg-white border-slate-200 text-slate-400'
-                }`}>
-                  {activeOrder.status === 'delivering' || activeOrder.status === 'completed' ? '✓' : '2'}
-                </div>
-                <div>
-                  <h5 className={`font-bold text-xs ${activeOrder.status === 'pending' ? 'text-slate-400' : 'text-slate-900'}`}>Préparation chez le marchand</h5>
-                  <p className="text-[11px] text-slate-400 mt-0.5">Emballage soigné du café, taro ou Ndop.</p>
-                </div>
-              </div>
+                const renderStep = (stepIdx: number, stepStatus: string, title: string, desc: string, icon: React.ReactNode) => {
+                  const isReached = currentIdx >= stepIdx;
+                  const isActive = currentIdx === stepIdx;
+                  
+                  return (
+                    <div className="relative flex gap-3 items-start" key={stepStatus}>
+                      <div className={`absolute -left-[27px] w-5.5 h-5.5 rounded-full border-2 flex items-center justify-center transition-all duration-300 ${
+                        isActive
+                          ? 'bg-white border-indigo-600 text-indigo-600 shadow-sm shadow-indigo-600/20 scale-110 z-10 animate-pulse'
+                          : isReached
+                          ? 'bg-indigo-600 border-indigo-600 text-white z-10'
+                          : 'bg-white border-slate-200 text-slate-300 z-10'
+                      }`}>
+                        {isReached && !isActive ? (
+                          <span className="text-[9px] font-bold">✓</span>
+                        ) : (
+                          <span className="text-[10px] font-bold font-mono">{stepIdx + 1}</span>
+                        )}
+                      </div>
+                      <div className="flex items-start gap-2.5">
+                        <div className={`p-1.5 rounded-lg border mt-0.5 ${
+                          isActive 
+                            ? 'bg-indigo-50 border-indigo-100 text-indigo-600'
+                            : isReached
+                            ? 'bg-indigo-50/40 border-indigo-100/30 text-indigo-500'
+                            : 'bg-slate-50 border-slate-100 text-slate-300'
+                        }`}>
+                          {icon}
+                        </div>
+                        <div>
+                          <h5 className={`font-bold text-xs leading-snug transition-colors ${
+                            isActive ? 'text-indigo-600 font-extrabold' : isReached ? 'text-slate-800' : 'text-slate-400'
+                          }`}>
+                            {title}
+                          </h5>
+                          <p className={`text-[10.5px] mt-0.5 leading-normal transition-colors ${
+                            isActive ? 'text-slate-600 font-medium' : isReached ? 'text-slate-400' : 'text-slate-300'
+                          }`}>
+                            {desc}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                };
 
-              {/* Node 3: Transit */}
-              <div className="relative">
-                <div className={`absolute -left-[21px] w-4.5 h-4.5 rounded-full border-2 flex items-center justify-center text-[8px] font-bold ${
-                  activeOrder.status === 'completed'
-                    ? 'bg-emerald-500 border-emerald-500 text-white'
-                    : activeOrder.status === 'delivering'
-                    ? 'bg-white border-indigo-600 text-indigo-600 animate-pulse'
-                    : 'bg-white border-slate-200 text-slate-400'
-                }`}>
-                  {activeOrder.status === 'completed' ? '✓' : '3'}
-                </div>
-                <div>
-                  <h5 className={`font-bold text-xs ${activeOrder.status === 'delivering' || activeOrder.status === 'completed' ? 'text-slate-900' : 'text-slate-400'}`}>Coursier en transit moto</h5>
-                  <p className="text-[11px] text-slate-400 mt-0.5">Vitesse de livraison maximisée par nos moto-taximen.</p>
-                </div>
-              </div>
-
-              {/* Node 4: Completed */}
-              <div className="relative">
-                <div className={`absolute -left-[21px] w-4.5 h-4.5 rounded-full border-2 flex items-center justify-center text-[8px] font-bold ${
-                  activeOrder.status === 'completed'
-                    ? 'bg-emerald-500 border-emerald-500 text-white animate-bounce'
-                    : 'bg-white border-slate-200 text-slate-400'
-                }`}>
-                  4
-                </div>
-                <div>
-                  <h5 className={`font-bold text-xs ${activeOrder.status === 'completed' ? 'text-emerald-600' : 'text-slate-400'}`}>Livré à domicile !</h5>
-                  <p className="text-[11px] text-slate-400 mt-0.5">Colis réceptionné à votre repère à {activeOrder.deliveryNeighborhood}.</p>
-                </div>
-              </div>
+                return (
+                  <>
+                    {renderStep(0, 'pending', 'Commande reçue', 'Passerelle mobile money approuvée. Commande enregistrée.', <CheckCircle2 className="w-3.5 h-3.5" />)}
+                    {renderStep(1, 'preparing', 'En préparation par le commerçant', 'Le marchand prépare et emballe vos articles soigneusement.', <Box className="w-3.5 h-3.5" />)}
+                    {renderStep(2, 'picked_up', 'Récupérée par le livreur', 'Le livreur a validé la cueillette des articles.', <Bike className="w-3.5 h-3.5" />)}
+                    {renderStep(3, 'delivering', 'En route vers vous', 'Votre colis est en transit express sur les axes de Bafoussam.', <MapPin className="w-3.5 h-3.5" />)}
+                    {renderStep(4, 'completed', 'Livrée !', `Colis remis en main propre à Bafoussam (${activeOrder.deliveryNeighborhood}).`, <Home className="w-3.5 h-3.5" />)}
+                  </>
+                );
+              })()}
             </div>
 
-            {/* Courier Info card */}
-            <div className="bg-slate-50 border border-slate-100 rounded-2xl p-4 flex items-center justify-between text-xs">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-slate-200 rounded-xl flex items-center justify-center font-bold text-lg">
-                  🛵
+            {/* Courier Info card - Visible from step 3 (picked_up) onwards */}
+            {(activeOrder.status === 'picked_up' || activeOrder.status === 'delivering' || activeOrder.status === 'completed') ? (
+              <div className="bg-indigo-50/50 border border-indigo-100/60 rounded-2xl p-4 flex items-center justify-between text-xs" id="courier-tracker-card">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-indigo-100 text-indigo-600 rounded-xl flex items-center justify-center font-bold text-lg shrink-0">
+                    🛵
+                  </div>
+                  <div>
+                    <p className="font-extrabold text-slate-900">{activeOrder.courierName || 'Jean-Baptiste (Moto Bafoussam)'}</p>
+                    <p className="text-[10px] text-indigo-600 font-semibold">Livreur assigné à votre commande</p>
+                    <p className="text-[9px] text-slate-400 mt-0.5">Tél : {activeOrder.courierPhone || '640406412'}</p>
+                  </div>
                 </div>
-                <div>
-                  <p className="font-bold text-slate-900">Jean-Baptiste (Moto Bafoussam)</p>
-                  <p className="text-[10px] text-slate-400">Agent de livraison certifié local</p>
-                </div>
+                <a
+                  href={`tel:${activeOrder.courierPhone || '640406412'}`}
+                  className="bg-white hover:bg-indigo-50 p-2 border border-slate-200 hover:border-indigo-200 rounded-xl text-slate-800 flex items-center justify-center shrink-0 transition shadow-2xs"
+                  title="Appeler le coursier"
+                  id="btn-call-courier"
+                >
+                  <Phone className="w-4 h-4 text-indigo-600" />
+                </a>
               </div>
-              <a
-                href="tel:640406412"
-                className="bg-white hover:bg-slate-100 p-2 border border-slate-200 rounded-xl text-slate-800 flex items-center justify-center shrink-0 transition shadow-xs"
-                title="Appeler le coursier ou le support"
-              >
-                <Phone className="w-4 h-4 text-slate-700" />
-              </a>
-            </div>
+            ) : (
+              <div className="bg-slate-50 border border-slate-100 rounded-2xl p-4.5 text-center" id="courier-waiting-placeholder">
+                <p className="text-[10.5px] text-slate-400 font-medium">🛵 En attente de l'attribution d'un livreur moto certifié Bafoussam Direct.</p>
+              </div>
+            )}
 
             {/* Order Items detail dropdown */}
             <div className="border-t border-slate-100 pt-5 space-y-3">

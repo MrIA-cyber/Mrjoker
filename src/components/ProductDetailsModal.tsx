@@ -1,14 +1,16 @@
 import React from 'react';
 import { Product } from '../types';
 import { X, Star, ShoppingCart, ShieldCheck, MapPin, Sparkles, Truck } from 'lucide-react';
+import VerifiedBadge from './VerifiedBadge';
 
 interface ProductDetailsModalProps {
   product: Product;
+  isMerchantVerified?: boolean;
   onClose: () => void;
   onAddToCart: (product: Product) => void;
 }
 
-export default function ProductDetailsModal({ product, onClose, onAddToCart }: ProductDetailsModalProps) {
+export default function ProductDetailsModal({ product, isMerchantVerified = false, onClose, onAddToCart }: ProductDetailsModalProps) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs font-sans animate-fade-in" id="product-details-modal-overlay">
       <div className="bg-white rounded-3xl w-full max-w-2xl overflow-hidden shadow-2xl border border-slate-100 max-h-[90vh] flex flex-col relative animate-scale-up">
@@ -77,7 +79,12 @@ export default function ProductDetailsModal({ product, onClose, onAddToCart }: P
                 <div className="flex items-center gap-2 text-xs text-slate-500 mb-4 bg-slate-50 p-2.5 rounded-xl border border-slate-100">
                   <MapPin className="w-4 h-4 text-indigo-600 shrink-0" />
                   <div>
-                    <p className="font-semibold text-slate-800">{product.merchantName}</p>
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <p className="font-semibold text-slate-800">{product.merchantName}</p>
+                      {isMerchantVerified && (
+                        <VerifiedBadge id="verified-badge-modal" />
+                      )}
+                    </div>
                     <p className="text-[11px] text-slate-400">Boutique locale à {product.origin}</p>
                   </div>
                 </div>
