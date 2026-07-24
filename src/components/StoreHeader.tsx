@@ -102,6 +102,16 @@ export default function StoreHeader({
           <MapPin className="w-3.5 h-3.5 text-indigo-400 animate-pulse" />
           <span>Bafoussam, Cameroun</span>
           <span className="text-slate-500">•</span>
+          <button
+            onClick={() => onViewChange('merchant')}
+            className="text-amber-300 hover:text-amber-200 font-semibold underline text-[11px] transition cursor-pointer flex items-center gap-1"
+            id="link-merchant-portal"
+            title="Accès Espace Commerçant"
+          >
+            <Store className="w-3.5 h-3.5 text-amber-400" />
+            <span>Vous êtes commerçant ?</span>
+          </button>
+          <span className="text-slate-500">•</span>
           <span className="text-slate-400">
             {lang === 'fr' 
               ? `Accès payé jusqu'au ${currentUser.subscriptionExpiryDate ? new Date(currentUser.subscriptionExpiryDate).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' }) : ''}`
@@ -179,50 +189,49 @@ export default function StoreHeader({
             </div>
 
             {/* Mode Switches */}
-            <div className="flex bg-slate-100 dark:bg-slate-900 p-1 rounded-xl text-xs font-bold overflow-x-auto no-scrollbar w-full sm:w-auto max-w-full shrink-0">
+            <div className="flex bg-slate-100 dark:bg-slate-900 p-1 rounded-xl text-xs font-bold overflow-x-auto no-scrollbar w-full sm:w-auto max-w-full shrink-0 border border-slate-200/60 dark:border-slate-800">
               <button
                 onClick={() => onViewChange('shop')}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition cursor-pointer ${
+                className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg transition cursor-pointer ${
                   activeView === 'shop'
-                    ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-xs'
-                    : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                    ? 'bg-indigo-600 text-white shadow-sm'
+                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                 }`}
+                id="tab-client-space"
               >
-                <Compass className="w-3.5 h-3.5" />
-                <span>{t.home}</span>
+                <Compass className="w-4 h-4" />
+                <span>{lang === 'fr' ? 'Espace Client' : 'Customer Space'}</span>
               </button>
 
-              <button
-                onClick={() => onViewChange('merchant')}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition cursor-pointer ${
-                  activeView === 'merchant'
-                    ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-xs'
-                    : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-                }`}
-                id="tab-merchant-space"
-              >
-                <Store className="w-3.5 h-3.5" />
-                <span>{t.merchant}</span>
-              </button>
+              {activeView === 'merchant' && (
+                <button
+                  onClick={() => onViewChange('merchant')}
+                  className="flex items-center gap-1.5 px-3.5 py-2 rounded-lg transition cursor-pointer bg-amber-500 text-slate-950 shadow-sm font-extrabold"
+                  id="tab-merchant-space"
+                >
+                  <Store className="w-4 h-4" />
+                  <span>{lang === 'fr' ? 'Espace Commerçant' : 'Merchant Space'}</span>
+                </button>
+              )}
 
               <button
                 onClick={() => onViewChange('orders')}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition cursor-pointer relative ${
+                className={`flex items-center gap-1.5 px-3 py-2 rounded-lg transition cursor-pointer relative ${
                   activeView === 'orders'
-                    ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-xs'
-                    : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                    ? 'bg-indigo-600 text-white shadow-sm'
+                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                 }`}
               >
                 <PackageCheck className="w-3.5 h-3.5" />
-                <span>{lang === 'fr' ? 'Suivi Commandes' : 'Order Tracking'}</span>
+                <span>{lang === 'fr' ? 'Suivi Commandes' : 'Orders'}</span>
               </button>
 
               <button
                 onClick={() => onViewChange('news')}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition cursor-pointer relative ${
+                className={`flex items-center gap-1.5 px-3 py-2 rounded-lg transition cursor-pointer relative ${
                   activeView === 'news'
-                    ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-xs'
-                    : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                    ? 'bg-indigo-600 text-white shadow-sm'
+                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                 }`}
                 id="tab-city-news"
               >
@@ -237,9 +246,9 @@ export default function StoreHeader({
               {isAdminUnlocked && (
                 <button
                   onClick={() => onViewChange('admin')}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition cursor-pointer relative ${
+                  className={`flex items-center gap-1.5 px-3 py-2 rounded-lg transition cursor-pointer relative ${
                     activeView === 'admin'
-                      ? 'bg-indigo-600 text-white shadow-xs'
+                      ? 'bg-slate-900 text-amber-400 shadow-sm'
                       : 'text-indigo-600 bg-indigo-50 dark:bg-indigo-950/40 hover:bg-indigo-100 dark:hover:bg-indigo-900/30'
                   }`}
                   id="tab-admin-space"

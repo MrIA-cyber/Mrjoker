@@ -747,51 +747,49 @@ export default function App() {
           onLangChange={handleLangChange}
         />
 
-        {/* Session Expiry Countdown Alert Banner */}
+        {/* Discrete Session Expiry / Safe Badge (Top Floating Pill) */}
         <AnimatePresence>
           {currentUser && timeRemaining !== null && (
             <motion.div
-              initial={{ height: 0, opacity: 0 }}
-              animate={{ height: 'auto', opacity: 1 }}
-              exit={{ height: 0, opacity: 0 }}
-              className="bg-amber-500/10 dark:bg-amber-500/5 border-b border-amber-500/20 px-4 py-2.5 text-center text-xs text-amber-800 dark:text-amber-400 font-medium flex items-center justify-center gap-2 relative overflow-hidden"
-              id="session-countdown-banner"
+              initial={{ opacity: 0, scale: 0.9, y: -10 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: -10 }}
+              className="fixed top-16 right-4 z-50 bg-slate-900/90 dark:bg-slate-950/95 text-white backdrop-blur-md px-3.5 py-2 rounded-full shadow-lg border border-amber-500/30 flex items-center gap-2 text-xs font-semibold"
+              id="session-countdown-pill"
             >
-              <span className="w-2 h-2 rounded-full bg-amber-500 animate-ping shrink-0" />
-              <span className="flex items-center gap-1.5 flex-wrap justify-center">
-                ⏰ <strong className="font-extrabold text-amber-900 dark:text-amber-300">Alerte Session Direct :</strong>
-                Il vous reste <span className="font-mono bg-amber-100 dark:bg-amber-900/40 px-1.5 py-0.5 rounded font-bold text-amber-950 dark:text-amber-200">{Math.floor(timeRemaining / 60000)}m {Math.floor((timeRemaining % 60000) / 1000)}s</span> pour effectuer un achat, sinon vous serez déconnecté de Bafoussam Direct.
+              <span className="w-2 h-2 rounded-full bg-amber-400 animate-ping shrink-0" />
+              <span className="text-amber-300 font-extrabold text-[11px]">Session:</span>
+              <span className="font-mono bg-amber-500/20 text-amber-200 px-1.5 py-0.5 rounded text-[11px] font-bold">
+                {Math.floor(timeRemaining / 60000)}m {Math.floor((timeRemaining % 60000) / 1000)}s
               </span>
-              
               <button
                 onClick={() => {
                   const mockStart = Date.now() - (10 * 60 * 1000) + 15000;
                   localStorage.setItem('bafoussam_session_start_time', mockStart.toString());
                   setSessionStartTime(mockStart);
                 }}
-                className="ml-3 bg-amber-500 hover:bg-amber-600 text-white font-extrabold text-[9px] uppercase px-2 py-0.5 rounded transition cursor-pointer shrink-0"
-                title="Simuler l'expiration de session dans 15s"
+                className="ml-1 text-[9px] bg-amber-500 hover:bg-amber-600 text-slate-950 font-black px-2 py-0.5 rounded-full cursor-pointer transition"
+                title="Simuler expiration (15s)"
               >
-                Simuler Expiration (15s)
+                15s
               </button>
             </motion.div>
           )}
         </AnimatePresence>
 
-        {/* Purchase Confirmation Safe Banner */}
+        {/* Purchase Confirmation Safe Pill */}
         <AnimatePresence>
           {currentUser && orders.some(o => o.userId === currentUser.id) && (
             <motion.div
-              initial={{ height: 0, opacity: 0 }}
-              animate={{ height: 'auto', opacity: 1 }}
-              exit={{ height: 0, opacity: 0 }}
-              className="bg-emerald-500/10 dark:bg-emerald-500/5 border-b border-emerald-500/20 px-4 py-2 text-center text-xs text-emerald-800 dark:text-emerald-400 font-medium flex items-center justify-center gap-2 relative overflow-hidden"
-              id="session-safe-banner"
+              initial={{ opacity: 0, scale: 0.9, y: -10 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: -10 }}
+              className="fixed top-16 right-4 z-50 bg-emerald-950/90 text-emerald-100 backdrop-blur-md px-3.5 py-2 rounded-full shadow-lg border border-emerald-500/30 flex items-center gap-2 text-xs font-semibold"
+              id="session-safe-pill"
             >
-              <ShieldCheck className="w-4 h-4 text-emerald-500 shrink-0 animate-pulse" />
-              <span>
-                ✓ <strong className="font-extrabold text-emerald-900 dark:text-emerald-300">Session Illimitée :</strong>
-                Merci pour votre achat ! Votre session est désormais permanente et sécurisée sans limite de temps.
+              <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0" />
+              <span className="text-[11px]">
+                ✓ <strong className="text-emerald-300">Session Illimitée Activée</strong>
               </span>
             </motion.div>
           )}
@@ -801,142 +799,39 @@ export default function App() {
       <main className="flex-1 pb-16">
         <AnimatePresence mode="wait">
           
-          {/* Shop View Layout */}
+          {/* Shop View Layout - Clean & Direct */}
           {activeView === 'shop' && (
             <motion.div
               key="shop-view"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-8"
+              className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6"
               id="shop-view-wrapper"
             >
-              {/* Premium Merchant Sponsored Banner Spotlight */}
-              {selectedCategory === 'Tous' && !searchTerm && (
-                <div className="bg-gradient-to-r from-amber-500 via-amber-600 to-amber-700 rounded-3xl p-6 sm:p-10 text-white relative overflow-hidden shadow-lg shadow-amber-500/10">
-                  <div className="absolute inset-0 bg-[radial-gradient(#ffffff_1px,transparent_1px)] [background-size:16px_16px] pointer-events-none opacity-10"></div>
-                  
-                  <div className="relative z-10 max-w-xl space-y-4">
-                    <span className="bg-white/20 backdrop-blur-md text-white font-bold text-[10px] uppercase tracking-wider px-3 py-1 rounded-full inline-block">
-                      Spotlight Commerçants Premium Bafoussam
-                    </span>
-                    <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight leading-tight">
-                      Découvrez le café de l'Ouest & l'artisanat noble de Bafoussam
-                    </h2>
-                    <p className="text-amber-50 text-xs sm:text-sm leading-relaxed">
-                      Commandez directement auprès des meilleurs artisans et producteurs locaux du Marché A et du Marché Congo. Livraison express garantie sous 15 à 30 minutes par nos coursiers moto.
-                    </p>
-                    <div className="flex items-center gap-4 text-xs font-bold pt-2">
-                      <div className="flex items-center gap-1">
-                        <ShieldCheck className="w-4.5 h-4.5 text-amber-300" />
-                        <span>Qualité Garantie</span>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <Truck className="w-4.5 h-4.5 text-amber-300" />
-                        <span>Livraison Rapide</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Absolute visual float */}
-                  <div className="absolute right-6 bottom-0 top-0 hidden lg:flex items-center justify-center text-8xl pointer-events-none opacity-20">
-                    🏔️
-                  </div>
-                </div>
-              )}
-
-              {/* Best Merchant Instant Status Section */}
-              {selectedCategory === 'Tous' && !searchTerm && (
-                <BestMerchantWidget 
-                  merchants={merchants}
-                  products={products}
-                  onSelectProduct={handleSelectProduct}
-                  onAddToCart={handleAddToCart}
-                  reviews={reviews}
-                  lang={lang}
-                />
-              )}
-
-              {/* Smart Search Recommendation Engine */}
-              <SmartRecommendationBanner
-                searchTerm={searchTerm}
-                products={products}
-                merchants={merchants}
-                currentUser={currentUser}
-                onAddToCart={handleAddToCart}
-                onSelectProduct={handleSelectProduct}
-                lang={lang}
-              />
-
-              {/* Recommended / Boosted Products Section */}
-              {selectedCategory === 'Tous' && !searchTerm && (
-                (() => {
-                  const activeBoosted = products.filter(p => 
-                    p.isBoosted && 
-                    (!p.boostExpiryDate || new Date(p.boostExpiryDate) >= new Date()) &&
-                    !isMerchantSubscriptionExpired(p.merchantId)
-                  );
-                  if (activeBoosted.length === 0) return null;
-
-                  return (
-                    <div className="space-y-5 bg-gradient-to-br from-amber-500/5 to-orange-500/5 dark:from-amber-500/10 dark:to-orange-500/10 p-6 rounded-3xl border border-amber-500/10 dark:border-amber-500/20 shadow-xs" id="recommended-products-section">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <div className="bg-amber-500 text-white p-1.5 rounded-xl">
-                            <Sparkles className="w-4 h-4 fill-white" />
-                          </div>
-                          <div>
-                            <h3 className="font-extrabold text-slate-900 dark:text-white text-base tracking-tight flex items-center gap-1.5">
-                              {translations[lang].recommendedProducts}
-                            </h3>
-                            <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                              Sélection exclusive mise en avant par nos commerçants de confiance
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                        {activeBoosted.map((p) => (
-                          <ProductCard
-                            key={`boosted-${p.id}`}
-                            product={p}
-                            isMerchantVerified={merchants.find(m => m.id === p.merchantId)?.isVerified ?? false}
-                            onAddToCart={handleAddToCart}
-                            onSelect={handleSelectProduct}
-                            reviews={reviews}
-                            lang={lang}
-                          />
-                        ))}
-                      </div>
-                    </div>
-                  );
-                })()
-              )}
-
-              {/* Store Grid Section */}
+              {/* Store Grid Section Directly */}
               <div className="space-y-5">
                 <div className="flex items-center justify-between">
                   <div>
-                    <h3 className="font-extrabold text-slate-900 text-lg tracking-tight">
-                      {selectedCategory === 'Tous' ? 'Tous les produits' : selectedCategory}
+                    <h3 className="font-extrabold text-slate-900 dark:text-white text-xl tracking-tight">
+                      {selectedCategory === 'Tous' ? (lang === 'fr' ? 'Tous les produits' : 'All Products') : selectedCategory}
                     </h3>
-                    <p className="text-xs text-slate-400 mt-0.5">
-                      {sortedAndFilteredProducts.length} articles disponibles à Bafoussam
+                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                      {sortedAndFilteredProducts.length} {lang === 'fr' ? 'articles disponibles à Bafoussam' : 'items available in Bafoussam'}
                     </p>
                   </div>
 
                   {/* Trust indicator */}
-                  <div className="hidden sm:flex items-center gap-1 text-xs text-slate-500 bg-white border border-slate-100 py-1.5 px-3 rounded-xl shadow-xs">
-                    <ShieldCheck className="w-4 h-4 text-emerald-500" />
-                    <span>Transactions MoMo & Orange 100% sécurisées</span>
+                  <div className="hidden sm:flex items-center gap-1.5 text-xs text-slate-600 dark:text-slate-400 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 py-1.5 px-3 rounded-xl shadow-2xs">
+                    <ShieldCheck className="w-4 h-4 text-emerald-500 shrink-0" />
+                    <span>Paiements MoMo & Orange 100% sécurisés</span>
                   </div>
                 </div>
 
                 {sortedAndFilteredProducts.length === 0 ? (
-                  <div className="bg-white rounded-3xl p-16 text-center border border-slate-100 shadow-sm max-w-md mx-auto">
+                  <div className="bg-white dark:bg-slate-900 rounded-3xl p-12 text-center border border-slate-100 dark:border-slate-800 shadow-sm max-w-md mx-auto">
                     <span className="text-4xl">🔍</span>
-                    <p className="font-bold text-slate-800 text-sm mt-3">Aucun produit trouvé</p>
+                    <p className="font-bold text-slate-800 dark:text-slate-200 text-sm mt-3">Aucun produit trouvé</p>
                     <p className="text-xs text-slate-400 mt-1">
                       Essayez de rechercher d'autres termes comme "café", "taro", "ndop", "épices" ou changez de catégorie.
                     </p>
@@ -971,12 +866,15 @@ export default function App() {
               <MerchantDashboard
                 products={products}
                 merchants={merchants}
+                orders={orders}
+                onUpdateOrderStatus={handleUpdateOrderStatus}
                 onAddProduct={handleAddProductAsMerchant}
                 onDeleteProduct={handleDeleteProductAsMerchant}
                 onUpgradeMerchant={handleUpgradeMerchantToPremium}
                 onRegisterMerchant={(newMerchant) => setMerchants((prev) => [...prev, newMerchant])}
                 onSimulateMerchantExpiration={handleSimulateMerchantExpiration}
                 onBoostProduct={handleBoostProduct}
+                onSwitchToClientSpace={() => setActiveView('shop')}
                 lang={lang}
               />
             </motion.div>

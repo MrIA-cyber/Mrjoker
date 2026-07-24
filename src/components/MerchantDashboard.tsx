@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
-import { Merchant, Product, MarketingCampaign } from '../types';
+import { Merchant, Product, MarketingCampaign, Order } from '../types';
 import { INITIAL_MERCHANTS } from '../data/mockData';
 import { 
   Store, Sparkles, Plus, Trash2, Edit3, BarChart3, Users, LineChart, 
   MapPin, Phone, ArrowUpRight, Check, ArrowRight, Loader2, Megaphone, 
-  Settings, Percent, Star, Tag, Compass, X, ShieldAlert
+  Settings, Percent, Star, Tag, Compass, X, ShieldAlert, PackageCheck,
+  ShoppingBag, UserCheck, Lock, Clock, CheckCircle2
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import VerifiedBadge from './VerifiedBadge';
@@ -13,28 +14,36 @@ import { Language, translations } from '../translations';
 interface MerchantDashboardProps {
   products: Product[];
   merchants: Merchant[];
+  orders?: Order[];
+  onUpdateOrderStatus?: (orderId: string, status: 'pending' | 'preparing' | 'picked_up' | 'delivering' | 'completed') => void;
   onAddProduct: (product: Product) => void;
   onDeleteProduct: (productId: string) => void;
   onUpgradeMerchant: (merchantId: string) => void;
   onRegisterMerchant?: (merchant: Merchant) => void; // clean React state propagation
   onSimulateMerchantExpiration?: (merchantId: string) => void;
   onBoostProduct?: (productId: string) => void;
+  onSwitchToClientSpace?: () => void;
   lang: Language;
 }
 
 export default function MerchantDashboard({
   products,
   merchants,
+  orders = [],
+  onUpdateOrderStatus,
   onAddProduct,
   onDeleteProduct,
   onUpgradeMerchant,
   onRegisterMerchant,
   onSimulateMerchantExpiration,
   onBoostProduct,
+  onSwitchToClientSpace,
   lang,
 }: MerchantDashboardProps) {
   const t = translations[lang];
   const [activeMerchantId, setActiveMerchantId] = useState<string | null>(null);
+  const [gatewayChoice, setGatewayChoice] = useState<'login' | 'register'>('login');
+  const [dashboardTab, setDashboardTab] = useState<'products' | 'orders' | 'profile' | 'marketing'>('products');
   
   // Password security login state
   const [pendingLoginMerchant, setPendingLoginMerchant] = useState<Merchant | null>(null);
@@ -300,16 +309,105 @@ export default function MerchantDashboard({
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 font-sans" id="merchant-portal-container">
       
-      {/* 1. Portal Intro / Login if not connected */}
+      {/* 1. Portal Gateway Screen / Login if not connected */}
       <AnimatePresence mode="wait">
         {!activeMerchantId ? (
           <motion.div
-            key="merchant-login-view"
+            key="merchant-gateway-view"
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -15 }}
-            className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start"
+            className="space-y-6"
           >
+            {/* Gateway Top Header with Return to Client Space */}
+            <div className="bg-slate-900 text-white rounded-3xl p-6 lg:p-8 border border-slate-800 shadow-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <div>
+                <span className="bg-amber-500 text-slate-950 font-black text-[10px] uppercase tracking-wider px-3 py-1 rounded-full inline-block">
+                  Espace Commerçant Isolé
+                </span>
+                <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-white mt-2">
+                  Portail de Gestion des Boutiques Bafoussam
+                </h2>
+                <p className="text-slate-400 text-xs sm:text-sm mt-1">
+                  Accès réservé aux vendeurs et artisans enregistrés à Bafoussam.
+                </p>
+              </div>
+
+              {onSwitchToClientSpace && (
+                <button
+                  onClick={onSwitchToClientSpace}
+                  className="bg-white hover:bg-slate-100 text-slate-900 font-bold text-xs py-2.5 px-4 rounded-xl shadow-sm transition flex items-center gap-2 cursor-pointer shrink-0"
+                  id="btn-gateway-back-to-client"
+                >
+                  <Compass className="w-4 h-4 text-indigo-600" />
+                  <span>← Retour à l'espace client</span>
+                </button>
+              )}
+            </div>
+
+            {/* Two Clear Options Selector */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <button
+                type="button"
+                onClick={() => {
+                  setGatewayChoice('login');
+                  setPendingLoginMerchant(null);
+                }}
+                className={`p-6 rounded-3xl border text-left transition cursor-pointer flex items-start gap-4 ${
+                  gatewayChoice === 'login'
+                    ? 'bg-indigo-600/10 border-indigo-600 shadow-md dark:bg-indigo-950/40 ring-2 ring-indigo-500/30'
+                    : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 hover:border-indigo-300'
+                }`}
+                id="choice-option-login"
+              >
+                <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 ${
+                  gatewayChoice === 'login' ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300'
+                }`}>
+                  <Store className="w-6 h-6" />
+                </div>
+                <div>
+                  <span className="text-[10px] font-black uppercase tracking-widest text-indigo-600 dark:text-indigo-400 block">
+                    Option 1
+                  </span>
+                  <h3 className="font-extrabold text-lg text-slate-900 dark:text-white mt-0.5">
+                    Se connecter
+                  </h3>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">
+                    Commerçant déjà inscrit. Entrez votre mot de passe pour gérer votre catalogue.
+                  </p>
+                </div>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setGatewayChoice('register')}
+                className={`p-6 rounded-3xl border text-left transition cursor-pointer flex items-start gap-4 ${
+                  gatewayChoice === 'register'
+                    ? 'bg-emerald-600/10 border-emerald-600 shadow-md dark:bg-emerald-950/40 ring-2 ring-emerald-500/30'
+                    : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 hover:border-emerald-300'
+                }`}
+                id="choice-option-register"
+              >
+                <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 ${
+                  gatewayChoice === 'register' ? 'bg-emerald-600 text-white' : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300'
+                }`}>
+                  <Plus className="w-6 h-6" />
+                </div>
+                <div>
+                  <span className="text-[10px] font-black uppercase tracking-widest text-emerald-600 dark:text-emerald-400 block">
+                    Option 2
+                  </span>
+                  <h3 className="font-extrabold text-lg text-slate-900 dark:text-white mt-0.5">
+                    Créer ma boutique
+                  </h3>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">
+                    Nouveau commerçant à Bafoussam → inscription, vérification & abonnement.
+                  </p>
+                </div>
+              </button>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
             {/* Left Box: Informational and Marketing Pitch */}
             <div className="lg:col-span-7 bg-slate-900 text-white rounded-3xl p-8 lg:p-12 border border-slate-800 shadow-xl relative overflow-hidden">
               <div className="absolute inset-0 bg-[radial-gradient(#334155_1px,transparent_1px)] [background-size:20px_20px] pointer-events-none opacity-30"></div>
@@ -685,7 +783,8 @@ export default function MerchantDashboard({
               </div>
 
             </div>
-          </motion.div>
+          </div>
+        </motion.div>
         ) : (
           
           /* 2. Merchant Dashboard Logged-In View */
@@ -694,8 +793,35 @@ export default function MerchantDashboard({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="space-y-8"
+            className="space-y-6"
           >
+            {/* Clear Banner for Active Merchant Session */}
+            <div className="bg-slate-950 text-white p-5 rounded-3xl border border-slate-800 shadow-xl flex flex-col sm:flex-row items-center justify-between gap-4">
+              <div className="flex items-center gap-3.5">
+                <div className="w-11 h-11 bg-indigo-600 text-white rounded-2xl flex items-center justify-center font-black text-amber-300 text-base border border-indigo-400/30 shrink-0">
+                  {activeMerchant?.logo}
+                </div>
+                <div>
+                  <span className="text-[10px] font-black uppercase tracking-widest text-indigo-400 block">
+                    Espace Commerçant Isolé
+                  </span>
+                  <h3 className="font-extrabold text-base text-white mt-0.5">
+                    Vous gérez : <span className="text-amber-400 font-black">{activeMerchant?.shopName}</span>
+                  </h3>
+                </div>
+              </div>
+
+              {onSwitchToClientSpace && (
+                <button
+                  onClick={onSwitchToClientSpace}
+                  className="bg-white hover:bg-slate-100 text-slate-950 font-extrabold text-xs py-2.5 px-4 rounded-xl shadow-md transition flex items-center gap-2 cursor-pointer shrink-0"
+                  id="btn-return-client-logged-in"
+                >
+                  <Compass className="w-4 h-4 text-indigo-600" />
+                  <span>Retour à l'espace client</span>
+                </button>
+              )}
+            </div>
             {/* Merchant Dashboard Header bar */}
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 bg-white p-6 rounded-3xl border border-slate-100 shadow-sm">
               <div className="flex items-center gap-4">
@@ -1002,18 +1128,82 @@ export default function MerchantDashboard({
               </div>
             </div>
 
-            {/* Dashboard main split content: Products vs Advanced Marketing */}
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-              
-              {/* Left Column (Catalog manager & Boost) - Col 7 */}
-              <div className="lg:col-span-7 space-y-6">
-                
-                <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm space-y-6">
+            {/* Clean Section Navigation Tabs for Merchant Workspace */}
+            <div className="flex bg-slate-100 dark:bg-slate-900 p-1.5 rounded-2xl text-xs font-bold gap-1 border border-slate-200/80 dark:border-slate-800" id="merchant-dashboard-tabs">
+              <button
+                onClick={() => setDashboardTab('products')}
+                className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl transition cursor-pointer ${
+                  dashboardTab === 'products'
+                    ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-xs font-extrabold'
+                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                }`}
+                id="tab-merchant-products"
+              >
+                <ShoppingBag className="w-4 h-4 text-indigo-500 shrink-0" />
+                <span>Mes Produits ({merchantProducts.length})</span>
+              </button>
+
+              <button
+                onClick={() => setDashboardTab('orders')}
+                className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl transition cursor-pointer relative ${
+                  dashboardTab === 'orders'
+                    ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-xs font-extrabold'
+                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                }`}
+                id="tab-merchant-orders"
+              >
+                <PackageCheck className="w-4 h-4 text-emerald-500 shrink-0" />
+                <span>Mes Commandes</span>
+                {(() => {
+                  const mOrders = orders.filter(o => o.items.some(i => i.product.merchantId === activeMerchantId));
+                  if (mOrders.length === 0) return null;
+                  return (
+                    <span className="bg-emerald-500 text-white font-extrabold text-[10px] px-1.5 py-0.2 rounded-full">
+                      {mOrders.length}
+                    </span>
+                  );
+                })()}
+              </button>
+
+              <button
+                onClick={() => setDashboardTab('profile')}
+                className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl transition cursor-pointer ${
+                  dashboardTab === 'profile'
+                    ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-xs font-extrabold'
+                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                }`}
+                id="tab-merchant-profile"
+              >
+                <UserCheck className="w-4 h-4 text-amber-500 shrink-0" />
+                <span>Mon Profil</span>
+              </button>
+
+              <button
+                onClick={() => setDashboardTab('marketing')}
+                className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl transition cursor-pointer ${
+                  dashboardTab === 'marketing'
+                    ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-xs font-extrabold'
+                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                }`}
+                id="tab-merchant-marketing"
+              >
+                <Sparkles className="w-4 h-4 text-purple-500 shrink-0" />
+                <span>Marketing & Visibilité</span>
+              </button>
+            </div>
+
+            {/* Tab 1: MES PRODUITS */}
+            {dashboardTab === 'products' && (
+              <div className="space-y-6">
+                <div className="bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm space-y-6">
                   <div className="flex items-center justify-between">
-                    <h3 className="font-extrabold text-slate-900 text-base">Gestion de votre Catalogue</h3>
+                    <div>
+                      <h3 className="font-extrabold text-slate-900 dark:text-white text-base">Gestion de votre Catalogue</h3>
+                      <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Articles en vente dans votre boutique sur Bafoussam Direct</p>
+                    </div>
                     <button
                       onClick={() => setShowAddProductModal(true)}
-                      className="bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs py-2 px-3 rounded-xl flex items-center gap-1.5 cursor-pointer transition shadow-sm"
+                      className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs py-2.5 px-4 rounded-xl flex items-center gap-1.5 cursor-pointer transition shadow-sm"
                       id="btn-add-product-trigger"
                     >
                       <Plus className="w-4 h-4" />
@@ -1022,54 +1212,51 @@ export default function MerchantDashboard({
                   </div>
 
                   {merchantProducts.length === 0 ? (
-                    <div className="text-center py-16 border-2 border-dashed border-slate-100 rounded-2xl">
+                    <div className="text-center py-16 border-2 border-dashed border-slate-100 dark:border-slate-800 rounded-2xl">
                       <span className="text-4xl">📦</span>
-                      <p className="font-semibold text-slate-800 mt-2.5 text-sm">Aucun produit en ligne</p>
-                      <p className="text-xs text-slate-400 max-w-[220px] mx-auto mt-1">
+                      <p className="font-semibold text-slate-800 dark:text-slate-200 mt-2.5 text-sm">Aucun produit en ligne</p>
+                      <p className="text-xs text-slate-400 max-w-[240px] mx-auto mt-1">
                         Commencez à ajouter vos articles pour qu'ils soient visibles par tous les clients de Bafoussam.
                       </p>
                     </div>
                   ) : (
-                    <div className="space-y-3">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       {merchantProducts.map((p) => (
                         <div
                           key={p.id}
-                          className="flex items-center gap-3.5 bg-slate-50/50 p-3 rounded-2xl border border-slate-100 relative group"
+                          className="flex items-center gap-3.5 bg-slate-50/70 dark:bg-slate-800/50 p-3.5 rounded-2xl border border-slate-100 dark:border-slate-800 relative group"
                         >
                           <img
                             src={p.image}
                             alt={p.name}
                             referrerPolicy="no-referrer"
-                            className="w-14 h-14 rounded-xl object-cover border border-slate-100 shrink-0"
+                            className="w-16 h-16 rounded-xl object-cover border border-slate-200 dark:border-slate-700 shrink-0"
                           />
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-1.5">
-                              <h4 className="font-bold text-slate-900 text-xs truncate">{p.name}</h4>
+                              <h4 className="font-bold text-slate-900 dark:text-white text-xs truncate">{p.name}</h4>
                               {p.isBoosted && (
-                                <span className="bg-indigo-100 text-indigo-800 font-extrabold text-[8px] px-1.5 py-0.5 rounded-md flex items-center gap-0.5">
-                                  <Sparkles className="w-2.5 h-2.5 fill-indigo-800 stroke-none" />
+                                <span className="bg-indigo-100 dark:bg-indigo-900/60 text-indigo-800 dark:text-indigo-300 font-extrabold text-[8px] px-1.5 py-0.5 rounded-md flex items-center gap-0.5">
+                                  <Sparkles className="w-2.5 h-2.5 fill-indigo-800 dark:fill-indigo-300 stroke-none" />
                                   <span>BOOST</span>
                                 </span>
                               )}
                             </div>
                             <p className="text-[10px] text-slate-400 mt-0.5 uppercase tracking-wider font-semibold">{p.category}</p>
                             <div className="flex items-center gap-3 mt-1.5 text-[11px]">
-                              <span className="font-extrabold text-slate-950">{p.price.toLocaleString('fr-FR')} F</span>
-                              <span className="text-slate-300">|</span>
-                              <span className="font-semibold text-slate-500">Stock: {p.stock} unités</span>
-                              <span className="text-slate-300">|</span>
-                              <span className="text-slate-400">★ {p.rating.toFixed(1)}</span>
+                              <span className="font-extrabold text-slate-950 dark:text-white">{p.price.toLocaleString('fr-FR')} F</span>
+                              <span className="text-slate-300 dark:text-slate-700">|</span>
+                              <span className="font-semibold text-slate-500 dark:text-slate-400">Stock: {p.stock} unités</span>
                             </div>
                           </div>
 
-                          {/* Action controllers */}
-                          <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition">
+                          <div className="flex items-center gap-1">
                             <button
                               onClick={() => onDeleteProduct(p.id)}
-                              className="p-1.5 bg-white hover:bg-red-50 text-slate-400 hover:text-red-500 rounded-lg border border-slate-100 cursor-pointer shadow-sm transition"
+                              className="p-2 bg-white dark:bg-slate-800 hover:bg-red-50 dark:hover:bg-red-950/40 text-slate-400 hover:text-red-500 rounded-xl border border-slate-200 dark:border-slate-700 cursor-pointer shadow-xs transition"
                               title="Supprimer l'article"
                             >
-                              <Trash2 className="w-3.5 h-3.5" />
+                              <Trash2 className="w-4 h-4" />
                             </button>
                           </div>
                         </div>
@@ -1079,15 +1266,15 @@ export default function MerchantDashboard({
                 </div>
 
                 {/* Booster mes produits Section */}
-                <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm space-y-5">
+                <div className="bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm space-y-5">
                   <div className="flex items-center gap-2">
-                    <div className="bg-amber-500 text-white p-1.5 rounded-xl">
-                      <Sparkles className="w-4 h-4 fill-white animate-pulse" />
+                    <div className="bg-amber-500 text-white p-2 rounded-xl">
+                      <Sparkles className="w-4 h-4 fill-white" />
                     </div>
                     <div>
-                      <h3 className="font-extrabold text-slate-900 text-base">Booster mes produits</h3>
-                      <p className="text-xs text-slate-400 mt-0.5">
-                        Mettez vos articles en vedette en haut de la page d'accueil pendant 7 jours pour maximiser vos ventes.
+                      <h3 className="font-extrabold text-slate-900 dark:text-white text-base">Booster mes produits</h3>
+                      <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                        Mettez vos articles en vedette sur la boutique pendant 7 jours pour multiplier vos ventes.
                       </p>
                     </div>
                   </div>
@@ -1101,20 +1288,20 @@ export default function MerchantDashboard({
                         return (
                           <div
                             key={`boost-row-${p.id}`}
-                            className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-slate-50/50 p-4 rounded-2xl border border-slate-100"
+                            className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-slate-50/70 dark:bg-slate-800/40 p-4 rounded-2xl border border-slate-100 dark:border-slate-800"
                           >
                             <div className="flex items-center gap-3">
                               <img
                                 src={p.image}
                                 alt={p.name}
                                 referrerPolicy="no-referrer"
-                                className="w-12 h-12 rounded-xl object-cover border border-slate-100 shrink-0"
+                                className="w-12 h-12 rounded-xl object-cover border border-slate-200 dark:border-slate-700 shrink-0"
                               />
                               <div className="min-w-0">
-                                <h4 className="font-bold text-slate-900 text-xs truncate">{p.name}</h4>
+                                <h4 className="font-bold text-slate-900 dark:text-white text-xs truncate">{p.name}</h4>
                                 <p className="text-[10px] text-slate-400 mt-0.5">{p.price.toLocaleString('fr-FR')} FCFA</p>
                                 {isBoostActive && p.boostExpiryDate && (
-                                  <span className="inline-flex items-center gap-1 text-[9px] text-emerald-600 font-bold mt-1">
+                                  <span className="inline-flex items-center gap-1 text-[9px] text-emerald-600 dark:text-emerald-400 font-bold mt-1">
                                     ✓ Boost actif jusqu'au {new Date(p.boostExpiryDate).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}
                                   </span>
                                 )}
@@ -1132,11 +1319,11 @@ export default function MerchantDashboard({
                               }}
                               className={`text-xs font-black py-2 px-3.5 rounded-xl transition shrink-0 cursor-pointer ${
                                 isBoostActive
-                                  ? 'bg-slate-100 text-slate-400 border border-slate-200 cursor-not-allowed'
-                                  : 'bg-indigo-600 hover:bg-indigo-700 text-white shadow-sm'
+                                  ? 'bg-slate-100 dark:bg-slate-800 text-slate-400 border border-slate-200 dark:border-slate-700 cursor-not-allowed'
+                                  : 'bg-amber-500 hover:bg-amber-600 text-slate-950 font-black shadow-sm'
                               }`}
                             >
-                              {isBoostActive ? 'Déjà mis en avant' : 'Mettre en avant (1 500 FCFA / 7 jours)'}
+                              {isBoostActive ? 'Déjà mis en avant' : 'Mettre en avant (1 500 FCFA / 7j)'}
                             </button>
                           </div>
                         );
@@ -1144,126 +1331,339 @@ export default function MerchantDashboard({
                     </div>
                   )}
                 </div>
-
               </div>
+            )}
 
-              {/* Right Column (Advanced Marketing / Analytics & Campaigns) - Col 5 */}
-              <div className="lg:col-span-5 space-y-6">
-                
-                {/* Advanced Marketing Space */}
-                <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm relative overflow-hidden">
-                  
-                  {/* Lock overlay if standard merchant */}
-                  {!activeMerchant?.isPremium && (
-                    <div className="absolute inset-0 bg-white/95 backdrop-blur-xs z-10 flex flex-col items-center justify-center p-6 text-center">
-                      <div className="w-12 h-12 bg-indigo-50 rounded-2xl flex items-center justify-center border border-indigo-100 text-indigo-600 mb-3.5 shadow-sm">
-                        <Sparkles className="w-6 h-6 fill-indigo-500 stroke-none" />
+            {/* Tab 2: MES COMMANDES */}
+            {dashboardTab === 'orders' && (
+              <div className="bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm space-y-6">
+                <div>
+                  <h3 className="font-extrabold text-slate-900 dark:text-white text-base">Commandes de votre Boutique</h3>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Suivez et gérez les commandes passées par vos clients à Bafoussam</p>
+                </div>
+
+                {(() => {
+                  const mOrders = orders.filter(o => o.items.some(i => i.product.merchantId === activeMerchantId));
+                  if (mOrders.length === 0) {
+                    return (
+                      <div className="text-center py-16 border-2 border-dashed border-slate-100 dark:border-slate-800 rounded-2xl">
+                        <span className="text-4xl">📋</span>
+                        <p className="font-semibold text-slate-800 dark:text-slate-200 mt-2.5 text-sm">Aucune commande reçue pour l'instant</p>
+                        <p className="text-xs text-slate-400 max-w-[260px] mx-auto mt-1">
+                          Les commandes passées par les clients apparaîtront ici en temps réel avec notification du coursier.
+                        </p>
                       </div>
-                      <h4 className="font-bold text-slate-900 text-sm tracking-tight mb-1">
-                        Outils Marketing Avancés Bloqués
-                      </h4>
-                      <p className="text-xs text-slate-500 max-w-xs leading-relaxed mb-5">
-                        L'accès aux analyses géographiques à Bafoussam, aux campagnes promotionnelles de quartiers, et à la mise en avant de produits nécessite un abonnement obligatoire de <strong className="text-slate-800">100 000 FCFA / an</strong>.
-                      </p>
-                      
-                      <button
-                        onClick={() => {
-                          setUpgradeStep('details');
-                          setShowUpgradeModal(true);
-                        }}
-                        className="bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs py-2.5 px-4 rounded-xl cursor-pointer shadow-sm transition"
-                      >
-                        Souscrire à l'Abonnement Annuel
-                      </button>
-                    </div>
-                  )}
+                    );
+                  }
 
-                  {/* Unlocked Premium Content */}
-                  <div className="space-y-6">
-                    <div className="flex items-center justify-between border-b border-slate-50 pb-3">
-                      <h3 className="font-extrabold text-slate-900 text-base flex items-center gap-1.5">
-                        <Megaphone className="w-4.5 h-4.5 text-indigo-500" />
-                        <span>Outils Marketing Premium</span>
-                      </h3>
-                      <span className="bg-indigo-100 text-indigo-900 text-[9px] font-extrabold px-2 py-0.5 rounded-md uppercase">Débloqué</span>
-                    </div>
+                  return (
+                    <div className="space-y-4">
+                      {mOrders.map((ord) => {
+                        const merchantItems = ord.items.filter(i => i.product.merchantId === activeMerchantId);
+                        const merchantSubtotal = merchantItems.reduce((acc, i) => acc + (i.product.price * i.quantity), 0);
 
-                    {/* SVG Analytics Graph (Bafoussam geographic performance) */}
+                        return (
+                          <div key={ord.id} className="bg-slate-50/70 dark:bg-slate-800/40 p-5 rounded-2xl border border-slate-100 dark:border-slate-800 space-y-4">
+                            <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-200/60 dark:border-slate-700/60 pb-3">
+                              <div>
+                                <div className="flex items-center gap-2">
+                                  <span className="font-extrabold text-slate-900 dark:text-white text-sm">Commande #{ord.id}</span>
+                                  <span className={`px-2 py-0.5 text-[10px] font-extrabold rounded-full ${
+                                    ord.status === 'completed' 
+                                      ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/60 dark:text-emerald-300'
+                                      : 'bg-amber-100 text-amber-800 dark:bg-amber-900/60 dark:text-amber-300'
+                                  }`}>
+                                    {ord.status === 'pending' && 'En attente'}
+                                    {ord.status === 'preparing' && 'En préparation'}
+                                    {ord.status === 'picked_up' && 'Récupérée coursier'}
+                                    {ord.status === 'delivering' && 'En cours de livraison'}
+                                    {ord.status === 'completed' && 'Livrée & Réglée'}
+                                  </span>
+                                </div>
+                                <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">
+                                  Client : <strong className="text-slate-800 dark:text-slate-200">{ord.userName}</strong> • {ord.deliveryNeighborhood} • Tél: {ord.paymentPhone}
+                                </p>
+                              </div>
+
+                              <div className="text-right">
+                                <span className="text-xs font-extrabold text-slate-950 dark:text-white block">
+                                  {merchantSubtotal.toLocaleString('fr-FR')} FCFA
+                                </span>
+                                <span className="text-[10px] text-slate-400 block">Paiement Mobile Money</span>
+                              </div>
+                            </div>
+
+                            {/* Order items */}
+                            <div className="space-y-2">
+                              {merchantItems.map((item, idx) => (
+                                <div key={idx} className="flex items-center justify-between text-xs">
+                                  <div className="flex items-center gap-2">
+                                    <span className="w-5 h-5 rounded-full bg-indigo-100 dark:bg-indigo-900/60 text-indigo-800 dark:text-indigo-300 font-extrabold text-[10px] flex items-center justify-center shrink-0">
+                                      {item.quantity}x
+                                    </span>
+                                    <span className="font-bold text-slate-800 dark:text-slate-200">{item.product.name}</span>
+                                  </div>
+                                  <span className="text-slate-600 dark:text-slate-400 font-mono text-[11px]">
+                                    {(item.product.price * item.quantity).toLocaleString('fr-FR')} F
+                                  </span>
+                                </div>
+                              ))}
+                            </div>
+
+                            {/* Status controls for merchant */}
+                            {onUpdateOrderStatus && ord.status !== 'completed' && (
+                              <div className="flex items-center gap-2 border-t border-slate-200/60 dark:border-slate-700/60 pt-3">
+                                <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400">Action Commerçant :</span>
+                                {ord.status === 'pending' && (
+                                  <button
+                                    onClick={() => onUpdateOrderStatus(ord.id, 'preparing')}
+                                    className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs py-1.5 px-3 rounded-lg cursor-pointer transition"
+                                  >
+                                    Confirmer & Préparer
+                                  </button>
+                                )}
+                                {ord.status === 'preparing' && (
+                                  <button
+                                    onClick={() => onUpdateOrderStatus(ord.id, 'delivering')}
+                                    className="bg-amber-500 hover:bg-amber-600 text-slate-950 font-extrabold text-xs py-1.5 px-3 rounded-lg cursor-pointer transition"
+                                  >
+                                    Remettre au Coursier Moto
+                                  </button>
+                                )}
+                                {ord.status === 'delivering' && (
+                                  <button
+                                    onClick={() => onUpdateOrderStatus(ord.id, 'completed')}
+                                    className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs py-1.5 px-3 rounded-lg cursor-pointer transition"
+                                  >
+                                    Marquer comme Livré
+                                  </button>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  );
+                })()}
+              </div>
+            )}
+
+            {/* Tab 3: MON PROFIL & BOUTIQUE */}
+            {dashboardTab === 'profile' && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Information Boutique */}
+                <div className="bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm space-y-4">
+                  <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
+                    <h3 className="font-extrabold text-slate-900 dark:text-white text-base flex items-center gap-2">
+                      <Store className="w-5 h-5 text-indigo-500" />
+                      <span>Fiche de la Boutique</span>
+                    </h3>
+                    {activeMerchant?.isVerified && <VerifiedBadge size="sm" />}
+                  </div>
+
+                  <div className="space-y-3 text-xs">
                     <div>
-                      <h4 className="font-bold text-slate-800 text-xs uppercase tracking-wider mb-2.5">Performance par Quartier Bafoussam</h4>
-                      <div className="space-y-2 text-xs">
-                        {/* Tamdja */}
-                        <div className="space-y-1">
-                          <div className="flex justify-between font-semibold">
-                            <span>Tamdja</span>
-                            <span className="text-slate-500">45% de vos ventes (85 visites)</span>
-                          </div>
-                          <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
-                            <div className="h-full bg-indigo-600 rounded-full" style={{ width: '45%' }}></div>
-                          </div>
-                        </div>
-                        {/* Bamendzi */}
-                        <div className="space-y-1">
-                          <div className="flex justify-between font-semibold">
-                            <span>Bamendzi</span>
-                            <span className="text-slate-500">30% de vos ventes (50 visites)</span>
-                          </div>
-                          <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
-                            <div className="h-full bg-slate-800 rounded-full" style={{ width: '30%' }}></div>
-                          </div>
-                        </div>
-                        {/* Banengo */}
-                        <div className="space-y-1">
-                          <div className="flex justify-between font-semibold">
-                            <span>Banengo</span>
-                            <span className="text-slate-500">15% de vos ventes (22 visites)</span>
-                          </div>
-                          <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
-                            <div className="h-full bg-slate-400 rounded-full" style={{ width: '15%' }}></div>
-                          </div>
-                        </div>
-                      </div>
+                      <span className="text-slate-400 font-semibold block text-[10px] uppercase tracking-wider">Nom de l'Espace Commerce</span>
+                      <strong className="text-slate-900 dark:text-white text-sm font-extrabold">{activeMerchant?.name}</strong>
                     </div>
 
-                    {/* Campaigns segment */}
-                    <div className="space-y-3 pt-2">
-                      <div className="flex items-center justify-between">
-                        <h4 className="font-bold text-slate-800 text-xs uppercase tracking-wider">Vos Campagnes de Visibilité</h4>
-                        <button
-                          onClick={() => setShowCampaignModal(true)}
-                          className="text-[11px] font-bold text-indigo-600 hover:text-indigo-800 underline cursor-pointer"
-                        >
-                          Créer une campagne
-                        </button>
-                      </div>
-
-                      <div className="space-y-2.5">
-                        {activeCampaigns.map((c) => (
-                          <div
-                            key={c.id}
-                            className="bg-slate-50 p-3.5 rounded-2xl border border-slate-100 text-xs space-y-2"
-                          >
-                            <div className="flex items-center justify-between">
-                              <span className="font-bold text-slate-900">{c.title}</span>
-                              <span className="bg-emerald-100 text-emerald-800 font-bold text-[9px] px-1.5 py-0.5 rounded-full">Actif</span>
-                            </div>
-                            <p className="text-[10px] text-slate-400">
-                              Cible : {c.targetNeighborhoods.join(', ')} • Fin le {new Date(c.endDate).toLocaleDateString('fr-FR')}
-                            </p>
-                            <div className="flex justify-between border-t border-slate-100 pt-2 text-[10px] text-slate-500">
-                              <span>Affichages: <strong className="text-slate-700">{c.views}</strong></span>
-                              <span>Conversions: <strong className="text-emerald-600">{c.conversions} clics</strong></span>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
+                    <div>
+                      <span className="text-slate-400 font-semibold block text-[10px] uppercase tracking-wider">Responsable Légal</span>
+                      <strong className="text-slate-800 dark:text-slate-200">{activeMerchant?.legalName || 'N/A'}</strong>
                     </div>
 
+                    <div>
+                      <span className="text-slate-400 font-semibold block text-[10px] uppercase tracking-wider">Localisation Bafoussam</span>
+                      <strong className="text-slate-800 dark:text-slate-200 flex items-center gap-1">
+                        <MapPin className="w-3.5 h-3.5 text-red-500" />
+                        {activeMerchant?.location}
+                      </strong>
+                    </div>
+
+                    <div>
+                      <span className="text-slate-400 font-semibold block text-[10px] uppercase tracking-wider">Compte Mobile Money de Réception</span>
+                      <strong className="text-slate-800 dark:text-slate-200 flex items-center gap-1 font-mono">
+                        <Phone className="w-3.5 h-3.5 text-emerald-500" />
+                        {activeMerchant?.phone}
+                      </strong>
+                    </div>
                   </div>
                 </div>
 
+                {/* Vérification & Abonnement */}
+                <div className="space-y-6">
+                  {/* Status Verification */}
+                  <div className="bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm space-y-4">
+                    <h3 className="font-extrabold text-slate-900 dark:text-white text-base flex items-center gap-2">
+                      <ShieldAlert className="w-5 h-5 text-emerald-500" />
+                      <span>Vérification CNI & Local</span>
+                    </h3>
+
+                    <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+                      Votre pièce d'identité et les photos de votre établissement physique ont été contrôlées par l'équipe Bafoussam Direct.
+                    </p>
+
+                    <div className="p-3 bg-emerald-50 dark:bg-emerald-950/40 rounded-xl border border-emerald-200/60 dark:border-emerald-800 flex items-center gap-2 text-xs text-emerald-800 dark:text-emerald-300 font-bold">
+                      <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
+                      <span>Commerçant Vérifié Conforme Bafoussam</span>
+                    </div>
+                  </div>
+
+                  {/* Status Subscription */}
+                  <div className="bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm space-y-4">
+                    <div className="flex items-center justify-between">
+                      <h3 className="font-extrabold text-slate-900 dark:text-white text-base flex items-center gap-2">
+                        <Sparkles className="w-5 h-5 text-amber-500" />
+                        <span>Abonnement Annuel</span>
+                      </h3>
+
+                      <span className={`px-2.5 py-0.5 text-[10px] font-extrabold rounded-full ${
+                        activeMerchant?.isPremium ? 'bg-amber-100 text-amber-900' : 'bg-slate-100 text-slate-600'
+                      }`}>
+                        {activeMerchant?.isPremium ? 'PREMIUM ACTIF' : 'STANDARD'}
+                      </span>
+                    </div>
+
+                    {activeMerchant?.isPremium ? (
+                      <div className="space-y-2 text-xs">
+                        <p className="text-slate-600 dark:text-slate-300">
+                          Votre abonnement est actif jusqu'au <strong className="text-slate-900 dark:text-white">{activeMerchant?.premiumExpiryDate}</strong>.
+                        </p>
+                        {onSimulateMerchantExpiration && (
+                          <button
+                            onClick={() => onSimulateMerchantExpiration(activeMerchant.id)}
+                            className="text-[10px] text-amber-600 hover:underline cursor-pointer font-bold block"
+                          >
+                            [Test Admin] Simuler expiration d'abonnement
+                          </button>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="space-y-3 text-xs">
+                        <p className="text-slate-500 dark:text-slate-400">
+                          Passez au statut Premium pour débloquer les outils marketing, les promotions par quartier et booster vos ventes.
+                        </p>
+                        <button
+                          onClick={() => {
+                            setUpgradeStep('details');
+                            setShowUpgradeModal(true);
+                          }}
+                          className="w-full bg-amber-500 hover:bg-amber-600 text-slate-950 font-black py-2.5 px-4 rounded-xl cursor-pointer transition shadow-sm text-center"
+                        >
+                          S'abonner pour 100 000 FCFA / an
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </div>
               </div>
-            </div>
+            )}
+
+            {/* Tab 4: MARKETING & VISIBILITÉ */}
+            {dashboardTab === 'marketing' && (
+              <div className="bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm relative overflow-hidden space-y-6">
+                {!activeMerchant?.isPremium && (
+                  <div className="p-6 bg-amber-500/10 border border-amber-500/20 rounded-2xl text-center space-y-3">
+                    <Sparkles className="w-8 h-8 text-amber-500 mx-auto" />
+                    <h4 className="font-extrabold text-slate-900 dark:text-white text-sm">Outils Marketing Avancés Réservés aux Membres Premium</h4>
+                    <p className="text-xs text-slate-600 dark:text-slate-400 max-w-md mx-auto">
+                      L'accès aux analyses géographiques par quartier à Bafoussam (Tamdja, Bamendzi, Banengo) et aux campagnes promotionnelles nécessite un abonnement annuel.
+                    </p>
+                    <button
+                      onClick={() => {
+                        setUpgradeStep('details');
+                        setShowUpgradeModal(true);
+                      }}
+                      className="bg-amber-500 hover:bg-amber-600 text-slate-950 font-black text-xs py-2 px-4 rounded-xl cursor-pointer transition inline-block"
+                    >
+                      S'abonner maintenant (100 000 FCFA / an)
+                    </button>
+                  </div>
+                )}
+
+                {/* Content */}
+                <div className="space-y-6">
+                  <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
+                    <h3 className="font-extrabold text-slate-900 dark:text-white text-base flex items-center gap-2">
+                      <Megaphone className="w-5 h-5 text-indigo-500" />
+                      <span>Analyse de Performance par Quartier Bafoussam</span>
+                    </h3>
+                  </div>
+
+                  <div className="space-y-3 text-xs">
+                    {/* Tamdja */}
+                    <div className="space-y-1">
+                      <div className="flex justify-between font-semibold text-slate-800 dark:text-slate-200">
+                        <span>Tamdja</span>
+                        <span className="text-slate-500">45% de vos ventes (85 visites)</span>
+                      </div>
+                      <div className="h-2.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+                        <div className="h-full bg-indigo-600 rounded-full" style={{ width: '45%' }}></div>
+                      </div>
+                    </div>
+
+                    {/* Bamendzi */}
+                    <div className="space-y-1">
+                      <div className="flex justify-between font-semibold text-slate-800 dark:text-slate-200">
+                        <span>Bamendzi</span>
+                        <span className="text-slate-500">30% de vos ventes (50 visites)</span>
+                      </div>
+                      <div className="h-2.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+                        <div className="h-full bg-slate-800 dark:bg-slate-400 rounded-full" style={{ width: '30%' }}></div>
+                      </div>
+                    </div>
+
+                    {/* Banengo */}
+                    <div className="space-y-1">
+                      <div className="flex justify-between font-semibold text-slate-800 dark:text-slate-200">
+                        <span>Banengo</span>
+                        <span className="text-slate-500">15% de vos ventes (22 visites)</span>
+                      </div>
+                      <div className="h-2.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+                        <div className="h-full bg-slate-400 dark:bg-slate-600 rounded-full" style={{ width: '15%' }}></div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Campaigns segment */}
+                  <div className="space-y-3 pt-4 border-t border-slate-100 dark:border-slate-800">
+                    <div className="flex items-center justify-between">
+                      <h4 className="font-bold text-slate-800 dark:text-slate-200 text-xs uppercase tracking-wider">Campagnes de Visibilité Actives</h4>
+                      {activeMerchant?.isPremium && (
+                        <button
+                          onClick={() => setShowCampaignModal(true)}
+                          className="text-xs font-bold text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 underline cursor-pointer"
+                        >
+                          + Créer une campagne
+                        </button>
+                      )}
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      {activeCampaigns.map((c) => (
+                        <div
+                          key={c.id}
+                          className="bg-slate-50 dark:bg-slate-800/50 p-4 rounded-2xl border border-slate-100 dark:border-slate-800 text-xs space-y-2"
+                        >
+                          <div className="flex items-center justify-between">
+                            <span className="font-bold text-slate-900 dark:text-white">{c.title}</span>
+                            <span className="bg-emerald-100 text-emerald-800 dark:bg-emerald-900/60 dark:text-emerald-300 font-bold text-[9px] px-2 py-0.5 rounded-full">Actif</span>
+                          </div>
+                          <p className="text-[10px] text-slate-400">
+                            Cible : {c.targetNeighborhoods.join(', ')} • Fin le {new Date(c.endDate).toLocaleDateString('fr-FR')}
+                          </p>
+                          <div className="flex justify-between border-t border-slate-200/60 dark:border-slate-700/60 pt-2 text-[10px] text-slate-500 dark:text-slate-400">
+                            <span>Affichages: <strong className="text-slate-700 dark:text-slate-200">{c.views}</strong></span>
+                            <span>Conversions: <strong className="text-emerald-600 dark:text-emerald-400">{c.conversions} clics</strong></span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
             </>
             )}
 
