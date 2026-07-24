@@ -4,6 +4,7 @@ import { BAFOUSSAM_NEIGHBORHOODS } from '../data/mockData';
 import { Check, ShieldCheck, HelpCircle, Phone, ArrowRight, Loader2, Sparkles, MapPin, Mail, User as UserIcon, Lock, Globe } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { translations, Language } from '../translations';
+import SupportPhoneNumber from './SupportPhoneNumber';
 
 interface WelcomeGateProps {
   onSuccess: (user: User) => void;
@@ -82,7 +83,7 @@ export default function WelcomeGate({ onSuccess, lang, onLangChange }: WelcomeGa
             id: 'u-seed-2',
             name: 'Alice Kamga',
             email: 'alice.kamga@yahoo.fr',
-            phone: '640406412',
+            phone: '690000000',
             isSubscribed: true,
             subscriptionDate: today.toISOString().split('T')[0],
             subscriptionExpiryDate: expiry.toISOString().split('T')[0],
@@ -324,7 +325,7 @@ export default function WelcomeGate({ onSuccess, lang, onLangChange }: WelcomeGa
       {/* Background Grid Pattern */}
       <div className="absolute inset-0 bg-[radial-gradient(#c7d2fe_1px,transparent_1px)] [background-size:24px_24px] pointer-events-none opacity-40"></div>
       
-      <div className="w-full max-w-xl bg-white/90 backdrop-blur-md rounded-3xl shadow-xl border border-slate-100 overflow-hidden relative z-10 transition-shadow hover:shadow-2xl duration-300">
+      <div className="w-full max-w-xl bg-white rounded-3xl shadow-xl border border-slate-100 overflow-hidden relative z-10 transition-shadow hover:shadow-2xl duration-300">
         
         {/* Floating Language Selector at the top right of the card */}
         <div className="absolute top-5 right-6 z-20 flex gap-2">
@@ -544,8 +545,8 @@ export default function WelcomeGate({ onSuccess, lang, onLangChange }: WelcomeGa
                     <span>{getTranslation('securedConnection')}</span>
                   </div>
                   <div className="flex items-center gap-1.5">
-                    <HelpCircle className="w-4 h-4 text-slate-300" />
-                    <span>{lang === 'fr' ? 'Support Bafoussam: 640 40 64 12' : 'Bafoussam Support: 640 40 64 12'}</span>
+                    <HelpCircle className="w-4 h-4 text-slate-300 shrink-0" />
+                    <SupportPhoneNumber prefix={lang === 'fr' ? 'Support Bafoussam :' : 'Bafoussam Support :'} className="text-xs" />
                   </div>
                 </div>
               </motion.div>
@@ -649,8 +650,8 @@ export default function WelcomeGate({ onSuccess, lang, onLangChange }: WelcomeGa
                     <span>{lang === 'fr' ? 'Numéro vérifié' : 'Number verified'}</span>
                   </div>
                   <div className="flex items-center gap-1.5">
-                    <HelpCircle className="w-4 h-4 text-slate-300" />
-                    <span>{getTranslation('needHelp')} : 640 40 64 12</span>
+                    <HelpCircle className="w-4 h-4 text-slate-300 shrink-0" />
+                    <SupportPhoneNumber prefix={`${getTranslation('needHelp')} :`} className="text-xs" />
                   </div>
                 </div>
               </motion.div>
@@ -690,7 +691,7 @@ export default function WelcomeGate({ onSuccess, lang, onLangChange }: WelcomeGa
                       <input
                         type="tel"
                         required
-                        placeholder="Ex: 677894512 ou 640406412"
+                        placeholder="Ex: 677894512 ou 690000000"
                         className="w-full pl-10 pr-4 py-3 bg-slate-50/50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/10 focus:border-indigo-500 text-slate-950 text-sm transition font-mono focus:bg-white"
                         value={loginPhone}
                         onChange={(e) => setLoginPhone(e.target.value)}
@@ -735,8 +736,8 @@ export default function WelcomeGate({ onSuccess, lang, onLangChange }: WelcomeGa
                     <span>{lang === 'fr' ? 'Connexion Cryptée' : 'Encrypted Connection'}</span>
                   </div>
                   <div className="flex items-center gap-1.5">
-                    <HelpCircle className="w-4 h-4 text-slate-300" />
-                    <span>{lang === 'fr' ? 'Assistance : 640 40 64 12' : 'Assistance: 640 40 64 12'}</span>
+                    <HelpCircle className="w-4 h-4 text-slate-300 shrink-0" />
+                    <SupportPhoneNumber prefix={lang === 'fr' ? 'Assistance :' : 'Assistance:'} className="text-xs" />
                   </div>
                 </div>
               </motion.div>
@@ -771,9 +772,9 @@ export default function WelcomeGate({ onSuccess, lang, onLangChange }: WelcomeGa
               >
                 <h3 className="text-lg font-bold text-slate-900 mb-2">{getTranslation('chooseMobilePayment')}</h3>
                 <p className="text-sm text-slate-500 mb-6">
-                  {getTranslation('paymentInstructions', { orangePhone: '640406412' }).split('640406412')[0]}
-                  <strong className="text-indigo-600 font-bold">640406412</strong>
-                  {getTranslation('paymentInstructions', { orangePhone: '640406412' }).split('640406412')[1]}
+                  {getTranslation('paymentInstructions', { orangePhone: '690000000' }).split('690000000')[0]}
+                  <strong className="text-indigo-600 font-bold">690000000</strong>
+                  {getTranslation('paymentInstructions', { orangePhone: '690000000' }).split('690000000')[1]}
                 </p>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -854,9 +855,9 @@ export default function WelcomeGate({ onSuccess, lang, onLangChange }: WelcomeGa
                     : `A debit validation notification has been sent to ${phoneForPayment}.`}
                   <br />
                   <span className="text-xs text-slate-400 mt-2 block">
-                    {getTranslation('pinDescription', { orangePhone: '640406412' }).split('640406412')[0]}
-                    <strong className="text-white">640406412</strong>
-                    {getTranslation('pinDescription', { orangePhone: '640406412' }).split('640406412')[1]}
+                    {getTranslation('pinDescription', { orangePhone: '690000000' }).split('690000000')[0]}
+                    <strong className="text-white">690000000</strong>
+                    {getTranslation('pinDescription', { orangePhone: '690000000' }).split('690000000')[1]}
                   </span>
                 </p>
 
@@ -885,15 +886,19 @@ export default function WelcomeGate({ onSuccess, lang, onLangChange }: WelcomeGa
                     <button
                       type="button"
                       onClick={() => setStep('payment-select')}
-                      className="flex-1 bg-slate-800 hover:bg-slate-700 text-slate-300 text-sm py-3 rounded-xl cursor-pointer transition"
+                      className="flex-1 bg-slate-800 hover:bg-slate-700 text-slate-100 font-bold text-sm py-3 px-4 rounded-xl cursor-pointer transition flex items-center justify-center text-center"
                     >
-                      {getTranslation('cancelBtn')}
+                      {getTranslation('cancel') || (lang === 'fr' ? 'Annuler' : 'Cancel')}
                     </button>
                     <button
                       type="submit"
-                      className="flex-1 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-sm py-3 rounded-xl cursor-pointer transition shadow-lg shadow-indigo-600/10"
+                      className={`flex-1 font-bold text-sm py-3 px-4 rounded-xl cursor-pointer transition text-white shadow-md flex items-center justify-center text-center ${
+                        paymentOperator === 'orange'
+                          ? 'bg-orange-600 hover:bg-orange-500 active:bg-orange-700'
+                          : 'bg-indigo-600 hover:bg-indigo-500 active:bg-indigo-700'
+                      }`}
                     >
-                      {getTranslation('confirmBtn')}
+                      {getTranslation('confirm') || (lang === 'fr' ? 'Confirmer' : 'Confirm')}
                     </button>
                   </div>
                 </form>
@@ -914,9 +919,9 @@ export default function WelcomeGate({ onSuccess, lang, onLangChange }: WelcomeGa
 
                 <h3 className="text-xl font-bold text-slate-900">{getTranslation('welcomeTitle')}</h3>
                 <p className="text-sm text-slate-500 mt-2 max-w-sm mx-auto">
-                  {getTranslation('paymentApprovedDesc', { orangePhone: '640406412' }).split('640406412')[0]}
-                  <strong className="text-indigo-600 font-bold">640406412</strong>
-                  {getTranslation('paymentApprovedDesc', { orangePhone: '640406412' }).split('640406412')[1]}
+                  {getTranslation('paymentApprovedDesc', { orangePhone: '690000000' }).split('690000000')[0]}
+                  <strong className="text-indigo-600 font-bold">690000000</strong>
+                  {getTranslation('paymentApprovedDesc', { orangePhone: '690000000' }).split('690000000')[1]}
                 </p>
 
                 <div className="bg-slate-50 rounded-2xl p-5 border border-slate-100 text-left my-6 space-y-2.5 text-xs max-w-sm mx-auto">

@@ -399,11 +399,11 @@ export default function DeliveryTracker({ orders, onUpdateOrderStatus, lang, onA
                     <p className="text-[10px] text-indigo-600 dark:text-indigo-400 font-semibold">
                       {lang === 'fr' ? 'Livreur assigné à votre commande' : 'Courier assigned to your order'}
                     </p>
-                    <p className="text-[9px] text-slate-400 mt-0.5">Tél : {activeOrder.courierPhone || '640406412'}</p>
+                    <p className="text-[9px] text-slate-400 mt-0.5">Tél : {activeOrder.courierPhone || '690000000'}</p>
                   </div>
                 </div>
                 <a
-                  href={`tel:${activeOrder.courierPhone || '640406412'}`}
+                  href={`tel:${activeOrder.courierPhone || '690000000'}`}
                   className="bg-white dark:bg-slate-800 dark:hover:bg-slate-700 hover:bg-indigo-50 p-2 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-800 dark:text-slate-200 flex items-center justify-center shrink-0 transition shadow-2xs"
                   title="Appeler le coursier"
                   id="btn-call-courier"

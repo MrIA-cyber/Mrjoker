@@ -197,7 +197,7 @@ export default function AdminPanel({
   const [serverPort, setServerPort] = useState('3000');
   const [isCachingEnabled, setIsCachingEnabled] = useState(true);
   const [logLevel, setLogLevel] = useState<'debug' | 'info' | 'warn' | 'error'>('info');
-  const [paymentApiKey, setPaymentApiKey] = useState('momo_live_key_bafoussam_640406412');
+  const [paymentApiKey, setPaymentApiKey] = useState('momo_live_key_bafoussam_690000000');
 
   // Simulated file explorer
   const [selectedFileName, setSelectedFileName] = useState<'App.tsx' | 'StoreHeader.tsx' | 'DeliveryTracker.tsx' | 'types.ts'>('App.tsx');
@@ -235,7 +235,7 @@ export default function StoreHeader({ cartCount }) {
       <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between">
         <span className="font-bold">Bafoussam Direct</span>
         <div className="flex items-center gap-4">
-          <span>Marché A • Support: 640 40 64 12</span>
+          <span>Marché A • Support: 690 00 00 00</span>
         </div>
       </div>
     </header>

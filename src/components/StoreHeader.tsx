@@ -3,6 +3,7 @@ import { User } from '../types';
 import { CATEGORIES } from '../data/mockData';
 import { ShoppingCart, Search, Store, Compass, MapPin, LogOut, PackageCheck, Newspaper, Key, Sun, Moon, X, Globe } from 'lucide-react';
 import { translations, Language } from '../translations';
+import SupportPhoneNumber from './SupportPhoneNumber';
 
 interface StoreHeaderProps {
   currentUser: User;
@@ -120,9 +121,7 @@ export default function StoreHeader({
             </>
           )}
           <span className="text-slate-500">•</span>
-          <span className="text-indigo-400 font-bold">
-            Support: <a href="tel:640406412" className="underline hover:text-indigo-300">640 40 64 12</a>
-          </span>
+          <SupportPhoneNumber prefix="Support :" showIcon={false} className="text-[11px]" />
         </div>
         <div className="flex items-center gap-2.5">
           <span className="text-slate-400 hidden xs:inline">

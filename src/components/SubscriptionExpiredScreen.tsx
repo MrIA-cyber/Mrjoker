@@ -3,6 +3,7 @@ import { User } from '../types';
 import { AlertTriangle, CreditCard, ArrowRight, Loader2, Phone, CheckCircle2, ShieldAlert } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Language } from '../translations';
+import SupportPhoneNumber from './SupportPhoneNumber';
 
 interface SubscriptionExpiredScreenProps {
   currentUser: User;
@@ -121,7 +122,7 @@ export default function SubscriptionExpiredScreen({
                    </span>
                    <span className="text-xl font-black text-white mt-0.5 block">3 000 FCFA</span>
                    <span className="text-[10px] text-orange-400 font-semibold block">
-                     {lang === 'fr' ? 'Versé directement sur Orange : 640406412' : 'Paid directly on Orange: 640406412'}
+                     {lang === 'fr' ? 'Versé directement sur Orange : 690000000' : 'Paid directly on Orange: 690000000'}
                    </span>
                  </div>
                  <div className="bg-indigo-600/20 text-indigo-300 font-bold text-[10px] py-1.5 px-3 rounded-lg border border-indigo-500/30">
@@ -147,11 +148,12 @@ export default function SubscriptionExpiredScreen({
                 </button>
               </div>
 
-              <div className="pt-3 border-t border-slate-800 text-center text-[10px] text-slate-500 font-semibold flex items-center justify-center gap-2">
-                <Phone className="w-3.5 h-3.5 text-indigo-400" />
-                <span>
-                  {lang === 'fr' ? 'Support d\'assistance de la Mifi :' : 'Mifi support helpline:'} <a href="tel:640406412" className="text-indigo-400 underline">640 40 64 12</a>
-                </span>
+              <div className="pt-3 border-t border-slate-800 text-center">
+                <SupportPhoneNumber
+                  prefix={lang === 'fr' ? 'Support d\'assistance de la Mifi :' : 'Mifi support helpline:'}
+                  showIcon
+                  className="text-[10px]"
+                />
               </div>
             </motion.div>
           )}
@@ -169,8 +171,8 @@ export default function SubscriptionExpiredScreen({
                 <h3 className="text-lg font-black text-white">{lang === 'fr' ? 'Mode de Paiement local' : 'Local Payment Method'}</h3>
                 <p className="text-xs text-slate-400">
                   {lang === 'fr' 
-                    ? <>Le montant de 3 000 FCFA sera versé directement sur le numéro Orange Money <strong className="text-orange-500">640406412</strong></>
-                    : <>The amount of 3,000 FCFA will be paid directly to Orange Money number <strong className="text-orange-500">640406412</strong></>}
+                    ? <>Le montant de 3 000 FCFA sera versé directement sur le numéro Orange Money <strong className="text-orange-500">690000000</strong></>
+                    : <>The amount of 3,000 FCFA will be paid directly to Orange Money number <strong className="text-orange-500">690000000</strong></>}
                 </p>
               </div>
 
@@ -277,8 +279,8 @@ export default function SubscriptionExpiredScreen({
                   <p className="font-extrabold text-slate-200 text-xs uppercase">{lang === 'fr' ? 'Autorisation requise' : 'Authorization required'}</p>
                   <p className="text-[10px] text-slate-400">
                     {lang === 'fr'
-                      ? <>Transfert de 3 000 FCFA directement vers Orange Money <span className="font-bold text-amber-400">640406412</span></>
-                      : <>Transfer of 3,000 FCFA directly to Orange Money <span className="font-bold text-amber-400">640406412</span></>}
+                      ? <>Transfert de 3 000 FCFA directement vers Orange Money <span className="font-bold text-amber-400">690000000</span></>
+                      : <>Transfer of 3,000 FCFA directly to Orange Money <span className="font-bold text-amber-400">690000000</span></>}
                   </p>
                 </div>
               </div>
@@ -314,13 +316,17 @@ export default function SubscriptionExpiredScreen({
                   <button
                     type="button"
                     onClick={handleBackToSelect}
-                    className="flex-1 bg-slate-950 border border-slate-800 text-slate-400 hover:text-white text-xs font-bold py-2.5 rounded-xl transition cursor-pointer"
+                    className="flex-1 bg-slate-800 border border-slate-700 text-slate-100 hover:bg-slate-700 text-sm font-bold py-2.5 px-3 rounded-xl transition cursor-pointer flex items-center justify-center text-center"
                   >
-                    {lang === 'fr' ? "Changer d'opérateur" : "Change operator"}
+                    {lang === 'fr' ? 'Annuler' : 'Cancel'}
                   </button>
                   <button
                     type="submit"
-                    className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-black py-2.5 rounded-xl transition shadow-md shadow-indigo-600/10 cursor-pointer"
+                    className={`flex-1 text-white text-sm font-bold py-2.5 px-3 rounded-xl transition shadow-md cursor-pointer flex items-center justify-center text-center ${
+                      operator === 'orange'
+                        ? 'bg-orange-600 hover:bg-orange-500 active:bg-orange-700'
+                        : 'bg-indigo-600 hover:bg-indigo-500 active:bg-indigo-700'
+                    }`}
                   >
                     {lang === 'fr' ? 'Valider le Paiement' : 'Validate Payment'}
                   </button>
@@ -347,9 +353,9 @@ export default function SubscriptionExpiredScreen({
                 <h3 className="text-xl font-black text-white">{lang === 'fr' ? 'Abonnement Réactivé !' : 'Subscription Reactivated!'}</h3>
                 <p className="text-xs text-slate-400 leading-relaxed max-w-xs mx-auto">
                   {lang === 'fr' ? (
-                    <>Votre versement de 3 000 FCFA sur le numéro Orange <strong className="text-emerald-400">640406412</strong> a été validé avec succès. Votre accès illimité de 3 mois à Bafoussam Direct est de nouveau opérationnel !</>
+                    <>Votre versement de 3 000 FCFA sur le numéro Orange <strong className="text-emerald-400">690000000</strong> a été validé avec succès. Votre accès illimité de 3 mois à Bafoussam Direct est de nouveau opérationnel !</>
                   ) : (
-                    <>Your payment of 3,000 FCFA to Orange number <strong className="text-emerald-400">640406412</strong> was successfully validated. Your 3-month unlimited access to Bafoussam Direct is active once again!</>
+                    <>Your payment of 3,000 FCFA to Orange number <strong className="text-emerald-400">690000000</strong> was successfully validated. Your 3-month unlimited access to Bafoussam Direct is active once again!</>
                   )}
                 </p>
               </div>

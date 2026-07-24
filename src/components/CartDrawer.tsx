@@ -124,7 +124,7 @@ export default function CartDrawer({
   return (
     <div className="fixed inset-0 z-50 flex justify-end font-sans" id="cart-drawer-container">
       {/* Backdrop */}
-      <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-xs" onClick={onClose} />
+      <div className="absolute inset-0 bg-slate-900/60" onClick={onClose} />
 
       {/* Drawer */}
       <div className="relative w-full max-w-md bg-white dark:bg-slate-900 h-full shadow-2xl flex flex-col z-10 border-l border-slate-100 dark:border-slate-800 transition-colors duration-200">
@@ -516,17 +516,21 @@ export default function CartDrawer({
                     </div>
                   )}
 
-                  <div className="flex gap-2">
+                  <div className="flex gap-2.5">
                     <button
                       type="button"
                       onClick={() => setStep('checkout')}
-                      className="flex-1 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs py-2.5 rounded-xl cursor-pointer transition"
+                      className="flex-1 bg-slate-800 hover:bg-slate-700 text-slate-100 font-bold text-sm py-2.5 px-3 rounded-xl cursor-pointer transition flex items-center justify-center text-center"
                     >
-                      {t.cancel}
+                      {t.cancel || (lang === 'fr' ? 'Annuler' : 'Cancel')}
                     </button>
                     <button
                       type="submit"
-                      className="flex-1 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs py-2.5 rounded-xl cursor-pointer transition"
+                      className={`flex-1 font-bold text-sm py-2.5 px-3 rounded-xl cursor-pointer transition text-white shadow-md flex items-center justify-center text-center ${
+                        paymentOperator === 'orange'
+                          ? 'bg-orange-600 hover:bg-orange-500 active:bg-orange-700'
+                          : 'bg-indigo-600 hover:bg-indigo-500 active:bg-indigo-700'
+                      }`}
                       id="btn-submit-momo-pin"
                     >
                       {lang === 'fr' ? 'Confirmer' : 'Confirm'}

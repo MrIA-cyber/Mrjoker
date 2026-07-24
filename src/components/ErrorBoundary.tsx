@@ -1,5 +1,6 @@
 import React, { ErrorInfo, ReactNode } from 'react';
 import { AlertOctagon, RotateCcw, Home } from 'lucide-react';
+import SupportPhoneNumber from './SupportPhoneNumber';
 
 interface Props {
   children: ReactNode;
@@ -126,9 +127,9 @@ export default class ErrorBoundary extends React.Component<Props, State> {
               </button>
             </div>
 
-            <p className="text-[10px] text-slate-500">
-              Support technique de la Mifi : <span className="font-bold text-slate-400">640 40 64 12</span>
-            </p>
+            <div className="pt-1">
+              <SupportPhoneNumber prefix="Support technique de la Mifi :" showIcon className="text-[10px]" />
+            </div>
           </div>
         </div>
       );

@@ -831,7 +831,7 @@ export default function MerchantDashboard({
                       <div>
                         <span className="text-[9px] font-bold text-indigo-600 uppercase tracking-widest block">Tarif de Renouvellement</span>
                         <span className="text-lg font-extrabold text-slate-900 mt-0.5 block">100 000 FCFA <span className="text-xs font-normal text-slate-500">/ an</span></span>
-                        <span className="text-[10px] text-orange-600 font-bold block">Intégralité versée directement sur Orange Money : 640406412</span>
+                        <span className="text-[10px] text-orange-600 font-bold block">Intégralité versée directement sur Orange Money : 690000000</span>
                       </div>
                       <span className="bg-indigo-600 text-white font-bold text-[10px] py-1 px-2.5 rounded-full">Renouvellement MoMo/Orange</span>
                     </div>
@@ -920,7 +920,7 @@ export default function MerchantDashboard({
                   <div className="space-y-4 text-left max-w-sm mx-auto">
                     <div className="text-center space-y-1">
                       <h4 className="text-xs font-bold text-slate-700 uppercase">Saisissez votre code PIN</h4>
-                      <p className="text-[10px] text-slate-400">Transfert de 100 000 FCFA directement vers le numéro Orange Money 640406412</p>
+                      <p className="text-[10px] text-slate-400">Transfert de 100 000 FCFA directement vers le numéro Orange Money 690000000</p>
                     </div>
 
                     <input
@@ -1420,7 +1420,7 @@ export default function MerchantDashboard({
                     </p>
                     <p className="font-bold text-orange-950 flex items-center gap-1.5 pt-2 border-t border-indigo-100/40 mt-1">
                       <span className="text-orange-500 text-sm">🧡</span>
-                      <span>L'intégralité est versée directement sur Orange Money : 640406412</span>
+                      <span>L'intégralité est versée directement sur Orange Money : 690000000</span>
                     </p>
                   </div>
 
@@ -1473,7 +1473,7 @@ export default function MerchantDashboard({
                       type="submit"
                       className="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs py-3.5 rounded-xl cursor-pointer transition shadow-sm"
                     >
-                      Verser 100 000 FCFA directement sur Orange 640406412
+                      Verser 100 000 FCFA directement sur Orange 690000000
                     </button>
                   </form>
                 </motion.div>
@@ -1487,7 +1487,7 @@ export default function MerchantDashboard({
                   <Loader2 className="w-12 h-12 text-slate-800 animate-spin mb-4" />
                   <h4 className="font-bold text-slate-900 text-sm">Traitement en cours...</h4>
                   <p className="text-[11px] text-slate-400 mt-1 max-w-[240px]">
-                    Envoi de la demande d'autorisation de transfert de 100 000 FCFA directement vers le numéro Orange Money 640406412.
+                    Envoi de la demande d'autorisation de transfert de 100 000 FCFA directement vers le numéro Orange Money 690000000.
                   </p>
                 </motion.div>
               )}
@@ -1505,7 +1505,7 @@ export default function MerchantDashboard({
                   </div>
 
                   <p className="text-xs leading-relaxed text-slate-300">
-                    Saisissez votre code PIN secret de paiement mobile pour valider le transfert annuel Premium de <strong className="text-white">100 000 FCFA</strong> vers le numéro Orange <strong className="text-white">640406412</strong> :
+                    Saisissez votre code PIN secret de paiement mobile pour valider le transfert annuel Premium de <strong className="text-white">100 000 FCFA</strong> vers le numéro Orange <strong className="text-white">690000000</strong> :
                   </p>
 
                   <form onSubmit={handleConfirmUpgradePIN} className="space-y-4">
@@ -1527,17 +1527,21 @@ export default function MerchantDashboard({
                       </div>
                     )}
 
-                    <div className="flex gap-2">
+                    <div className="flex gap-2.5">
                       <button
                         type="button"
                         onClick={() => setUpgradeStep('details')}
-                        className="flex-1 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs py-2 rounded-xl transition"
+                        className="flex-1 bg-slate-800 hover:bg-slate-700 text-slate-100 font-bold text-sm py-2 px-3 rounded-xl transition flex items-center justify-center text-center cursor-pointer"
                       >
                         Annuler
                       </button>
                       <button
                         type="submit"
-                        className="flex-1 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs py-2 rounded-xl transition"
+                        className={`flex-1 font-bold text-sm py-2 px-3 rounded-xl cursor-pointer transition text-white shadow-md flex items-center justify-center text-center ${
+                          upgradeOperator === 'orange'
+                            ? 'bg-orange-600 hover:bg-orange-500 active:bg-orange-700'
+                            : 'bg-indigo-600 hover:bg-indigo-500 active:bg-indigo-700'
+                        }`}
                         id="btn-confirm-upgrade-momo"
                       >
                         Autoriser (100k)
@@ -1558,7 +1562,7 @@ export default function MerchantDashboard({
 
                   <h3 className="text-lg font-bold text-slate-900">Boutique Upgradée !</h3>
                   <p className="text-xs text-slate-500 mt-2 max-w-sm mx-auto leading-relaxed">
-                    Votre abonnement obligatoire de 100 000 FCFA par an a été versé avec succès directement sur le numéro Orange <strong className="text-orange-600 font-bold">640406412</strong>. Les fonctionnalités de marketing avancé et le boost de visibilité sont débloqués.
+                    Votre abonnement obligatoire de 100 000 FCFA par an a été versé avec succès directement sur le numéro Orange <strong className="text-orange-600 font-bold">690000000</strong>. Les fonctionnalités de marketing avancé et le boost de visibilité sont débloqués.
                   </p>
 
                   <button

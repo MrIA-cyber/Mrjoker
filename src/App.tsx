@@ -19,6 +19,7 @@ import BestMerchantWidget from './components/BestMerchantWidget';
 import AdminPanel from './components/AdminPanel';
 import SmartRecommendationBanner from './components/SmartRecommendationBanner';
 import SubscriptionExpiredScreen from './components/SubscriptionExpiredScreen';
+import SupportPhoneNumber from './components/SupportPhoneNumber';
 import { Sparkles, ShoppingBag, ShieldCheck, Truck, Store, ArrowRight, HelpCircle, Bell, X, Lock, Key, Sun, Moon } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
@@ -1114,8 +1115,8 @@ export default function App() {
                     </button>
                   </div>
 
-                  <div className="pt-2 border-t border-slate-50 dark:border-slate-800 text-[10px] text-slate-400 dark:text-slate-500 font-medium">
-                    Support de la Mifi : <span className="font-bold text-slate-600 dark:text-slate-300">640 40 64 12</span>
+                  <div className="pt-2 border-t border-slate-50 dark:border-slate-800 text-center">
+                    <SupportPhoneNumber prefix="Support de la Mifi :" showIcon className="text-[10px]" />
                   </div>
                 </div>
               )}
@@ -1144,9 +1145,9 @@ export default function App() {
             <span>•</span>
             <span>Tamdja</span>
           </div>
-          <p className="text-[10px] text-slate-400 font-semibold pt-1">
-            Besoin d'aide ? Support Client Bafoussam : <a href="tel:640406412" className="text-indigo-600 hover:underline">640 40 64 12</a>
-          </p>
+          <div className="pt-1">
+            <SupportPhoneNumber prefix="Besoin d'aide ? Support Client Bafoussam :" showIcon className="text-[10px]" />
+          </div>
           <p className="text-[10px] text-slate-300 pt-3">
             &copy; 2026 Bafoussam En Ligne. Tous droits réservés. Service assuré par la communauté de l'Ouest.
           </p>
