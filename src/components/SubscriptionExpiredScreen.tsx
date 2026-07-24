@@ -121,8 +121,8 @@ export default function SubscriptionExpiredScreen({
                      {lang === 'fr' ? 'Tarif de Renouvellement' : 'Renewal Fee'}
                    </span>
                    <span className="text-xl font-black text-white mt-0.5 block">3 000 FCFA</span>
-                   <span className="text-[10px] text-orange-400 font-semibold block">
-                     {lang === 'fr' ? 'Versé directement sur Orange : 690000000' : 'Paid directly on Orange: 690000000'}
+                   <span className="text-[10px] text-indigo-300 font-semibold block">
+                     {lang === 'fr' ? 'Accès illimité de 3 mois' : '3-month unlimited access'}
                    </span>
                  </div>
                  <div className="bg-indigo-600/20 text-indigo-300 font-bold text-[10px] py-1.5 px-3 rounded-lg border border-indigo-500/30">
@@ -171,8 +171,8 @@ export default function SubscriptionExpiredScreen({
                 <h3 className="text-lg font-black text-white">{lang === 'fr' ? 'Mode de Paiement local' : 'Local Payment Method'}</h3>
                 <p className="text-xs text-slate-400">
                   {lang === 'fr' 
-                    ? <>Le montant de 3 000 FCFA sera versé directement sur le numéro Orange Money <strong className="text-orange-500">690000000</strong></>
-                    : <>The amount of 3,000 FCFA will be paid directly to Orange Money number <strong className="text-orange-500">690000000</strong></>}
+                    ? 'Le montant de 3 000 FCFA sera versé via votre compte Mobile Money pour activer l\'accès de 3 mois.'
+                    : 'The amount of 3,000 FCFA will be paid via Mobile Money to activate 3-month access.'}
                 </p>
               </div>
 
@@ -279,8 +279,8 @@ export default function SubscriptionExpiredScreen({
                   <p className="font-extrabold text-slate-200 text-xs uppercase">{lang === 'fr' ? 'Autorisation requise' : 'Authorization required'}</p>
                   <p className="text-[10px] text-slate-400">
                     {lang === 'fr'
-                      ? <>Transfert de 3 000 FCFA directement vers Orange Money <span className="font-bold text-amber-400">690000000</span></>
-                      : <>Transfer of 3,000 FCFA directly to Orange Money <span className="font-bold text-amber-400">690000000</span></>}
+                      ? 'Paiement de 3 000 FCFA via Mobile Money'
+                      : 'Payment of 3,000 FCFA via Mobile Money'}
                   </p>
                 </div>
               </div>
@@ -352,20 +352,18 @@ export default function SubscriptionExpiredScreen({
                 <span className="text-[10px] font-black tracking-widest text-emerald-400 uppercase">{lang === 'fr' ? 'Paiement Approuvé 🎉' : 'Payment Approved 🎉'}</span>
                 <h3 className="text-xl font-black text-white">{lang === 'fr' ? 'Abonnement Réactivé !' : 'Subscription Reactivated!'}</h3>
                 <p className="text-xs text-slate-400 leading-relaxed max-w-xs mx-auto">
-                  {lang === 'fr' ? (
-                    <>Votre versement de 3 000 FCFA sur le numéro Orange <strong className="text-emerald-400">690000000</strong> a été validé avec succès. Votre accès illimité de 3 mois à Bafoussam Direct est de nouveau opérationnel !</>
-                  ) : (
-                    <>Your payment of 3,000 FCFA to Orange number <strong className="text-emerald-400">690000000</strong> was successfully validated. Your 3-month unlimited access to Bafoussam Direct is active once again!</>
-                  )}
+                  {lang === 'fr' 
+                    ? 'Votre paiement de 3 000 FCFA a été approuvé avec succès. Votre accès illimité de 3 mois est de nouveau opérationnel !'
+                    : 'Your payment of 3,000 FCFA was successfully validated. Your 3-month unlimited access is active once again!'}
                 </p>
               </div>
 
               <button
                 onClick={onRenewSuccess}
-                className="w-full bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black py-3.5 rounded-xl transition shadow-lg shadow-emerald-600/10 cursor-pointer flex items-center justify-center gap-2"
+                className="w-full bg-emerald-600 hover:bg-emerald-700 text-white text-sm sm:text-base font-extrabold py-3.5 px-5 rounded-xl transition shadow-lg shadow-emerald-600/10 cursor-pointer flex items-center justify-center gap-2 text-center"
               >
                 <span>{lang === 'fr' ? 'Accéder à la plateforme' : 'Access the platform'}</span>
-                <ArrowRight className="w-3.5 h-3.5" />
+                <ArrowRight className="w-4 h-4" />
               </button>
             </motion.div>
           )}

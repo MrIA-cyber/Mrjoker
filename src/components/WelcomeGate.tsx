@@ -772,9 +772,7 @@ export default function WelcomeGate({ onSuccess, lang, onLangChange }: WelcomeGa
               >
                 <h3 className="text-lg font-bold text-slate-900 mb-2">{getTranslation('chooseMobilePayment')}</h3>
                 <p className="text-sm text-slate-500 mb-6">
-                  {getTranslation('paymentInstructions', { orangePhone: '690000000' }).split('690000000')[0]}
-                  <strong className="text-indigo-600 font-bold">690000000</strong>
-                  {getTranslation('paymentInstructions', { orangePhone: '690000000' }).split('690000000')[1]}
+                  {getTranslation('paymentInstructions')}
                 </p>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -855,9 +853,7 @@ export default function WelcomeGate({ onSuccess, lang, onLangChange }: WelcomeGa
                     : `A debit validation notification has been sent to ${phoneForPayment}.`}
                   <br />
                   <span className="text-xs text-slate-400 mt-2 block">
-                    {getTranslation('pinDescription', { orangePhone: '690000000' }).split('690000000')[0]}
-                    <strong className="text-white">690000000</strong>
-                    {getTranslation('pinDescription', { orangePhone: '690000000' }).split('690000000')[1]}
+                    {getTranslation('pinDescription')}
                   </span>
                 </p>
 
@@ -919,9 +915,7 @@ export default function WelcomeGate({ onSuccess, lang, onLangChange }: WelcomeGa
 
                 <h3 className="text-xl font-bold text-slate-900">{getTranslation('welcomeTitle')}</h3>
                 <p className="text-sm text-slate-500 mt-2 max-w-sm mx-auto">
-                  {getTranslation('paymentApprovedDesc', { orangePhone: '690000000' }).split('690000000')[0]}
-                  <strong className="text-indigo-600 font-bold">690000000</strong>
-                  {getTranslation('paymentApprovedDesc', { orangePhone: '690000000' }).split('690000000')[1]}
+                  {getTranslation('paymentApprovedDesc')}
                 </p>
 
                 <div className="bg-slate-50 rounded-2xl p-5 border border-slate-100 text-left my-6 space-y-2.5 text-xs max-w-sm mx-auto">
@@ -951,9 +945,11 @@ export default function WelcomeGate({ onSuccess, lang, onLangChange }: WelcomeGa
 
                 <button
                   onClick={handleFinish}
-                  className="w-full bg-slate-900 hover:bg-slate-800 text-white font-medium py-3.5 px-4 rounded-xl cursor-pointer transition shadow-sm"
+                  className="w-full bg-slate-900 hover:bg-slate-800 text-white font-extrabold text-base py-3.5 px-6 rounded-xl cursor-pointer transition shadow-md flex items-center justify-center gap-2 text-center"
+                  id="btn-finish-payment-welcome"
                 >
-                  {getTranslation('enterStoreBtn')}
+                  <span>{getTranslation('enterStoreBtn') || getTranslation('enterShopBtn') || (lang === 'fr' ? 'Entrer dans la boutique' : 'Enter the store')}</span>
+                  <ArrowRight className="w-5 h-5 text-amber-400 shrink-0" />
                 </button>
               </motion.div>
             )}

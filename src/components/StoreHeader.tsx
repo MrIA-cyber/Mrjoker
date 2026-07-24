@@ -131,7 +131,7 @@ export default function StoreHeader({
             </>
           )}
           <span className="text-slate-500">•</span>
-          <SupportPhoneNumber prefix="Support :" showIcon={false} className="text-[11px]" />
+          <SupportPhoneNumber prefix="Support :" showIcon={false} className="text-[10px] text-slate-400/80 font-normal" />
         </div>
         <div className="flex items-center gap-2.5">
           <span className="text-slate-400 hidden xs:inline">

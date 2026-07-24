@@ -584,10 +584,11 @@ export default function CartDrawer({
 
                 <button
                   onClick={onClose}
-                  className="w-full bg-slate-900 hover:bg-slate-800 dark:bg-indigo-600 dark:hover:bg-indigo-700 text-white font-bold py-3 px-4 rounded-xl cursor-pointer transition text-xs shadow-sm"
+                  className="w-full bg-slate-900 hover:bg-slate-800 dark:bg-indigo-600 dark:hover:bg-indigo-700 text-white font-extrabold text-sm sm:text-base py-3.5 px-5 rounded-xl cursor-pointer transition shadow-md flex items-center justify-center gap-2 text-center"
                   id="btn-finish-checkout-success"
                 >
-                  {lang === 'fr' ? 'Suivre la livraison en direct' : 'Track delivery live'}
+                  <span>{lang === 'fr' ? 'Suivre la livraison en direct' : 'Track delivery live'}</span>
+                  <ArrowRight className="w-4 h-4 text-amber-400 shrink-0" />
                 </button>
               </motion.div>
             )}
