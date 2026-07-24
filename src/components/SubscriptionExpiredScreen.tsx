@@ -120,7 +120,7 @@ export default function SubscriptionExpiredScreen({
                    <span className="text-[9px] font-bold text-indigo-400 uppercase tracking-widest block">
                      {lang === 'fr' ? 'Tarif de Renouvellement' : 'Renewal Fee'}
                    </span>
-                   <span className="text-xl font-black text-white mt-0.5 block">3 000 FCFA</span>
+                   <span className="text-xl font-black text-white mt-0.5 block">1 000 FCFA</span>
                    <span className="text-[10px] text-indigo-300 font-semibold block">
                      {lang === 'fr' ? 'Accès illimité de 3 mois' : '3-month unlimited access'}
                    </span>
@@ -171,8 +171,8 @@ export default function SubscriptionExpiredScreen({
                 <h3 className="text-lg font-black text-white">{lang === 'fr' ? 'Mode de Paiement local' : 'Local Payment Method'}</h3>
                 <p className="text-xs text-slate-400">
                   {lang === 'fr' 
-                    ? 'Le montant de 3 000 FCFA sera versé via votre compte Mobile Money pour activer l\'accès de 3 mois.'
-                    : 'The amount of 3,000 FCFA will be paid via Mobile Money to activate 3-month access.'}
+                    ? 'Le montant de 1 000 FCFA sera versé via votre compte Mobile Money pour activer l\'accès de 3 mois.'
+                    : 'The amount of 1,000 FCFA will be paid via Mobile Money to activate 3-month access.'}
                 </p>
               </div>
 
@@ -253,8 +253,8 @@ export default function SubscriptionExpiredScreen({
                 <h3 className="text-base font-extrabold text-white">{lang === 'fr' ? 'Connexion à la passerelle de l\'Ouest...' : 'Connecting to the West gateway...'}</h3>
                 <p className="text-xs text-slate-400 max-w-xs mx-auto leading-normal">
                   {lang === 'fr' 
-                    ? 'Génération de la facture et initialisation du prélèvement sécurisé de 3 000 FCFA. Veuillez ne pas quitter.'
-                    : 'Generating bill and initiating secure collection of 3,000 FCFA. Please do not leave.'}
+                    ? 'Génération de la facture et initialisation du prélèvement sécurisé de 1 000 FCFA. Veuillez ne pas quitter.'
+                    : 'Generating bill and initiating secure collection of 1,000 FCFA. Please do not leave.'}
                 </p>
               </div>
             </motion.div>
@@ -279,8 +279,8 @@ export default function SubscriptionExpiredScreen({
                   <p className="font-extrabold text-slate-200 text-xs uppercase">{lang === 'fr' ? 'Autorisation requise' : 'Authorization required'}</p>
                   <p className="text-[10px] text-slate-400">
                     {lang === 'fr'
-                      ? 'Paiement de 3 000 FCFA via Mobile Money'
-                      : 'Payment of 3,000 FCFA via Mobile Money'}
+                      ? 'Paiement de 1 000 FCFA via Mobile Money'
+                      : 'Payment of 1,000 FCFA via Mobile Money'}
                   </p>
                 </div>
               </div>
@@ -353,8 +353,8 @@ export default function SubscriptionExpiredScreen({
                 <h3 className="text-xl font-black text-white">{lang === 'fr' ? 'Abonnement Réactivé !' : 'Subscription Reactivated!'}</h3>
                 <p className="text-xs text-slate-400 leading-relaxed max-w-xs mx-auto">
                   {lang === 'fr' 
-                    ? 'Votre paiement de 3 000 FCFA a été approuvé avec succès. Votre accès illimité de 3 mois est de nouveau opérationnel !'
-                    : 'Your payment of 3,000 FCFA was successfully validated. Your 3-month unlimited access is active once again!'}
+                    ? 'Votre paiement de 1 000 FCFA a été approuvé avec succès. Votre accès illimité de 3 mois est de nouveau opérationnel !'
+                    : 'Your payment of 1,000 FCFA was successfully validated. Your 3-month unlimited access is active once again!'}
                 </p>
               </div>
 
