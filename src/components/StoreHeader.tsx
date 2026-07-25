@@ -13,6 +13,7 @@ interface StoreHeaderProps {
   onOpenCart: () => void;
   searchTerm: string;
   onSearchChange: (term: string) => void;
+  onSearchSubmit?: () => void;
   selectedCategory: string;
   onCategoryChange: (category: string) => void;
   onLogout: () => void;
@@ -74,6 +75,7 @@ export default function StoreHeader({
   onOpenCart,
   searchTerm,
   onSearchChange,
+  onSearchSubmit,
   selectedCategory,
   onCategoryChange,
   onLogout,
@@ -263,8 +265,22 @@ export default function StoreHeader({
           {/* Search, Filter, Cart Controls (only if in shop view) */}
           {activeView === 'shop' && (
             <div className="flex items-center gap-3 w-full md:w-auto md:flex-1 md:max-w-xl md:justify-end">
-              <div className="relative w-full md:max-w-md">
-                <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  if (onSearchSubmit) {
+                    onSearchSubmit();
+                  }
+                }}
+                className="relative w-full md:max-w-md"
+              >
+                <button
+                  type="submit"
+                  className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer p-0.5 rounded-lg"
+                  title={lang === 'fr' ? 'Rechercher' : 'Search'}
+                >
+                  <Search className="w-4 h-4 pointer-events-none" />
+                </button>
                 <input
                   type="text"
                   placeholder={lang === 'fr' ? "Rechercher taro, café, vêtement, épices..." : "Search taro, coffee, clothing, spices..."}
@@ -274,6 +290,7 @@ export default function StoreHeader({
                 />
                 {searchTerm && (
                   <button
+                    type="button"
                     onClick={() => onSearchChange('')}
                     className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer p-1 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700"
                     title="Effacer la recherche"
@@ -281,7 +298,7 @@ export default function StoreHeader({
                     <X className="w-3.5 h-3.5" />
                   </button>
                 )}
-              </div>
+              </form>
 
               {/* Cart Button */}
               <button

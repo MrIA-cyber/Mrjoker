@@ -610,7 +610,7 @@ export interface Merchant {
             </div>
             <h1 className="text-2xl sm:text-3xl font-black tracking-tight leading-none text-white font-display flex items-center gap-2">
               <Terminal className="w-8 h-8 text-indigo-400" />
-              <span>Console Centrale "chris237"</span>
+              <span>Console Centrale d'Administration</span>
             </h1>
             <p className="text-xs text-slate-400 max-w-xl leading-relaxed">
               Vous êtes connecté sur le serveur d'administration de Bafoussam Direct. Gérez les droits d'accès des abonnés et surveillez le trafic des boutiques de la Mifi en direct.
