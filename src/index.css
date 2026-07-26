@@ -25,6 +25,16 @@
   to { transform: scale(1); opacity: 1; }
 }
 
+@keyframes floatHalo {
+  0%, 100% { transform: translate(0px, 0px) scale(1); opacity: 0.35; }
+  50% { transform: translate(30px, -20px) scale(1.18); opacity: 0.55; }
+}
+
+@keyframes pulseGlow {
+  0%, 100% { opacity: 0.4; transform: scale(1); }
+  50% { opacity: 0.8; transform: scale(1.08); }
+}
+
 .animate-fade-in {
   animation: fadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
@@ -35,5 +45,26 @@
 
 .animate-spin-slow {
   animation: spin 10s linear infinite;
+}
+
+.animate-ambient-halo {
+  animation: floatHalo 12s ease-in-out infinite;
+}
+
+.animate-pulse-glow {
+  animation: pulseGlow 3s ease-in-out infinite;
+}
+
+/* Accessibility: respect prefers-reduced-motion */
+@media (prefers-reduced-motion: reduce) {
+  *, ::before, ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  .animate-ambient-halo, .animate-pulse-glow, .animate-spin-slow {
+    animation: none !important;
+  }
 }
 

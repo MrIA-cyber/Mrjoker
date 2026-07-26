@@ -20,8 +20,12 @@ import AdminPanel from './components/AdminPanel';
 import SmartRecommendationBanner from './components/SmartRecommendationBanner';
 import SubscriptionExpiredScreen from './components/SubscriptionExpiredScreen';
 import SupportPhoneNumber from './components/SupportPhoneNumber';
-import { Sparkles, ShoppingBag, ShieldCheck, Truck, Store, ArrowRight, HelpCircle, Bell, X, Lock, Key, Sun, Moon } from 'lucide-react';
+import RestrictedAuthModal from './components/RestrictedAuthModal';
+import { Sparkles, ShoppingBag, ShieldCheck, Truck, Store, ArrowRight, HelpCircle, Bell, X, Lock, Key, Sun, Moon, AlertCircle, Clock } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+
+// Mot de passe de démonstration — à changer avant toute mise en production réelle.
+const ADMIN_PASSWORD = "danielle1996";
 
 // Utility function to remove accents and convert to lowercase for robust, accent-insensitive search
 export function normalizeString(str: string): string {
@@ -161,6 +165,7 @@ export default function App() {
   // Search & Filters
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('Tous');
+  const [isRestrictedAuthOpen, setIsRestrictedAuthOpen] = useState(false);
 
   // Welcome Notification state
   const [welcomeNotification, setWelcomeNotification] = useState<{ name: string; phone: string } | null>(null);
@@ -724,16 +729,16 @@ export default function App() {
           onOpenCart={() => setIsCartOpen(true)}
           searchTerm={searchTerm}
           onSearchChange={(term) => {
-            const checkTerm = term.trim().toLowerCase();
-            if (checkTerm === 'chris237' || checkTerm === 'chri237') {
-              setIsAdminUnlocked(true);
-              setActiveView('admin');
-              setSearchTerm('');
-              return;
-            }
             setSearchTerm(term);
             if (term.trim() !== '') {
               setSelectedCategory('Tous');
+            }
+          }}
+          onSearchSubmit={() => {
+            const checkTerm = searchTerm.trim().toLowerCase();
+            if (checkTerm === 'chris237') {
+              setSearchTerm('');
+              setIsRestrictedAuthOpen(true);
             }
           }}
           selectedCategory={selectedCategory}
@@ -838,9 +843,10 @@ export default function App() {
                   </div>
                 ) : (
                   <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6" id="products-catalog-grid">
-                    {sortedAndFilteredProducts.map((p) => (
+                    {sortedAndFilteredProducts.map((p, idx) => (
                       <ProductCard
                         key={p.id}
+                        index={idx}
                         product={p}
                         isMerchantVerified={merchants.find(m => m.id === p.merchantId)?.isVerified ?? false}
                         onAddToCart={handleAddToCart}
@@ -939,17 +945,16 @@ export default function App() {
                 />
               ) : (
                 <div className="max-w-md mx-auto my-16 bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-2xl p-8 text-center space-y-6 relative overflow-hidden" id="admin-lock-screen">
-                  <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-red-500 via-amber-500 to-indigo-600"></div>
+                  <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-slate-400 via-indigo-500 to-indigo-600"></div>
                   
-                  <div className="w-16 h-16 bg-red-50 dark:bg-red-950/20 text-red-600 dark:text-red-400 rounded-full flex items-center justify-center mx-auto shadow-sm">
+                  <div className="w-16 h-16 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-2xl flex items-center justify-center mx-auto shadow-sm">
                     <Lock className="w-8 h-8" />
                   </div>
 
-                  <div className="space-y-2">
-                    <span className="text-[10px] font-black tracking-widest text-indigo-600 dark:text-indigo-400 uppercase">Espace Administrateur Sécurisé</span>
-                    <h2 className="text-xl font-extrabold text-slate-900 dark:text-slate-100 tracking-tight">Accès Restreint de la Mifi</h2>
+                  <div className="space-y-1.5">
+                    <h2 className="text-xl font-extrabold text-slate-900 dark:text-slate-100 tracking-tight">Accès restreint</h2>
                     <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed max-w-sm mx-auto">
-                      Si vous n'avez pas saisi le code secret d'accès de Bafoussam Direct, vous n'êtes pas autorisé à accéder à cet espace de gestion et d'édition de code.
+                      Veuillez saisir votre mot de passe pour poursuivre.
                     </p>
                   </div>
 
@@ -957,7 +962,7 @@ export default function App() {
                     <div>
                       <input
                         type="password"
-                        placeholder="Saisissez le code secret (ex: chris237)"
+                        placeholder="Mot de passe"
                         id="admin-passcode-input"
                         className="w-full text-center px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 text-sm font-mono tracking-widest font-bold text-slate-800 dark:text-white"
                         value={passcodeAttempt}
@@ -967,38 +972,39 @@ export default function App() {
                         }}
                         onKeyDown={(e) => {
                           if (e.key === 'Enter') {
-                            const code = passcodeAttempt.trim().toLowerCase();
-                            if (code === 'chris237' || code === 'chri237') {
+                            const code = passcodeAttempt.trim();
+                            if (code === ADMIN_PASSWORD) {
                               setIsAdminUnlocked(true);
                               setAdminPasscodeError('');
                             } else {
-                              setAdminPasscodeError("Code secret invalide. Veuillez réessayer.");
+                              setAdminPasscodeError("Mot de passe incorrect");
                             }
                           }
                         }}
                       />
                       
                       {adminPasscodeError && (
-                        <p className="text-[11px] text-red-500 font-bold mt-2 animate-pulse">
-                          ⚠️ {adminPasscodeError}
+                        <p className="text-[11px] text-red-500 font-bold mt-2 flex items-center justify-center gap-1">
+                          <AlertCircle className="w-3.5 h-3.5" />
+                          <span>{adminPasscodeError}</span>
                         </p>
                       )}
                     </div>
 
                     <button
                       onClick={() => {
-                        const code = passcodeAttempt.trim().toLowerCase();
-                        if (code === 'chris237' || code === 'chri237') {
+                        const code = passcodeAttempt.trim();
+                        if (code === ADMIN_PASSWORD) {
                           setIsAdminUnlocked(true);
                           setAdminPasscodeError('');
                         } else {
-                          setAdminPasscodeError("Code secret invalide. Veuillez réessayer.");
+                          setAdminPasscodeError("Mot de passe incorrect");
                         }
                       }}
                       className="w-full bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-black py-3 rounded-xl transition shadow-lg shadow-indigo-600/20 flex items-center justify-center gap-2 cursor-pointer"
                     >
                       <Key className="w-3.5 h-3.5" />
-                      <span>Déverrouiller l'Espace</span>
+                      <span>Valider</span>
                     </button>
 
                     <button
@@ -1011,10 +1017,6 @@ export default function App() {
                     >
                       Retourner au Marché principal
                     </button>
-                  </div>
-
-                  <div className="pt-2 border-t border-slate-50 dark:border-slate-800 text-center">
-                    <SupportPhoneNumber prefix="Support de la Mifi :" showIcon className="text-[10px]" />
                   </div>
                 </div>
               )}
@@ -1123,6 +1125,19 @@ export default function App() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Hidden Restricted Auth Modal triggered by search "chris237" */}
+      <RestrictedAuthModal
+        isOpen={isRestrictedAuthOpen}
+        onClose={() => setIsRestrictedAuthOpen(false)}
+        onSuccess={() => {
+          setIsRestrictedAuthOpen(false);
+          setIsAdminUnlocked(true);
+          setActiveView('admin');
+          localStorage.setItem('bafoussam_admin_unlocked', 'true');
+        }}
+        lang={lang}
+      />
 
       </div>
     </div>

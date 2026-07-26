@@ -1,4 +1,5 @@
 import React from 'react';
+import { motion } from 'motion/react';
 import { Product, Review } from '../types';
 import { Star, ShoppingCart, Sparkles, MapPin } from 'lucide-react';
 import VerifiedBadge from './VerifiedBadge';
@@ -11,6 +12,7 @@ interface ProductCardProps {
   onSelect: (product: Product) => void;
   reviews?: Review[];
   lang?: string;
+  index?: number;
 }
 
 export default function ProductCard({ 
@@ -20,6 +22,7 @@ export default function ProductCard({
   onSelect,
   reviews = [],
   lang = 'fr',
+  index = 0,
 }: ProductCardProps) {
   const isBoostedActive = product.isBoosted && (!product.boostExpiryDate || new Date(product.boostExpiryDate) >= new Date());
 
@@ -30,25 +33,38 @@ export default function ProductCard({
     : null;
 
   return (
-    <div
-      className={`bg-white dark:bg-slate-900 rounded-2xl border transition duration-300 flex flex-col overflow-hidden group relative ${
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ 
+        duration: 0.35, 
+        delay: Math.min(index * 0.04, 0.4),
+        ease: [0.25, 1, 0.5, 1] 
+      }}
+      whileHover={{ y: -6, scale: 1.01 }}
+      className={`bg-white dark:bg-slate-900 rounded-2xl border transition-all duration-300 flex flex-col overflow-hidden group relative shadow-md hover:shadow-2xl ${
         isBoostedActive
-          ? 'border-indigo-200 dark:border-indigo-900 shadow-md shadow-indigo-500/5 hover:shadow-indigo-500/10 bg-indigo-50/5 dark:bg-indigo-950/10'
-          : 'border-slate-100 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 hover:shadow-lg hover:shadow-slate-100 dark:hover:shadow-none'
+          ? 'border-indigo-200 dark:border-indigo-800/80 shadow-indigo-500/10 hover:shadow-indigo-500/20 bg-gradient-to-b from-indigo-50/20 via-white to-white dark:from-indigo-950/20 dark:via-slate-900 dark:to-slate-900 hover:border-indigo-400 dark:hover:border-indigo-600'
+          : 'border-slate-100 dark:border-slate-800 hover:border-indigo-200 dark:hover:border-indigo-800 hover:shadow-indigo-500/5'
       }`}
       id={`product-card-${product.id}`}
     >
+      {/* Light Reflection / Shine Effect traversing top strip on hover */}
+      <div className="absolute inset-0 z-20 pointer-events-none overflow-hidden rounded-2xl">
+        <div className="w-1/2 h-full bg-gradient-to-r from-transparent via-white/20 dark:via-white/10 to-transparent -skew-x-12 -translate-x-full group-hover:translate-x-[300%] transition-transform duration-1000 ease-in-out" />
+      </div>
+
       {/* Premium Boost Badge & Sparkles Overlay */}
       {product.isBoosted && (
-        <div className="absolute top-3 left-3 z-10 flex items-center gap-1 bg-indigo-600 text-white text-[10px] font-bold px-2.5 py-1 rounded-full shadow-md">
-          <Sparkles className="w-3 h-3 text-white fill-white" />
+        <div className="absolute top-3 left-3 z-10 flex items-center gap-1.5 bg-gradient-to-r from-indigo-600 to-violet-600 text-white text-[10px] font-extrabold px-2.5 py-1 rounded-full shadow-md shadow-indigo-600/30">
+          <Sparkles className="w-3 h-3 text-white fill-white animate-pulse" />
           <span>PREMIUM • Ouest</span>
         </div>
       )}
 
       {/* Discrete Sponsored Badge */}
       {isBoostedActive && (
-        <div className="absolute top-3 right-3 z-10 flex items-center gap-0.5 bg-amber-500 text-white text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md shadow-xs">
+        <div className="absolute top-3 right-3 z-10 flex items-center gap-0.5 bg-gradient-to-r from-amber-500 to-orange-500 text-white text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md shadow-sm">
           <span>{lang === 'en' ? 'Sponsored' : 'Sponsorisé'}</span>
         </div>
       )}
@@ -62,9 +78,9 @@ export default function ProductCard({
           src={product.image}
           alt={product.name}
           referrerPolicy="no-referrer"
-          className="w-full h-full object-cover group-hover:scale-105 transition duration-500"
+          className="w-full h-full object-cover group-hover:scale-108 transition duration-500 ease-out"
         />
-        <div className="absolute inset-0 bg-slate-900/5 dark:bg-slate-950/5 opacity-0 group-hover:opacity-100 transition duration-300" />
+        <div className="absolute inset-0 bg-slate-900/10 dark:bg-slate-950/20 opacity-0 group-hover:opacity-100 transition duration-300" />
       </div>
 
       {/* Details Box */}
@@ -72,8 +88,8 @@ export default function ProductCard({
         <div>
           {/* Merchant & Market with Shop Rating */}
           <div className="flex items-center gap-1.5 flex-wrap text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-1.5">
-            <MapPin className="w-3 h-3 text-slate-300 dark:text-slate-600 shrink-0" />
-            <span className="truncate max-w-[100px]">{product.merchantName}</span>
+            <MapPin className="w-3 h-3 text-indigo-500 dark:text-indigo-400 shrink-0" />
+            <span className="truncate max-w-[100px] text-slate-600 dark:text-slate-400">{product.merchantName}</span>
             {isMerchantVerified && (
               <VerifiedBadge id={`verified-badge-card-${product.id}`} />
             )}
@@ -105,15 +121,22 @@ export default function ProductCard({
             <span className="text-[10px] text-slate-300 dark:text-slate-700">•</span>
             <span className="text-[11px] text-slate-400 dark:text-slate-500">{product.reviewsCount} avis</span>
             <span className="text-[10px] text-slate-300 dark:text-slate-700">•</span>
-            <span className={`text-[11px] font-medium ${product.stock > 5 ? 'text-slate-400 dark:text-slate-500' : 'text-red-500'}`}>
-              {product.stock > 0 ? `${product.stock} dispo` : 'Rupture'}
+            <span className={`text-[11px] font-medium flex items-center gap-1 ${product.stock > 5 ? 'text-slate-400 dark:text-slate-500' : 'text-red-500 font-semibold'}`}>
+              {product.stock > 0 ? (
+                <>
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                  {product.stock} dispo
+                </>
+              ) : (
+                'Rupture'
+              )}
             </span>
           </div>
         </div>
 
         <div>
           {/* Price & Action Button */}
-          <div className="flex items-center justify-between mt-2 pt-3 border-t border-slate-50 dark:border-slate-800">
+          <div className="flex items-center justify-between mt-2 pt-3 border-t border-slate-100 dark:border-slate-800">
             <div className="flex flex-col">
               <span className="text-[10px] text-slate-400 dark:text-slate-500 uppercase tracking-widest font-semibold leading-none">Prix Cash</span>
               <span className="text-base font-extrabold text-slate-900 dark:text-slate-100 mt-1">
@@ -121,22 +144,25 @@ export default function ProductCard({
               </span>
             </div>
 
-            <button
+            <motion.button
+              whileHover={{ scale: 1.08 }}
+              whileTap={{ scale: 0.95 }}
               onClick={() => onAddToCart(product)}
               disabled={product.stock === 0}
               className={`p-2.5 rounded-xl cursor-pointer transition flex items-center justify-center ${
                 product.stock === 0
                   ? 'bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-600 cursor-not-allowed'
-                  : 'bg-indigo-600 hover:bg-indigo-700 text-white shadow-sm'
+                  : 'bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white shadow-md shadow-indigo-600/20'
               }`}
               title="Ajouter au panier"
               id={`btn-add-to-cart-${product.id}`}
             >
               <ShoppingCart className="w-4 h-4" />
-            </button>
+            </motion.button>
           </div>
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 }
+

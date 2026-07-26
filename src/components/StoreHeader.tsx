@@ -1,4 +1,5 @@
 import React from 'react';
+import { motion } from 'motion/react';
 import { User } from '../types';
 import { CATEGORIES } from '../data/mockData';
 import { ShoppingCart, Search, Store, Compass, MapPin, LogOut, PackageCheck, Newspaper, Key, Sun, Moon, X, Globe } from 'lucide-react';
@@ -97,7 +98,10 @@ export default function StoreHeader({
   };
 
   return (
-    <header className="bg-white dark:bg-slate-950 border-b border-slate-100 dark:border-slate-900 sticky top-0 z-40 transition-colors duration-200" id="store-header">
+    <header className="bg-white/95 dark:bg-slate-950/95 backdrop-blur-md border-b border-slate-100 dark:border-slate-900 sticky top-0 z-40 transition-colors duration-200 relative overflow-hidden" id="store-header">
+      {/* Ambient Drifting Radial Light Halo */}
+      <div className="absolute -top-24 left-1/3 w-96 h-96 bg-indigo-500/10 dark:bg-indigo-500/15 rounded-full blur-3xl pointer-events-none animate-ambient-halo" />
+
       {/* Upper bar: User location, welcome, signout */}
       <div className="bg-slate-900 text-slate-300 text-xs py-2 px-4 sm:px-6 flex justify-between items-center">
         <div className="flex flex-wrap items-center gap-1.5 sm:gap-2.5 font-medium">
@@ -301,40 +305,44 @@ export default function StoreHeader({
               </form>
 
               {/* Cart Button */}
-              <button
+              <motion.button
+                whileHover={{ scale: 1.05, y: -1 }}
+                whileTap={{ scale: 0.95 }}
                 onClick={onOpenCart}
-                className="relative bg-indigo-50 dark:bg-indigo-950/40 hover:bg-indigo-100 dark:hover:bg-indigo-900/40 text-indigo-900 dark:text-indigo-200 p-2.5 rounded-xl border border-indigo-100 dark:border-indigo-900 cursor-pointer transition flex items-center justify-center shrink-0"
+                className="relative bg-gradient-to-r from-indigo-50 to-violet-50 dark:from-indigo-950/60 dark:to-violet-950/60 hover:from-indigo-100 hover:to-violet-100 dark:hover:from-indigo-900/60 dark:hover:to-violet-900/60 text-indigo-900 dark:text-indigo-200 p-2.5 rounded-xl border border-indigo-200/60 dark:border-indigo-800/60 cursor-pointer transition flex items-center justify-center shrink-0 shadow-sm"
                 id="btn-open-cart"
               >
                 <ShoppingCart className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
                 {cartItemsCount > 0 && (
-                  <span className="absolute -top-1.5 -right-1.5 bg-indigo-600 text-white font-bold text-[10px] w-5 h-5 rounded-full flex items-center justify-center border-2 border-white animate-pulse">
+                  <span className="absolute -top-1.5 -right-1.5 bg-indigo-600 text-white font-bold text-[10px] w-5 h-5 rounded-full flex items-center justify-center border-2 border-white dark:border-slate-900 animate-pulse shadow-sm">
                     {cartItemsCount}
                   </span>
                 )}
-              </button>
+              </motion.button>
             </div>
           )}
         </div>
 
         {/* Category horizontal scroller (only visible in Shop view) */}
         {activeView === 'shop' && (
-          <div className="mt-5 flex items-center gap-2 overflow-x-auto no-scrollbar pb-1 border-t border-slate-100 dark:border-slate-800 pt-4" id="categories-scroller">
-            <span className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mr-2 shrink-0">
+          <div className="mt-5 flex items-center gap-2.5 overflow-x-auto no-scrollbar pb-1 border-t border-slate-100 dark:border-slate-800 pt-4" id="categories-scroller">
+            <span className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mr-1.5 shrink-0">
               {lang === 'fr' ? 'Catégories:' : 'Categories:'}
             </span>
             {CATEGORIES.map((cat) => (
-              <button
+              <motion.button
                 key={cat}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
                 onClick={() => onCategoryChange(cat)}
                 className={`px-3.5 py-1.5 rounded-full text-xs font-bold whitespace-nowrap cursor-pointer transition ${
                   selectedCategory === cat
-                    ? 'bg-indigo-600 text-white shadow-xs'
-                    : 'bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-slate-900 dark:hover:text-white'
+                    ? 'bg-gradient-to-r from-indigo-600 to-violet-600 text-white shadow-md shadow-indigo-600/20'
+                    : 'bg-slate-50 dark:bg-slate-800/80 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-slate-900 dark:hover:text-white border border-slate-200/50 dark:border-slate-800'
                 }`}
               >
                 {translateCategory(cat)}
-              </button>
+              </motion.button>
             ))}
           </div>
         )}
