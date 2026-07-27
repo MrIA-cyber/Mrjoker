@@ -1217,8 +1217,17 @@ export default function App() {
             isMerchantVerified={merchants.find(m => m.id === selectedProduct.merchantId)?.isVerified ?? false}
             onClose={() => setSelectedProduct(null)}
             onAddToCart={handleAddToCart}
+            onBuyNow={(prod) => {
+              handleAddToCart(prod);
+              setIsCartOpen(true);
+              setSelectedProduct(null);
+            }}
             reviews={reviews}
             lang={lang}
+            allProducts={products}
+            merchants={merchants}
+            onSelectProduct={handleSelectProduct}
+            onAddReview={handleAddReview}
           />
         )}
 
