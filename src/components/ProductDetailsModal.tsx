@@ -24,96 +24,91 @@ interface ProductDetailsModalProps {
   onAddReview?: (orderId: string, rating: number, comment: string, clientName: string) => void;
 }
 
-// Multi-media gallery generator for products to simulate rich Alibaba/Amazon multi-angle photos & videos
+// Multi-media gallery generator derived strictly from the selected product's actual media
 function getProductGallery(product: Product) {
-  const isFood = product.category.includes('Alimentation') || product.category.includes('Épicerie');
-  const isCraft = product.category.includes('Artisanat') || product.category.includes('Mode');
-  const isTech = product.category.includes('Électronique') || product.category.includes('Tech');
+  const media: { id: string; type: 'image' | 'video'; url: string; poster?: string; title: string }[] = [];
 
-  // Media items array
-  const media = [
-    {
-      id: 'm-1',
-      type: 'image' as const,
+  // 1. Primary main image (always present)
+  if (product.image) {
+    media.push({
+      id: `img-main-${product.id}`,
+      type: 'image',
       url: product.image,
-      title: 'Vue principale HD',
-    },
-    {
-      id: 'm-2',
-      type: 'image' as const,
-      url: isFood 
-        ? 'https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=800&q=80'
-        : isCraft 
-        ? 'https://images.unsplash.com/photo-1513519245088-0e12902e5a38?auto=format&fit=crop&w=800&q=80'
-        : 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=800&q=80',
-      title: 'Gros plan & Détails',
-    },
-    {
-      id: 'm-3',
-      type: 'video' as const,
-      url: 'https://assets.mixkit.co/videos/preview/mixkit-hand-holding-a-smartphone-showing-a-shopping-app-42832-large.mp4',
-      poster: product.image,
-      title: 'Vidéo Démo 4K (30s)',
-    },
-    {
-      id: 'm-4',
-      type: 'image' as const,
-      url: isFood
-        ? 'https://images.unsplash.com/photo-1610832958506-aa56368176cf?auto=format&fit=crop&w=800&q=80'
-        : isCraft
-        ? 'https://images.unsplash.com/photo-1523381210434-271e8be1f52b?auto=format&fit=crop&w=800&q=80'
-        : 'https://images.unsplash.com/photo-1526738549149-8e07eca6c147?auto=format&fit=crop&w=800&q=80',
-      title: 'Emballage & Conditionnement',
-    },
-    {
-      id: 'm-5',
-      type: 'image' as const,
-      url: isFood
-        ? 'https://images.unsplash.com/photo-1588854337236-6889d631faa8?auto=format&fit=crop&w=800&q=80'
-        : isCraft
-        ? 'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&w=800&q=80'
-        : 'https://images.unsplash.com/photo-1498050108023-c5249f4df085?auto=format&fit=crop&w=800&q=80',
-      title: 'Mise en situation Bafoussam',
-    },
-  ];
+      title: 'Image principale',
+    });
+  }
+
+  // 2. Secondary images (strictly from product.images if present)
+  if (product.images && Array.isArray(product.images)) {
+    product.images.forEach((imgUrl, index) => {
+      if (imgUrl && imgUrl !== product.image) {
+        media.push({
+          id: `img-sec-${product.id}-${index}`,
+          type: 'image',
+          url: imgUrl,
+          title: `Photo ${index + 2}`,
+        });
+      }
+    });
+  }
+
+  // 3. Videos (strictly from product.videos or product.videoUrl if present)
+  const videoSources = product.videos && product.videos.length > 0 
+    ? product.videos 
+    : (product.videoUrl ? [product.videoUrl] : []);
+
+  videoSources.forEach((vidUrl, index) => {
+    if (vidUrl) {
+      media.push({
+        id: `vid-${product.id}-${index}`,
+        type: 'video',
+        url: vidUrl,
+        poster: product.image,
+        title: `Vidéo de présentation ${index + 1}`,
+      });
+    }
+  });
 
   return media;
 }
 
-// Generate realistic specifications for the specs tab based on category
+// Generate specs strictly for the selected product
 function getProductSpecs(product: Product, lang: Language) {
   const isFr = lang === 'fr';
-  const isFood = product.category.includes('Alimentation') || product.category.includes('Épicerie');
-  const isCraft = product.category.includes('Artisanat') || product.category.includes('Mode');
 
-  if (isFood) {
-    return [
-      { label: isFr ? 'Provenance' : 'Origin', value: product.origin },
-      { label: isFr ? 'Qualité' : 'Quality', value: isFr ? '100% Bio & Frais du jour' : '100% Organic & Fresh' },
-      { label: isFr ? 'Conservation' : 'Storage', value: isFr ? 'À conserver au frais (2-8°C)' : 'Keep refrigerated (2-8°C)' },
-      { label: isFr ? 'Conditionnement' : 'Packaging', value: isFr ? 'Sac / Carton hermétique Bafoussam' : 'Sealed Bafoussam Bag/Box' },
-      { label: isFr ? 'Poids / Quantité' : 'Weight / Quantity', value: isFr ? 'Format Standard Marché' : 'Standard Market Format' },
-      { label: isFr ? 'Garantie Fraîcheur' : 'Freshness Guarantee', value: isFr ? 'Satisfait ou remplacé sous 24h' : 'Satisfied or replaced in 24h' },
-    ];
-  } else if (isCraft) {
-    return [
-      { label: isFr ? 'Origine' : 'Origin', value: isFr ? 'Atelier Artisanal Ouest Cameroun' : 'Handicraft Workshop West Cameroon' },
-      { label: isFr ? 'Matériaux' : 'Materials', value: isFr ? 'Cuir véritable, Coton Bio & Bois noble' : 'Genuine Leather, Bio Cotton & Wood' },
-      { label: isFr ? 'Couleurs' : 'Colors', value: isFr ? 'Traditionnel Bamiléké & Couleurs variées' : 'Traditional Bamileke & Colors' },
-      { label: isFr ? 'Finition' : 'Finish', value: isFr ? 'Fait main avec coutures renforcées' : 'Handmade with reinforced stitching' },
-      { label: isFr ? 'Entretien' : 'Care', value: isFr ? 'Nettoyage à sec ou chiffon doux' : 'Dry clean or soft cloth' },
-      { label: isFr ? 'Garantie' : 'Warranty', value: isFr ? '6 mois contre tout vice de fabrication' : '6 months manufacturing warranty' },
-    ];
-  } else {
-    return [
-      { label: isFr ? 'Marque / Modèle' : 'Brand / Model', value: isFr ? 'Certifié Bafoussam Tech' : 'Bafoussam Tech Certified' },
-      { label: isFr ? 'État' : 'Condition', value: isFr ? 'Neuf sous emballage scellé' : 'Brand new in sealed box' },
-      { label: isFr ? 'Alimentation / Batterie' : 'Power / Battery', value: isFr ? 'Conforme aux normes camerounaises' : 'Compliant with local standards' },
-      { label: isFr ? 'Accessoires' : 'Accessories', value: isFr ? 'Câble & Manuel inclus' : 'Cable & Manual included' },
-      { label: isFr ? 'Garantie Vendeur' : 'Seller Warranty', value: isFr ? '3 mois garantie pièces & main d’œuvre' : '3 months parts & labor warranty' },
-      { label: isFr ? 'SAV Locale' : 'Local Support', value: isFr ? 'Assuré directement à Bafoussam' : 'Directly serviced in Bafoussam' },
-    ];
+  // If product has custom specifications defined by vendor
+  if (product.specifications && product.specifications.length > 0) {
+    return product.specifications;
   }
+
+  const defaultSpecs = [
+    { label: isFr ? 'Catégorie' : 'Category', value: product.category },
+    { label: isFr ? 'Provenance' : 'Origin', value: product.origin },
+  ];
+
+  if (product.brand) {
+    defaultSpecs.push({ label: isFr ? 'Marque' : 'Brand', value: product.brand });
+  }
+  if (product.condition) {
+    defaultSpecs.push({ label: isFr ? 'État du produit' : 'Condition', value: product.condition });
+  }
+  if (product.subCategory) {
+    defaultSpecs.push({ label: isFr ? 'Sous-catégorie' : 'Sub-category', value: product.subCategory });
+  }
+  if (product.weight) {
+    defaultSpecs.push({ label: isFr ? 'Poids' : 'Weight', value: product.weight });
+  }
+  if (product.dimensions) {
+    defaultSpecs.push({ label: isFr ? 'Dimensions' : 'Dimensions', value: product.dimensions });
+  }
+  if (product.materials) {
+    defaultSpecs.push({ label: isFr ? 'Matériaux' : 'Materials', value: product.materials });
+  }
+  if (product.warranty) {
+    defaultSpecs.push({ label: isFr ? 'Garantie' : 'Warranty', value: product.warranty });
+  }
+
+  return defaultSpecs;
 }
 
 // Sample buyer photos for reviews
@@ -180,8 +175,16 @@ export default function ProductDetailsModal({
   const [newReviewName, setNewReviewName] = useState('');
   const [newReviewPhoto, setNewReviewPhoto] = useState('');
 
-  // Merchant details
+  // Reset gallery and tab states when selected product changes
+  useEffect(() => {
+    setActiveMediaIndex(0);
+    setQuantity(1);
+    setActiveTab('desc');
+  }, [product.id]);
+
+  // Merchant details & Product-specific reviews
   const merchant = merchants.find(m => m.id === product.merchantId);
+  const productReviews = reviews.filter(r => r.productId === product.id || (!r.productId && r.merchantId === product.merchantId));
   const merchantReviews = reviews.filter(r => r.merchantId === product.merchantId);
   const avgMerchantRating = merchantReviews.length > 0 
     ? (merchantReviews.reduce((sum, r) => sum + r.rating, 0) / merchantReviews.length).toFixed(1)
@@ -200,8 +203,8 @@ export default function ProductDetailsModal({
   const specs = getProductSpecs(product, lang);
 
   // Calculated old price & savings
-  const oldPrice = Math.round(product.price * 1.20); // 20% strikethrough promo discount
-  const discountPercent = 20;
+  const oldPrice = product.oldPrice;
+  const discountPercent = product.discountPercent || (oldPrice && oldPrice > product.price ? Math.round(((oldPrice - product.price) / oldPrice) * 100) : undefined);
 
   // Toggle Wishlist
   const handleToggleWishlist = () => {
@@ -398,10 +401,12 @@ export default function ProductDetailsModal({
                 {/* Floating Promotional Badges */}
                 <div className="absolute top-3 left-3 flex flex-wrap gap-2 pointer-events-none">
                   {/* Discount Badge */}
-                  <span className="bg-red-600 text-white text-xs font-black px-3 py-1 rounded-full shadow-md flex items-center gap-1">
-                    <Zap className="w-3 h-3 fill-white" />
-                    <span>-{discountPercent}% OFF</span>
-                  </span>
+                  {discountPercent && discountPercent > 0 && (
+                    <span className="bg-red-600 text-white text-xs font-black px-3 py-1 rounded-full shadow-md flex items-center gap-1">
+                      <Zap className="w-3 h-3 fill-white" />
+                      <span>-{discountPercent}% OFF</span>
+                    </span>
+                  )}
 
                   {/* Boosted Sponsor Badge */}
                   {product.isBoosted && (
@@ -573,14 +578,22 @@ export default function ProductDetailsModal({
                   </div>
 
                   {/* Strikethrough comparison price */}
-                  <div className="text-right">
-                    <span className="text-sm font-bold text-slate-400 line-through font-mono block">
-                      {(oldPrice * quantity).toLocaleString('fr-FR')} FCFA
-                    </span>
-                    <span className="text-[11px] font-extrabold text-red-600 dark:text-red-400 bg-red-100 dark:bg-red-950/80 px-2 py-0.5 rounded-md">
-                      Économisez {( (oldPrice - product.price) * quantity ).toLocaleString('fr-FR')} FCFA
-                    </span>
-                  </div>
+                  {oldPrice && oldPrice > product.price ? (
+                    <div className="text-right">
+                      <span className="text-sm font-bold text-slate-400 line-through font-mono block">
+                        {(oldPrice * quantity).toLocaleString('fr-FR')} FCFA
+                      </span>
+                      <span className="text-[11px] font-extrabold text-red-600 dark:text-red-400 bg-red-100 dark:bg-red-950/80 px-2 py-0.5 rounded-md">
+                        Économisez {((oldPrice - product.price) * quantity).toLocaleString('fr-FR')} FCFA
+                      </span>
+                    </div>
+                  ) : (
+                    <div className="text-right">
+                      <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200/60 px-2.5 py-1 rounded-lg block">
+                        {isFr ? 'Prix direct boutique' : 'Direct shop price'}
+                      </span>
+                    </div>
+                  )}
                 </div>
 
                 {/* Stock meter */}
@@ -599,32 +612,50 @@ export default function ProductDetailsModal({
               </div>
 
               {/* Color Swatch / Options selector */}
-              <div className="space-y-3">
-                <label className="block text-xs font-extrabold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
-                  {isFr ? 'Choix de la déclinaison / Couleur' : 'Color / Variant'}
-                </label>
-                <div className="flex items-center gap-2.5">
-                  {[
-                    { name: 'Noir Bamiléké', color: 'bg-slate-900' },
-                    { name: 'Rouge Chefferie', color: 'bg-red-600' },
-                    { name: 'Marron Artisanal', color: 'bg-amber-800' },
-                    { name: 'Vert Ouest', color: 'bg-emerald-700' },
-                  ].map((variant) => (
-                    <button
-                      key={variant.name}
-                      onClick={() => setSelectedColor(variant.name)}
-                      className={`flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-bold transition cursor-pointer border ${
-                        selectedColor === variant.name 
-                          ? 'border-indigo-600 bg-indigo-50/50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 ring-2 ring-indigo-500/20' 
-                          : 'border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:border-slate-300'
-                      }`}
-                    >
-                      <span className={`w-3.5 h-3.5 rounded-full ${variant.color} border border-white/40 shadow-xs`} />
-                      <span>{variant.name}</span>
-                    </button>
-                  ))}
+              {((product.colors && product.colors.length > 0) || (product.sizes && product.sizes.length > 0)) && (
+                <div className="space-y-4">
+                  {product.colors && product.colors.length > 0 && (
+                    <div className="space-y-2">
+                      <label className="block text-xs font-extrabold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
+                        {isFr ? 'Couleurs disponibles' : 'Available Colors'}
+                      </label>
+                      <div className="flex items-center flex-wrap gap-2">
+                        {product.colors.map((colorName) => (
+                          <button
+                            key={colorName}
+                            onClick={() => setSelectedColor(colorName)}
+                            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer border ${
+                              selectedColor === colorName
+                                ? 'border-indigo-600 bg-indigo-50/50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 ring-2 ring-indigo-500/20'
+                                : 'border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:border-slate-300'
+                            }`}
+                          >
+                            <span>{colorName}</span>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {product.sizes && product.sizes.length > 0 && (
+                    <div className="space-y-2">
+                      <label className="block text-xs font-extrabold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
+                        {isFr ? 'Tailles disponibles' : 'Available Sizes'}
+                      </label>
+                      <div className="flex items-center flex-wrap gap-2">
+                        {product.sizes.map((sizeName) => (
+                          <button
+                            key={sizeName}
+                            className="px-3 py-1.5 rounded-xl text-xs font-bold border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 bg-slate-50 dark:bg-slate-800/40 hover:border-indigo-500"
+                          >
+                            <span>{sizeName}</span>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
-              </div>
+              )}
 
               {/* Quantity Selector */}
               <div className="space-y-2">

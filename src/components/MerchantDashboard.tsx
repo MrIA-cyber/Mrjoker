@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import VerifiedBadge from './VerifiedBadge';
+import AddProductModal from './AddProductModal';
 import { Language, translations } from '../translations';
 
 interface MerchantDashboardProps {
@@ -2205,6 +2206,23 @@ export default function MerchantDashboard({
             )}
           </div>
         </div>
+      )}
+
+      {/* 7. Modern Add Product Modal Overlay */}
+      {showAddProductModal && activeMerchant && (
+        <AddProductModal
+          merchant={activeMerchant}
+          onClose={() => setShowAddProductModal(false)}
+          onPublishProduct={(newProduct) => {
+            onAddProduct(newProduct);
+            setShowAddProductModal(false);
+          }}
+          onSaveDraft={(draftProduct) => {
+            onAddProduct(draftProduct);
+            setShowAddProductModal(false);
+          }}
+          lang={lang}
+        />
       )}
 
     </div>

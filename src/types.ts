@@ -41,17 +41,46 @@ export interface Product {
   name: string;
   description: string;
   price: number; // in FCFA
-  image: string;
+  oldPrice?: number; // optional original price for discount
+  discountPercent?: number; // calculated promo percentage
+  image: string; // main image
+  images?: string[]; // secondary images (up to 10)
+  videos?: string[]; // presentation videos (up to 3)
+  videoUrl?: string; // single promo video URL
   category: string;
+  subCategory?: string;
+  brand?: string;
+  condition?: 'Neuf' | 'Occasion' | 'Reconditionné';
+  sku?: string; // Product reference / SKU
   merchantId: string;
   merchantName: string;
   isBoosted: boolean; // boosted via Premium subscription
   boostExpiryDate?: string;
   boostCount?: number;
   stock: number;
+  minStockThreshold?: number;
+  availabilityStatus?: 'in_stock' | 'limited' | 'out_of_stock' | 'preorder';
   rating: number;
   reviewsCount: number;
   origin: string; // "Local (Bafoussam)", "Importé", etc.
+  specifications?: { label: string; value: string }[];
+  weight?: string;
+  dimensions?: string;
+  materials?: string;
+  usageTips?: string;
+  warranty?: string;
+  colors?: string[];
+  sizes?: string[];
+  deliveryOptions?: {
+    local?: boolean;
+    national?: boolean;
+    international?: boolean;
+    storePickup?: boolean;
+    deliveryTime?: string;
+    deliveryFee?: number;
+    freeDeliveryMin?: number;
+  };
+  isDraft?: boolean;
 }
 
 export interface CartItem {
@@ -86,11 +115,13 @@ export interface Order {
 export interface Review {
   id: string;
   merchantId: string;
+  productId?: string; // specific product ID for filtered reviews
   orderId: string;
   clientName: string;
   rating: number; // 1 to 5
   comment: string;
   createdAt: string;
+  photos?: string[]; // photos published by buyers
 }
 
 export interface Neighborhood {
