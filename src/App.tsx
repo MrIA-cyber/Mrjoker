@@ -162,10 +162,21 @@ export default function App() {
     });
   };
   
-  // Search & Filters
+  // Search, Filters & Sorting
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('Tous');
+  const [sortBy, setSortBy] = useState<'popular' | 'price_asc' | 'price_desc' | 'rating'>('popular');
   const [isRestrictedAuthOpen, setIsRestrictedAuthOpen] = useState(false);
+
+  // Toast Notification State
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'info' | 'error' } | null>(null);
+
+  const triggerToast = (message: string, type: 'success' | 'info' | 'error' = 'success') => {
+    setToast({ message, type });
+    setTimeout(() => {
+      setToast((current) => (current?.message === message ? null : current));
+    }, 3200);
+  };
 
   // Welcome Notification state
   const [welcomeNotification, setWelcomeNotification] = useState<{ name: string; phone: string } | null>(null);
@@ -397,6 +408,11 @@ export default function App() {
       prev.map((m) =>
         m.id === product.merchantId ? { ...m, clicks: m.clicks + 1 } : m
       )
+    );
+
+    triggerToast(
+      lang === 'fr' ? `"${product.name}" ajouté au panier !` : `"${product.name}" added to cart!`,
+      'success'
     );
   };
 
@@ -638,10 +654,14 @@ export default function App() {
       return matchSearch && matchCategory;
     })
     .sort((a, b) => {
-      // Sort boosted products to the top
+      if (sortBy === 'price_asc') return a.price - b.price;
+      if (sortBy === 'price_desc') return b.price - a.price;
+      if (sortBy === 'rating') return (b.rating || 0) - (a.rating || 0);
+
+      // Default: 'popular' - Boosted products first, then by rating
       if (a.isBoosted && !b.isBoosted) return -1;
       if (!a.isBoosted && b.isBoosted) return 1;
-      return 0;
+      return (b.rating || 0) - (a.rating || 0);
     });
 
   // Calculate Cart items count
@@ -811,34 +831,168 @@ export default function App() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6"
+              className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-8"
               id="shop-view-wrapper"
             >
-              {/* Store Grid Section Directly */}
-              <div className="space-y-5">
-                <div className="flex items-center justify-between">
+              {/* Glovo / Uber Eats Style Hero Banner */}
+              {!searchTerm && (
+                <div className="relative rounded-3xl overflow-hidden bg-gradient-to-r from-indigo-600 via-indigo-700 to-indigo-900 text-white p-6 sm:p-8 shadow-xl border border-indigo-500/20">
+                  <div className="absolute -right-10 -bottom-10 w-72 h-72 bg-amber-400/10 rounded-full blur-3xl pointer-events-none" />
+                  <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+                    <div className="space-y-3 max-w-2xl">
+                      <div className="flex items-center gap-2">
+                        <span className="bg-amber-400 text-slate-950 font-black text-[10px] uppercase tracking-widest px-3 py-1 rounded-full shadow-sm flex items-center gap-1">
+                          <Truck className="w-3.5 h-3.5" />
+                          {lang === 'fr' ? 'Express Moto-Taxi ⚡' : 'Express Moto Delivery ⚡'}
+                        </span>
+                        <span className="bg-white/10 text-slate-200 text-[10px] font-bold px-3 py-1 rounded-full border border-white/10">
+                          {lang === 'fr' ? '15-30 Min Garantis' : '15-30 Min Guaranteed'}
+                        </span>
+                      </div>
+                      <h1 className="text-2xl sm:text-3.5xl font-black tracking-tight leading-tight text-white font-display">
+                        {lang === 'fr' 
+                          ? 'Vos marchés de Bafoussam livrés directement chez vous'
+                          : 'Your Bafoussam markets delivered straight to your doorstep'}
+                      </h1>
+                      <p className="text-xs sm:text-sm text-indigo-100 leading-relaxed max-w-xl">
+                        {lang === 'fr'
+                          ? 'Marché A, Marché B, Marché Congo, Tamdja & Carrefour Bamiléké. Produits frais, café, tissus Ndop et épices locales livrés en un clic.'
+                          : 'Market A, Market B, Congo Market, Tamdja & Carrefour Bamiléké. Fresh products, coffee, Ndop fabrics and local spices delivered in one click.'}
+                      </p>
+
+                      {/* Market location tags */}
+                      <div className="flex flex-wrap items-center gap-2 pt-1 text-[10px] font-extrabold text-indigo-200">
+                        <span className="bg-indigo-950/60 px-2.5 py-1 rounded-lg border border-indigo-400/20">📍 Marché A</span>
+                        <span className="bg-indigo-950/60 px-2.5 py-1 rounded-lg border border-indigo-400/20">📍 Marché B</span>
+                        <span className="bg-indigo-950/60 px-2.5 py-1 rounded-lg border border-indigo-400/20">📍 Marché Congo</span>
+                        <span className="bg-indigo-950/60 px-2.5 py-1 rounded-lg border border-indigo-400/20">📍 Tamdja</span>
+                        <span className="bg-indigo-950/60 px-2.5 py-1 rounded-lg border border-indigo-400/20">📍 Carrefour Bamiléké</span>
+                      </div>
+                    </div>
+
+                    <div className="flex flex-col sm:flex-row lg:flex-col gap-3 shrink-0">
+                      <div className="bg-slate-900/80 backdrop-blur-md border border-indigo-400/30 rounded-2xl p-4 flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-xl bg-amber-400/20 text-amber-300 flex items-center justify-center font-bold text-lg shrink-0">
+                          ⚡
+                        </div>
+                        <div>
+                          <span className="text-[10px] text-indigo-200 uppercase font-extrabold tracking-wider block">Paiement Mobile</span>
+                          <span className="text-xs font-black text-white">MTN MoMo & Orange Money</span>
+                        </div>
+                      </div>
+                      <div className="bg-slate-900/80 backdrop-blur-md border border-indigo-400/30 rounded-2xl p-4 flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-xl bg-emerald-400/20 text-emerald-300 flex items-center justify-center font-bold text-lg shrink-0">
+                          🛡️
+                        </div>
+                        <div>
+                          <span className="text-[10px] text-indigo-200 uppercase font-extrabold tracking-wider block">Sécurité</span>
+                          <span className="text-xs font-black text-white">100% Vendeurs Vérifiés</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Smart Recommendation Engine Banner (When Searching) */}
+              {searchTerm.trim() !== '' && (
+                <SmartRecommendationBanner
+                  searchTerm={searchTerm}
+                  products={products}
+                  merchants={merchants}
+                  currentUser={currentUser}
+                  onAddToCart={handleAddToCart}
+                  onSelectProduct={handleSelectProduct}
+                  lang={lang}
+                />
+              )}
+
+              {/* Best Merchant Spotlight (When not searching or as feature) */}
+              {!searchTerm && (
+                <BestMerchantWidget
+                  merchants={merchants}
+                  products={products}
+                  onSelectProduct={handleSelectProduct}
+                  onAddToCart={handleAddToCart}
+                  reviews={reviews}
+                  lang={lang}
+                />
+              )}
+
+              {/* Store Grid Section & Sorting Header */}
+              <div className="space-y-6">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200/80 dark:border-slate-800 pb-4">
                   <div>
                     <h3 className="font-extrabold text-slate-900 dark:text-white text-xl tracking-tight">
-                      {selectedCategory === 'Tous' ? (lang === 'fr' ? 'Tous les produits' : 'All Products') : selectedCategory}
+                      {selectedCategory === 'Tous' ? (lang === 'fr' ? 'Catalogue de Bafoussam' : 'Bafoussam Catalog') : selectedCategory}
                     </h3>
                     <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                      {sortedAndFilteredProducts.length} {lang === 'fr' ? 'articles disponibles à Bafoussam' : 'items available in Bafoussam'}
+                      {sortedAndFilteredProducts.length} {lang === 'fr' ? 'articles disponibles en stock' : 'items available in stock'}
                     </p>
                   </div>
 
-                  {/* Trust indicator */}
-                  <div className="hidden sm:flex items-center gap-1.5 text-xs text-slate-600 dark:text-slate-400 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 py-1.5 px-3 rounded-xl shadow-2xs">
-                    <ShieldCheck className="w-4 h-4 text-emerald-500 shrink-0" />
-                    <span>Paiements MoMo & Orange 100% sécurisés</span>
+                  {/* Sorting & Filter controls */}
+                  <div className="flex items-center gap-3 flex-wrap">
+                    <div className="flex items-center gap-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-1 shadow-2xs">
+                      <button
+                        onClick={() => setSortBy('popular')}
+                        className={`px-3 py-1.5 rounded-lg text-xs font-extrabold transition cursor-pointer ${
+                          sortBy === 'popular'
+                            ? 'bg-indigo-600 text-white'
+                            : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                        }`}
+                      >
+                        🔥 {lang === 'fr' ? 'Populaires' : 'Popular'}
+                      </button>
+                      <button
+                        onClick={() => setSortBy('rating')}
+                        className={`px-3 py-1.5 rounded-lg text-xs font-extrabold transition cursor-pointer ${
+                          sortBy === 'rating'
+                            ? 'bg-indigo-600 text-white'
+                            : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                        }`}
+                      >
+                        ⭐ {lang === 'fr' ? 'Mieux notés' : 'Top Rated'}
+                      </button>
+                      <button
+                        onClick={() => setSortBy('price_asc')}
+                        className={`px-3 py-1.5 rounded-lg text-xs font-extrabold transition cursor-pointer ${
+                          sortBy === 'price_asc'
+                            ? 'bg-indigo-600 text-white'
+                            : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                        }`}
+                      >
+                        💰 {lang === 'fr' ? 'Prix croissant' : 'Price low-high'}
+                      </button>
+                      <button
+                        onClick={() => setSortBy('price_desc')}
+                        className={`px-3 py-1.5 rounded-lg text-xs font-extrabold transition cursor-pointer ${
+                          sortBy === 'price_desc'
+                            ? 'bg-indigo-600 text-white'
+                            : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                        }`}
+                      >
+                        📈 {lang === 'fr' ? 'Prix décroissant' : 'Price high-low'}
+                      </button>
+                    </div>
+
+                    <div className="hidden md:flex items-center gap-1.5 text-xs text-slate-600 dark:text-slate-400 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 py-2 px-3.5 rounded-xl shadow-2xs">
+                      <ShieldCheck className="w-4 h-4 text-emerald-500 shrink-0" />
+                      <span>{lang === 'fr' ? 'Paiements MoMo & Orange' : 'MoMo & Orange Payments'}</span>
+                    </div>
                   </div>
                 </div>
 
                 {sortedAndFilteredProducts.length === 0 ? (
                   <div className="bg-white dark:bg-slate-900 rounded-3xl p-12 text-center border border-slate-100 dark:border-slate-800 shadow-sm max-w-md mx-auto">
                     <span className="text-4xl">🔍</span>
-                    <p className="font-bold text-slate-800 dark:text-slate-200 text-sm mt-3">Aucun produit trouvé</p>
+                    <p className="font-bold text-slate-800 dark:text-slate-200 text-sm mt-3">
+                      {lang === 'fr' ? 'Aucun produit trouvé' : 'No products found'}
+                    </p>
                     <p className="text-xs text-slate-400 mt-1">
-                      Essayez de rechercher d'autres termes comme "café", "taro", "ndop", "épices" ou changez de catégorie.
+                      {lang === 'fr' 
+                        ? 'Essayez de rechercher d\'autres termes comme "café", "taro", "ndop", "épices" ou changez de catégorie.'
+                        : 'Try searching for other terms like "coffee", "taro", "ndop", "spices" or change category.'}
                     </p>
                   </div>
                 ) : (
@@ -1079,6 +1233,28 @@ export default function App() {
             currentUser={currentUser}
             lang={lang}
           />
+        )}
+
+        {/* Floating Action Toast Notification */}
+        {toast && (
+          <motion.div
+            initial={{ opacity: 0, y: 50, scale: 0.9 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 20, scale: 0.9 }}
+            className="fixed bottom-6 left-6 z-[90] bg-slate-900 text-white border border-indigo-500/30 px-5 py-3.5 rounded-2xl shadow-2xl flex items-center gap-3"
+            id="action-toast-notification"
+          >
+            <div className="w-8 h-8 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0">
+              <ShoppingBag className="w-4 h-4" />
+            </div>
+            <span className="text-xs font-bold">{toast.message}</span>
+            <button
+              onClick={() => setToast(null)}
+              className="ml-2 text-slate-400 hover:text-white transition cursor-pointer p-1"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+          </motion.div>
         )}
 
         {/* Welcome Notification Modal / Toast overlay */}

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { User, Neighborhood } from '../types';
 import { BAFOUSSAM_NEIGHBORHOODS } from '../data/mockData';
-import { Check, ShieldCheck, HelpCircle, Phone, ArrowRight, Loader2, Sparkles, MapPin, Mail, User as UserIcon, Lock, Globe } from 'lucide-react';
+import { Check, ShieldCheck, HelpCircle, Phone, ArrowRight, Loader2, Sparkles, MapPin, Mail, User as UserIcon, Lock, Globe, AlertCircle, Clock } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { translations, Language } from '../translations';
 import SupportPhoneNumber from './SupportPhoneNumber';
@@ -58,6 +58,32 @@ export default function WelcomeGate({ onSuccess, lang, onLangChange }: WelcomeGa
   const [inputOtp, setInputOtp] = useState('');
   const [isOtpResending, setIsOtpResending] = useState(false);
 
+  // Rate limiting & user verification states
+  const [failedLoginCount, setFailedLoginCount] = useState(0);
+  const [loginLockoutEndTime, setLoginLockoutEndTime] = useState<number | null>(null);
+  const [remainingLockoutSeconds, setRemainingLockoutSeconds] = useState(0);
+  const [unregisteredError, setUnregisteredError] = useState(false);
+
+  // Countdown timer for lockout
+  React.useEffect(() => {
+    if (!loginLockoutEndTime) return;
+
+    const interval = setInterval(() => {
+      const now = Date.now();
+      const diff = Math.ceil((loginLockoutEndTime - now) / 1000);
+
+      if (diff <= 0) {
+        setLoginLockoutEndTime(null);
+        setRemainingLockoutSeconds(0);
+        setFailedLoginCount(0);
+      } else {
+        setRemainingLockoutSeconds(diff);
+      }
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [loginLockoutEndTime]);
+
   // Seed registered users list if empty
   React.useEffect(() => {
     try {
@@ -100,60 +126,80 @@ export default function WelcomeGate({ onSuccess, lang, onLangChange }: WelcomeGa
 
   const handleLoginSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!loginPhone.trim()) {
-      setValidationError('Veuillez entrer votre numéro de téléphone.');
+
+    // Check if lockout is active
+    if (loginLockoutEndTime && Date.now() < loginLockoutEndTime) {
+      const remaining = Math.max(1, Math.ceil((loginLockoutEndTime - Date.now()) / 1000));
+      setValidationError(
+        lang === 'fr'
+          ? `Trop de tentatives, réessayez dans quelques instants (${remaining}s).`
+          : `Too many attempts, please try again in a moment (${remaining}s).`
+      );
+      setUnregisteredError(false);
       return;
     }
-    setValidationError('');
-    setStep('searching-subscription');
 
-    const cleanInputPhone = loginPhone.replace(/\s+/g, '');
+    const cleanInputPhone = loginPhone.replace(/\s+/g, '').replace(/[^0-9+]/g, '');
+
+    if (!cleanInputPhone) {
+      setValidationError(lang === 'fr' ? 'Veuillez entrer votre numéro de téléphone.' : 'Please enter your phone number.');
+      setUnregisteredError(false);
+      return;
+    }
+
+    setValidationError('');
+    setUnregisteredError(false);
+    setStep('searching-subscription');
 
     setTimeout(() => {
       try {
         const savedUsersRaw = localStorage.getItem('bafoussam_all_registered_users');
         const savedUsers: User[] = savedUsersRaw ? JSON.parse(savedUsersRaw) : [];
         
-        // Find matching user
-        const matchedUser = savedUsers.find(
-          u => u.phone.replace(/\s+/g, '') === cleanInputPhone || 
-               u.phone.replace(/\s+/g, '').endsWith(cleanInputPhone) ||
-               cleanInputPhone.endsWith(u.phone.replace(/\s+/g, ''))
-        );
+        // Strictly verify if the phone number belongs to a registered subscriber
+        const matchedUser = savedUsers.find(u => {
+          const uClean = u.phone.replace(/\s+/g, '').replace(/[^0-9+]/g, '');
+          return uClean === cleanInputPhone || 
+                 (cleanInputPhone.length >= 8 && uClean.endsWith(cleanInputPhone)) ||
+                 (uClean.length >= 8 && cleanInputPhone.endsWith(uClean));
+        });
 
         if (matchedUser) {
-          // Found! Set active user
+          // Success! Clear error counters and log in
+          setFailedLoginCount(0);
+          setLoginLockoutEndTime(null);
           onSuccess(matchedUser);
         } else {
-          // If not found in localStorage, simulate finding their active subscription on the central server!
-          const today = new Date();
-          const expiry = new Date();
-          expiry.setMonth(today.getMonth() + 3);
+          // Number does NOT exist in registered subscribers list!
+          const nextFailedCount = failedLoginCount + 1;
+          setFailedLoginCount(nextFailedCount);
+          setStep('login');
 
-          const autoCreatedUser: User = {
-            id: `u-${Date.now()}`,
-            name: `Abonné #${cleanInputPhone.slice(-4)}`,
-            email: `abonne.${cleanInputPhone.slice(-4)}@bafoussam.direct`,
-            phone: loginPhone,
-            isSubscribed: true,
-            subscriptionDate: today.toISOString().split('T')[0],
-            subscriptionExpiryDate: expiry.toISOString().split('T')[0],
-            hasPaidFee: true,
-            neighborhoodId: 'marche-a',
-          };
-
-          // Save to local registered list
-          savedUsers.push(autoCreatedUser);
-          localStorage.setItem('bafoussam_all_registered_users', JSON.stringify(savedUsers));
-
-          onSuccess(autoCreatedUser);
+          if (nextFailedCount >= 5) {
+            const lockoutTime = Date.now() + 30000; // 30 seconds lockout
+            setLoginLockoutEndTime(lockoutTime);
+            setRemainingLockoutSeconds(30);
+            setValidationError(
+              lang === 'fr'
+                ? 'Trop de tentatives, réessayez dans quelques instants.'
+                : 'Too many attempts, please try again in a moment.'
+            );
+            setUnregisteredError(false);
+          } else {
+            setUnregisteredError(true);
+            setValidationError(
+              lang === 'fr'
+                ? "Ce numéro n'est associé à aucun compte. Vérifiez le numéro saisi, ou inscrivez-vous d'abord."
+                : "This phone number is not associated with any account. Check the entered number, or register first."
+            );
+          }
         }
       } catch (err) {
         console.error(err);
         setStep('login');
-        setValidationError(lang === 'fr' ? 'Erreur lors de la récupération de la session.' : 'Error retrieving session.');
+        setValidationError(lang === 'fr' ? 'Erreur lors de la vérification du compte.' : 'Error verifying account.');
       }
-    }, 1500);
+    }, 1200);
   };
 
   const handleNextStep = (e: React.FormEvent) => {
@@ -530,6 +576,7 @@ export default function WelcomeGate({ onSuccess, lang, onLangChange }: WelcomeGa
                       type="button"
                       onClick={() => {
                         setValidationError('');
+                        setUnregisteredError(false);
                         setStep('login');
                       }}
                       className="text-indigo-600 font-bold hover:underline cursor-pointer"
@@ -703,8 +750,51 @@ export default function WelcomeGate({ onSuccess, lang, onLangChange }: WelcomeGa
                   </div>
 
                   {validationError && (
-                    <div className="text-red-600 text-xs font-medium p-3 bg-red-50 border border-red-100 rounded-xl">
-                      {validationError}
+                    <div className={`p-4 rounded-2xl border text-xs space-y-2.5 ${
+                      loginLockoutEndTime || remainingLockoutSeconds > 0
+                        ? 'bg-amber-50 border-amber-200 text-amber-900'
+                        : unregisteredError
+                          ? 'bg-red-50 border-red-200 text-red-900'
+                          : 'bg-red-50 border-red-100 text-red-600 font-medium'
+                    }`}>
+                      <div className="flex items-start gap-2.5">
+                        {loginLockoutEndTime || remainingLockoutSeconds > 0 ? (
+                          <Clock className="w-4 h-4 text-amber-600 shrink-0 mt-0.5 animate-spin" />
+                        ) : (
+                          <AlertCircle className="w-4 h-4 text-red-600 shrink-0 mt-0.5" />
+                        )}
+                        <div className="flex-1">
+                          <p className="font-bold leading-relaxed">
+                            {validationError}
+                            {(loginLockoutEndTime || remainingLockoutSeconds > 0) && remainingLockoutSeconds > 0 && (
+                              <span className="block font-mono text-[11px] font-semibold text-amber-700 mt-1">
+                                {lang === 'fr' ? `Veuillez patienter ${remainingLockoutSeconds}s...` : `Please wait ${remainingLockoutSeconds}s...`}
+                              </span>
+                            )}
+                          </p>
+                        </div>
+                      </div>
+
+                      {unregisteredError && (
+                        <div className="pt-2.5 border-t border-red-200/80 flex items-center justify-between gap-2">
+                          <span className="text-[11px] text-red-700 font-medium">
+                            {lang === 'fr' ? "Nouveau sur Bafoussam Market ?" : "New to Bafoussam Market?"}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setValidationError('');
+                              setUnregisteredError(false);
+                              setFormData(prev => ({ ...prev, phone: loginPhone }));
+                              setStep('form');
+                            }}
+                            className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl text-[11px] transition shadow-sm cursor-pointer flex items-center gap-1.5 shrink-0"
+                          >
+                            <span>{lang === 'fr' ? "S'inscrire maintenant" : "Register Now"}</span>
+                            <ArrowRight className="w-3 h-3" />
+                          </button>
+                        </div>
+                      )}
                     </div>
                   )}
 
@@ -713,6 +803,7 @@ export default function WelcomeGate({ onSuccess, lang, onLangChange }: WelcomeGa
                       type="button"
                       onClick={() => {
                         setValidationError('');
+                        setUnregisteredError(false);
                         setStep('form');
                       }}
                       className="flex-1 bg-slate-50 hover:bg-slate-100 text-slate-600 font-semibold py-3 px-4 rounded-xl text-xs cursor-pointer transition border border-slate-200 text-center"
@@ -721,11 +812,18 @@ export default function WelcomeGate({ onSuccess, lang, onLangChange }: WelcomeGa
                     </button>
                     <button
                       type="submit"
-                      className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-4 rounded-xl text-xs flex items-center justify-center gap-2 cursor-pointer transition shadow-sm"
+                      disabled={Boolean(loginLockoutEndTime && remainingLockoutSeconds > 0)}
+                      className="flex-1 bg-indigo-600 hover:bg-indigo-700 disabled:bg-slate-300 disabled:cursor-not-allowed text-white font-bold py-3 px-4 rounded-xl text-xs flex items-center justify-center gap-2 cursor-pointer transition shadow-sm"
                       id="btn-submit-login"
                     >
-                      <span>{getTranslation('loginBtnWelcome')}</span>
-                      <ArrowRight className="w-4 h-4" />
+                      {remainingLockoutSeconds > 0 ? (
+                        <span>{lang === 'fr' ? `Bloqué (${remainingLockoutSeconds}s)` : `Locked (${remainingLockoutSeconds}s)`}</span>
+                      ) : (
+                        <>
+                          <span>{getTranslation('loginBtnWelcome')}</span>
+                          <ArrowRight className="w-4 h-4" />
+                        </>
+                      )}
                     </button>
                   </div>
                 </form>
