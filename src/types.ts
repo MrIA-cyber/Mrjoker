@@ -1,3 +1,33 @@
+export type AccountType = 'client' | 'vendeur' | 'prestataire' | 'entreprise';
+
+export interface SubscriptionPlan {
+  id: AccountType;
+  name: string;
+  monthlyPrice: number; // in FCFA
+  yearlyPrice: number; // in FCFA
+  trialDays: number; // e.g. 5 for client, 10 for others
+  recommended?: boolean;
+  badge?: string;
+  color: string;
+  features: string[];
+}
+
+export interface SubscriptionInvoice {
+  id: string;
+  userId: string;
+  userName: string;
+  userPhone: string;
+  planId: AccountType;
+  planName: string;
+  duration: 'monthly' | 'yearly';
+  amount: number;
+  paymentMethod: 'momo' | 'orange' | 'visa' | 'mastercard';
+  paymentRef: string;
+  createdAt: string;
+  startDate: string;
+  expiryDate: string;
+}
+
 export interface User {
   id: string;
   name: string;
@@ -5,11 +35,19 @@ export interface User {
   email: string;
   password?: string;
   isVerifiedPhone?: boolean;
-  isSubscribed: boolean;
+  accountType?: AccountType;
+  trialStartDate?: string;
+  trialExpiryDate?: string;
+  isInTrial?: boolean;
+  hasCompletedTrial?: boolean;
+  subscriptionPlan?: AccountType;
+  subscriptionDuration?: 'monthly' | 'yearly';
   subscriptionDate?: string;
   subscriptionExpiryDate?: string;
+  isSubscribed: boolean;
   hasPaidFee: boolean;
   neighborhoodId?: string;
+  paymentHistory?: SubscriptionInvoice[];
 }
 
 export interface Merchant {

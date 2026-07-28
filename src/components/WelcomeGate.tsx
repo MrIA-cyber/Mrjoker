@@ -455,13 +455,18 @@ export default function WelcomeGate({ onSuccess, lang, onLangChange }: WelcomeGa
 
   const handleFinish = () => {
     const today = new Date();
+    const trialDays = 5; // Default client trial
+    const trialExpiry = new Date();
+    trialExpiry.setDate(today.getDate() + trialDays);
+
     const expiry = new Date();
-    expiry.setMonth(today.getMonth() + 3); // 3 months validity
+    expiry.setMonth(today.getMonth() + 3); // 3 months subscription validity
 
     const newUser: User = unverifiedUserToActivate ? {
       ...unverifiedUserToActivate,
       isVerifiedPhone: true,
       isSubscribed: true,
+      isInTrial: false,
     } : {
       id: `u-${Date.now()}`,
       name: formData.name,
@@ -469,7 +474,14 @@ export default function WelcomeGate({ onSuccess, lang, onLangChange }: WelcomeGa
       phone: formData.phone,
       password: formData.password,
       isVerifiedPhone: true,
+      accountType: 'client',
+      trialStartDate: today.toISOString(),
+      trialExpiryDate: trialExpiry.toISOString(),
+      isInTrial: true,
+      hasCompletedTrial: false,
       isSubscribed: true,
+      subscriptionPlan: 'client',
+      subscriptionDuration: 'monthly',
       subscriptionDate: today.toISOString().split('T')[0],
       subscriptionExpiryDate: expiry.toISOString().split('T')[0],
       hasPaidFee: true,

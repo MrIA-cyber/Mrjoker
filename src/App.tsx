@@ -19,10 +19,22 @@ import BestMerchantWidget from './components/BestMerchantWidget';
 import AdminPanel from './components/AdminPanel';
 import SmartRecommendationBanner from './components/SmartRecommendationBanner';
 import SubscriptionExpiredScreen from './components/SubscriptionExpiredScreen';
+import PremiumSubscriptionScreen from './components/PremiumSubscriptionScreen';
+import SubscriptionNotificationBanner from './components/SubscriptionNotificationBanner';
 import SupportPhoneNumber from './components/SupportPhoneNumber';
 import RestrictedAuthModal from './components/RestrictedAuthModal';
 import SplashScreen from './components/SplashScreen';
-import { Sparkles, ShoppingBag, ShieldCheck, Truck, Store, ArrowRight, HelpCircle, Bell, X, Lock, Key, Sun, Moon, AlertCircle, Clock } from 'lucide-react';
+import ShowcasePlanche8K from './components/screens/ShowcasePlanche8K';
+import Screen2Onboarding from './components/screens/Screen2Onboarding';
+import Screen3Connexion from './components/screens/Screen3Connexion';
+import Screen4Inscription from './components/screens/Screen4Inscription';
+import Screen5TypeCompte from './components/screens/Screen5TypeCompte';
+import Screen6DashboardClient from './components/screens/Screen6DashboardClient';
+import Screen7Marketplace from './components/screens/Screen7Marketplace';
+import Screen8DetailProduit from './components/screens/Screen8DetailProduit';
+import Screen9Panier from './components/screens/Screen9Panier';
+import Screen10Paiement from './components/screens/Screen10Paiement';
+import { Sparkles, ShoppingBag, ShieldCheck, Truck, Store, ArrowRight, HelpCircle, Bell, X, Lock, Key, Sun, Moon, AlertCircle, Clock, Smartphone, Layers } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
 // Mot de passe de démonstration — à changer avant toute mise en production réelle.
@@ -169,6 +181,9 @@ export default function App() {
   const [sortBy, setSortBy] = useState<'popular' | 'price_asc' | 'price_desc' | 'rating'>('popular');
   const [isRestrictedAuthOpen, setIsRestrictedAuthOpen] = useState(false);
   const [isAppBooting, setIsAppBooting] = useState(true);
+  const [showShowcaseBoard, setShowShowcaseBoard] = useState(false);
+  const [previewScreenNumber, setPreviewScreenNumber] = useState<number | null>(null);
+  const [isSubscriptionModalOpen, setIsSubscriptionModalOpen] = useState(false);
 
   // Toast Notification State
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'info' | 'error' } | null>(null);
@@ -747,6 +762,13 @@ export default function App() {
         <div className="absolute top-32 right-10 w-[500px] h-[350px] bg-[#2563EB]/10 dark:bg-[#2563EB]/15 rounded-full blur-3xl pointer-events-none" />
         <div className="absolute top-96 left-10 w-[400px] h-[300px] bg-[#10B981]/5 dark:bg-[#10B981]/10 rounded-full blur-3xl pointer-events-none" />
         
+        {/* Subscription / Trial Expiry Top Banner */}
+        <SubscriptionNotificationBanner
+          currentUser={currentUser}
+          onOpenSubscriptionModal={() => setIsSubscriptionModalOpen(true)}
+          lang={lang}
+        />
+
         {/* 1. Header Navigation Block */}
         <StoreHeader
           currentUser={currentUser}
@@ -787,6 +809,8 @@ export default function App() {
           onSimulateUserExpiration={handleSimulateUserExpiration}
           lang={lang}
           onLangChange={handleLangChange}
+          onOpenShowcase={() => setShowShowcaseBoard(true)}
+          onOpenSubscriptions={() => setIsSubscriptionModalOpen(true)}
         />
 
         {/* Discrete Session Expiry / Safe Badge (Top Floating Pill) */}
@@ -1340,6 +1364,70 @@ export default function App() {
         }}
         lang={lang}
       />
+
+      {/* Floating Bottom Quick Launcher for 8K Showcase Board (Écrans 2 à 10) */}
+      <div className="fixed bottom-4 left-4 z-40 hidden sm:block">
+        <button
+          onClick={() => setShowShowcaseBoard(true)}
+          className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-[#16A34A] to-emerald-600 text-white font-black text-xs rounded-full shadow-2xl hover:scale-105 active:scale-95 transition cursor-pointer border border-white/20"
+          id="btn-[#16A34A]-showcase-floating"
+        >
+          <Smartphone className="w-4 h-4 text-white" />
+          <span>📱 Planche 8K — Écrans 2 à 10</span>
+        </button>
+      </div>
+
+      {/* Premium Subscription Modal */}
+      <AnimatePresence>
+        {isSubscriptionModalOpen && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.98 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.98 }}
+            className="fixed inset-0 z-[100] bg-slate-950/95 overflow-y-auto"
+          >
+            <div className="relative">
+              <button
+                onClick={() => setIsSubscriptionModalOpen(false)}
+                className="fixed top-6 right-6 z-50 bg-slate-900 border border-slate-700 text-white p-3 rounded-full hover:bg-slate-800 transition cursor-pointer shadow-2xl"
+                title="Fermer"
+              >
+                <X className="w-6 h-6" />
+              </button>
+
+              <PremiumSubscriptionScreen
+                currentUser={currentUser}
+                onUpdateCurrentUser={(updated) => {
+                  setCurrentUser(updated);
+                  triggerToast('Abonnement activé avec succès !', 'success');
+                }}
+                onClose={() => setIsSubscriptionModalOpen(false)}
+                lang={lang}
+                initialSelectedPlan={currentUser?.accountType || 'vendeur'}
+              />
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Fullscreen 8K Showcase Presentation Board Modal */}
+      <AnimatePresence>
+        {showShowcaseBoard && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.98 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.98 }}
+            className="fixed inset-0 z-[100] bg-slate-950/95 overflow-y-auto"
+          >
+            <ShowcasePlanche8K
+              onCloseShowcase={() => setShowShowcaseBoard(false)}
+              onSelectScreenToPreview={(screenNum) => {
+                setPreviewScreenNumber(screenNum);
+              }}
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       </div>
     </div>

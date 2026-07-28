@@ -41,7 +41,8 @@ import {
   MessageSquare,
   Store
 } from 'lucide-react';
-import { User, Merchant, Product, Order, Review } from '../types';
+import { User, Merchant, Product, Order, Review, SubscriptionPlan, AccountType } from '../types';
+import { INITIAL_SUBSCRIPTION_PLANS } from '../data/subscriptionPlans';
 import { translations, Language } from '../translations';
 import VerifiedBadge from './VerifiedBadge';
 
@@ -72,10 +73,26 @@ export default function AdminPanel({
   onUpdateOrders,
   lang
 }: AdminPanelProps) {
-  const [activeTab, setActiveTab] = useState<'users' | 'merchants' | 'products' | 'logs' | 'settings' | 'verifications' | 'orders' | 'revenue' | 'boosts'>('users');
+  const [activeTab, setActiveTab] = useState<'users' | 'merchants' | 'products' | 'logs' | 'settings' | 'verifications' | 'orders' | 'revenue' | 'boosts' | 'subscriptions'>('users');
   const [searchTerm, setSearchTerm] = useState('');
   const [merchantSearchTerm, setMerchantSearchTerm] = useState('');
   const [rejectionReasons, setRejectionReasons] = useState<{[mId: string]: string}>({});
+
+  // Subscription management states
+  const [adminPlans, setAdminPlans] = useState<SubscriptionPlan[]>(() => {
+    try {
+      const saved = localStorage.getItem('bafoussam_custom_subscription_plans');
+      return saved ? JSON.parse(saved) : INITIAL_SUBSCRIPTION_PLANS;
+    } catch {
+      return INITIAL_SUBSCRIPTION_PLANS;
+    }
+  });
+
+  const handleUpdateAdminPlan = (planId: AccountType, field: 'monthlyPrice' | 'yearlyPrice' | 'trialDays', val: number) => {
+    const updated = adminPlans.map(p => p.id === planId ? { ...p, [field]: val } : p);
+    setAdminPlans(updated);
+    localStorage.setItem('bafoussam_custom_subscription_plans', JSON.stringify(updated));
+  };
 
   // Order Dashboard Filter States
   const [orderStatusFilter, setOrderStatusFilter] = useState<'all' | 'pending' | 'preparing' | 'delivering' | 'completed'>('all');
@@ -784,6 +801,23 @@ export interface Merchant {
               </span>
               <span className="bg-amber-100 text-amber-800 text-[9px] px-1.5 py-0.5 rounded font-mono font-bold">
                 {products.filter(p => p.isBoosted).length}
+              </span>
+            </button>
+
+            <button
+              onClick={() => setActiveTab('subscriptions')}
+              className={`w-full flex items-center justify-between p-3 rounded-xl font-bold text-xs cursor-pointer transition ${
+                activeTab === 'subscriptions'
+                  ? 'bg-slate-900 text-white'
+                  : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+              }`}
+            >
+              <span className="flex items-center gap-2.5">
+                <Coins className="w-4 h-4 text-emerald-500" />
+                <span>Abonnements & Tarifs</span>
+              </span>
+              <span className="bg-emerald-100 text-emerald-800 text-[9px] px-1.5 py-0.5 rounded font-mono font-bold">
+                4 Offres
               </span>
             </button>
 
@@ -2569,7 +2603,232 @@ export interface Merchant {
               </motion.div>
             )}
 
-            {/* TAB BOOSTED PRODUCTS */}
+            {/* TAB SUBSCRIPTIONS & PRICING */}
+            {activeTab === 'subscriptions' && (
+              <motion.div
+                key="tab-subscriptions-content"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.15 }}
+                className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-xs p-6 space-y-8"
+              >
+                {/* Header & Export Actions */}
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-100 dark:border-slate-800 pb-5">
+                  <div>
+                    <h3 className="text-base font-black text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-2">
+                      <Coins className="w-5 h-5 text-emerald-500" />
+                      <span>Système d'Abonnements & Tarifications Mifi</span>
+                    </h3>
+                    <p className="text-xs text-slate-500 dark:text-slate-400">
+                      Pilotez les tarifs mensuels/annuels, les durées d'essais gratuits, et gérez les droits d'accès des 4 catégories de membres.
+                    </p>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => {
+                        let csvContent = "data:text/csv;charset=utf-8,ID,Nom,Telephone,Email,TypeCompte,StatutAbonnement,DateExpiration\n";
+                        allUsers.forEach(u => {
+                          csvContent += `"${u.id}","${u.name}","${u.phone}","${u.email}","${u.accountType || 'client'}","${u.isSubscribed ? 'Actif' : 'Inactif'}","${u.subscriptionExpiryDate || ''}"\n`;
+                        });
+                        const encodedUri = encodeURI(csvContent);
+                        const link = document.createElement("a");
+                        link.setAttribute("href", encodedUri);
+                        link.setAttribute("download", `bafoussam_abonnees_${new Date().toISOString().split('T')[0]}.csv`);
+                        document.body.appendChild(link);
+                        link.click();
+                        document.body.removeChild(link);
+                      }}
+                      className="bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-bold px-4 py-2.5 rounded-xl transition flex items-center gap-2 cursor-pointer"
+                    >
+                      <span>Exporter CSV (Excel)</span>
+                    </button>
+
+                    <button
+                      onClick={() => {
+                        const printWin = window.open('', '_blank');
+                        if (!printWin) return;
+                        printWin.document.write(`
+                          <html>
+                            <head><title>Rapport des Abonnements Bafoussam Market</title></head>
+                            <body style="font-family:sans-serif; padding:30px;">
+                              <h2>Rapport Général des Abonnements - Bafoussam Market</h2>
+                              <p>Généré le : ${new Date().toLocaleString('fr-FR')}</p>
+                              <hr/>
+                              <h3>Total Inscrits : ${allUsers.length}</h3>
+                              <h3>Abonnés Actifs : ${allUsers.filter(u => u.isSubscribed).length}</h3>
+                              <script>window.onload = function() { window.print(); }</script>
+                            </body>
+                          </html>
+                        `);
+                        printWin.document.close();
+                      }}
+                      className="bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-black px-4 py-2.5 rounded-xl transition shadow-lg shadow-emerald-600/20 flex items-center gap-2 cursor-pointer"
+                    >
+                      <span>Imprimer Rapport PDF</span>
+                    </button>
+                  </div>
+                </div>
+
+                {/* 1. Configurateur des Tarifs & Périodes d'Essai */}
+                <div className="space-y-4">
+                  <h4 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-2">
+                    <Settings className="w-4 h-4 text-emerald-500" />
+                    <span>Configuration des 4 Formules & Essais Gratuit</span>
+                  </h4>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                    {adminPlans.map((plan) => (
+                      <div
+                        key={plan.id}
+                        className="bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/80 rounded-2xl p-4 space-y-3"
+                      >
+                        <div className="flex items-center justify-between">
+                          <span className="text-[10px] font-black uppercase text-slate-400">
+                            {plan.id.toUpperCase()}
+                          </span>
+                          <span className="bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-400 text-[9px] font-extrabold px-2 py-0.5 rounded-full">
+                            {plan.name}
+                          </span>
+                        </div>
+
+                        <div>
+                          <label className="block text-[9px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">
+                            Prix Mensuel (FCFA)
+                          </label>
+                          <input
+                            type="number"
+                            value={plan.monthlyPrice}
+                            onChange={(e) => handleUpdateAdminPlan(plan.id, 'monthlyPrice', parseInt(e.target.value) || 0)}
+                            className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-1.5 font-mono text-xs font-extrabold text-slate-900 dark:text-white"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-[9px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">
+                            Prix Annuel (FCFA)
+                          </label>
+                          <input
+                            type="number"
+                            value={plan.yearlyPrice}
+                            onChange={(e) => handleUpdateAdminPlan(plan.id, 'yearlyPrice', parseInt(e.target.value) || 0)}
+                            className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-1.5 font-mono text-xs font-extrabold text-slate-900 dark:text-white"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-[9px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">
+                            Essai Gratuit (Jours)
+                          </label>
+                          <input
+                            type="number"
+                            value={plan.trialDays}
+                            onChange={(e) => handleUpdateAdminPlan(plan.id, 'trialDays', parseInt(e.target.value) || 0)}
+                            className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-1.5 font-mono text-xs font-extrabold text-emerald-600 dark:text-emerald-400"
+                          />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* 2. Liste & Action Directe sur les Utilisateurs */}
+                <div className="space-y-4 pt-4 border-t border-slate-100 dark:border-slate-800">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <h4 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-2">
+                      <Users className="w-4 h-4 text-emerald-500" />
+                      <span>Gestion des Membres & Prolongations d'Abonnement</span>
+                    </h4>
+
+                    <div className="relative max-w-xs w-full">
+                      <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                      <input
+                        type="text"
+                        placeholder="Rechercher nom ou téléphone..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className="w-full bg-slate-100 dark:bg-slate-800 rounded-xl pl-9 pr-3 py-2 text-xs font-medium text-slate-800 dark:text-white focus:outline-none"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="overflow-x-auto border border-slate-100 dark:border-slate-800 rounded-2xl">
+                    <table className="w-full text-left text-xs">
+                      <thead className="bg-slate-50 dark:bg-slate-800/50 text-[10px] font-bold text-slate-400 uppercase tracking-wider border-b border-slate-100 dark:border-slate-800">
+                        <tr>
+                          <th className="px-4 py-3">Utilisateur</th>
+                          <th className="px-4 py-3">Téléphone</th>
+                          <th className="px-4 py-3">Formule</th>
+                          <th className="px-4 py-3">Statut</th>
+                          <th className="px-4 py-3">Expiration</th>
+                          <th className="px-4 py-3 text-right">Prolonger / Suspendre</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100 dark:divide-slate-800 font-medium">
+                        {allUsers
+                          .filter(u => u.name.toLowerCase().includes(searchTerm.toLowerCase()) || u.phone.includes(searchTerm))
+                          .map((u) => {
+                            const accountType = u.accountType || 'client';
+
+                            return (
+                              <tr key={u.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/40 transition">
+                                <td className="px-4 py-3 font-bold text-slate-900 dark:text-white">
+                                  {u.name}
+                                </td>
+                                <td className="px-4 py-3 font-mono text-slate-600 dark:text-slate-400">
+                                  {u.phone}
+                                </td>
+                                <td className="px-4 py-3">
+                                  <span className="bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-extrabold text-[10px] px-2 py-0.5 rounded-md uppercase">
+                                    {accountType}
+                                  </span>
+                                </td>
+                                <td className="px-4 py-3">
+                                  <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-black uppercase ${
+                                    u.isSubscribed
+                                      ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300'
+                                      : 'bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300'
+                                  }`}>
+                                    {u.isSubscribed ? 'ACTIF' : 'INACTIF'}
+                                  </span>
+                                </td>
+                                <td className="px-4 py-3 font-mono text-slate-500 dark:text-slate-400">
+                                  {u.subscriptionExpiryDate ? new Date(u.subscriptionExpiryDate).toLocaleDateString('fr-FR') : 'N/A'}
+                                </td>
+                                <td className="px-4 py-3 text-right space-x-1.5">
+                                  <button
+                                    onClick={() => handleExtendSub(u.id, 30)}
+                                    className="bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-200 text-[10px] font-black px-2 py-1 rounded-lg transition cursor-pointer"
+                                  >
+                                    +30J
+                                  </button>
+                                  <button
+                                    onClick={() => handleExtendSub(u.id, 90)}
+                                    className="bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-200 text-[10px] font-black px-2 py-1 rounded-lg transition cursor-pointer"
+                                  >
+                                    +90J
+                                  </button>
+                                  <button
+                                    onClick={() => handleToggleSub(u.id)}
+                                    className={`text-[10px] font-black px-2 py-1 rounded-lg transition cursor-pointer ${
+                                      u.isSubscribed
+                                        ? 'bg-rose-100 dark:bg-rose-950 text-rose-700 dark:text-rose-300 hover:bg-rose-200'
+                                        : 'bg-emerald-600 text-white hover:bg-emerald-500'
+                                    }`}
+                                  >
+                                    {u.isSubscribed ? 'Suspendre' : 'Activer'}
+                                  </button>
+                                </td>
+                              </tr>
+                            );
+                          })}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </motion.div>
+            )}
             {activeTab === 'boosts' && (
               <motion.div
                 key="tab-boosts-content"
