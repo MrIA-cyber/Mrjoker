@@ -21,6 +21,7 @@ import SmartRecommendationBanner from './components/SmartRecommendationBanner';
 import SubscriptionExpiredScreen from './components/SubscriptionExpiredScreen';
 import SupportPhoneNumber from './components/SupportPhoneNumber';
 import RestrictedAuthModal from './components/RestrictedAuthModal';
+import SplashScreen from './components/SplashScreen';
 import { Sparkles, ShoppingBag, ShieldCheck, Truck, Store, ArrowRight, HelpCircle, Bell, X, Lock, Key, Sun, Moon, AlertCircle, Clock } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
@@ -167,6 +168,7 @@ export default function App() {
   const [selectedCategory, setSelectedCategory] = useState('Tous');
   const [sortBy, setSortBy] = useState<'popular' | 'price_asc' | 'price_desc' | 'rating'>('popular');
   const [isRestrictedAuthOpen, setIsRestrictedAuthOpen] = useState(false);
+  const [isAppBooting, setIsAppBooting] = useState(true);
 
   // Toast Notification State
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'info' | 'error' } | null>(null);
@@ -667,7 +669,18 @@ export default function App() {
   // Calculate Cart items count
   const cartItemsCount = cart.reduce((acc, item) => acc + item.quantity, 0);
 
-  // If user hasn't completed paid subscription, lock site access behind WelcomeGate paywall
+  // 1. Automatic 8K Splash Screen at App Launch
+  if (isAppBooting) {
+    return (
+      <SplashScreen 
+        onComplete={() => setIsAppBooting(false)} 
+        lang={lang} 
+        autoComplete={true}
+      />
+    );
+  }
+
+  // 2. If user hasn't completed paid subscription, lock site access behind WelcomeGate paywall
   if (!currentUser) {
     return (
       <div className="relative min-h-screen">
@@ -728,7 +741,11 @@ export default function App() {
 
   return (
     <div className={theme === 'dark' ? 'dark' : ''}>
-      <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col justify-between font-sans selection:bg-amber-100 selection:text-amber-900 transition-colors duration-200" id="main-applet-wrapper">
+      <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col justify-between font-sans selection:bg-indigo-100 selection:text-indigo-900 transition-colors duration-200 relative overflow-x-hidden" id="main-applet-wrapper">
+        {/* Continuous 8K Splash Screen Ambient Glow Backdrops */}
+        <div className="absolute top-0 left-1/4 w-[600px] h-[400px] bg-[#4F46E5]/10 dark:bg-[#4F46E5]/15 rounded-full blur-3xl pointer-events-none -translate-y-1/2" />
+        <div className="absolute top-32 right-10 w-[500px] h-[350px] bg-[#2563EB]/10 dark:bg-[#2563EB]/15 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute top-96 left-10 w-[400px] h-[300px] bg-[#10B981]/5 dark:bg-[#10B981]/10 rounded-full blur-3xl pointer-events-none" />
         
         {/* 1. Header Navigation Block */}
         <StoreHeader

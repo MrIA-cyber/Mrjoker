@@ -56,7 +56,7 @@ export default function ProductCard({
 
       {/* Premium Boost Badge & Sparkles Overlay */}
       {product.isBoosted && (
-        <div className="absolute top-3 left-3 z-10 flex items-center gap-1.5 bg-gradient-to-r from-indigo-600 to-violet-600 text-white text-[10px] font-extrabold px-2.5 py-1 rounded-full shadow-md shadow-indigo-600/30">
+        <div className="absolute top-3 left-3 z-10 flex items-center gap-1.5 bg-gradient-to-r from-[#4F46E5] to-[#2563EB] text-white text-[10px] font-extrabold px-2.5 py-1 rounded-full shadow-md shadow-indigo-600/30">
           <Sparkles className="w-3 h-3 text-white fill-white animate-pulse" />
           <span>PREMIUM • Ouest</span>
         </div>
@@ -152,7 +152,7 @@ export default function ProductCard({
               className={`p-2.5 rounded-xl cursor-pointer transition flex items-center justify-center ${
                 product.stock === 0
                   ? 'bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-600 cursor-not-allowed'
-                  : 'bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white shadow-md shadow-indigo-600/20'
+                  : 'bg-gradient-to-r from-[#4F46E5] to-[#2563EB] hover:from-indigo-600 hover:to-blue-600 text-white shadow-md shadow-indigo-600/20'
               }`}
               title="Ajouter au panier"
               id={`btn-add-to-cart-${product.id}`}

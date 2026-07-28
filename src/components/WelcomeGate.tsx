@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { User, Neighborhood } from '../types';
 import { BAFOUSSAM_NEIGHBORHOODS } from '../data/mockData';
-import { Check, ShieldCheck, HelpCircle, Phone, ArrowRight, Loader2, Sparkles, MapPin, Mail, User as UserIcon, Lock, Globe, AlertCircle, Clock, Eye, EyeOff, X } from 'lucide-react';
+import { Check, ShieldCheck, HelpCircle, Phone, ArrowRight, Loader2, Sparkles, MapPin, Mail, User as UserIcon, Lock, Globe, AlertCircle, Clock, Eye, EyeOff, X, Smartphone } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { translations, Language } from '../translations';
 import SupportPhoneNumber from './SupportPhoneNumber';
@@ -491,51 +491,52 @@ export default function WelcomeGate({ onSuccess, lang, onLangChange }: WelcomeGa
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-indigo-50/30 to-slate-100 flex items-center justify-center p-4 font-sans selection:bg-indigo-100 selection:text-indigo-900 relative overflow-hidden" id="welcome-gate-container">
-      {/* Background Decorative Orbs */}
-      <div className="absolute top-0 left-0 w-[500px] h-[500px] bg-indigo-200/20 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2 pointer-events-none"></div>
-      <div className="absolute bottom-0 right-0 w-[600px] h-[600px] bg-amber-100/20 rounded-full blur-3xl translate-x-1/3 translate-y-1/3 pointer-events-none"></div>
+    <div className="min-h-screen bg-gradient-to-br from-indigo-950 via-slate-900 to-blue-950 flex items-center justify-center p-4 font-sans selection:bg-indigo-100 selection:text-indigo-900 relative overflow-hidden" id="welcome-gate-container">
+      {/* Background Decorative Orbs matching official palette */}
+      <div className="absolute top-0 left-0 w-[500px] h-[500px] bg-[#4F46E5]/25 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2 pointer-events-none"></div>
+      <div className="absolute bottom-0 right-0 w-[600px] h-[600px] bg-[#2563EB]/25 rounded-full blur-3xl translate-x-1/3 translate-y-1/3 pointer-events-none"></div>
+      <div className="absolute top-1/2 right-1/4 w-[350px] h-[350px] bg-[#10B981]/15 rounded-full blur-3xl pointer-events-none"></div>
       
       {/* Background Grid Pattern */}
-      <div className="absolute inset-0 bg-[radial-gradient(#c7d2fe_1px,transparent_1px)] [background-size:24px_24px] pointer-events-none opacity-40"></div>
+      <div className="absolute inset-0 bg-[radial-gradient(#818cf8_1px,transparent_1px)] [background-size:24px_24px] pointer-events-none opacity-20"></div>
       
-      <div className="w-full max-w-xl bg-white rounded-3xl shadow-xl border border-slate-100 overflow-hidden relative z-10 transition-shadow hover:shadow-2xl duration-300">
+      <div className="w-full max-w-xl bg-white/98 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/20 overflow-hidden relative z-10 transition-shadow hover:shadow-indigo-500/10 duration-300">
         
         {/* Floating Language Selector at the top right of the card */}
-        <div className="absolute top-5 right-6 z-20 flex gap-2">
+        <div className="absolute top-5 right-6 z-20 flex gap-2 items-center">
           <button
             type="button"
             onClick={() => onLangChange(lang === 'fr' ? 'en' : 'fr')}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-slate-50 hover:bg-slate-100 text-slate-700 hover:text-slate-900 border border-slate-200 text-xs font-semibold shadow-sm transition cursor-pointer"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-200/80 text-xs font-semibold shadow-sm transition cursor-pointer"
             title="Switch Language"
           >
-            <Globe className="w-3.5 h-3.5" />
+            <Globe className="w-3.5 h-3.5 text-indigo-600" />
             <span>{lang === 'fr' ? 'EN' : 'FR'}</span>
           </button>
         </div>
 
-        {/* Banner with sleek indigo gradient */}
-        <div className="h-3 bg-gradient-to-r from-indigo-500 via-indigo-600 to-indigo-700"></div>
+        {/* Banner with sleek deep violet to electric blue to emerald gradient */}
+        <div className="h-3 bg-gradient-to-r from-[#4F46E5] via-[#2563EB] to-[#10B981]"></div>
 
         <div className="p-8">
           {/* Logo & Header */}
           <div className="flex flex-col items-center text-center mb-6" id="logo-header">
             <div className="relative mb-3">
               {/* Outer soft glow ring */}
-              <div className="absolute inset-0 bg-indigo-500/10 rounded-2xl blur-md scale-110"></div>
+              <div className="absolute inset-0 bg-indigo-500/20 rounded-2xl blur-md scale-110"></div>
               <div className="w-16 h-16 bg-gradient-to-tr from-indigo-50 to-white rounded-2xl flex items-center justify-center border border-indigo-100 shadow-sm relative z-10 hover:scale-105 transition-transform duration-300 p-2">
                 <img src="/logo-bafoussam-market.svg" alt="Bafoussam Market Logo" className="w-full h-full object-contain" />
               </div>
             </div>
 
             {/* Live Operational Badge */}
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 text-[11px] font-semibold border border-emerald-100/60 mb-3 animate-pulse">
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 text-[11px] font-semibold border border-emerald-200/60 mb-3 animate-pulse">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
               <span>{getTranslation('deliveryActiveBadge')}</span>
             </div>
 
             <h1 className="text-3xl font-black tracking-tight text-slate-900 font-display">
-              Bafoussam <span className="text-indigo-600 bg-gradient-to-r from-indigo-600 to-indigo-800 bg-clip-text text-transparent">Market</span>
+              Bafoussam <span className="bg-gradient-to-r from-[#4F46E5] to-[#2563EB] bg-clip-text text-transparent">Market</span>
             </h1>
             <p className="text-xs text-slate-500 mt-1.5 max-w-sm leading-relaxed">
               {getTranslation('taglineWelcome')}
@@ -1046,12 +1047,6 @@ export default function WelcomeGate({ onSuccess, lang, onLangChange }: WelcomeGa
                         {showLoginPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                       </button>
                     </div>
-                  </div>
-
-                  {/* Demo account hint */}
-                  <div className="bg-slate-50 border border-slate-200/80 rounded-xl p-2.5 text-[11px] text-slate-600 flex items-center justify-between">
-                    <span>💡 {lang === 'fr' ? 'Compte démo : 677894512' : 'Demo account: 677894512'}</span>
-                    <span className="font-mono font-bold bg-white px-2 py-0.5 rounded border border-slate-200 text-indigo-700">password123</span>
                   </div>
 
                   {validationError && (

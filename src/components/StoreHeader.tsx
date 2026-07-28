@@ -2,7 +2,7 @@ import React from 'react';
 import { motion } from 'motion/react';
 import { User } from '../types';
 import { CATEGORIES } from '../data/mockData';
-import { ShoppingCart, Search, Store, Compass, MapPin, LogOut, PackageCheck, Newspaper, Key, Sun, Moon, X, Globe } from 'lucide-react';
+import { ShoppingCart, Search, Store, Compass, MapPin, LogOut, PackageCheck, Newspaper, Key, Sun, Moon, X, Globe, Sparkles, Smartphone } from 'lucide-react';
 import { translations, Language } from '../translations';
 import SupportPhoneNumber from './SupportPhoneNumber';
 
@@ -143,7 +143,7 @@ export default function StoreHeader({
           <span className="text-slate-400 hidden xs:inline">
             {lang === 'fr' ? 'Bonjour' : 'Hello'}, <strong className="text-white font-semibold">{currentUser.name}</strong>
           </span>
-          
+
           {/* Language toggle selector */}
           <button
             onClick={() => onLangChange(lang === 'fr' ? 'en' : 'fr')}
@@ -200,7 +200,7 @@ export default function StoreHeader({
                 onClick={() => onViewChange('shop')}
                 className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg transition cursor-pointer ${
                   activeView === 'shop'
-                    ? 'bg-indigo-600 text-white shadow-sm'
+                    ? 'bg-gradient-to-r from-[#4F46E5] to-[#2563EB] text-white shadow-md shadow-indigo-600/20 font-bold'
                     : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                 }`}
                 id="tab-client-space"
@@ -212,7 +212,7 @@ export default function StoreHeader({
               {activeView === 'merchant' && (
                 <button
                   onClick={() => onViewChange('merchant')}
-                  className="flex items-center gap-1.5 px-3.5 py-2 rounded-lg transition cursor-pointer bg-amber-500 text-slate-950 shadow-sm font-extrabold"
+                  className="flex items-center gap-1.5 px-3.5 py-2 rounded-lg transition cursor-pointer bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 shadow-sm font-extrabold"
                   id="tab-merchant-space"
                 >
                   <Store className="w-4 h-4" />
@@ -224,7 +224,7 @@ export default function StoreHeader({
                 onClick={() => onViewChange('orders')}
                 className={`flex items-center gap-1.5 px-3 py-2 rounded-lg transition cursor-pointer relative ${
                   activeView === 'orders'
-                    ? 'bg-indigo-600 text-white shadow-sm'
+                    ? 'bg-gradient-to-r from-[#4F46E5] to-[#2563EB] text-white shadow-md shadow-indigo-600/20 font-bold'
                     : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                 }`}
               >
@@ -236,7 +236,7 @@ export default function StoreHeader({
                 onClick={() => onViewChange('news')}
                 className={`flex items-center gap-1.5 px-3 py-2 rounded-lg transition cursor-pointer relative ${
                   activeView === 'news'
-                    ? 'bg-indigo-600 text-white shadow-sm'
+                    ? 'bg-gradient-to-r from-[#4F46E5] to-[#2563EB] text-white shadow-md shadow-indigo-600/20 font-bold'
                     : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                 }`}
                 id="tab-city-news"
@@ -244,8 +244,8 @@ export default function StoreHeader({
                 <Newspaper className="w-3.5 h-3.5" />
                 <span>{lang === 'fr' ? 'Actualités' : 'News'}</span>
                 <span className="absolute -top-1 -right-1 flex h-2 w-2">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-indigo-500"></span>
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-[#10B981]"></span>
                 </span>
               </button>
 
@@ -337,7 +337,7 @@ export default function StoreHeader({
                 onClick={() => onCategoryChange(cat)}
                 className={`px-3.5 py-1.5 rounded-full text-xs font-bold whitespace-nowrap cursor-pointer transition ${
                   selectedCategory === cat
-                    ? 'bg-gradient-to-r from-indigo-600 to-violet-600 text-white shadow-md shadow-indigo-600/20'
+                    ? 'bg-gradient-to-r from-[#4F46E5] to-[#2563EB] text-white shadow-md shadow-indigo-600/20'
                     : 'bg-slate-50 dark:bg-slate-800/80 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-slate-900 dark:hover:text-white border border-slate-200/50 dark:border-slate-800'
                 }`}
               >
