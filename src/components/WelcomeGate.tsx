@@ -5,7 +5,7 @@ import { otpService } from '../services/otpService';
 import { 
   Check, ShieldCheck, HelpCircle, Phone, ArrowRight, Loader2, Sparkles, MapPin, Mail, 
   User as UserIcon, Lock, Globe, AlertCircle, Clock, Eye, EyeOff, X, Smartphone, 
-  Store, Building2, Wrench, ChevronRight, CreditCard, RefreshCw
+  Store, Building2, Wrench, ChevronRight, CreditCard, RefreshCw, CheckCircle2
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { translations, Language } from '../translations';
@@ -147,6 +147,7 @@ export default function WelcomeGate({ onSuccess, lang, onLangChange }: WelcomeGa
   const [isOtpResending, setIsOtpResending] = useState(false);
   const [otpCountdown, setOtpCountdown] = useState(60);
   const [unverifiedUserToActivate, setUnverifiedUserToActivate] = useState<User | null>(null);
+  const [devOtpSimStatus, setDevOtpSimStatus] = useState<'idle' | 'simulating' | 'success'>('idle');
 
   // Rate limiting & user verification states
   const [failedLoginCount, setFailedLoginCount] = useState(0);
@@ -221,7 +222,7 @@ export default function WelcomeGate({ onSuccess, lang, onLangChange }: WelcomeGa
   // Smart Auto-Advance from Step 2 OTP to Step 3 Payment when 6 digits typed
   useEffect(() => {
     if (step !== 'otp-verification') return;
-    if (inputOtp.length === 6) {
+    if (inputOtp.length === 6 && otpService.getMode() === 'production') {
       const targetPhone = formData.phone || (unverifiedUserToActivate ? unverifiedUserToActivate.phone : '');
       otpService.verifyOtp(targetPhone, inputOtp).then((res) => {
         if (res.success) {
@@ -234,6 +235,39 @@ export default function WelcomeGate({ onSuccess, lang, onLangChange }: WelcomeGa
       });
     }
   }, [inputOtp, step, formData.phone, unverifiedUserToActivate]);
+
+  // Development Mode 2-second OTP Simulation & Auto-Advance
+  useEffect(() => {
+    if (step !== 'otp-verification') {
+      setDevOtpSimStatus('idle');
+      return;
+    }
+
+    if (otpService.getMode() === 'development') {
+      setDevOtpSimStatus('simulating');
+      console.log('[WelcomeGate] Mode DEVELOPMENT: Démarrage de la simulation 2s OTP...');
+
+      const simTimer = setTimeout(async () => {
+        const targetPhone = formData.phone || (unverifiedUserToActivate ? unverifiedUserToActivate.phone : '');
+        const res = await otpService.verifyOtp(targetPhone, inputOtp || generatedOtp || '123456');
+
+        if (res.success) {
+          setDevOtpSimStatus('success');
+          console.log('[WelcomeGate] Simulation OTP réussie -> Passage automatique à l\'étape suivante');
+
+          const advanceTimer = setTimeout(() => {
+            setValidationError('');
+            setPhoneForPayment(targetPhone);
+            setStep('payment-select');
+          }, 400);
+
+          return () => clearTimeout(advanceTimer);
+        }
+      }, 2000); // Exactly 2 seconds
+
+      return () => clearTimeout(simTimer);
+    }
+  }, [step, formData.phone, unverifiedUserToActivate]);
 
   // Seed registered users list if empty
   useEffect(() => {
@@ -620,28 +654,35 @@ export default function WelcomeGate({ onSuccess, lang, onLangChange }: WelcomeGa
         </div>
 
         {/* Header: Logo, Title & Subtitle */}
-        <div className="flex flex-col items-center text-center mb-5" id="logo-header">
-          <div className="w-14 h-14 bg-[#16A34A] text-white rounded-2xl flex items-center justify-center font-black text-2xl shadow-sm mb-3">
-            B
+        <div className="flex flex-col items-center text-center mb-4 pb-3 border-b border-[#E5E7EB]" id="logo-header">
+          <div className="flex items-center gap-2.5">
+            <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-[#16A34A] to-[#0F172A] text-white flex items-center justify-center font-black text-xl shadow-md shrink-0">
+              <Globe className="w-5 h-5 text-emerald-400 animate-pulse" />
+            </div>
+            <div className="text-left">
+              <div className="flex items-center gap-1.5">
+                <span className="text-lg font-black text-[#0F172A] font-display tracking-tight leading-none">
+                  Afri<span className="text-[#16A34A]">Nova</span>
+                </span>
+                <span className="text-[9px] font-extrabold uppercase bg-[#16A34A] text-white px-1.5 py-0.5 rounded-md tracking-wider">
+                  Bafoussam
+                </span>
+              </div>
+              <p className="text-[11px] text-[#16A34A] font-extrabold tracking-tight mt-0.5">
+                « L'Afrique connectée au monde. »
+              </p>
+            </div>
           </div>
-
-          <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-[#0F172A] font-display">
-            Bafoussam <span className="text-[#16A34A]">Market</span>
-          </h1>
-
-          <p className="text-xs text-slate-500 mt-1 max-w-sm leading-relaxed font-medium">
-            Rejoignez la plus grande plateforme numérique de Bafoussam.
-          </p>
         </div>
 
         {/* 3-Step Stepper Progress Bar (Only shown during registration steps) */}
         {step !== 'login' && step !== 'searching-subscription' && (
-          <div className="mb-6 px-1">
+          <div className="mb-5 px-1">
             <div className="flex items-center justify-between relative">
               {/* Line 1-2 */}
               <div className="absolute top-4 left-6 right-1/2 h-0.5 bg-[#E5E7EB] -z-0">
                 <div 
-                  className="h-full bg-[#16A34A] transition-all duration-300" 
+                  className="h-full bg-[#16A34A] transition-all duration-250 ease-out" 
                   style={{ width: currentStepIndex > 1 ? '100%' : '0%' }}
                 />
               </div>
@@ -649,53 +690,53 @@ export default function WelcomeGate({ onSuccess, lang, onLangChange }: WelcomeGa
               {/* Line 2-3 */}
               <div className="absolute top-4 left-1/2 right-6 h-0.5 bg-[#E5E7EB] -z-0">
                 <div 
-                  className="h-full bg-[#16A34A] transition-all duration-300" 
+                  className="h-full bg-[#16A34A] transition-all duration-250 ease-out" 
                   style={{ width: currentStepIndex > 2 ? '100%' : '0%' }}
                 />
               </div>
 
               {/* Step 1 Circle */}
-              <div className="flex flex-col items-center gap-1.5 z-10">
-                <div className={`w-8 h-8 rounded-full flex items-center justify-center font-extrabold text-xs transition-colors shadow-2xs ${
+              <div className="flex flex-col items-center gap-1 z-10">
+                <div className={`w-8 h-8 rounded-full flex items-center justify-center font-extrabold text-xs transition-all duration-200 ${
                   currentStepIndex > 1
-                    ? 'bg-[#16A34A] text-white'
-                    : 'bg-[#16A34A] text-white ring-4 ring-[#DCFCE7]'
+                    ? 'bg-[#16A34A] text-white shadow-xs'
+                    : 'bg-[#16A34A] text-white ring-4 ring-[#DCFCE7] ring-offset-1 shadow-sm'
                 }`}>
                   {currentStepIndex > 1 ? <Check className="w-4 h-4 stroke-[3]" /> : '1'}
                 </div>
-                <span className={`text-[10px] font-bold ${currentStepIndex === 1 ? 'text-[#16A34A]' : 'text-slate-500'}`}>
+                <span className={`text-[10px] font-extrabold ${currentStepIndex === 1 ? 'text-[#16A34A]' : 'text-slate-500'}`}>
                   Informations
                 </span>
               </div>
 
               {/* Step 2 Circle */}
-              <div className="flex flex-col items-center gap-1.5 z-10">
-                <div className={`w-8 h-8 rounded-full flex items-center justify-center font-extrabold text-xs transition-colors shadow-2xs ${
+              <div className="flex flex-col items-center gap-1 z-10">
+                <div className={`w-8 h-8 rounded-full flex items-center justify-center font-extrabold text-xs transition-all duration-200 ${
                   currentStepIndex > 2
-                    ? 'bg-[#16A34A] text-white'
+                    ? 'bg-[#16A34A] text-white shadow-xs'
                     : currentStepIndex === 2
-                    ? 'bg-[#16A34A] text-white ring-4 ring-[#DCFCE7]'
+                    ? 'bg-[#16A34A] text-white ring-4 ring-[#DCFCE7] ring-offset-1 shadow-sm'
                     : 'bg-[#F8FAFC] text-slate-400 border-2 border-[#E5E7EB]'
                 }`}>
                   {currentStepIndex > 2 ? <Check className="w-4 h-4 stroke-[3]" /> : '2'}
                 </div>
-                <span className={`text-[10px] font-bold ${currentStepIndex === 2 ? 'text-[#16A34A]' : 'text-slate-400'}`}>
+                <span className={`text-[10px] font-extrabold ${currentStepIndex === 2 ? 'text-[#16A34A]' : 'text-slate-400'}`}>
                   Vérification
                 </span>
               </div>
 
               {/* Step 3 Circle */}
-              <div className="flex flex-col items-center gap-1.5 z-10">
-                <div className={`w-8 h-8 rounded-full flex items-center justify-center font-extrabold text-xs transition-colors shadow-2xs ${
+              <div className="flex flex-col items-center gap-1 z-10">
+                <div className={`w-8 h-8 rounded-full flex items-center justify-center font-extrabold text-xs transition-all duration-200 ${
                   currentStepIndex === 4
-                    ? 'bg-[#16A34A] text-white'
+                    ? 'bg-[#16A34A] text-white shadow-xs'
                     : currentStepIndex === 3
-                    ? 'bg-[#16A34A] text-white ring-4 ring-[#DCFCE7]'
+                    ? 'bg-[#16A34A] text-white ring-4 ring-[#DCFCE7] ring-offset-1 shadow-sm'
                     : 'bg-[#F8FAFC] text-slate-400 border-2 border-[#E5E7EB]'
                 }`}>
                   {currentStepIndex === 4 ? <Check className="w-4 h-4 stroke-[3]" /> : '3'}
                 </div>
-                <span className={`text-[10px] font-bold ${currentStepIndex >= 3 ? 'text-[#16A34A]' : 'text-slate-400'}`}>
+                <span className={`text-[10px] font-extrabold ${currentStepIndex >= 3 ? 'text-[#16A34A]' : 'text-slate-400'}`}>
                   Finalisation
                 </span>
               </div>
@@ -1000,6 +1041,35 @@ export default function WelcomeGate({ onSuccess, lang, onLangChange }: WelcomeGa
               exit={{ opacity: 0, y: -10 }}
               transition={{ duration: 0.2 }}
             >
+              {/* OTP MODE BANNER */}
+              {otpService.getMode() === 'development' ? (
+                <div className="bg-emerald-50 border border-emerald-300 rounded-2xl p-3.5 mb-4 shadow-xs">
+                  <div className="flex items-center gap-2.5">
+                    {devOtpSimStatus === 'simulating' ? (
+                      <>
+                        <Loader2 className="w-5 h-5 text-emerald-600 animate-spin shrink-0" />
+                        <div className="text-left">
+                          <p className="text-emerald-950 font-black text-xs">Simulation OTP en cours (2s)...</p>
+                          <p className="text-emerald-700 text-[11px] font-medium">Mode Développement actif • Validation automatique</p>
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
+                        <div className="text-left">
+                          <p className="text-emerald-950 font-black text-xs">Simulation OTP réussie</p>
+                          <p className="text-emerald-700 text-[11px] font-medium">Redirection automatique vers le paiement...</p>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                </div>
+              ) : (
+                <div className="bg-blue-50 border border-blue-200 rounded-2xl p-3 mb-4 flex items-center gap-2 text-blue-900 text-xs font-semibold">
+                  <ShieldCheck className="w-4 h-4 text-blue-600 shrink-0" />
+                  <span>Mode Production • Code SMS envoyé via {otpService.getProviderType().toUpperCase()}</span>
+                </div>
+              )}
               {/* SMS Notification Banner */}
               <div className="bg-[#0F172A] text-white rounded-2xl p-4 mb-5 shadow-md border border-slate-800 relative overflow-hidden">
                 <div className="absolute top-0 left-0 w-1.5 h-full bg-[#16A34A] animate-pulse" />

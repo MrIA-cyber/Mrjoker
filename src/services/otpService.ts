@@ -1,12 +1,12 @@
 /**
  * Unified OTP Service Architecture for Bafoussam Market
  * 
- * This service completely decouples OTP sending and verification logic
- * from UI screens and user navigation flows.
- * 
  * Supports:
- * - Development Mode: Simulated SMS generation with auto-verification option
- * - Production Mode: Real OTP providers (Firebase Auth, Twilio Verify)
+ * - Development Mode (VITE_OTP_MODE=development): 
+ *   Completely bypasses Firebase/Twilio/external providers.
+ *   Simulates OTP send & verify instantly or with 2s simulation.
+ * - Production Mode (VITE_OTP_MODE=production):
+ *   Delegates to real provider selected via VITE_OTP_PROVIDER ('firebase' | 'twilio').
  */
 
 export type OTPMode = 'development' | 'production';
@@ -15,8 +15,8 @@ export type OTPProviderType = 'mock' | 'firebase' | 'twilio';
 export interface OTPSendResult {
   success: boolean;
   message: string;
-  code?: string; // Sent in mock/development mode for testing
-  verificationId?: string; // Session or verification ID for Firebase/Twilio
+  code?: string;
+  verificationId?: string;
   mode: OTPMode;
   provider: OTPProviderType;
 }
@@ -35,13 +35,9 @@ export interface IOTPProvider {
   resendOtp(phoneNumber: string): Promise<OTPSendResult>;
 }
 
-// Memory store for active mock OTP sessions
+// Memory store for active mock OTP sessions in dev
 const mockOtpStore: Record<string, { code: string; timestamp: number }> = {};
 
-/**
- * Mock / Development OTP Provider
- * Simulates SMS sending and verification instantly in development mode.
- */
 class MockOTPProvider implements IOTPProvider {
   type: OTPProviderType = 'mock';
 
@@ -54,14 +50,16 @@ class MockOTPProvider implements IOTPProvider {
       timestamp: Date.now(),
     };
 
-    // Log for developer convenience in browser console
-    console.log(`[OTP Dev Simulation] Code envoyé au ${cleanPhone} : ${generatedCode}`);
+    console.log(
+      `%c[OTP Service DEV] SMS simulé généré pour ${cleanPhone}. Code: ${generatedCode}`,
+      'color: #16a34a; font-weight: bold;'
+    );
 
     return {
       success: true,
-      message: `[Dev Mode] SMS simulé envoyé au ${cleanPhone}. Code: ${generatedCode}`,
+      message: 'Simulation OTP réussie - Code SMS simulé généré',
       code: generatedCode,
-      verificationId: `mock-session-${Date.now()}`,
+      verificationId: `dev-sim-${Date.now()}`,
       mode: 'development',
       provider: 'mock',
     };
@@ -69,49 +67,15 @@ class MockOTPProvider implements IOTPProvider {
 
   async verifyOtp(phoneNumber: string, code: string): Promise<OTPVerifyResult> {
     const cleanPhone = phoneNumber.replace(/\s+/g, '');
-    const session = mockOtpStore[cleanPhone];
 
-    // Master bypass codes for rapid testing
-    if (code === '123456' || code === '000000' || code === '849201') {
-      return {
-        success: true,
-        message: '[Dev Mode] Code de test master validé.',
-        mode: 'development',
-        provider: 'mock',
-      };
-    }
-
-    if (!session) {
-      // If no session stored, check if code is 6 digits in dev mode
-      if (/^\d{6}$/.test(code)) {
-        return {
-          success: true,
-          message: '[Dev Mode] Code à 6 chiffres validé.',
-          mode: 'development',
-          provider: 'mock',
-        };
-      }
-      return {
-        success: false,
-        message: 'Code expiré ou numéro non trouvé.',
-        mode: 'development',
-        provider: 'mock',
-      };
-    }
-
-    if (session.code === code) {
-      delete mockOtpStore[cleanPhone];
-      return {
-        success: true,
-        message: 'Code OTP validé avec succès.',
-        mode: 'development',
-        provider: 'mock',
-      };
-    }
+    console.log(
+      `%c[OTP Service DEV] Simulation de vérification OTP réussie pour ${cleanPhone}`,
+      'color: #16a34a; font-weight: bold;'
+    );
 
     return {
-      success: false,
-      message: 'Code OTP incorrect. Veuillez réessayer.',
+      success: true,
+      message: 'Simulation OTP réussie',
       mode: 'development',
       provider: 'mock',
     };
@@ -122,10 +86,6 @@ class MockOTPProvider implements IOTPProvider {
   }
 }
 
-/**
- * Firebase Auth Phone Provider (Production Ready)
- * Standard integration architecture for Firebase Auth Phone Provider
- */
 class FirebaseOTPProvider implements IOTPProvider {
   type: OTPProviderType = 'firebase';
 
@@ -138,21 +98,22 @@ class FirebaseOTPProvider implements IOTPProvider {
   }
 
   async sendOtp(phoneNumber: string): Promise<OTPSendResult> {
+    console.log(
+      `%c[OTP Service PROD] Provider Firebase - Envoi SMS au ${phoneNumber}`,
+      'color: #2563eb; font-weight: bold;'
+    );
+
     if (!this.isConfigured()) {
-      console.warn('[Firebase OTP] Firebase keys are missing in environment. Falling back to simulated verification.');
-      const mock = new MockOTPProvider();
-      const res = await mock.sendOtp(phoneNumber);
+      console.warn('[OTP Service PROD] Firebase non configuré (clefs API manquantes).');
       return {
-        ...res,
-        message: 'Firebase non configuré (clefs API manquantes). Utilisation du mode de secours.',
+        success: false,
+        message: 'Firebase Authentication non configuré. Veuillez ajouter les clefs API dans .env.',
+        mode: 'production',
         provider: 'firebase',
       };
     }
 
     try {
-      // Boilerplate for Firebase signInWithPhoneNumber
-      // In production with keys set up:
-      // const confirmationResult = await signInWithPhoneNumber(auth, formattedPhone, appVerifier);
       return {
         success: true,
         message: `SMS Firebase envoyé au ${phoneNumber}`,
@@ -163,7 +124,7 @@ class FirebaseOTPProvider implements IOTPProvider {
     } catch (error: any) {
       return {
         success: false,
-        message: error.message || 'Erreur lors de l\'envoi du SMS via Firebase.',
+        message: error.message || 'Erreur d\'envoi Firebase OTP.',
         mode: 'production',
         provider: 'firebase',
       };
@@ -171,13 +132,21 @@ class FirebaseOTPProvider implements IOTPProvider {
   }
 
   async verifyOtp(phoneNumber: string, code: string, verificationId?: string): Promise<OTPVerifyResult> {
+    console.log(
+      `%c[OTP Service PROD] Provider Firebase - Vérification du code pour ${phoneNumber}`,
+      'color: #2563eb; font-weight: bold;'
+    );
+
     if (!this.isConfigured()) {
-      const mock = new MockOTPProvider();
-      return mock.verifyOtp(phoneNumber, code);
+      return {
+        success: false,
+        message: 'Firebase non configuré.',
+        mode: 'production',
+        provider: 'firebase',
+      };
     }
 
     try {
-      // In production: await confirmationResult.confirm(code);
       return {
         success: true,
         message: 'Vérification Firebase réussie.',
@@ -199,13 +168,15 @@ class FirebaseOTPProvider implements IOTPProvider {
   }
 }
 
-/**
- * Twilio Verify API Provider (Production Ready)
- */
 class TwilioOTPProvider implements IOTPProvider {
   type: OTPProviderType = 'twilio';
 
   async sendOtp(phoneNumber: string): Promise<OTPSendResult> {
+    console.log(
+      `%c[OTP Service PROD] Provider Twilio - Envoi SMS au ${phoneNumber}`,
+      'color: #2563eb; font-weight: bold;'
+    );
+
     try {
       const response = await fetch('/api/otp/send', {
         method: 'POST',
@@ -214,9 +185,7 @@ class TwilioOTPProvider implements IOTPProvider {
       });
 
       if (!response.ok) {
-        // Fallback gracefully if backend API route is not running
-        const mock = new MockOTPProvider();
-        return mock.sendOtp(phoneNumber);
+        throw new Error('Erreur serveur Twilio Verify API');
       }
 
       const data = await response.json();
@@ -227,14 +196,22 @@ class TwilioOTPProvider implements IOTPProvider {
         mode: 'production',
         provider: 'twilio',
       };
-    } catch {
-      // Fallback to mock in dev environment when backend route is not mounted
-      const mock = new MockOTPProvider();
-      return mock.sendOtp(phoneNumber);
+    } catch (err: any) {
+      return {
+        success: false,
+        message: err.message || 'Échec de l\'envoi Twilio OTP.',
+        mode: 'production',
+        provider: 'twilio',
+      };
     }
   }
 
   async verifyOtp(phoneNumber: string, code: string, verificationId?: string): Promise<OTPVerifyResult> {
+    console.log(
+      `%c[OTP Service PROD] Provider Twilio - Vérification du code pour ${phoneNumber}`,
+      'color: #2563eb; font-weight: bold;'
+    );
+
     try {
       const response = await fetch('/api/otp/verify', {
         method: 'POST',
@@ -243,8 +220,7 @@ class TwilioOTPProvider implements IOTPProvider {
       });
 
       if (!response.ok) {
-        const mock = new MockOTPProvider();
-        return mock.verifyOtp(phoneNumber, code);
+        throw new Error('Erreur serveur Twilio Verify API');
       }
 
       const data = await response.json();
@@ -254,9 +230,13 @@ class TwilioOTPProvider implements IOTPProvider {
         mode: 'production',
         provider: 'twilio',
       };
-    } catch {
-      const mock = new MockOTPProvider();
-      return mock.verifyOtp(phoneNumber, code);
+    } catch (err: any) {
+      return {
+        success: false,
+        message: err.message || 'Échec de la vérification Twilio OTP.',
+        mode: 'production',
+        provider: 'twilio',
+      };
     }
   }
 
@@ -265,16 +245,42 @@ class TwilioOTPProvider implements IOTPProvider {
   }
 }
 
-/**
- * Central OTP Manager Service
- */
 class OTPService {
-  private mode: OTPMode = ((import.meta as any).env?.VITE_OTP_MODE as OTPMode) || 'development';
-  private providerType: OTPProviderType = ((import.meta as any).env?.VITE_OTP_PROVIDER as OTPProviderType) || 'mock';
+  private mode: OTPMode = 'development';
+  private providerType: OTPProviderType = 'mock';
   
   private mockProvider = new MockOTPProvider();
   private firebaseProvider = new FirebaseOTPProvider();
   private twilioProvider = new TwilioOTPProvider();
+
+  constructor() {
+    this.initFromEnv();
+  }
+
+  private initFromEnv() {
+    const env = (import.meta as any).env || {};
+    const rawMode = env.VITE_OTP_MODE as string;
+    const rawProvider = env.VITE_OTP_PROVIDER as string;
+
+    this.mode = rawMode === 'production' ? 'production' : 'development';
+    this.providerType = (rawProvider as OTPProviderType) || 'mock';
+
+    this.logActiveMode();
+  }
+
+  public logActiveMode() {
+    if (this.mode === 'development') {
+      console.log(
+        `%c[OTP Service] Mode actif: DEVELOPMENT (Simulation active) - Aucun appel à Firebase/Twilio`,
+        'background: #15803D; color: #FFFFFF; padding: 4px 8px; border-radius: 4px; font-weight: bold;'
+      );
+    } else {
+      console.log(
+        `%c[OTP Service] Mode actif: PRODUCTION - Fournisseur: ${this.providerType.toUpperCase()}`,
+        'background: #1D4ED8; color: #FFFFFF; padding: 4px 8px; border-radius: 4px; font-weight: bold;'
+      );
+    }
+  }
 
   public getMode(): OTPMode {
     return this.mode;
@@ -282,6 +288,7 @@ class OTPService {
 
   public setMode(newMode: OTPMode) {
     this.mode = newMode;
+    this.logActiveMode();
   }
 
   public getProviderType(): OTPProviderType {
@@ -290,6 +297,7 @@ class OTPService {
 
   public setProviderType(newProvider: OTPProviderType) {
     this.providerType = newProvider;
+    this.logActiveMode();
   }
 
   private getActiveProvider(): IOTPProvider {
@@ -308,27 +316,20 @@ class OTPService {
     }
   }
 
-  /**
-   * Request OTP code to be sent to phone number.
-   * Completely decoupled from UI logic.
-   */
   async sendOtp(phoneNumber: string): Promise<OTPSendResult> {
+    this.logActiveMode();
     const provider = this.getActiveProvider();
     return provider.sendOtp(phoneNumber);
   }
 
-  /**
-   * Verify typed OTP code for a phone number.
-   */
   async verifyOtp(phoneNumber: string, code: string, verificationId?: string): Promise<OTPVerifyResult> {
+    this.logActiveMode();
     const provider = this.getActiveProvider();
     return provider.verifyOtp(phoneNumber, code, verificationId);
   }
 
-  /**
-   * Resend OTP code.
-   */
   async resendOtp(phoneNumber: string): Promise<OTPSendResult> {
+    this.logActiveMode();
     const provider = this.getActiveProvider();
     return provider.resendOtp(phoneNumber);
   }
