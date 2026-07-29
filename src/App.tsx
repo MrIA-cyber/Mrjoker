@@ -24,7 +24,6 @@ import SubscriptionNotificationBanner from './components/SubscriptionNotificatio
 import SupportPhoneNumber from './components/SupportPhoneNumber';
 import RestrictedAuthModal from './components/RestrictedAuthModal';
 import SplashScreen from './components/SplashScreen';
-import ShowcasePlanche8K from './components/screens/ShowcasePlanche8K';
 import Screen2Onboarding from './components/screens/Screen2Onboarding';
 import Screen3Connexion from './components/screens/Screen3Connexion';
 import Screen4Inscription from './components/screens/Screen4Inscription';
@@ -34,7 +33,7 @@ import Screen7Marketplace from './components/screens/Screen7Marketplace';
 import Screen8DetailProduit from './components/screens/Screen8DetailProduit';
 import Screen9Panier from './components/screens/Screen9Panier';
 import Screen10Paiement from './components/screens/Screen10Paiement';
-import { Sparkles, ShoppingBag, ShieldCheck, Truck, Store, ArrowRight, HelpCircle, Bell, X, Lock, Key, Sun, Moon, AlertCircle, Clock, Smartphone, Layers } from 'lucide-react';
+import { Sparkles, ShoppingBag, ShieldCheck, Truck, Store, ArrowRight, HelpCircle, Bell, X, Lock, Key, Sun, Moon, AlertCircle, Clock, Smartphone, Layers, Headphones, Coins, CheckCircle2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
 // Mot de passe de démonstration — à changer avant toute mise en production réelle.
@@ -181,8 +180,6 @@ export default function App() {
   const [sortBy, setSortBy] = useState<'popular' | 'price_asc' | 'price_desc' | 'rating'>('popular');
   const [isRestrictedAuthOpen, setIsRestrictedAuthOpen] = useState(false);
   const [isAppBooting, setIsAppBooting] = useState(true);
-  const [showShowcaseBoard, setShowShowcaseBoard] = useState(false);
-  const [previewScreenNumber, setPreviewScreenNumber] = useState<number | null>(null);
   const [isSubscriptionModalOpen, setIsSubscriptionModalOpen] = useState(false);
 
   // Toast Notification State
@@ -809,7 +806,6 @@ export default function App() {
           onSimulateUserExpiration={handleSimulateUserExpiration}
           lang={lang}
           onLangChange={handleLangChange}
-          onOpenShowcase={() => setShowShowcaseBoard(true)}
           onOpenSubscriptions={() => setIsSubscriptionModalOpen(true)}
         />
 
@@ -875,60 +871,144 @@ export default function App() {
               className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-8"
               id="shop-view-wrapper"
             >
-              {/* Glovo / Uber Eats Style Hero Banner */}
+              {/* Premium Hero Banner & Interactive Neighborhood Badges */}
               {!searchTerm && (
-                <div className="relative rounded-3xl overflow-hidden bg-gradient-to-r from-indigo-600 via-indigo-700 to-indigo-900 text-white p-6 sm:p-8 shadow-xl border border-indigo-500/20">
-                  <div className="absolute -right-10 -bottom-10 w-72 h-72 bg-amber-400/10 rounded-full blur-3xl pointer-events-none" />
-                  <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-                    <div className="space-y-3 max-w-2xl">
-                      <div className="flex items-center gap-2">
-                        <span className="bg-amber-400 text-slate-950 font-black text-[10px] uppercase tracking-widest px-3 py-1 rounded-full shadow-sm flex items-center gap-1">
-                          <Truck className="w-3.5 h-3.5" />
-                          {lang === 'fr' ? 'Express Moto-Taxi ⚡' : 'Express Moto Delivery ⚡'}
-                        </span>
-                        <span className="bg-white/10 text-slate-200 text-[10px] font-bold px-3 py-1 rounded-full border border-white/10">
-                          {lang === 'fr' ? '15-30 Min Garantis' : '15-30 Min Guaranteed'}
-                        </span>
-                      </div>
-                      <h1 className="text-2xl sm:text-3.5xl font-black tracking-tight leading-tight text-white font-display">
-                        {lang === 'fr' 
-                          ? 'Vos marchés de Bafoussam livrés directement chez vous'
-                          : 'Your Bafoussam markets delivered straight to your doorstep'}
-                      </h1>
-                      <p className="text-xs sm:text-sm text-indigo-100 leading-relaxed max-w-xl">
-                        {lang === 'fr'
-                          ? 'Marché A, Marché B, Marché Congo, Tamdja & Carrefour Bamiléké. Produits frais, café, tissus Ndop et épices locales livrés en un clic.'
-                          : 'Market A, Market B, Congo Market, Tamdja & Carrefour Bamiléké. Fresh products, coffee, Ndop fabrics and local spices delivered in one click.'}
-                      </p>
+                <div className="space-y-6">
+                  <div className="relative rounded-[28px] overflow-hidden bg-gradient-to-r from-[#4F46E5] via-[#3730A3] to-[#2563EB] text-white p-6 sm:p-10 shadow-2xl border border-indigo-400/30">
+                    {/* Glowing Radial Halo Effect */}
+                    <div className="absolute -right-16 -top-16 w-80 h-80 bg-indigo-400/25 rounded-full blur-3xl pointer-events-none animate-pulse" />
+                    <div className="absolute left-1/2 -bottom-20 w-96 h-96 bg-purple-500/20 rounded-full blur-3xl pointer-events-none" />
 
-                      {/* Market location tags */}
-                      <div className="flex flex-wrap items-center gap-2 pt-1 text-[10px] font-extrabold text-indigo-200">
-                        <span className="bg-indigo-950/60 px-2.5 py-1 rounded-lg border border-indigo-400/20">📍 Marché A</span>
-                        <span className="bg-indigo-950/60 px-2.5 py-1 rounded-lg border border-indigo-400/20">📍 Marché B</span>
-                        <span className="bg-indigo-950/60 px-2.5 py-1 rounded-lg border border-indigo-400/20">📍 Marché Congo</span>
-                        <span className="bg-indigo-950/60 px-2.5 py-1 rounded-lg border border-indigo-400/20">📍 Tamdja</span>
-                        <span className="bg-indigo-950/60 px-2.5 py-1 rounded-lg border border-indigo-400/20">📍 Carrefour Bamiléké</span>
+                    <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-8">
+                      <div className="space-y-4 max-w-2xl">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <span className="bg-amber-400 text-slate-950 font-black text-[10px] uppercase tracking-widest px-3.5 py-1 rounded-full shadow-md flex items-center gap-1.5">
+                            <Truck className="w-3.5 h-3.5" />
+                            {lang === 'fr' ? 'Livraison Express Moto ⚡' : 'Express Moto Delivery ⚡'}
+                          </span>
+                          <span className="bg-white/15 backdrop-blur-md text-white text-[10px] font-extrabold px-3.5 py-1 rounded-full border border-white/20">
+                            {lang === 'fr' ? '15-30 Min Garantis' : '15-30 Min Guaranteed'}
+                          </span>
+                        </div>
+
+                        <h1 className="text-2xl sm:text-4xl font-black tracking-tight leading-tight text-white font-display">
+                          {lang === 'fr' 
+                            ? 'Vos marchés de Bafoussam livrés directement chez vous'
+                            : 'Your Bafoussam markets delivered straight to your doorstep'}
+                        </h1>
+
+                        <p className="text-xs sm:text-sm text-indigo-100/90 leading-relaxed max-w-xl font-medium">
+                          {lang === 'fr'
+                            ? 'Marché A, Marché B, Marché Congo, Tamdja & Carrefour Bamiléké. Produits frais, café Arabica, tissus Ndop et épices locales livrés en un clic.'
+                            : 'Market A, Market B, Congo Market, Tamdja & Carrefour Bamiléké. Fresh products, Arabica coffee, Ndop fabrics and local spices delivered in one click.'}
+                        </p>
+
+                        {/* Neighborhood Badges */}
+                        <div className="pt-2">
+                          <span className="text-[10px] font-bold uppercase tracking-wider text-indigo-200 block mb-2">
+                            Quartiers desservis à Bafoussam :
+                          </span>
+                          <div className="flex flex-wrap items-center gap-2">
+                            {['Marché A', 'Marché B', 'Marché Congo', 'Tamdja', 'Djeleng', 'Kamkop', 'Carrefour Bamiléké'].map((q) => (
+                              <span 
+                                key={q}
+                                className="bg-slate-900/60 backdrop-blur-md text-indigo-100 font-extrabold text-[10px] px-3 py-1 rounded-xl border border-indigo-300/20 shadow-xs hover:bg-slate-900/80 transition cursor-pointer"
+                              >
+                                📍 {q}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* Call To Action Button (Section 5 in Prompt) */}
+                        <div className="pt-3">
+                          <button
+                            onClick={() => {
+                              const catalogEl = document.getElementById('products-catalog-grid');
+                              if (catalogEl) {
+                                catalogEl.scrollIntoView({ behavior: 'smooth' });
+                              }
+                            }}
+                            className="bg-white hover:bg-slate-100 text-[#4F46E5] font-black text-xs px-6 py-3.5 rounded-2xl shadow-xl shadow-slate-950/20 flex items-center gap-2.5 transition active:scale-95 cursor-pointer font-display"
+                          >
+                            <span>Commander maintenant</span>
+                            <ArrowRight className="w-4 h-4 text-[#4F46E5]" />
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Illustration artwork & badge */}
+                      <div className="shrink-0 flex items-center justify-center lg:justify-end">
+                        <div className="relative w-48 h-48 sm:w-56 sm:h-56 rounded-3xl bg-white/10 backdrop-blur-md border border-white/20 p-4 flex flex-col items-center justify-center text-center space-y-2 shadow-2xl animate-ambient-halo">
+                          <span className="text-5xl sm:text-6xl drop-shadow-md">🛍️</span>
+                          <span className="font-black text-sm text-white font-display">Marketplace Bafoussam</span>
+                          <span className="text-[10px] font-extrabold text-indigo-200 bg-indigo-950/60 px-3 py-1 rounded-full border border-indigo-400/30">
+                            100% Produits Locaux
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* 4 Glassmorphism Information Cards (Section 6 in Prompt) */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    {/* Card 1: Paiement Mobile */}
+                    <div className="backdrop-blur-md bg-white/80 dark:bg-slate-900/80 border border-slate-200/80 dark:border-slate-800/80 rounded-[24px] p-5 shadow-lg shadow-indigo-500/5 hover:-translate-y-1 hover:shadow-xl transition-all duration-300 flex items-start gap-3.5 group">
+                      <div className="w-12 h-12 rounded-2xl bg-indigo-500/10 dark:bg-indigo-500/20 text-[#4F46E5] dark:text-indigo-400 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
+                        <Coins className="w-6 h-6" />
+                      </div>
+                      <div>
+                        <h3 className="font-black text-xs text-slate-900 dark:text-white uppercase tracking-wider font-display">
+                          Paiement Mobile
+                        </h3>
+                        <p className="text-xs text-slate-500 dark:text-slate-400 font-medium mt-1 leading-snug">
+                          MTN MoMo & Orange Money sécurisés en 1 clic.
+                        </p>
                       </div>
                     </div>
 
-                    <div className="flex flex-col sm:flex-row lg:flex-col gap-3 shrink-0">
-                      <div className="bg-slate-900/80 backdrop-blur-md border border-indigo-400/30 rounded-2xl p-4 flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-amber-400/20 text-amber-300 flex items-center justify-center font-bold text-lg shrink-0">
-                          ⚡
-                        </div>
-                        <div>
-                          <span className="text-[10px] text-indigo-200 uppercase font-extrabold tracking-wider block">Paiement Mobile</span>
-                          <span className="text-xs font-black text-white">MTN MoMo & Orange Money</span>
-                        </div>
+                    {/* Card 2: Sécurité */}
+                    <div className="backdrop-blur-md bg-white/80 dark:bg-slate-900/80 border border-slate-200/80 dark:border-slate-800/80 rounded-[24px] p-5 shadow-lg shadow-indigo-500/5 hover:-translate-y-1 hover:shadow-xl transition-all duration-300 flex items-start gap-3.5 group">
+                      <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 dark:bg-emerald-500/20 text-[#10B981] flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
+                        <ShieldCheck className="w-6 h-6" />
                       </div>
-                      <div className="bg-slate-900/80 backdrop-blur-md border border-indigo-400/30 rounded-2xl p-4 flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-emerald-400/20 text-emerald-300 flex items-center justify-center font-bold text-lg shrink-0">
-                          🛡️
-                        </div>
-                        <div>
-                          <span className="text-[10px] text-indigo-200 uppercase font-extrabold tracking-wider block">Sécurité</span>
-                          <span className="text-xs font-black text-white">100% Vendeurs Vérifiés</span>
-                        </div>
+                      <div>
+                        <h3 className="font-black text-xs text-slate-900 dark:text-white uppercase tracking-wider font-display">
+                          Sécurité Garantie
+                        </h3>
+                        <p className="text-xs text-slate-500 dark:text-slate-400 font-medium mt-1 leading-snug">
+                          100% Vendeurs Vérifiés & Protection Anti-Arnaque.
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Card 3: Livraison Express */}
+                    <div className="backdrop-blur-md bg-white/80 dark:bg-slate-900/80 border border-slate-200/80 dark:border-slate-800/80 rounded-[24px] p-5 shadow-lg shadow-indigo-500/5 hover:-translate-y-1 hover:shadow-xl transition-all duration-300 flex items-start gap-3.5 group">
+                      <div className="w-12 h-12 rounded-2xl bg-blue-500/10 dark:bg-blue-500/20 text-[#2563EB] flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
+                        <Truck className="w-6 h-6" />
+                      </div>
+                      <div>
+                        <h3 className="font-black text-xs text-slate-900 dark:text-white uppercase tracking-wider font-display">
+                          Livraison Express
+                        </h3>
+                        <p className="text-xs text-slate-500 dark:text-slate-400 font-medium mt-1 leading-snug">
+                          Moto-Taxi rapide 15 à 30 min dans tous les quartiers.
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Card 4: Support Client */}
+                    <div className="backdrop-blur-md bg-white/80 dark:bg-slate-900/80 border border-slate-200/80 dark:border-slate-800/80 rounded-[24px] p-5 shadow-lg shadow-indigo-500/5 hover:-translate-y-1 hover:shadow-xl transition-all duration-300 flex items-start gap-3.5 group">
+                      <div className="w-12 h-12 rounded-2xl bg-amber-500/10 dark:bg-amber-500/20 text-amber-500 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
+                        <Headphones className="w-6 h-6" />
+                      </div>
+                      <div>
+                        <h3 className="font-black text-xs text-slate-900 dark:text-white uppercase tracking-wider font-display">
+                          Support 24/7
+                        </h3>
+                        <p className="text-xs text-slate-500 dark:text-slate-400 font-medium mt-1 leading-snug">
+                          Assistance locale immédiate par téléphone & WhatsApp.
+                        </p>
                       </div>
                     </div>
                   </div>
@@ -1365,18 +1445,6 @@ export default function App() {
         lang={lang}
       />
 
-      {/* Floating Bottom Quick Launcher for 8K Showcase Board (Écrans 2 à 10) */}
-      <div className="fixed bottom-4 left-4 z-40 hidden sm:block">
-        <button
-          onClick={() => setShowShowcaseBoard(true)}
-          className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-[#16A34A] to-emerald-600 text-white font-black text-xs rounded-full shadow-2xl hover:scale-105 active:scale-95 transition cursor-pointer border border-white/20"
-          id="btn-[#16A34A]-showcase-floating"
-        >
-          <Smartphone className="w-4 h-4 text-white" />
-          <span>📱 Planche 8K — Écrans 2 à 10</span>
-        </button>
-      </div>
-
       {/* Premium Subscription Modal */}
       <AnimatePresence>
         {isSubscriptionModalOpen && (
@@ -1406,25 +1474,6 @@ export default function App() {
                 initialSelectedPlan={currentUser?.accountType || 'vendeur'}
               />
             </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Fullscreen 8K Showcase Presentation Board Modal */}
-      <AnimatePresence>
-        {showShowcaseBoard && (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.98 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.98 }}
-            className="fixed inset-0 z-[100] bg-slate-950/95 overflow-y-auto"
-          >
-            <ShowcasePlanche8K
-              onCloseShowcase={() => setShowShowcaseBoard(false)}
-              onSelectScreenToPreview={(screenNum) => {
-                setPreviewScreenNumber(screenNum);
-              }}
-            />
           </motion.div>
         )}
       </AnimatePresence>

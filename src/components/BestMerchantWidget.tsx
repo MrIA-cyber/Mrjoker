@@ -217,22 +217,38 @@ export default function BestMerchantWidget({
           </div>
 
           {/* Quick contact and badges */}
-          <div className="flex flex-wrap items-center gap-3 pt-1">
-            <span className="bg-amber-50 dark:bg-amber-950/20 border border-amber-100 dark:border-amber-900/40 text-amber-800 dark:text-amber-300 text-[10px] font-bold px-2.5 py-1 rounded-md flex items-center gap-1 shadow-2xs">
-              <Sparkles className="w-3 h-3 text-amber-500" />
-              <span>{lang === 'fr' ? 'Membre Élite Premium' : 'Elite Premium Member'}</span>
+          <div className="flex flex-wrap items-center gap-2.5 pt-1">
+            <span className="bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-200/80 dark:border-indigo-800 text-indigo-700 dark:text-indigo-300 text-[11px] font-black px-3 py-1.5 rounded-xl flex items-center gap-1.5 shadow-2xs">
+              <MapPin className="w-3.5 h-3.5 text-[#4F46E5]" />
+              <span>1.2 km • Tamdja</span>
             </span>
-            <span className="bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 text-[10px] font-bold px-2.5 py-1 rounded-md flex items-center gap-1 shadow-2xs">
-              <ShoppingBag className="w-3 h-3" />
-              <span>{totalItemsCount} {lang === 'fr' ? 'articles en ligne' : 'items online'}</span>
+            <span className="bg-amber-50 dark:bg-amber-950/40 border border-amber-200/80 dark:border-amber-800 text-amber-800 dark:text-amber-300 text-[11px] font-black px-3 py-1.5 rounded-xl flex items-center gap-1.5 shadow-2xs">
+              <Zap className="w-3.5 h-3.5 text-amber-500" />
+              <span>15-25 min (Livraison)</span>
+            </span>
+            <span className="bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200/80 dark:border-emerald-800 text-emerald-800 dark:text-emerald-300 text-[11px] font-black px-3 py-1.5 rounded-xl flex items-center gap-1.5 shadow-2xs">
+              <ShoppingBag className="w-3.5 h-3.5 text-emerald-600" />
+              <span>1,240+ commandes</span>
             </span>
             <a 
               href={`tel:${merchant.phone.replace(/\s+/g, '')}`} 
-              className="bg-indigo-50 dark:bg-indigo-950/35 hover:bg-indigo-100 dark:hover:bg-indigo-900/45 border border-indigo-100 dark:border-indigo-900/55 text-indigo-700 dark:text-indigo-300 text-[10px] font-extrabold px-3 py-1 rounded-md flex items-center gap-1 shadow-2xs transition"
+              className="bg-slate-900 text-white hover:bg-slate-800 text-[11px] font-black px-3.5 py-1.5 rounded-xl flex items-center gap-1.5 shadow-xs transition"
             >
-              <Phone className="w-3 h-3" />
+              <Phone className="w-3.5 h-3.5 text-indigo-400" />
               <span>{lang === 'fr' ? `Appeler : ${merchant.phone}` : `Call: ${merchant.phone}`}</span>
             </a>
+          </div>
+
+          <div className="pt-2">
+            {starProduct && (
+              <button
+                onClick={() => onSelectProduct(starProduct)}
+                className="w-full sm:w-auto bg-[#4F46E5] hover:bg-indigo-700 text-white font-black text-xs px-6 py-3 rounded-2xl flex items-center justify-center gap-2 transition shadow-lg shadow-indigo-600/25 cursor-pointer font-display"
+              >
+                <span>Voir la boutique ({merchant.shopName})</span>
+                <ArrowRight className="w-4 h-4" />
+              </button>
+            )}
           </div>
         </div>
 
