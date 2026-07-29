@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { otpService } from '../../services/otpService';
 import { 
   User as UserIcon, Mail, Phone, Lock, Check, ShieldCheck, ArrowRight, Sparkles, 
   Store, Building2, Wrench, MapPin, ChevronRight, X, AlertCircle, Loader2, CreditCard, RefreshCw
@@ -121,10 +122,12 @@ export default function Screen4Inscription({ onSignupSuccess, onGoToLogin }: Scr
     if (currentStep !== 'step1' || !isStep1Complete || isAutoAdvancing) return;
 
     setIsAutoAdvancing(true);
-    const timer = setTimeout(() => {
-      // Generate OTP code
-      const code = Math.floor(100000 + Math.random() * 900000).toString();
-      setGeneratedOtp(code);
+    const timer = setTimeout(async () => {
+      // Trigger OTP service
+      const res = await otpService.sendOtp(formData.phone);
+      if (res.code) {
+        setGeneratedOtp(res.code);
+      }
       setInputOtp('');
       setOtpCountdown(60);
       setPaymentPhone(formData.phone);
@@ -145,30 +148,35 @@ export default function Screen4Inscription({ onSignupSuccess, onGoToLogin }: Scr
   // Smart Auto-Advance from Step 2 to Step 3 when 6-digit OTP is typed
   useEffect(() => {
     if (currentStep !== 'step2') return;
-    if (inputOtp.length === 6 && inputOtp === generatedOtp) {
-      setCurrentStep('step3');
+    if (inputOtp.length === 6) {
+      otpService.verifyOtp(formData.phone, inputOtp).then((res) => {
+        if (res.success) {
+          setCurrentStep('step3');
+        }
+      });
     }
-  }, [inputOtp, generatedOtp, currentStep]);
+  }, [inputOtp, currentStep, formData.phone]);
 
   // Handle manual OTP submission
-  const handleVerifyOtpSubmit = (e: React.FormEvent) => {
+  const handleVerifyOtpSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (inputOtp === generatedOtp) {
+    const res = await otpService.verifyOtp(formData.phone, inputOtp);
+    if (res.success) {
       setCurrentStep('step3');
     }
   };
 
   // Handle Resend OTP
-  const handleResendOtp = () => {
+  const handleResendOtp = async () => {
     if (otpCountdown > 0) return;
     setIsResendingOtp(true);
-    setTimeout(() => {
-      const code = Math.floor(100000 + Math.random() * 900000).toString();
-      setGeneratedOtp(code);
-      setInputOtp('');
-      setOtpCountdown(60);
-      setIsResendingOtp(false);
-    }, 800);
+    const res = await otpService.resendOtp(formData.phone);
+    if (res.code) {
+      setGeneratedOtp(res.code);
+    }
+    setInputOtp('');
+    setOtpCountdown(60);
+    setIsResendingOtp(false);
   };
 
   // Handle Payment Submission

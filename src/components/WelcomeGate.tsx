@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { User, Neighborhood } from '../types';
 import { BAFOUSSAM_NEIGHBORHOODS } from '../data/mockData';
+import { otpService } from '../services/otpService';
 import { 
   Check, ShieldCheck, HelpCircle, Phone, ArrowRight, Loader2, Sparkles, MapPin, Mail, 
   User as UserIcon, Lock, Globe, AlertCircle, Clock, Eye, EyeOff, X, Smartphone, 
@@ -220,12 +221,19 @@ export default function WelcomeGate({ onSuccess, lang, onLangChange }: WelcomeGa
   // Smart Auto-Advance from Step 2 OTP to Step 3 Payment when 6 digits typed
   useEffect(() => {
     if (step !== 'otp-verification') return;
-    if (inputOtp.length === 6 && inputOtp === generatedOtp) {
-      setValidationError('');
-      setPhoneForPayment(formData.phone || (unverifiedUserToActivate ? unverifiedUserToActivate.phone : ''));
-      setStep('payment-select');
+    if (inputOtp.length === 6) {
+      const targetPhone = formData.phone || (unverifiedUserToActivate ? unverifiedUserToActivate.phone : '');
+      otpService.verifyOtp(targetPhone, inputOtp).then((res) => {
+        if (res.success) {
+          setValidationError('');
+          setPhoneForPayment(targetPhone);
+          setStep('payment-select');
+        } else {
+          setValidationError(res.message || getTranslation('incorrectCode'));
+        }
+      });
     }
-  }, [inputOtp, generatedOtp, step, formData.phone, unverifiedUserToActivate]);
+  }, [inputOtp, step, formData.phone, unverifiedUserToActivate]);
 
   // Seed registered users list if empty
   useEffect(() => {
@@ -307,11 +315,14 @@ export default function WelcomeGate({ onSuccess, lang, onLangChange }: WelcomeGa
     setGpsDetails(null);
     setIsVerifyingLocation(true);
 
-    const proceedWithOtp = () => {
+    const proceedWithOtp = async () => {
       setIsVerifyingLocation(false);
       setIsAutoAdvancing(false);
-      const code = Math.floor(100000 + Math.random() * 900000).toString();
-      setGeneratedOtp(code);
+      const targetPhone = formData.phone || (unverifiedUserToActivate ? unverifiedUserToActivate.phone : '');
+      const res = await otpService.sendOtp(targetPhone);
+      if (res.code) {
+        setGeneratedOtp(res.code);
+      }
       setInputOtp('');
       setOtpCountdown(60);
       setStep('otp-verification');
@@ -478,28 +489,31 @@ export default function WelcomeGate({ onSuccess, lang, onLangChange }: WelcomeGa
     }, 1200);
   };
 
-  const handleVerifyOtp = (e: React.FormEvent) => {
+  const handleVerifyOtp = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (inputOtp !== generatedOtp) {
-      setValidationError(getTranslation('incorrectCode'));
+    const targetPhone = formData.phone || (unverifiedUserToActivate ? unverifiedUserToActivate.phone : '');
+    const res = await otpService.verifyOtp(targetPhone, inputOtp);
+    if (!res.success) {
+      setValidationError(res.message || getTranslation('incorrectCode'));
       return;
     }
     setValidationError('');
-    setPhoneForPayment(formData.phone || (unverifiedUserToActivate ? unverifiedUserToActivate.phone : ''));
+    setPhoneForPayment(targetPhone);
     setStep('payment-select');
   };
 
-  const handleResendOtp = () => {
+  const handleResendOtp = async () => {
     if (otpCountdown > 0) return;
     setIsOtpResending(true);
     setValidationError('');
-    setTimeout(() => {
-      const code = Math.floor(100000 + Math.random() * 900000).toString();
-      setGeneratedOtp(code);
-      setInputOtp('');
-      setOtpCountdown(60);
-      setIsOtpResending(false);
-    }, 1000);
+    const targetPhone = formData.phone || (unverifiedUserToActivate ? unverifiedUserToActivate.phone : '');
+    const res = await otpService.resendOtp(targetPhone);
+    if (res.code) {
+      setGeneratedOtp(res.code);
+    }
+    setInputOtp('');
+    setOtpCountdown(60);
+    setIsOtpResending(false);
   };
 
   const handleSelectOperator = (op: 'momo' | 'orange') => {
