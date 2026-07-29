@@ -122,8 +122,10 @@ export default function Screen4Inscription({ onSignupSuccess, onGoToLogin }: Scr
 
   // OTP state
   const [generatedOtp, setGeneratedOtp] = useState('849201');
+  const [currentDemoOtp, setCurrentDemoOtp] = useState<string>('849201');
   const [inputOtp, setInputOtp] = useState('');
   const [otpError, setOtpError] = useState('');
+  const [otpSuccess, setOtpSuccess] = useState('');
   const [otpCountdown, setOtpCountdown] = useState(60);
   const [isResendingOtp, setIsResendingOtp] = useState(false);
 
@@ -169,9 +171,7 @@ export default function Screen4Inscription({ onSignupSuccess, onGoToLogin }: Scr
       const res = await otpService.sendOtp(formData.phone);
       if (res.code) {
         setGeneratedOtp(res.code);
-        if (otpService.getMode() === 'development') {
-          setInputOtp(res.code);
-        }
+        setCurrentDemoOtp(res.code);
       }
       setOtpCountdown(60);
       setPaymentPhone(formData.phone);
@@ -196,13 +196,19 @@ export default function Screen4Inscription({ onSignupSuccess, onGoToLogin }: Scr
       otpService.verifyOtp(formData.phone, inputOtp).then((res) => {
         if (res.success) {
           setOtpError('');
-          setCurrentStep('step3');
+          setOtpSuccess('Vérification réussie');
+          setTimeout(() => {
+            setOtpSuccess('');
+            setCurrentStep('step3');
+          }, 800);
         } else {
+          setOtpSuccess('');
           setOtpError(res.message || 'Code OTP invalide');
         }
       });
     } else {
       setOtpError('');
+      setOtpSuccess('');
     }
   }, [inputOtp, currentStep, formData.phone]);
 
@@ -210,26 +216,30 @@ export default function Screen4Inscription({ onSignupSuccess, onGoToLogin }: Scr
   const handleVerifyOtpSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setOtpError('');
+    setOtpSuccess('');
     const res = await otpService.verifyOtp(formData.phone, inputOtp);
     if (res.success) {
       setOtpError('');
-      setCurrentStep('step3');
+      setOtpSuccess('Vérification réussie');
+      setTimeout(() => {
+        setOtpSuccess('');
+        setCurrentStep('step3');
+      }, 800);
     } else {
+      setOtpSuccess('');
       setOtpError(res.message || 'Code OTP invalide');
     }
   };
 
   // Handle Resend OTP
   const handleResendOtp = async () => {
-    if (otpCountdown > 0) return;
     setIsResendingOtp(true);
     setOtpError('');
+    setOtpSuccess('');
     const res = await otpService.resendOtp(formData.phone);
     if (res.code) {
       setGeneratedOtp(res.code);
-      if (otpService.getMode() === 'development') {
-        setInputOtp(res.code);
-      }
+      setCurrentDemoOtp(res.code);
     }
     setOtpCountdown(60);
     setIsResendingOtp(false);
@@ -734,10 +744,15 @@ export default function Screen4Inscription({ onSignupSuccess, onGoToLogin }: Scr
             >
               {/* Validation OTP Banner */}
               {otpService.getMode() === 'development' ? (
-                <div className="bg-emerald-50 border border-emerald-300 rounded-2xl p-3 shadow-xs">
-                  <div className="flex items-center gap-2 text-emerald-950 text-xs font-extrabold">
-                    <Sparkles className="w-4 h-4 text-[#16A34A] shrink-0" />
-                    <span>🔐 Mode Dev : Code OTP affiché en console & notification</span>
+                <div className="bg-amber-500/10 border border-amber-500/30 text-amber-900 rounded-2xl p-3.5 shadow-xs">
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-2">
+                      <Sparkles className="w-4 h-4 text-amber-600 shrink-0 animate-pulse" />
+                      <span className="text-xs font-black uppercase tracking-wider text-amber-700">BANNIÈRE DE DÉVELOPPEMENT OTP</span>
+                    </div>
+                    <div className="font-mono text-sm font-black text-amber-600 bg-amber-100/80 px-2.5 py-1 rounded-lg border border-amber-300">
+                      OTP DEMO : {currentDemoOtp || generatedOtp}
+                    </div>
                   </div>
                 </div>
               ) : (
@@ -759,7 +774,7 @@ export default function Screen4Inscription({ onSignupSuccess, onGoToLogin }: Scr
                         <span className="text-[9px] text-slate-400">À l'instant</span>
                       </div>
                       <p className="text-xs text-slate-100 font-mono mt-0.5 font-semibold">
-                        Code de test : <span className="text-yellow-400 text-sm font-black tracking-widest underline">{generatedOtp}</span>
+                        Code de test : <span className="text-yellow-400 text-sm font-black tracking-widest underline">{currentDemoOtp || generatedOtp}</span>
                       </p>
                     </div>
                   </div>
@@ -772,6 +787,13 @@ export default function Screen4Inscription({ onSignupSuccess, onGoToLogin }: Scr
                   Code SMS transmis au <span className="font-mono text-[#16A34A] font-bold">{formData.phone}</span>
                 </p>
               </div>
+
+              {otpSuccess && (
+                <div className="bg-emerald-50 border border-emerald-300 text-emerald-800 p-3 rounded-2xl text-xs font-extrabold text-center flex items-center justify-center gap-2 animate-bounce">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                  <span>{otpSuccess}</span>
+                </div>
+              )}
 
               {otpError && (
                 <div className="bg-red-50 border border-red-300 text-red-700 p-3 rounded-2xl text-xs font-extrabold text-center flex items-center justify-center gap-2 animate-shake">

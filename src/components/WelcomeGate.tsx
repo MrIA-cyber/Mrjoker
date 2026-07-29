@@ -144,11 +144,12 @@ export default function WelcomeGate({ onSuccess, lang, onLangChange }: WelcomeGa
 
   // OTP State
   const [generatedOtp, setGeneratedOtp] = useState('');
+  const [currentDemoOtp, setCurrentDemoOtp] = useState('');
   const [inputOtp, setInputOtp] = useState('');
   const [isOtpResending, setIsOtpResending] = useState(false);
   const [otpCountdown, setOtpCountdown] = useState(60);
+  const [otpSuccessMessage, setOtpSuccessMessage] = useState('');
   const [unverifiedUserToActivate, setUnverifiedUserToActivate] = useState<User | null>(null);
-  const [devOtpSimStatus, setDevOtpSimStatus] = useState<'idle' | 'simulating' | 'success'>('idle');
 
   // Rate limiting & user verification states
   const [failedLoginCount, setFailedLoginCount] = useState(0);
@@ -228,14 +229,20 @@ export default function WelcomeGate({ onSuccess, lang, onLangChange }: WelcomeGa
       otpService.verifyOtp(targetPhone, inputOtp).then((res) => {
         if (res.success) {
           setValidationError('');
-          setPhoneForPayment(targetPhone);
-          setStep('payment-select');
+          setOtpSuccessMessage('Vérification réussie');
+          setTimeout(() => {
+            setOtpSuccessMessage('');
+            setPhoneForPayment(targetPhone);
+            setStep('payment-select');
+          }, 800);
         } else {
+          setOtpSuccessMessage('');
           setValidationError(res.message || 'Code OTP invalide');
         }
       });
     } else {
       setValidationError('');
+      setOtpSuccessMessage('');
     }
   }, [inputOtp, step, formData.phone, unverifiedUserToActivate]);
 
@@ -326,9 +333,7 @@ export default function WelcomeGate({ onSuccess, lang, onLangChange }: WelcomeGa
       const res = await otpService.sendOtp(targetPhone);
       if (res.code) {
         setGeneratedOtp(res.code);
-        if (otpService.getMode() === 'development') {
-          setInputOtp(res.code);
-        }
+        setCurrentDemoOtp(res.code);
       }
       setInputOtp('');
       setOtpCountdown(60);
@@ -499,28 +504,32 @@ export default function WelcomeGate({ onSuccess, lang, onLangChange }: WelcomeGa
   const handleVerifyOtp = async (e: React.FormEvent) => {
     e.preventDefault();
     setValidationError('');
+    setOtpSuccessMessage('');
     const targetPhone = formData.phone || (unverifiedUserToActivate ? unverifiedUserToActivate.phone : '');
     const res = await otpService.verifyOtp(targetPhone, inputOtp);
     if (!res.success) {
+      setOtpSuccessMessage('');
       setValidationError(res.message || 'Code OTP invalide');
       return;
     }
     setValidationError('');
-    setPhoneForPayment(targetPhone);
-    setStep('payment-select');
+    setOtpSuccessMessage('Vérification réussie');
+    setTimeout(() => {
+      setOtpSuccessMessage('');
+      setPhoneForPayment(targetPhone);
+      setStep('payment-select');
+    }, 800);
   };
 
   const handleResendOtp = async () => {
-    if (otpCountdown > 0) return;
     setIsOtpResending(true);
     setValidationError('');
+    setOtpSuccessMessage('');
     const targetPhone = formData.phone || (unverifiedUserToActivate ? unverifiedUserToActivate.phone : '');
     const res = await otpService.resendOtp(targetPhone);
     if (res.code) {
       setGeneratedOtp(res.code);
-      if (otpService.getMode() === 'development') {
-        setInputOtp(res.code);
-      }
+      setCurrentDemoOtp(res.code);
     }
     setOtpCountdown(60);
     setIsOtpResending(false);
@@ -1060,10 +1069,15 @@ export default function WelcomeGate({ onSuccess, lang, onLangChange }: WelcomeGa
             >
               {/* OTP MODE BANNER */}
               {otpService.getMode() === 'development' ? (
-                <div className="bg-emerald-50 border border-emerald-300 rounded-2xl p-3 mb-4 shadow-xs">
-                  <div className="flex items-center gap-2 text-emerald-950 text-xs font-extrabold">
-                    <Sparkles className="w-4 h-4 text-[#16A34A] shrink-0" />
-                    <span>🔐 Mode Dev : Code OTP affiché en console & notification</span>
+                <div className="bg-amber-500/10 border border-amber-500/30 text-amber-900 rounded-2xl p-3.5 mb-4 shadow-xs">
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-2">
+                      <Sparkles className="w-4 h-4 text-amber-600 shrink-0 animate-pulse" />
+                      <span className="text-xs font-black uppercase tracking-wider text-amber-700">BANNIÈRE DE DÉVELOPPEMENT OTP</span>
+                    </div>
+                    <div className="font-mono text-sm font-black text-amber-600 bg-amber-100/80 px-2.5 py-1 rounded-lg border border-amber-300">
+                      OTP DEMO : {currentDemoOtp || generatedOtp}
+                    </div>
                   </div>
                 </div>
               ) : (
@@ -1085,7 +1099,7 @@ export default function WelcomeGate({ onSuccess, lang, onLangChange }: WelcomeGa
                         <span className="text-[9px] text-slate-400">À l'instant</span>
                       </div>
                       <p className="text-xs text-slate-100 font-mono mt-1 font-semibold">
-                        Code de test : <span className="text-yellow-400 text-sm font-black underline tracking-widest">{generatedOtp}</span>
+                        Code de test : <span className="text-yellow-400 text-sm font-black underline tracking-widest">{currentDemoOtp || generatedOtp}</span>
                       </p>
                     </div>
                   </div>
@@ -1098,6 +1112,13 @@ export default function WelcomeGate({ onSuccess, lang, onLangChange }: WelcomeGa
                   Code SMS envoyé au <span className="font-mono text-[#16A34A] font-bold">{formData.phone || unverifiedUserToActivate?.phone}</span>.
                 </p>
               </div>
+
+              {otpSuccessMessage && (
+                <div className="text-emerald-700 text-xs font-extrabold p-3 bg-emerald-50 border border-emerald-200 rounded-xl text-center animate-bounce mb-3 flex items-center justify-center gap-2">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                  <span>{otpSuccessMessage}</span>
+                </div>
+              )}
 
               <form onSubmit={handleVerifyOtp} className="space-y-4">
                 <div>

@@ -2,10 +2,11 @@
  * Unified OTP Service Architecture for AfriNova
  * 
  * Supports:
- * - Development Mode (VITE_OTP_MODE=development): 
+ * - Development / Demo Mode (VITE_OTP_MODE=development or VITE_OTP_MODE=demo): 
  *   Completely bypasses Firebase/Twilio/external providers.
- *   Generates random 6-digit OTP, stores in memory & sessionStorage, displays formatted banner in console,
- *   displays a development toast notification, and validates entered OTP with a 5-minute expiration window.
+ *   Generates random 6-digit OTP, stores in memory & sessionStorage,
+ *   logs console.log("OTP DEMO :", code), displays a development banner/toast,
+ *   and validates entered OTP with a 5-minute expiration window.
  * - Production Mode (VITE_OTP_MODE=production):
  *   Delegates to real provider selected via VITE_OTP_PROVIDER ('firebase' | 'twilio').
  */
@@ -43,7 +44,6 @@ const mockOtpStore: Record<string, { code: string; timestamp: number }> = {};
 function showDevOtpToast(phone: string, code: string) {
   if (typeof window === 'undefined' || typeof document === 'undefined') return;
 
-  // Remove existing toast if any
   const existingToast = document.getElementById('afrinova-dev-otp-toast');
   if (existingToast) {
     existingToast.remove();
@@ -73,7 +73,7 @@ function showDevOtpToast(phone: string, code: string) {
         <div style="font-size: 24px; line-height: 1;">🔐</div>
         <div>
           <div style="font-size: 11px; font-weight: 800; color: #34d399; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 2px;">
-            OTP Mode Développement
+            OTP Mode Développement / Démo
           </div>
           <div style="font-size: 12px; color: #cbd5e1;">
             Numéro : <strong style="color: #ffffff; font-family: monospace;">${phone}</strong>
@@ -102,7 +102,6 @@ function showDevOtpToast(phone: string, code: string) {
     });
   }
 
-  // Auto-remove toast after 12 seconds
   setTimeout(() => {
     if (document.body.contains(toast)) {
       toast.style.opacity = '0';
@@ -140,7 +139,8 @@ class MockOTPProvider implements IOTPProvider {
       console.warn('[OTP Service DEV] Impossible de stocker dans sessionStorage', e);
     }
 
-    // Display formatted console box
+    // Required exact console log format
+    console.log("OTP DEMO :", generatedCode);
     console.log(
       `================================\n` +
       `🔐 OTP MODE DÉVELOPPEMENT\n` +
@@ -209,7 +209,7 @@ class MockOTPProvider implements IOTPProvider {
       );
       return {
         success: true,
-        message: 'Code OTP valide',
+        message: 'Vérification réussie',
         mode: 'development',
         provider: 'mock',
       };
@@ -296,14 +296,14 @@ class FirebaseOTPProvider implements IOTPProvider {
     try {
       return {
         success: true,
-        message: 'Vérification Firebase réussie.',
+        message: 'Vérification réussie',
         mode: 'production',
         provider: 'firebase',
       };
     } catch (error: any) {
       return {
         success: false,
-        message: error.message || 'Code Firebase invalide.',
+        message: error.message || 'Code OTP invalide',
         mode: 'production',
         provider: 'firebase',
       };
@@ -373,14 +373,14 @@ class TwilioOTPProvider implements IOTPProvider {
       const data = await response.json();
       return {
         success: data.success,
-        message: data.message || 'Code Twilio validé.',
+        message: data.success ? 'Vérification réussie' : (data.message || 'Code OTP invalide'),
         mode: 'production',
         provider: 'twilio',
       };
     } catch (err: any) {
       return {
         success: false,
-        message: err.message || 'Échec de la vérification Twilio OTP.',
+        message: err.message || 'Code OTP invalide',
         mode: 'production',
         provider: 'twilio',
       };
@@ -409,7 +409,7 @@ class OTPService {
     const rawMode = env.VITE_OTP_MODE as string;
     const rawProvider = env.VITE_OTP_PROVIDER as string;
 
-    this.mode = rawMode === 'production' ? 'production' : 'development';
+    this.mode = (rawMode === 'production') ? 'production' : 'development';
     this.providerType = (rawProvider as OTPProviderType) || 'mock';
 
     this.logActiveMode();
@@ -418,7 +418,7 @@ class OTPService {
   public logActiveMode() {
     if (this.mode === 'development') {
       console.log(
-        `%c[OTP Service] Mode actif: DEVELOPMENT (Simulation active) - Aucun appel à Firebase/Twilio`,
+        `%c[OTP Service] Mode actif: DEVELOPMENT / DEMO (Simulation active) - Aucun appel à Firebase/Twilio`,
         'background: #15803D; color: #FFFFFF; padding: 4px 8px; border-radius: 4px; font-weight: bold;'
       );
     } else {
