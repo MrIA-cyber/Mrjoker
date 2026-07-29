@@ -322,7 +322,7 @@ export interface Merchant {
     // Set initial system logs
     const now = new Date().toLocaleTimeString('fr-FR');
     setLogs([
-      { id: '1', time: now, msg: 'Système Bafoussam Direct initialisé.', type: 'success' },
+      { id: '1', time: now, msg: 'Système AfriNova initialisé.', type: 'success' },
       { id: '2', time: now, msg: 'Connexion sécurisée établie via le terminal administrateur Chris.', type: 'info' },
       { id: '3', time: now, msg: 'Passerelle de paiement MTN Mobile Money & Orange Money en ligne (100%).', type: 'success' },
       { id: '4', time: now, msg: 'Moteur de recommandation de la meilleure boutique de la Mifi opérationnel.', type: 'info' },

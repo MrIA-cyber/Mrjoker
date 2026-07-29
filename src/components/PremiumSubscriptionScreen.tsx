@@ -205,8 +205,8 @@ export default function PremiumSubscriptionScreen({
       <body>
         <div class="header">
           <div>
-            <div class="logo">BAFOUSSAM MARKET</div>
-            <div style="font-size: 12px; color: #64748b;">Super App Officielle de la Ville de Bafoussam</div>
+            <div class="logo">AFRINOVA</div>
+            <div style="font-size: 12px; color: #64748b;">L'Afrique connectée au monde.</div>
           </div>
           <div class="badge">PAYÉ - ACCÈS ACTIF</div>
         </div>
@@ -255,7 +255,7 @@ export default function PremiumSubscriptionScreen({
         </div>
 
         <div class="footer">
-          Merci pour votre confiance en Bafoussam Market. Ce document sert de reçu officiel de paiement.<br/>
+          Merci pour votre confiance en AfriNova. Ce document sert de reçu officiel de paiement.<br/>
           Support & Hotline Mifi : +237 677 89 45 12 / +237 690 00 00 00
         </div>
 
@@ -295,7 +295,7 @@ export default function PremiumSubscriptionScreen({
         <div className="text-center space-y-4 max-w-3xl mx-auto pt-4">
           <div className="inline-flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-black px-4 py-1.5 rounded-full uppercase tracking-widest shadow-lg shadow-emerald-500/5">
             <Sparkles className="w-4 h-4 animate-pulse" />
-            <span>Offres d'Abonnement Bafoussam Market</span>
+            <span>Offres d'Abonnement AfriNova</span>
           </div>
 
           <h1 className="text-3xl sm:text-5xl font-black tracking-tight text-white font-display leading-tight">
@@ -303,7 +303,7 @@ export default function PremiumSubscriptionScreen({
           </h1>
 
           <p className="text-sm sm:text-base text-slate-300 leading-relaxed font-medium">
-            Débloquez le plein potentiel de la Super App de Bafoussam. Bénéficiez d'un essai gratuit sans engagement, puis abonnez-vous en toute sérénité.
+            Débloquez le plein potentiel de la plateforme AfriNova. Bénéficiez d'un essai gratuit sans engagement, puis abonnez-vous en toute sérénité.
           </p>
 
           {/* Toggle Mensuel / Annuel */}

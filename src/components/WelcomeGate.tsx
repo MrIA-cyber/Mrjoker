@@ -5,7 +5,8 @@ import { otpService } from '../services/otpService';
 import { 
   Check, ShieldCheck, HelpCircle, Phone, ArrowRight, Loader2, Sparkles, MapPin, Mail, 
   User as UserIcon, Lock, Globe, AlertCircle, Clock, Eye, EyeOff, X, Smartphone, 
-  Store, Building2, Wrench, ChevronRight, CreditCard, RefreshCw, CheckCircle2
+  Store, Building2, Wrench, ChevronRight, CreditCard, RefreshCw, CheckCircle2,
+  Truck, Headphones
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { translations, Language } from '../translations';
@@ -654,21 +655,21 @@ export default function WelcomeGate({ onSuccess, lang, onLangChange }: WelcomeGa
         </div>
 
         {/* Header: Logo, Title & Subtitle */}
-        <div className="flex flex-col items-center text-center mb-4 pb-3 border-b border-[#E5E7EB]" id="logo-header">
-          <div className="flex items-center gap-2.5">
-            <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-[#16A34A] to-[#0F172A] text-white flex items-center justify-center font-black text-xl shadow-md shrink-0">
-              <Globe className="w-5 h-5 text-emerald-400 animate-pulse" />
+        <div className="flex flex-col items-center text-center mb-3 pb-2.5 border-b border-[#E8E8E8]" id="logo-header">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-[#16A34A] to-[#0F172A] text-white flex items-center justify-center font-black text-lg shadow-sm shrink-0">
+              <Globe className="w-4 h-4 text-emerald-400 animate-pulse" />
             </div>
             <div className="text-left">
               <div className="flex items-center gap-1.5">
-                <span className="text-lg font-black text-[#0F172A] font-display tracking-tight leading-none">
+                <span className="text-base font-black text-[#0F172A] font-display tracking-tight leading-none">
                   Afri<span className="text-[#16A34A]">Nova</span>
                 </span>
                 <span className="text-[9px] font-extrabold uppercase bg-[#16A34A] text-white px-1.5 py-0.5 rounded-md tracking-wider">
                   Bafoussam
                 </span>
               </div>
-              <p className="text-[11px] text-[#16A34A] font-extrabold tracking-tight mt-0.5">
+              <p className="text-[13px] text-slate-600 font-medium tracking-tight mt-0.5">
                 « L'Afrique connectée au monde. »
               </p>
             </div>
@@ -677,10 +678,10 @@ export default function WelcomeGate({ onSuccess, lang, onLangChange }: WelcomeGa
 
         {/* 3-Step Stepper Progress Bar (Only shown during registration steps) */}
         {step !== 'login' && step !== 'searching-subscription' && (
-          <div className="mb-5 px-1">
+          <div className="mb-4 px-1">
             <div className="flex items-center justify-between relative">
               {/* Line 1-2 */}
-              <div className="absolute top-4 left-6 right-1/2 h-0.5 bg-[#E5E7EB] -z-0">
+              <div className="absolute top-4 left-6 right-1/2 h-[1.5px] bg-[#E8E8E8] -z-0">
                 <div 
                   className="h-full bg-[#16A34A] transition-all duration-250 ease-out" 
                   style={{ width: currentStepIndex > 1 ? '100%' : '0%' }}
@@ -688,7 +689,7 @@ export default function WelcomeGate({ onSuccess, lang, onLangChange }: WelcomeGa
               </div>
 
               {/* Line 2-3 */}
-              <div className="absolute top-4 left-1/2 right-6 h-0.5 bg-[#E5E7EB] -z-0">
+              <div className="absolute top-4 left-1/2 right-6 h-[1.5px] bg-[#E8E8E8] -z-0">
                 <div 
                   className="h-full bg-[#16A34A] transition-all duration-250 ease-out" 
                   style={{ width: currentStepIndex > 2 ? '100%' : '0%' }}
@@ -697,46 +698,46 @@ export default function WelcomeGate({ onSuccess, lang, onLangChange }: WelcomeGa
 
               {/* Step 1 Circle */}
               <div className="flex flex-col items-center gap-1 z-10">
-                <div className={`w-8 h-8 rounded-full flex items-center justify-center font-extrabold text-xs transition-all duration-200 ${
+                <div className={`w-8 h-8 rounded-full flex items-center justify-center font-extrabold text-xs transition-all duration-250 ease-out ${
                   currentStepIndex > 1
-                    ? 'bg-[#16A34A] text-white shadow-xs'
-                    : 'bg-[#16A34A] text-white ring-4 ring-[#DCFCE7] ring-offset-1 shadow-sm'
+                    ? 'bg-[#16A34A] text-white shadow-2xs'
+                    : 'bg-[#16A34A] text-white ring-4 ring-[#DCFCE7] ring-offset-1 shadow-xs'
                 }`}>
                   {currentStepIndex > 1 ? <Check className="w-4 h-4 stroke-[3]" /> : '1'}
                 </div>
-                <span className={`text-[10px] font-extrabold ${currentStepIndex === 1 ? 'text-[#16A34A]' : 'text-slate-500'}`}>
+                <span className={`text-[10px] font-extrabold transition-colors duration-250 ${currentStepIndex === 1 ? 'text-[#16A34A]' : 'text-slate-500'}`}>
                   Informations
                 </span>
               </div>
 
               {/* Step 2 Circle */}
               <div className="flex flex-col items-center gap-1 z-10">
-                <div className={`w-8 h-8 rounded-full flex items-center justify-center font-extrabold text-xs transition-all duration-200 ${
+                <div className={`w-8 h-8 rounded-full flex items-center justify-center font-extrabold text-xs transition-all duration-250 ease-out ${
                   currentStepIndex > 2
-                    ? 'bg-[#16A34A] text-white shadow-xs'
+                    ? 'bg-[#16A34A] text-white shadow-2xs'
                     : currentStepIndex === 2
-                    ? 'bg-[#16A34A] text-white ring-4 ring-[#DCFCE7] ring-offset-1 shadow-sm'
-                    : 'bg-[#F8FAFC] text-slate-400 border-2 border-[#E5E7EB]'
+                    ? 'bg-[#16A34A] text-white ring-4 ring-[#DCFCE7] ring-offset-1 shadow-xs'
+                    : 'bg-[#F8FAFC] text-slate-400 border border-[#E8E8E8]'
                 }`}>
                   {currentStepIndex > 2 ? <Check className="w-4 h-4 stroke-[3]" /> : '2'}
                 </div>
-                <span className={`text-[10px] font-extrabold ${currentStepIndex === 2 ? 'text-[#16A34A]' : 'text-slate-400'}`}>
+                <span className={`text-[10px] font-extrabold transition-colors duration-250 ${currentStepIndex === 2 ? 'text-[#16A34A]' : 'text-slate-400'}`}>
                   Vérification
                 </span>
               </div>
 
               {/* Step 3 Circle */}
               <div className="flex flex-col items-center gap-1 z-10">
-                <div className={`w-8 h-8 rounded-full flex items-center justify-center font-extrabold text-xs transition-all duration-200 ${
+                <div className={`w-8 h-8 rounded-full flex items-center justify-center font-extrabold text-xs transition-all duration-250 ease-out ${
                   currentStepIndex === 4
-                    ? 'bg-[#16A34A] text-white shadow-xs'
+                    ? 'bg-[#16A34A] text-white shadow-2xs'
                     : currentStepIndex === 3
-                    ? 'bg-[#16A34A] text-white ring-4 ring-[#DCFCE7] ring-offset-1 shadow-sm'
-                    : 'bg-[#F8FAFC] text-slate-400 border-2 border-[#E5E7EB]'
+                    ? 'bg-[#16A34A] text-white ring-4 ring-[#DCFCE7] ring-offset-1 shadow-xs'
+                    : 'bg-[#F8FAFC] text-slate-400 border border-[#E8E8E8]'
                 }`}>
                   {currentStepIndex === 4 ? <Check className="w-4 h-4 stroke-[3]" /> : '3'}
                 </div>
-                <span className={`text-[10px] font-extrabold ${currentStepIndex >= 3 ? 'text-[#16A34A]' : 'text-slate-400'}`}>
+                <span className={`text-[10px] font-extrabold transition-colors duration-250 ${currentStepIndex >= 3 ? 'text-[#16A34A]' : 'text-slate-400'}`}>
                   Finalisation
                 </span>
               </div>
@@ -753,9 +754,9 @@ export default function WelcomeGate({ onSuccess, lang, onLangChange }: WelcomeGa
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
-              transition={{ duration: 0.2 }}
+              transition={{ duration: 0.25 }}
             >
-              <form onSubmit={(e) => { e.preventDefault(); if (!isAutoAdvancing) triggerFormSubmission(); }} className="space-y-3.5">
+              <form onSubmit={(e) => { e.preventDefault(); if (!isAutoAdvancing) triggerFormSubmission(); }} className="space-y-3">
                 
                 {/* Nom complet */}
                 <div>
@@ -763,12 +764,12 @@ export default function WelcomeGate({ onSuccess, lang, onLangChange }: WelcomeGa
                     {getTranslation('fullNameLabel')} <span className="text-red-500">*</span>
                   </label>
                   <div className="relative">
-                    <UserIcon className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                    <UserIcon className="w-4 h-4 text-slate-500 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
                     <input
                       type="text"
                       required
                       placeholder="Ex: Jean Kamdem"
-                      className="w-full pl-10 pr-4 py-2.5 bg-[#F8FAFC] border border-[#E5E7EB] rounded-xl text-xs text-[#0F172A] font-medium focus:outline-none focus:ring-2 focus:ring-[#16A34A]/30 focus:border-[#16A34A] transition focus:bg-white"
+                      className="w-full h-[42px] pl-10 pr-3.5 bg-white border border-[#E8E8E8] rounded-[16px] text-xs text-[#0F172A] font-medium placeholder:text-slate-400 focus:outline-none focus:border-[#16A34A] focus:ring-2 focus:ring-[#16A34A]/20 transition-all duration-200 ease-out shadow-[0_2px_8px_rgba(0,0,0,0.03)]"
                       value={formData.name}
                       onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                     />
@@ -782,12 +783,12 @@ export default function WelcomeGate({ onSuccess, lang, onLangChange }: WelcomeGa
                       {getTranslation('emailAddressLabel')} <span className="text-red-500">*</span>
                     </label>
                     <div className="relative">
-                      <Mail className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                      <Mail className="w-4 h-4 text-slate-500 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
                       <input
                         type="email"
                         required
                         placeholder="jean.kamdem@mail.com"
-                        className="w-full pl-10 pr-4 py-2.5 bg-[#F8FAFC] border border-[#E5E7EB] rounded-xl text-xs text-[#0F172A] font-medium focus:outline-none focus:ring-2 focus:ring-[#16A34A]/30 focus:border-[#16A34A] transition focus:bg-white"
+                        className="w-full h-[42px] pl-10 pr-3.5 bg-white border border-[#E8E8E8] rounded-[16px] text-xs text-[#0F172A] font-medium placeholder:text-slate-400 focus:outline-none focus:border-[#16A34A] focus:ring-2 focus:ring-[#16A34A]/20 transition-all duration-200 ease-out shadow-[0_2px_8px_rgba(0,0,0,0.03)]"
                         value={formData.email}
                         onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                       />
@@ -799,12 +800,12 @@ export default function WelcomeGate({ onSuccess, lang, onLangChange }: WelcomeGa
                       {getTranslation('phoneNumberLabel')} <span className="text-red-500">*</span>
                     </label>
                     <div className="relative">
-                      <Phone className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                      <Phone className="w-4 h-4 text-slate-500 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
                       <input
                         type="tel"
                         required
                         placeholder="Ex: 677894512"
-                        className="w-full pl-10 pr-4 py-2.5 bg-[#F8FAFC] border border-[#E5E7EB] rounded-xl text-xs text-[#0F172A] font-mono focus:outline-none focus:ring-2 focus:ring-[#16A34A]/30 focus:border-[#16A34A] transition focus:bg-white"
+                        className="w-full h-[42px] pl-10 pr-3.5 bg-white border border-[#E8E8E8] rounded-[16px] text-xs text-[#0F172A] font-mono focus:outline-none focus:border-[#16A34A] focus:ring-2 focus:ring-[#16A34A]/20 transition-all duration-200 ease-out shadow-[0_2px_8px_rgba(0,0,0,0.03)]"
                         value={formData.phone}
                         onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                       />
@@ -819,13 +820,13 @@ export default function WelcomeGate({ onSuccess, lang, onLangChange }: WelcomeGa
                       {getTranslation('passwordLabel')} <span className="text-red-500">*</span>
                     </label>
                     <div className="relative">
-                      <Lock className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                      <Lock className="w-4 h-4 text-slate-500 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
                       <input
                         type={showRegisterPassword ? "text" : "password"}
                         required
                         minLength={8}
                         placeholder={getTranslation('passwordPlaceholder')}
-                        className="w-full pl-10 pr-10 py-2.5 bg-[#F8FAFC] border border-[#E5E7EB] rounded-xl text-xs text-[#0F172A] font-medium focus:outline-none focus:ring-2 focus:ring-[#16A34A]/30 focus:border-[#16A34A] transition focus:bg-white"
+                        className="w-full h-[42px] pl-10 pr-10 bg-white border border-[#E8E8E8] rounded-[16px] text-xs text-[#0F172A] font-medium placeholder:text-slate-400 focus:outline-none focus:border-[#16A34A] focus:ring-2 focus:ring-[#16A34A]/20 transition-all duration-200 ease-out shadow-[0_2px_8px_rgba(0,0,0,0.03)]"
                         value={formData.password}
                         onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                       />
@@ -844,13 +845,13 @@ export default function WelcomeGate({ onSuccess, lang, onLangChange }: WelcomeGa
                       {getTranslation('confirmPasswordLabel')} <span className="text-red-500">*</span>
                     </label>
                     <div className="relative">
-                      <Lock className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                      <Lock className="w-4 h-4 text-slate-500 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
                       <input
                         type={showRegisterConfirmPassword ? "text" : "password"}
                         required
                         minLength={8}
                         placeholder={getTranslation('confirmPasswordLabel')}
-                        className="w-full pl-10 pr-10 py-2.5 bg-[#F8FAFC] border border-[#E5E7EB] rounded-xl text-xs text-[#0F172A] font-medium focus:outline-none focus:ring-2 focus:ring-[#16A34A]/30 focus:border-[#16A34A] transition focus:bg-white"
+                        className="w-full h-[42px] pl-10 pr-10 bg-white border border-[#E8E8E8] rounded-[16px] text-xs text-[#0F172A] font-medium placeholder:text-slate-400 focus:outline-none focus:border-[#16A34A] focus:ring-2 focus:ring-[#16A34A]/20 transition-all duration-200 ease-out shadow-[0_2px_8px_rgba(0,0,0,0.03)]"
                         value={formData.confirmPassword}
                         onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
                       />
@@ -871,9 +872,9 @@ export default function WelcomeGate({ onSuccess, lang, onLangChange }: WelcomeGa
                     {getTranslation('yourNeighborhoodLabel')} <span className="text-red-500">*</span>
                   </label>
                   <div className="relative">
-                    <MapPin className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                    <MapPin className="w-4 h-4 text-slate-500 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
                     <select
-                      className="w-full pl-10 pr-4 py-2.5 bg-[#F8FAFC] border border-[#E5E7EB] rounded-xl text-xs text-[#0F172A] font-medium focus:outline-none focus:ring-2 focus:ring-[#16A34A]/30 focus:border-[#16A34A] appearance-none cursor-pointer"
+                      className="w-full h-[42px] pl-10 pr-4 bg-white border border-[#E8E8E8] rounded-[16px] text-xs text-[#0F172A] font-medium focus:outline-none focus:border-[#16A34A] focus:ring-2 focus:ring-[#16A34A]/20 transition-all duration-200 ease-out shadow-[0_2px_8px_rgba(0,0,0,0.03)] appearance-none cursor-pointer"
                       value={formData.neighborhood}
                       onChange={(e) => setFormData({ ...formData, neighborhood: e.target.value })}
                     >
@@ -886,20 +887,20 @@ export default function WelcomeGate({ onSuccess, lang, onLangChange }: WelcomeGa
                   </div>
                 </div>
 
-                {/* Compact Profile Banderole or Selected Summary */}
-                <div className="pt-1">
+                {/* Premium Profile Selection Card */}
+                <div className="pt-0.5">
                   {!hasChosenProfile ? (
                     <button
                       type="button"
                       onClick={() => setIsBottomSheetOpen(true)}
-                      className="w-full p-3.5 rounded-[18px] bg-[#FFFFFF] border border-[#E5E7EB] hover:border-[#16A34A] hover:bg-[#DCFCE7]/20 transition-all flex items-center justify-between shadow-2xs group cursor-pointer text-left"
+                      className="w-full p-3 rounded-[16px] bg-white border border-[#E8E8E8] hover:border-[#16A34A] hover:bg-[#F0FDF4]/50 transition-all duration-200 flex items-center justify-between shadow-[0_2px_8px_rgba(0,0,0,0.03)] group cursor-pointer text-left"
                     >
                       <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 rounded-xl bg-[#DCFCE7] text-[#16A34A] flex items-center justify-center text-lg font-bold shrink-0">
+                        <div className="w-9 h-9 rounded-[12px] bg-[#DCFCE7] text-[#16A34A] flex items-center justify-center text-base font-bold shrink-0">
                           👤
                         </div>
                         <div>
-                          <h4 className="text-xs font-black text-[#0F172A] uppercase tracking-wider">
+                          <h4 className="text-xs font-black text-[#0F172A] uppercase tracking-wider flex items-center gap-1">
                             Choisir mon profil <span className="text-red-500">*</span>
                           </h4>
                           <p className="text-[11px] text-slate-500 font-medium mt-0.5">
@@ -912,15 +913,15 @@ export default function WelcomeGate({ onSuccess, lang, onLangChange }: WelcomeGa
                       </div>
                     </button>
                   ) : (
-                    <div className="w-full p-3.5 rounded-[18px] bg-[#DCFCE7]/80 border-2 border-[#16A34A] shadow-2xs flex items-center justify-between">
+                    <div className="w-full p-3 rounded-[16px] bg-[#F0FDF4] border-2 border-[#16A34A] shadow-[0_2px_8px_rgba(22,163,74,0.08)] flex items-center justify-between transition-all duration-200">
                       <div className="flex items-center gap-3 min-w-0">
-                        <div className="w-9 h-9 rounded-xl bg-[#16A34A] text-white flex items-center justify-center text-base font-bold shrink-0 shadow-2xs">
+                        <div className="w-9 h-9 rounded-[12px] bg-[#16A34A] text-white flex items-center justify-center text-base font-bold shrink-0 shadow-xs">
                           {selectedProfileObj.emoji}
                         </div>
                         <div className="min-w-0">
                           <div className="flex items-center gap-1.5">
-                            <span className="text-[10px] font-black text-[#15803D] uppercase tracking-wider">
-                              Profil sélectionné
+                            <span className="text-[10px] font-black text-[#15803D] uppercase tracking-wider flex items-center gap-1">
+                              Profil sélectionné <CheckCircle2 className="w-3 h-3 text-[#16A34A]" />
                             </span>
                             <span className="text-[9px] font-bold px-1.5 py-0.2 rounded-md bg-white text-[#16A34A] border border-emerald-200">
                               {selectedProfileObj.badge}
@@ -934,7 +935,7 @@ export default function WelcomeGate({ onSuccess, lang, onLangChange }: WelcomeGa
                       <button
                         type="button"
                         onClick={() => setIsBottomSheetOpen(true)}
-                        className="px-3 py-1.5 rounded-xl bg-white hover:bg-emerald-50 text-[#16A34A] border border-emerald-300 text-[11px] font-extrabold transition shrink-0 cursor-pointer shadow-2xs"
+                        className="px-3 py-1.5 rounded-[12px] bg-white hover:bg-emerald-50 text-[#16A34A] border border-emerald-300 text-[11px] font-extrabold transition shrink-0 cursor-pointer shadow-2xs"
                       >
                         Modifier
                       </button>
@@ -947,7 +948,7 @@ export default function WelcomeGate({ onSuccess, lang, onLangChange }: WelcomeGa
                   <motion.div
                     initial={{ opacity: 0, y: -5 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="text-red-600 text-xs font-semibold p-3 bg-red-50 border border-red-200 rounded-xl space-y-1 flex items-start gap-2"
+                    className="text-red-600 text-xs font-semibold p-3 bg-red-50 border border-red-200 rounded-[16px] space-y-1 flex items-start gap-2"
                   >
                     <AlertCircle className="w-4 h-4 text-red-500 shrink-0 mt-0.5" />
                     <div>
@@ -962,7 +963,7 @@ export default function WelcomeGate({ onSuccess, lang, onLangChange }: WelcomeGa
                 )}
 
                 {showBypassOption && (
-                  <div className="bg-amber-50 border border-amber-200 rounded-2xl p-3 space-y-2 mt-1">
+                  <div className="bg-amber-50 border border-amber-200 rounded-[16px] p-3 space-y-2 mt-1">
                     <div className="flex items-start gap-2">
                       <span className="text-amber-600 text-base">💡</span>
                       <div>
@@ -984,7 +985,7 @@ export default function WelcomeGate({ onSuccess, lang, onLangChange }: WelcomeGa
                         setOtpCountdown(60);
                         setStep('otp-verification');
                       }}
-                      className="w-full bg-amber-600 hover:bg-amber-700 text-white font-semibold py-2 px-3 rounded-xl text-xs transition cursor-pointer text-center flex items-center justify-center gap-1.5"
+                      className="w-full bg-amber-600 hover:bg-amber-700 text-white font-semibold py-2 px-3 rounded-[12px] text-xs transition cursor-pointer text-center flex items-center justify-center gap-1.5"
                     >
                       <Check className="w-4 h-4" />
                       <span>{getTranslation('manualBypassBtn')}</span>
@@ -992,26 +993,67 @@ export default function WelcomeGate({ onSuccess, lang, onLangChange }: WelcomeGa
                   </div>
                 )}
 
-                {/* Smart Auto-Advance Pulse Banner */}
-                {isVerifyingLocation ? (
-                  <div className="p-3 bg-[#DCFCE7] border border-emerald-300 rounded-2xl text-center text-[#15803D] text-xs font-bold flex items-center justify-center gap-2">
-                    <Loader2 className="w-4 h-4 animate-spin text-[#16A34A]" />
-                    <span>Vérification de la géolocalisation en cours...</span>
+                {/* Info Text */}
+                <p className="text-center text-xs text-slate-500 font-medium pt-1">
+                  Les informations seront vérifiées automatiquement avant de passer à l'étape suivante.
+                </p>
+
+                {/* Primary Button "Continuer" */}
+                <button
+                  type="submit"
+                  disabled={!formData.name.trim() || !formData.email.trim() || formData.phone.trim().length < 8 || formData.password.length < 8 || formData.confirmPassword !== formData.password || !hasChosenProfile || isAutoAdvancing || isVerifyingLocation}
+                  onClick={() => {
+                    if (typeof window !== 'undefined' && 'vibrate' in navigator) {
+                      try { navigator.vibrate(10); } catch (e) {}
+                    }
+                  }}
+                  className={`w-full h-[54px] rounded-[16px] text-sm font-extrabold flex items-center justify-center gap-2 transition-all duration-200 cursor-pointer ${
+                    (!formData.name.trim() || !formData.email.trim() || formData.phone.trim().length < 8 || formData.password.length < 8 || formData.confirmPassword !== formData.password || !hasChosenProfile)
+                      ? 'bg-slate-100 text-slate-400 border border-slate-200 cursor-not-allowed shadow-none'
+                      : 'bg-[#16A34A] hover:bg-[#15803D] text-white shadow-[0_8px_20px_rgba(22,163,74,0.25)] active:scale-[0.99]'
+                  }`}
+                >
+                  {isVerifyingLocation ? (
+                    <>
+                      <Loader2 className="w-5 h-5 animate-spin" />
+                      <span>Vérification de la géolocalisation...</span>
+                    </>
+                  ) : isAutoAdvancing ? (
+                    <>
+                      <Loader2 className="w-5 h-5 animate-spin" />
+                      <span>Envoi du code OTP...</span>
+                    </>
+                  ) : (
+                    <>
+                      <span>Continuer vers la vérification</span>
+                      <ArrowRight className="w-4 h-4" />
+                    </>
+                  )}
+                </button>
+
+                {/* Footer Badges */}
+                <div className="pt-2">
+                  <div className="flex items-center justify-around gap-2 text-center text-[11px] font-semibold text-slate-600 bg-[#F8FAFC] p-2.5 sm:p-3 rounded-[16px] border border-[#E8E8E8]">
+                    <div className="flex items-center gap-1.5">
+                      <ShieldCheck className="w-4 h-4 text-[#16A34A]" />
+                      <span>Paiement sécurisé</span>
+                    </div>
+                    <span className="text-slate-300">•</span>
+                    <div className="flex items-center gap-1.5">
+                      <Truck className="w-4 h-4 text-[#16A34A]" />
+                      <span>Livraison rapide</span>
+                    </div>
+                    <span className="text-slate-300">•</span>
+                    <div className="flex items-center gap-1.5">
+                      <Headphones className="w-4 h-4 text-[#16A34A]" />
+                      <span>Support 24/7</span>
+                    </div>
                   </div>
-                ) : isAutoAdvancing ? (
-                  <div className="p-3 bg-[#DCFCE7] border border-emerald-300 rounded-2xl text-center text-[#15803D] text-xs font-bold flex items-center justify-center gap-2">
-                    <Loader2 className="w-4 h-4 animate-spin text-[#16A34A]" />
-                    <span>Informations valides — Envoi du code OTP...</span>
-                  </div>
-                ) : (
-                  <p className="text-[10px] text-slate-400 text-center font-medium pt-1">
-                    Complétez tous les champs pour passer automatiquement à l'étape suivante.
-                  </p>
-                )}
+                </div>
 
               </form>
 
-              <div className="mt-4 text-center">
+              <div className="mt-3.5 text-center">
                 <p className="text-xs text-slate-500">
                   {getTranslation('alreadyRegistered')}{' '}
                   <button

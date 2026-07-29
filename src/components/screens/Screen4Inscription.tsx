@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { otpService } from '../../services/otpService';
 import { 
   User as UserIcon, Mail, Phone, Lock, Check, ShieldCheck, ArrowRight, Sparkles, 
-  Store, Building2, Wrench, MapPin, ChevronRight, X, AlertCircle, Loader2, CreditCard, RefreshCw, CheckCircle2, Globe
+  Store, Building2, Wrench, MapPin, ChevronRight, X, AlertCircle, Loader2, CreditCard, RefreshCw, CheckCircle2, Globe, Truck, Headphones
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
@@ -387,7 +387,7 @@ export default function Screen4Inscription({ onSignupSuccess, onGoToLogin }: Scr
                     Nom <span className="text-red-500">*</span>
                   </label>
                   <div className="relative">
-                    <UserIcon className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                    <UserIcon className="w-4 h-4 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
                     <input
                       type="text"
                       value={formData.lastName}
@@ -395,8 +395,8 @@ export default function Screen4Inscription({ onSignupSuccess, onGoToLogin }: Scr
                       onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
                       placeholder="Ex: Kamdem"
                       required
-                      className={`w-full h-11 pl-9 pr-8 bg-[#F8FAFC] border rounded-xl text-xs text-[#0F172A] font-medium shadow-xs focus:outline-none focus:ring-2 focus:ring-[#16A34A]/25 focus:border-[#16A34A] transition focus:bg-white ${
-                        touchedFields.lastName && !isLastNameValid ? 'border-red-400 bg-red-50/20' : 'border-[#E5E7EB]'
+                      className={`w-full h-[42px] pl-9 pr-8 bg-white border rounded-[16px] text-xs text-[#0F172A] font-medium shadow-[0_2px_8px_rgba(0,0,0,0.03)] focus:outline-none focus:ring-2 focus:ring-[#16A34A]/20 focus:border-[#16A34A] transition-all duration-200 ease-out placeholder:text-slate-400 ${
+                        touchedFields.lastName && !isLastNameValid ? 'border-red-400 bg-red-50/20' : 'border-[#E8E8E8]'
                       }`}
                     />
                     {isLastNameValid && (
@@ -416,7 +416,7 @@ export default function Screen4Inscription({ onSignupSuccess, onGoToLogin }: Scr
                     Prénom <span className="text-red-500">*</span>
                   </label>
                   <div className="relative">
-                    <UserIcon className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                    <UserIcon className="w-4 h-4 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
                     <input
                       type="text"
                       value={formData.firstName}
@@ -424,8 +424,8 @@ export default function Screen4Inscription({ onSignupSuccess, onGoToLogin }: Scr
                       onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
                       placeholder="Ex: Paul"
                       required
-                      className={`w-full h-11 pl-9 pr-8 bg-[#F8FAFC] border rounded-xl text-xs text-[#0F172A] font-medium shadow-xs focus:outline-none focus:ring-2 focus:ring-[#16A34A]/25 focus:border-[#16A34A] transition focus:bg-white ${
-                        touchedFields.firstName && !isFirstNameValid ? 'border-red-400 bg-red-50/20' : 'border-[#E5E7EB]'
+                      className={`w-full h-[42px] pl-9 pr-8 bg-white border rounded-[16px] text-xs text-[#0F172A] font-medium shadow-[0_2px_8px_rgba(0,0,0,0.03)] focus:outline-none focus:ring-2 focus:ring-[#16A34A]/20 focus:border-[#16A34A] transition-all duration-200 ease-out placeholder:text-slate-400 ${
+                        touchedFields.firstName && !isFirstNameValid ? 'border-red-400 bg-red-50/20' : 'border-[#E8E8E8]'
                       }`}
                     />
                     {isFirstNameValid && (
@@ -447,7 +447,7 @@ export default function Screen4Inscription({ onSignupSuccess, onGoToLogin }: Scr
                   Téléphone (WhatsApp / MoMo / Orange) <span className="text-red-500">*</span>
                 </label>
                 <div className="relative">
-                  <Phone className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                  <Phone className="w-4 h-4 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
                   <input
                     type="tel"
                     value={formData.phone}
@@ -455,8 +455,8 @@ export default function Screen4Inscription({ onSignupSuccess, onGoToLogin }: Scr
                     onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                     placeholder="Ex: 699123456"
                     required
-                    className={`w-full h-11 pl-9 pr-8 bg-[#F8FAFC] border rounded-xl text-xs text-[#0F172A] font-mono shadow-xs focus:outline-none focus:ring-2 focus:ring-[#16A34A]/25 focus:border-[#16A34A] transition focus:bg-white ${
-                      touchedFields.phone && !isPhoneValid ? 'border-red-400 bg-red-50/20' : 'border-[#E5E7EB]'
+                    className={`w-full h-[42px] pl-9 pr-8 bg-white border rounded-[16px] text-xs text-[#0F172A] font-mono shadow-[0_2px_8px_rgba(0,0,0,0.03)] focus:outline-none focus:ring-2 focus:ring-[#16A34A]/20 focus:border-[#16A34A] transition-all duration-200 ease-out placeholder:text-slate-400 ${
+                      touchedFields.phone && !isPhoneValid ? 'border-red-400 bg-red-50/20' : 'border-[#E8E8E8]'
                     }`}
                   />
                   {isPhoneValid && (
@@ -477,7 +477,7 @@ export default function Screen4Inscription({ onSignupSuccess, onGoToLogin }: Scr
                   Email <span className="text-red-500">*</span>
                 </label>
                 <div className="relative">
-                  <Mail className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                  <Mail className="w-4 h-4 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
                   <input
                     type="email"
                     value={formData.email}
@@ -485,8 +485,8 @@ export default function Screen4Inscription({ onSignupSuccess, onGoToLogin }: Scr
                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                     placeholder="votre.email@domaine.cm"
                     required
-                    className={`w-full h-11 pl-9 pr-8 bg-[#F8FAFC] border rounded-xl text-xs text-[#0F172A] font-medium shadow-xs focus:outline-none focus:ring-2 focus:ring-[#16A34A]/25 focus:border-[#16A34A] transition focus:bg-white ${
-                      touchedFields.email && !isEmailValid ? 'border-red-400 bg-red-50/20' : 'border-[#E5E7EB]'
+                    className={`w-full h-[42px] pl-9 pr-8 bg-white border rounded-[16px] text-xs text-[#0F172A] font-medium shadow-[0_2px_8px_rgba(0,0,0,0.03)] focus:outline-none focus:ring-2 focus:ring-[#16A34A]/20 focus:border-[#16A34A] transition-all duration-200 ease-out placeholder:text-slate-400 ${
+                      touchedFields.email && !isEmailValid ? 'border-red-400 bg-red-50/20' : 'border-[#E8E8E8]'
                     }`}
                   />
                   {isEmailValid && (
@@ -508,7 +508,7 @@ export default function Screen4Inscription({ onSignupSuccess, onGoToLogin }: Scr
                     Mot de passe <span className="text-red-500">*</span>
                   </label>
                   <div className="relative">
-                    <Lock className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                    <Lock className="w-4 h-4 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
                     <input
                       type="password"
                       value={formData.password}
@@ -517,8 +517,8 @@ export default function Screen4Inscription({ onSignupSuccess, onGoToLogin }: Scr
                       placeholder="••••••••"
                       required
                       minLength={8}
-                      className={`w-full h-11 pl-9 pr-8 bg-[#F8FAFC] border rounded-xl text-xs text-[#0F172A] font-medium shadow-xs focus:outline-none focus:ring-2 focus:ring-[#16A34A]/25 focus:border-[#16A34A] transition focus:bg-white ${
-                        touchedFields.password && !isPasswordValid ? 'border-red-400 bg-red-50/20' : 'border-[#E5E7EB]'
+                      className={`w-full h-[42px] pl-9 pr-8 bg-white border rounded-[16px] text-xs text-[#0F172A] font-medium shadow-[0_2px_8px_rgba(0,0,0,0.03)] focus:outline-none focus:ring-2 focus:ring-[#16A34A]/20 focus:border-[#16A34A] transition-all duration-200 ease-out placeholder:text-slate-400 ${
+                        touchedFields.password && !isPasswordValid ? 'border-red-400 bg-red-50/20' : 'border-[#E8E8E8]'
                       }`}
                     />
                     {isPasswordValid && (
@@ -538,7 +538,7 @@ export default function Screen4Inscription({ onSignupSuccess, onGoToLogin }: Scr
                     Confirmation <span className="text-red-500">*</span>
                   </label>
                   <div className="relative">
-                    <Lock className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                    <Lock className="w-4 h-4 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
                     <input
                       type="password"
                       value={formData.confirmPassword}
@@ -547,8 +547,8 @@ export default function Screen4Inscription({ onSignupSuccess, onGoToLogin }: Scr
                       placeholder="••••••••"
                       required
                       minLength={8}
-                      className={`w-full h-11 pl-9 pr-8 bg-[#F8FAFC] border rounded-xl text-xs text-[#0F172A] font-medium shadow-xs focus:outline-none focus:ring-2 focus:ring-[#16A34A]/25 focus:border-[#16A34A] transition focus:bg-white ${
-                        touchedFields.confirmPassword && !isConfirmPasswordValid ? 'border-red-400 bg-red-50/20' : 'border-[#E5E7EB]'
+                      className={`w-full h-[42px] pl-9 pr-8 bg-white border rounded-[16px] text-xs text-[#0F172A] font-medium shadow-[0_2px_8px_rgba(0,0,0,0.03)] focus:outline-none focus:ring-2 focus:ring-[#16A34A]/20 focus:border-[#16A34A] transition-all duration-200 ease-out placeholder:text-slate-400 ${
+                        touchedFields.confirmPassword && !isConfirmPasswordValid ? 'border-red-400 bg-red-50/20' : 'border-[#E8E8E8]'
                       }`}
                     />
                     {isConfirmPasswordValid && (
@@ -570,11 +570,11 @@ export default function Screen4Inscription({ onSignupSuccess, onGoToLogin }: Scr
                   Quartier à Bafoussam <span className="text-red-500">*</span>
                 </label>
                 <div className="relative">
-                  <MapPin className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                  <MapPin className="w-4 h-4 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
                   <select
                     value={formData.neighborhood}
                     onChange={(e) => setFormData({ ...formData, neighborhood: e.target.value })}
-                    className="w-full h-11 pl-9 pr-8 bg-[#F8FAFC] border border-[#E5E7EB] rounded-xl text-xs text-[#0F172A] font-medium shadow-xs focus:outline-none focus:ring-2 focus:ring-[#16A34A]/25 focus:border-[#16A34A] appearance-none cursor-pointer"
+                    className="w-full h-[42px] pl-9 pr-8 bg-white border border-[#E8E8E8] rounded-[16px] text-xs text-[#0F172A] font-medium shadow-[0_2px_8px_rgba(0,0,0,0.03)] focus:outline-none focus:ring-2 focus:ring-[#16A34A]/20 focus:border-[#16A34A] transition-all duration-200 ease-out appearance-none cursor-pointer"
                   >
                     <option value="march-a">Marché A (Centre Commercial)</option>
                     <option value="march-b">Marché B (Ancien Marché)</option>
@@ -592,14 +592,14 @@ export default function Screen4Inscription({ onSignupSuccess, onGoToLogin }: Scr
                   <button
                     type="button"
                     onClick={() => setIsBottomSheetOpen(true)}
-                    className="w-full p-3.5 rounded-[20px] bg-[#FFFFFF] border border-[#E5E7EB] hover:border-[#16A34A] hover:bg-[#DCFCE7]/20 transition-all duration-200 flex items-center justify-between shadow-2xs group cursor-pointer text-left active:scale-[0.98]"
+                    className="w-full p-3 rounded-[16px] bg-white border border-[#E8E8E8] hover:border-[#16A34A] hover:bg-[#F0FDF4]/50 transition-all duration-200 flex items-center justify-between shadow-[0_2px_8px_rgba(0,0,0,0.03)] group cursor-pointer text-left active:scale-[0.98]"
                   >
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-xl bg-[#DCFCE7] text-[#16A34A] flex items-center justify-center text-xl font-bold shrink-0">
+                      <div className="w-9 h-9 rounded-[12px] bg-[#DCFCE7] text-[#16A34A] flex items-center justify-center text-base font-bold shrink-0">
                         👤
                       </div>
                       <div>
-                        <h4 className="text-xs font-black text-[#0F172A] uppercase tracking-wider">
+                        <h4 className="text-xs font-black text-[#0F172A] uppercase tracking-wider flex items-center gap-1">
                           Choisir mon profil <span className="text-red-500">*</span>
                         </h4>
                         <p className="text-[11px] text-slate-500 font-medium mt-0.5">
@@ -617,17 +617,17 @@ export default function Screen4Inscription({ onSignupSuccess, onGoToLogin }: Scr
                     initial={{ opacity: 0, scale: 0.97 }}
                     animate={{ opacity: 1, scale: 1 }}
                     transition={{ duration: 0.2 }}
-                    className="w-full p-4 rounded-[20px] bg-gradient-to-br from-[#DCFCE7] to-[#F8FAFC] border-2 border-[#16A34A] shadow-sm relative overflow-hidden"
+                    className="w-full p-3.5 rounded-[16px] bg-[#F0FDF4] border-2 border-[#16A34A] shadow-[0_2px_8px_rgba(22,163,74,0.08)] relative overflow-hidden"
                   >
-                    <div className="flex items-start justify-between gap-2 pb-2.5 border-b border-emerald-200/80">
+                    <div className="flex items-start justify-between gap-2 pb-2 border-b border-emerald-200/80">
                       <div className="flex items-center gap-3 min-w-0">
-                        <div className="w-10 h-10 rounded-xl bg-[#16A34A] text-white flex items-center justify-center text-lg font-bold shrink-0 shadow-xs">
+                        <div className="w-9 h-9 rounded-[12px] bg-[#16A34A] text-white flex items-center justify-center text-base font-bold shrink-0 shadow-xs">
                           {selectedProfileObj.emoji}
                         </div>
                         <div className="min-w-0">
                           <div className="flex items-center gap-1.5">
-                            <span className="text-[10px] font-black text-[#15803D] uppercase tracking-wider">
-                              Profil sélectionné
+                            <span className="text-[10px] font-black text-[#15803D] uppercase tracking-wider flex items-center gap-1">
+                              Profil sélectionné <CheckCircle2 className="w-3 h-3 text-[#16A34A]" />
                             </span>
                             <span className="text-[9px] font-bold px-1.5 py-0.2 rounded-md bg-white text-[#16A34A] border border-emerald-200">
                               {selectedProfileObj.badge}
@@ -642,18 +642,18 @@ export default function Screen4Inscription({ onSignupSuccess, onGoToLogin }: Scr
                       <button
                         type="button"
                         onClick={() => setIsBottomSheetOpen(true)}
-                        className="px-3 py-1.5 rounded-xl bg-white hover:bg-emerald-50 text-[#16A34A] border border-emerald-300 text-[11px] font-extrabold transition shrink-0 cursor-pointer shadow-2xs active:scale-[0.98]"
+                        className="px-3 py-1.5 rounded-[12px] bg-white hover:bg-emerald-50 text-[#16A34A] border border-emerald-300 text-[11px] font-extrabold transition shrink-0 cursor-pointer shadow-2xs active:scale-[0.98]"
                       >
                         Modifier
                       </button>
                     </div>
 
                     {/* Display Benefits Checklist */}
-                    <div className="pt-2.5 space-y-1">
+                    <div className="pt-2 space-y-1">
                       <p className="text-[10px] font-extrabold text-[#15803D] uppercase tracking-wider">
                         Avantages exclusifs inclus ({selectedProfileObj.formattedTrial}) :
                       </p>
-                      <ul className="space-y-1">
+                      <ul className="space-y-0.5">
                         {selectedProfileObj.benefits.map((benefit, i) => (
                           <li key={i} className="text-[11px] text-slate-700 font-medium flex items-center gap-1.5">
                             <CheckCircle2 className="w-3.5 h-3.5 text-[#16A34A] shrink-0" />
@@ -666,17 +666,73 @@ export default function Screen4Inscription({ onSignupSuccess, onGoToLogin }: Scr
                 )}
               </div>
 
-              {/* Status Note or Auto-Advancing Indicator */}
-              {isAutoAdvancing ? (
-                <div className="p-3 bg-[#DCFCE7] border border-emerald-300 rounded-2xl text-center text-[#15803D] text-xs font-bold flex items-center justify-center gap-2 animate-pulse shadow-2xs">
-                  <Loader2 className="w-4 h-4 animate-spin text-[#16A34A]" />
-                  <span>Informations valides — Envoi du code OTP...</span>
+              {/* Info Text */}
+              <p className="text-center text-xs text-slate-500 font-medium pt-1">
+                Les informations seront vérifiées automatiquement avant de passer à l'étape suivante.
+              </p>
+
+              {/* Primary Button "Continuer" */}
+              <button
+                type="button"
+                disabled={!isStep1Complete || isAutoAdvancing}
+                onClick={() => {
+                  if (typeof window !== 'undefined' && 'vibrate' in navigator) {
+                    try { navigator.vibrate(10); } catch (e) {}
+                  }
+                  if (isStep1Complete && !isAutoAdvancing) {
+                    setIsAutoAdvancing(true);
+                    otpService.sendOtp(formData.phone).then(res => {
+                      if (res.code) {
+                        setGeneratedOtp(res.code);
+                        if (otpService.getMode() === 'development') {
+                          setInputOtp(res.code);
+                        }
+                      }
+                      setOtpCountdown(60);
+                      setPaymentPhone(formData.phone);
+                      setCurrentStep('step2');
+                      setIsAutoAdvancing(false);
+                    });
+                  }
+                }}
+                className={`w-full h-[54px] rounded-[16px] text-sm font-extrabold flex items-center justify-center gap-2 transition-all duration-200 cursor-pointer ${
+                  !isStep1Complete
+                    ? 'bg-slate-100 text-slate-400 border border-slate-200 cursor-not-allowed shadow-none'
+                    : 'bg-[#16A34A] hover:bg-[#15803D] text-white shadow-[0_8px_20px_rgba(22,163,74,0.25)] active:scale-[0.99]'
+                }`}
+              >
+                {isAutoAdvancing ? (
+                  <>
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                    <span>Envoi du code OTP...</span>
+                  </>
+                ) : (
+                  <>
+                    <span>Continuer vers la vérification</span>
+                    <ArrowRight className="w-4 h-4" />
+                  </>
+                )}
+              </button>
+
+              {/* Footer Badges */}
+              <div className="pt-2">
+                <div className="flex items-center justify-around gap-2 text-center text-[11px] font-semibold text-slate-600 bg-[#F8FAFC] p-2.5 sm:p-3 rounded-[16px] border border-[#E8E8E8]">
+                  <div className="flex items-center gap-1.5">
+                    <ShieldCheck className="w-4 h-4 text-[#16A34A]" />
+                    <span>Paiement sécurisé</span>
+                  </div>
+                  <span className="text-slate-300">•</span>
+                  <div className="flex items-center gap-1.5">
+                    <Truck className="w-4 h-4 text-[#16A34A]" />
+                    <span>Livraison rapide</span>
+                  </div>
+                  <span className="text-slate-300">•</span>
+                  <div className="flex items-center gap-1.5">
+                    <Headphones className="w-4 h-4 text-[#16A34A]" />
+                    <span>Support 24/7</span>
+                  </div>
                 </div>
-              ) : !isStep1Complete ? (
-                <p className="text-[10px] text-slate-400 text-center font-medium pt-1">
-                  Complétez tous les champs obligatoires pour valider automatiquement l'étape.
-                </p>
-              ) : null}
+              </div>
 
             </motion.div>
           )}

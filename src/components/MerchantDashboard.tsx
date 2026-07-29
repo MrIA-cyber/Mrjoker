@@ -327,10 +327,10 @@ export default function MerchantDashboard({
                   Espace Commerçant Isolé
                 </span>
                 <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-white mt-2">
-                  Portail de Gestion des Boutiques Bafoussam
+                  Portail Commerçants AfriNova
                 </h2>
                 <p className="text-slate-400 text-xs sm:text-sm mt-1">
-                  Accès réservé aux vendeurs et artisans enregistrés à Bafoussam.
+                  Accès réservé aux vendeurs, boutiques et prestataires affiliés AfriNova.
                 </p>
               </div>
 
@@ -414,8 +414,8 @@ export default function MerchantDashboard({
               <div className="absolute inset-0 bg-[radial-gradient(#334155_1px,transparent_1px)] [background-size:20px_20px] pointer-events-none opacity-30"></div>
               
               <div className="relative z-10 space-y-6">
-                <span className="bg-indigo-600 text-white font-bold text-[10px] uppercase tracking-wider px-3 py-1 rounded-full inline-block">
-                  {lang === 'fr' ? 'Espace Commerçants Bafoussam' : 'Bafoussam Merchant Space'}
+                <span className="bg-[#16A34A] text-white font-bold text-[10px] uppercase tracking-wider px-3 py-1 rounded-full inline-block">
+                  {lang === 'fr' ? 'Espace Commerçants AfriNova' : 'AfriNova Merchant Space'}
                 </span>
 
                 <h2 className="text-3xl lg:text-4xl font-extrabold tracking-tight leading-tight">

@@ -1,6 +1,6 @@
 {
-  "name": "Bafoussam Market",
-  "description": "Bafoussam Market - Livraison locale à Bafoussam. Plateforme de vente en ligne et de livraison rapide à Bafoussam.",
+  "name": "AfriNova",
+  "description": "AfriNova - L'Afrique connectée au monde. Plateforme panafricaine de technologie, de commerce et de services locaux.",
   "requestFramePermissions": ["geolocation"],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }
