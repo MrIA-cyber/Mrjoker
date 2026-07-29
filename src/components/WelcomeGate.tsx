@@ -220,10 +220,10 @@ export default function WelcomeGate({ onSuccess, lang, onLangChange }: WelcomeGa
     return () => clearTimeout(timer);
   }, [isStep1FormComplete, step, isAutoAdvancing]);
 
-  // Smart Auto-Advance from Step 2 OTP to Step 3 Payment when 6 digits typed
+  // Auto-verify OTP when 6 digits are typed
   useEffect(() => {
     if (step !== 'otp-verification') return;
-    if (inputOtp.length === 6 && otpService.getMode() === 'production') {
+    if (inputOtp.length === 6) {
       const targetPhone = formData.phone || (unverifiedUserToActivate ? unverifiedUserToActivate.phone : '');
       otpService.verifyOtp(targetPhone, inputOtp).then((res) => {
         if (res.success) {
@@ -231,44 +231,13 @@ export default function WelcomeGate({ onSuccess, lang, onLangChange }: WelcomeGa
           setPhoneForPayment(targetPhone);
           setStep('payment-select');
         } else {
-          setValidationError(res.message || getTranslation('incorrectCode'));
+          setValidationError(res.message || 'Code OTP invalide');
         }
       });
+    } else {
+      setValidationError('');
     }
   }, [inputOtp, step, formData.phone, unverifiedUserToActivate]);
-
-  // Development Mode 2-second OTP Simulation & Auto-Advance
-  useEffect(() => {
-    if (step !== 'otp-verification') {
-      setDevOtpSimStatus('idle');
-      return;
-    }
-
-    if (otpService.getMode() === 'development') {
-      setDevOtpSimStatus('simulating');
-      console.log('[WelcomeGate] Mode DEVELOPMENT: Démarrage de la simulation 2s OTP...');
-
-      const simTimer = setTimeout(async () => {
-        const targetPhone = formData.phone || (unverifiedUserToActivate ? unverifiedUserToActivate.phone : '');
-        const res = await otpService.verifyOtp(targetPhone, inputOtp || generatedOtp || '123456');
-
-        if (res.success) {
-          setDevOtpSimStatus('success');
-          console.log('[WelcomeGate] Simulation OTP réussie -> Passage automatique à l\'étape suivante');
-
-          const advanceTimer = setTimeout(() => {
-            setValidationError('');
-            setPhoneForPayment(targetPhone);
-            setStep('payment-select');
-          }, 400);
-
-          return () => clearTimeout(advanceTimer);
-        }
-      }, 2000); // Exactly 2 seconds
-
-      return () => clearTimeout(simTimer);
-    }
-  }, [step, formData.phone, unverifiedUserToActivate]);
 
   // Seed registered users list if empty
   useEffect(() => {
@@ -357,6 +326,9 @@ export default function WelcomeGate({ onSuccess, lang, onLangChange }: WelcomeGa
       const res = await otpService.sendOtp(targetPhone);
       if (res.code) {
         setGeneratedOtp(res.code);
+        if (otpService.getMode() === 'development') {
+          setInputOtp(res.code);
+        }
       }
       setInputOtp('');
       setOtpCountdown(60);
@@ -526,10 +498,11 @@ export default function WelcomeGate({ onSuccess, lang, onLangChange }: WelcomeGa
 
   const handleVerifyOtp = async (e: React.FormEvent) => {
     e.preventDefault();
+    setValidationError('');
     const targetPhone = formData.phone || (unverifiedUserToActivate ? unverifiedUserToActivate.phone : '');
     const res = await otpService.verifyOtp(targetPhone, inputOtp);
     if (!res.success) {
-      setValidationError(res.message || getTranslation('incorrectCode'));
+      setValidationError(res.message || 'Code OTP invalide');
       return;
     }
     setValidationError('');
@@ -545,8 +518,10 @@ export default function WelcomeGate({ onSuccess, lang, onLangChange }: WelcomeGa
     const res = await otpService.resendOtp(targetPhone);
     if (res.code) {
       setGeneratedOtp(res.code);
+      if (otpService.getMode() === 'development') {
+        setInputOtp(res.code);
+      }
     }
-    setInputOtp('');
     setOtpCountdown(60);
     setIsOtpResending(false);
   };
@@ -1085,25 +1060,10 @@ export default function WelcomeGate({ onSuccess, lang, onLangChange }: WelcomeGa
             >
               {/* OTP MODE BANNER */}
               {otpService.getMode() === 'development' ? (
-                <div className="bg-emerald-50 border border-emerald-300 rounded-2xl p-3.5 mb-4 shadow-xs">
-                  <div className="flex items-center gap-2.5">
-                    {devOtpSimStatus === 'simulating' ? (
-                      <>
-                        <Loader2 className="w-5 h-5 text-emerald-600 animate-spin shrink-0" />
-                        <div className="text-left">
-                          <p className="text-emerald-950 font-black text-xs">Simulation OTP en cours (2s)...</p>
-                          <p className="text-emerald-700 text-[11px] font-medium">Mode Développement actif • Validation automatique</p>
-                        </div>
-                      </>
-                    ) : (
-                      <>
-                        <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
-                        <div className="text-left">
-                          <p className="text-emerald-950 font-black text-xs">Simulation OTP réussie</p>
-                          <p className="text-emerald-700 text-[11px] font-medium">Redirection automatique vers le paiement...</p>
-                        </div>
-                      </>
-                    )}
+                <div className="bg-emerald-50 border border-emerald-300 rounded-2xl p-3 mb-4 shadow-xs">
+                  <div className="flex items-center gap-2 text-emerald-950 text-xs font-extrabold">
+                    <Sparkles className="w-4 h-4 text-[#16A34A] shrink-0" />
+                    <span>🔐 Mode Dev : Code OTP affiché en console & notification</span>
                   </div>
                 </div>
               ) : (
@@ -1112,22 +1072,25 @@ export default function WelcomeGate({ onSuccess, lang, onLangChange }: WelcomeGa
                   <span>Mode Production • Code SMS envoyé via {otpService.getProviderType().toUpperCase()}</span>
                 </div>
               )}
-              {/* SMS Notification Banner */}
-              <div className="bg-[#0F172A] text-white rounded-2xl p-4 mb-5 shadow-md border border-slate-800 relative overflow-hidden">
-                <div className="absolute top-0 left-0 w-1.5 h-full bg-[#16A34A] animate-pulse" />
-                <div className="flex items-start gap-3">
-                  <span className="text-xl">📱</span>
-                  <div className="flex-1">
-                    <div className="flex items-center justify-between">
-                      <span className="text-[10px] font-extrabold text-[#16A34A] uppercase tracking-wider">SMS Bafoussam Market</span>
-                      <span className="text-[9px] text-slate-400">À l'instant</span>
+
+              {/* SMS Notification Banner in Dev mode */}
+              {otpService.getMode() === 'development' && (
+                <div className="bg-[#0F172A] text-white rounded-2xl p-4 mb-5 shadow-md border border-slate-800 relative overflow-hidden">
+                  <div className="absolute top-0 left-0 w-1.5 h-full bg-[#16A34A]" />
+                  <div className="flex items-start gap-3">
+                    <span className="text-xl">🔐</span>
+                    <div className="flex-1">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[10px] font-extrabold text-[#16A34A] uppercase tracking-wider">SMS OTP Mode Développeur</span>
+                        <span className="text-[9px] text-slate-400">À l'instant</span>
+                      </div>
+                      <p className="text-xs text-slate-100 font-mono mt-1 font-semibold">
+                        Code de test : <span className="text-yellow-400 text-sm font-black underline tracking-widest">{generatedOtp}</span>
+                      </p>
                     </div>
-                    <p className="text-xs text-slate-100 font-mono mt-1 font-semibold">
-                      Votre code OTP est : <span className="text-yellow-400 text-sm font-black underline tracking-widest">{generatedOtp}</span>
-                    </p>
                   </div>
                 </div>
-              </div>
+              )}
 
               <div className="text-center mb-5">
                 <h3 className="font-extrabold text-[#0F172A] text-sm">Vérification de sécurité</h3>

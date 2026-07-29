@@ -1,10 +1,11 @@
 /**
- * Unified OTP Service Architecture for Bafoussam Market
+ * Unified OTP Service Architecture for AfriNova
  * 
  * Supports:
  * - Development Mode (VITE_OTP_MODE=development): 
  *   Completely bypasses Firebase/Twilio/external providers.
- *   Simulates OTP send & verify instantly or with 2s simulation.
+ *   Generates random 6-digit OTP, stores in memory & sessionStorage, displays formatted banner in console,
+ *   displays a development toast notification, and validates entered OTP with a 5-minute expiration window.
  * - Production Mode (VITE_OTP_MODE=production):
  *   Delegates to real provider selected via VITE_OTP_PROVIDER ('firebase' | 'twilio').
  */
@@ -38,44 +39,190 @@ export interface IOTPProvider {
 // Memory store for active mock OTP sessions in dev
 const mockOtpStore: Record<string, { code: string; timestamp: number }> = {};
 
+// Helper function to render a dev toast notification
+function showDevOtpToast(phone: string, code: string) {
+  if (typeof window === 'undefined' || typeof document === 'undefined') return;
+
+  // Remove existing toast if any
+  const existingToast = document.getElementById('afrinova-dev-otp-toast');
+  if (existingToast) {
+    existingToast.remove();
+  }
+
+  const toast = document.createElement('div');
+  toast.id = 'afrinova-dev-otp-toast';
+  toast.style.cssText = `
+    position: fixed;
+    top: 16px;
+    right: 16px;
+    z-index: 999999;
+    max-width: 380px;
+    width: calc(100vw - 32px);
+    background: #0f172a;
+    color: #ffffff;
+    border-radius: 16px;
+    padding: 16px;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 8px 10px -6px rgba(0, 0, 0, 0.5);
+    border: 2px solid #10b981;
+    font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  `;
+
+  toast.innerHTML = `
+    <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 12px;">
+      <div style="display: flex; align-items: flex-start; gap: 12px;">
+        <div style="font-size: 24px; line-height: 1;">🔐</div>
+        <div>
+          <div style="font-size: 11px; font-weight: 800; color: #34d399; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 2px;">
+            OTP Mode Développement
+          </div>
+          <div style="font-size: 12px; color: #cbd5e1;">
+            Numéro : <strong style="color: #ffffff; font-family: monospace;">${phone}</strong>
+          </div>
+          <div style="margin-top: 8px; font-family: monospace; font-size: 22px; font-weight: 900; letter-spacing: 0.18em; color: #facc15; background: rgba(0,0,0,0.4); padding: 4px 12px; border-radius: 8px; display: inline-block; border: 1px solid rgba(250,204,21,0.3);">
+            ${code}
+          </div>
+        </div>
+      </div>
+      <button id="close-dev-otp-toast" style="background: transparent; border: none; color: #94a3b8; font-size: 18px; cursor: pointer; padding: 2px 6px; border-radius: 6px; font-weight: bold;">
+        ✕
+      </button>
+    </div>
+    <div style="margin-top: 10px; font-size: 10px; color: #64748b; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 6px; display: flex; justify-content: space-between; align-items: center;">
+      <span>⏱ Expiration : 5 minutes</span>
+      <span style="color: #34d399; font-weight: 600;">VITE_OTP_MODE=development</span>
+    </div>
+  `;
+
+  document.body.appendChild(toast);
+
+  const closeBtn = toast.querySelector('#close-dev-otp-toast');
+  if (closeBtn) {
+    closeBtn.addEventListener('click', () => {
+      toast.remove();
+    });
+  }
+
+  // Auto-remove toast after 12 seconds
+  setTimeout(() => {
+    if (document.body.contains(toast)) {
+      toast.style.opacity = '0';
+      toast.style.transition = 'opacity 0.3s ease-out';
+      setTimeout(() => {
+        if (document.body.contains(toast)) {
+          toast.remove();
+        }
+      }, 300);
+    }
+  }, 12000);
+}
+
 class MockOTPProvider implements IOTPProvider {
   type: OTPProviderType = 'mock';
 
   async sendOtp(phoneNumber: string): Promise<OTPSendResult> {
-    const cleanPhone = phoneNumber.replace(/\s+/g, '');
+    const cleanPhone = phoneNumber ? phoneNumber.replace(/\s+/g, '') : '+237690000000';
     const generatedCode = Math.floor(100000 + Math.random() * 900000).toString();
-    
+    const timestamp = Date.now();
+
+    // Store in memory
     mockOtpStore[cleanPhone] = {
       code: generatedCode,
-      timestamp: Date.now(),
+      timestamp,
     };
 
+    // Store in sessionStorage
+    try {
+      if (typeof sessionStorage !== 'undefined') {
+        sessionStorage.setItem(`afrinova_otp_${cleanPhone}`, JSON.stringify({ code: generatedCode, timestamp }));
+        sessionStorage.setItem('afrinova_otp_latest', JSON.stringify({ phone: cleanPhone, code: generatedCode, timestamp }));
+      }
+    } catch (e) {
+      console.warn('[OTP Service DEV] Impossible de stocker dans sessionStorage', e);
+    }
+
+    // Display formatted console box
     console.log(
-      `%c[OTP Service DEV] SMS simulé généré pour ${cleanPhone}. Code: ${generatedCode}`,
-      'color: #16a34a; font-weight: bold;'
+      `================================\n` +
+      `🔐 OTP MODE DÉVELOPPEMENT\n` +
+      `Numéro : ${cleanPhone}\n` +
+      `Code OTP : ${generatedCode}\n` +
+      `================================`
     );
+
+    // Display toast notification in development mode
+    showDevOtpToast(cleanPhone, generatedCode);
 
     return {
       success: true,
-      message: 'Simulation OTP réussie - Code SMS simulé généré',
+      message: 'Code OTP de développement généré avec succès',
       code: generatedCode,
-      verificationId: `dev-sim-${Date.now()}`,
+      verificationId: `dev-sim-${timestamp}`,
       mode: 'development',
       provider: 'mock',
     };
   }
 
   async verifyOtp(phoneNumber: string, code: string): Promise<OTPVerifyResult> {
-    const cleanPhone = phoneNumber.replace(/\s+/g, '');
+    const cleanPhone = phoneNumber ? phoneNumber.replace(/\s+/g, '') : '+237690000000';
+    const inputCode = code ? code.trim() : '';
+
+    // Retrieve from memory or sessionStorage
+    let record = mockOtpStore[cleanPhone];
+    if (!record) {
+      try {
+        if (typeof sessionStorage !== 'undefined') {
+          const storedStr = sessionStorage.getItem(`afrinova_otp_${cleanPhone}`) || sessionStorage.getItem('afrinova_otp_latest');
+          if (storedStr) {
+            record = JSON.parse(storedStr);
+          }
+        }
+      } catch (e) {}
+    }
+
+    if (!record || !record.code) {
+      return {
+        success: false,
+        message: 'Code OTP invalide',
+        mode: 'development',
+        provider: 'mock',
+      };
+    }
+
+    // Check expiration (5 minutes = 300,000 ms)
+    const FIVE_MINUTES_MS = 5 * 60 * 1000;
+    const elapsed = Date.now() - record.timestamp;
+
+    if (elapsed > FIVE_MINUTES_MS) {
+      return {
+        success: false,
+        message: 'Code OTP expiré (plus de 5 minutes). Veuillez renvoyer un code.',
+        mode: 'development',
+        provider: 'mock',
+      };
+    }
+
+    // Compare code
+    if (inputCode === record.code) {
+      console.log(
+        `%c[OTP Service DEV] Code OTP validé avec succès pour ${cleanPhone}`,
+        'color: #16a34a; font-weight: bold;'
+      );
+      return {
+        success: true,
+        message: 'Code OTP valide',
+        mode: 'development',
+        provider: 'mock',
+      };
+    }
 
     console.log(
-      `%c[OTP Service DEV] Simulation de vérification OTP réussie pour ${cleanPhone}`,
-      'color: #16a34a; font-weight: bold;'
+      `%c[OTP Service DEV] Échec vérification OTP pour ${cleanPhone}: code saisi '${inputCode}' != attendu '${record.code}'`,
+      'color: #dc2626; font-weight: bold;'
     );
 
     return {
-      success: true,
-      message: 'Simulation OTP réussie',
+      success: false,
+      message: 'Code OTP invalide',
       mode: 'development',
       provider: 'mock',
     };

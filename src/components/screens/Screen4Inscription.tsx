@@ -123,9 +123,9 @@ export default function Screen4Inscription({ onSignupSuccess, onGoToLogin }: Scr
   // OTP state
   const [generatedOtp, setGeneratedOtp] = useState('849201');
   const [inputOtp, setInputOtp] = useState('');
+  const [otpError, setOtpError] = useState('');
   const [otpCountdown, setOtpCountdown] = useState(60);
   const [isResendingOtp, setIsResendingOtp] = useState(false);
-  const [devOtpSimStatus, setDevOtpSimStatus] = useState<'idle' | 'simulating' | 'success'>('idle');
 
   // Payment state
   const [paymentOperator, setPaymentOperator] = useState<'momo' | 'orange'>('momo');
@@ -189,51 +189,33 @@ export default function Screen4Inscription({ onSignupSuccess, onGoToLogin }: Scr
     return () => clearInterval(timer);
   }, [currentStep, otpCountdown]);
 
-  // Smart Auto-Advance from Step 2 to Step 3 when 6-digit OTP is typed in Production mode
+  // Auto-verify OTP when 6 digits are typed
   useEffect(() => {
     if (currentStep !== 'step2') return;
-    if (inputOtp.length === 6 && otpService.getMode() === 'production') {
+    if (inputOtp.length === 6) {
       otpService.verifyOtp(formData.phone, inputOtp).then((res) => {
         if (res.success) {
+          setOtpError('');
           setCurrentStep('step3');
+        } else {
+          setOtpError(res.message || 'Code OTP invalide');
         }
       });
+    } else {
+      setOtpError('');
     }
   }, [inputOtp, currentStep, formData.phone]);
-
-  // Development Mode 2-second OTP Simulation & Auto-Advance in Step 2
-  useEffect(() => {
-    if (currentStep !== 'step2') {
-      setDevOtpSimStatus('idle');
-      return;
-    }
-
-    if (otpService.getMode() === 'development') {
-      setDevOtpSimStatus('simulating');
-
-      const simTimer = setTimeout(async () => {
-        const res = await otpService.verifyOtp(formData.phone, inputOtp || generatedOtp || '123456');
-        if (res.success) {
-          setDevOtpSimStatus('success');
-
-          const advanceTimer = setTimeout(() => {
-            setCurrentStep('step3');
-          }, 400);
-
-          return () => clearTimeout(advanceTimer);
-        }
-      }, 2000); // Exactly 2 seconds
-
-      return () => clearTimeout(simTimer);
-    }
-  }, [currentStep, formData.phone]);
 
   // Handle manual OTP submission
   const handleVerifyOtpSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setOtpError('');
     const res = await otpService.verifyOtp(formData.phone, inputOtp);
     if (res.success) {
+      setOtpError('');
       setCurrentStep('step3');
+    } else {
+      setOtpError(res.message || 'Code OTP invalide');
     }
   };
 
@@ -241,11 +223,14 @@ export default function Screen4Inscription({ onSignupSuccess, onGoToLogin }: Scr
   const handleResendOtp = async () => {
     if (otpCountdown > 0) return;
     setIsResendingOtp(true);
+    setOtpError('');
     const res = await otpService.resendOtp(formData.phone);
     if (res.code) {
       setGeneratedOtp(res.code);
+      if (otpService.getMode() === 'development') {
+        setInputOtp(res.code);
+      }
     }
-    setInputOtp('');
     setOtpCountdown(60);
     setIsResendingOtp(false);
   };
@@ -747,27 +732,12 @@ export default function Screen4Inscription({ onSignupSuccess, onGoToLogin }: Scr
               transition={{ duration: 0.25, ease: 'easeOut' }}
               className="space-y-4 py-2"
             >
-              {/* 6. Validation OTP Banner (Development 2s simulation vs Production) */}
+              {/* Validation OTP Banner */}
               {otpService.getMode() === 'development' ? (
-                <div className="bg-emerald-50 border border-emerald-300 rounded-2xl p-3.5 shadow-xs">
-                  <div className="flex items-center gap-2.5">
-                    {devOtpSimStatus === 'simulating' ? (
-                      <>
-                        <Loader2 className="w-5 h-5 text-emerald-600 animate-spin shrink-0" />
-                        <div className="text-left">
-                          <p className="text-emerald-950 font-black text-xs">Simulation OTP en cours (2s)...</p>
-                          <p className="text-emerald-700 text-[11px] font-medium">Mode Développement actif • Validation automatique</p>
-                        </div>
-                      </>
-                    ) : (
-                      <>
-                        <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
-                        <div className="text-left">
-                          <p className="text-emerald-950 font-black text-xs">Simulation OTP réussie ✔</p>
-                          <p className="text-emerald-700 text-[11px] font-medium">Redirection automatique vers la finalisation...</p>
-                        </div>
-                      </>
-                    )}
+                <div className="bg-emerald-50 border border-emerald-300 rounded-2xl p-3 shadow-xs">
+                  <div className="flex items-center gap-2 text-emerald-950 text-xs font-extrabold">
+                    <Sparkles className="w-4 h-4 text-[#16A34A] shrink-0" />
+                    <span>🔐 Mode Dev : Code OTP affiché en console & notification</span>
                   </div>
                 </div>
               ) : (
@@ -777,22 +747,24 @@ export default function Screen4Inscription({ onSignupSuccess, onGoToLogin }: Scr
                 </div>
               )}
 
-              {/* Simulated SMS Toast alert */}
-              <div className="bg-[#0F172A] text-white rounded-2xl p-3.5 shadow-md border border-slate-800 relative overflow-hidden">
-                <div className="absolute top-0 left-0 w-1.5 h-full bg-[#16A34A] animate-pulse"></div>
-                <div className="flex items-start gap-2.5">
-                  <span className="text-lg">📱</span>
-                  <div className="flex-1">
-                    <div className="flex items-center justify-between">
-                      <span className="text-[9px] font-black text-[#16A34A] uppercase tracking-wider">SMS de sécurité AfriNova</span>
-                      <span className="text-[9px] text-slate-400">À l'instant</span>
+              {/* Simulated SMS alert in Dev mode */}
+              {otpService.getMode() === 'development' && (
+                <div className="bg-[#0F172A] text-white rounded-2xl p-3.5 shadow-md border border-slate-800 relative overflow-hidden">
+                  <div className="absolute top-0 left-0 w-1.5 h-full bg-[#16A34A]"></div>
+                  <div className="flex items-start gap-2.5">
+                    <span className="text-lg">🔐</span>
+                    <div className="flex-1">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[9px] font-black text-[#16A34A] uppercase tracking-wider">SMS OTP Mode Développeur</span>
+                        <span className="text-[9px] text-slate-400">À l'instant</span>
+                      </div>
+                      <p className="text-xs text-slate-100 font-mono mt-0.5 font-semibold">
+                        Code de test : <span className="text-yellow-400 text-sm font-black tracking-widest underline">{generatedOtp}</span>
+                      </p>
                     </div>
-                    <p className="text-xs text-slate-100 font-mono mt-0.5 font-semibold">
-                      Votre code OTP est : <span className="text-yellow-400 text-sm font-black tracking-widest underline">{generatedOtp}</span>
-                    </p>
                   </div>
                 </div>
-              </div>
+              )}
 
               <div className="text-center">
                 <h3 className="font-extrabold text-[#0F172A] text-sm">Vérification du numéro de téléphone</h3>
@@ -800,6 +772,13 @@ export default function Screen4Inscription({ onSignupSuccess, onGoToLogin }: Scr
                   Code SMS transmis au <span className="font-mono text-[#16A34A] font-bold">{formData.phone}</span>
                 </p>
               </div>
+
+              {otpError && (
+                <div className="bg-red-50 border border-red-300 text-red-700 p-3 rounded-2xl text-xs font-extrabold text-center flex items-center justify-center gap-2 animate-shake">
+                  <AlertCircle className="w-4 h-4 text-red-600 shrink-0" />
+                  <span>{otpError}</span>
+                </div>
+              )}
 
               <form onSubmit={handleVerifyOtpSubmit} className="space-y-4">
                 <div>
