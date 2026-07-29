@@ -130,7 +130,7 @@ export default function Screen4Inscription({ onSignupSuccess, onGoToLogin }: Scr
       setPaymentPhone(formData.phone);
       setCurrentStep('step2');
       setIsAutoAdvancing(false);
-    }, 600);
+    }, 350);
 
     return () => clearTimeout(timer);
   }, [isStep1Complete, currentStep, isAutoAdvancing, formData.phone]);
@@ -146,10 +146,7 @@ export default function Screen4Inscription({ onSignupSuccess, onGoToLogin }: Scr
   useEffect(() => {
     if (currentStep !== 'step2') return;
     if (inputOtp.length === 6 && inputOtp === generatedOtp) {
-      const timer = setTimeout(() => {
-        setCurrentStep('step3');
-      }, 300);
-      return () => clearTimeout(timer);
+      setCurrentStep('step3');
     }
   }, [inputOtp, generatedOtp, currentStep]);
 

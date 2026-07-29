@@ -212,7 +212,7 @@ export default function WelcomeGate({ onSuccess, lang, onLangChange }: WelcomeGa
     setIsAutoAdvancing(true);
     const timer = setTimeout(() => {
       triggerFormSubmission();
-    }, 500);
+    }, 350);
 
     return () => clearTimeout(timer);
   }, [isStep1FormComplete, step, isAutoAdvancing]);
@@ -354,7 +354,7 @@ export default function WelcomeGate({ onSuccess, lang, onLangChange }: WelcomeGa
         setValidationError(errMsg);
         setShowBypassOption(true);
       },
-      { enableHighAccuracy: true, timeout: 25000, maximumAge: 0 }
+      { enableHighAccuracy: false, timeout: 3000, maximumAge: 300000 }
     );
   };
 
@@ -938,10 +938,15 @@ export default function WelcomeGate({ onSuccess, lang, onLangChange }: WelcomeGa
                 )}
 
                 {/* Smart Auto-Advance Pulse Banner */}
-                {isAutoAdvancing ? (
-                  <div className="p-3 bg-[#DCFCE7] border border-emerald-300 rounded-2xl text-center text-[#15803D] text-xs font-bold flex items-center justify-center gap-2 animate-pulse">
-                    <Check className="w-4 h-4 stroke-[3]" />
-                    <span>Informations valides — Validation automatique...</span>
+                {isVerifyingLocation ? (
+                  <div className="p-3 bg-[#DCFCE7] border border-emerald-300 rounded-2xl text-center text-[#15803D] text-xs font-bold flex items-center justify-center gap-2">
+                    <Loader2 className="w-4 h-4 animate-spin text-[#16A34A]" />
+                    <span>Vérification de la géolocalisation en cours...</span>
+                  </div>
+                ) : isAutoAdvancing ? (
+                  <div className="p-3 bg-[#DCFCE7] border border-emerald-300 rounded-2xl text-center text-[#15803D] text-xs font-bold flex items-center justify-center gap-2">
+                    <Loader2 className="w-4 h-4 animate-spin text-[#16A34A]" />
+                    <span>Informations valides — Envoi du code OTP...</span>
                   </div>
                 ) : (
                   <p className="text-[10px] text-slate-400 text-center font-medium pt-1">
