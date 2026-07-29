@@ -1586,7 +1586,7 @@ export default function WelcomeGate({ onSuccess, lang, onLangChange }: WelcomeGa
                       }`}
                     >
                       <div className="space-y-2">
-                        <div className="flex items-start justify-between gap-2">
+                        <div className="flex flex-wrap sm:flex-nowrap items-start justify-between gap-2">
                           <div className="flex items-center gap-2.5 min-w-0">
                             <div className={`w-8 h-8 rounded-xl flex items-center justify-center text-xs shrink-0 ${
                               isSelected ? 'bg-[#16A34A] text-white shadow-2xs' : 'bg-[#F8FAFC] text-slate-600 border border-[#E5E7EB]'
