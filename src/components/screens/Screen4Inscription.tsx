@@ -1,14 +1,15 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import { otpService } from '../../services/otpService';
+import React, { useState, useMemo } from 'react';
 import { 
   User as UserIcon, Mail, Phone, Lock, Check, ShieldCheck, ArrowRight, Sparkles, 
-  Store, Building2, Wrench, MapPin, ChevronRight, X, AlertCircle, Loader2, CreditCard, RefreshCw, CheckCircle2, Globe, Truck, Headphones
+  Store, Building2, Wrench, MapPin, ChevronRight, X, AlertCircle, Loader2, CreditCard, RefreshCw, CheckCircle2, Globe, Truck, Headphones, MessageCircle, PhoneCall, ArrowLeft
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
 interface Screen4InscriptionProps {
   onSignupSuccess?: () => void;
   onGoToLogin?: () => void;
+  lang?: 'fr' | 'en';
+  onLangChange?: (lang: 'fr' | 'en') => void;
 }
 
 export type ProfileType = 'client' | 'vendeur' | 'entreprise' | 'prestataire';
@@ -27,39 +28,39 @@ export interface ProfileOption {
   benefits: string[];
 }
 
-export const PROFILE_OPTIONS: ProfileOption[] = [
+const PROFILE_OPTIONS: ProfileOption[] = [
   {
     id: 'client',
     title: 'Client',
     emoji: '👤',
     icon: UserIcon,
-    description: 'Achetez des produits, commandez des repas et réservez des services à Bafoussam.',
+    description: 'Achetez facilement auprès des meilleurs vendeurs.',
     price: 3000,
-    formattedPrice: '3 000 FCFA / mois',
+    formattedPrice: '3 000 FCFA/mois',
     trialDays: 5,
-    formattedTrial: '5 jours d\'essai gratuit',
+    formattedTrial: "5 jours d'essai gratuit",
     badge: 'Particulier',
     benefits: [
-      'Accès illimité à toute la marketplace',
-      'Paiement sécurisé MTN MoMo & Orange Money',
-      'Suivi en temps réel des livraisons',
+      "5 jours d'essai gratuit",
+      'Achats sécurisés',
+      'Livraison rapide',
     ]
   },
   {
     id: 'vendeur',
     title: 'Vendeur',
-    emoji: '🛍️',
+    emoji: '🏪',
     icon: Store,
-    description: 'Créez votre boutique et vendez vos produits sur la marketplace.',
+    description: 'Créez votre boutique et vendez dans toute la région.',
     price: 5000,
-    formattedPrice: '5 000 FCFA / mois',
+    formattedPrice: '5 000 FCFA/mois',
     trialDays: 10,
-    formattedTrial: '10 jours d\'essai gratuit',
+    formattedTrial: "10 jours d'essai",
     badge: 'Boutique',
     benefits: [
-      'Boutique en ligne personnalisée',
-      'Gestion automatisée des stocks',
-      'Encaissement direct des ventes',
+      "10 jours d'essai",
+      'Boutique personnalisée',
+      'Gestion des commandes',
     ]
   },
   {
@@ -67,16 +68,16 @@ export const PROFILE_OPTIONS: ProfileOption[] = [
     title: 'Prestataire',
     emoji: '🛠️',
     icon: Wrench,
-    description: 'Proposez vos services professionnels et recevez des commandes directes.',
-    price: 7500,
-    formattedPrice: '7 500 FCFA / mois',
+    description: 'Proposez vos services à des milliers de clients.',
+    price: 5000,
+    formattedPrice: '5 000 FCFA/mois',
     trialDays: 10,
-    formattedTrial: '10 jours d\'essai gratuit',
+    formattedTrial: "10 jours d'essai",
     badge: 'Services',
     benefits: [
-      'Profil professionnel certifié',
-      'Demandes de devis en direct',
-      'Gestion dynamique des rendez-vous',
+      "10 jours d'essai",
+      'Réservation en ligne',
+      'Paiement sécurisé',
     ]
   },
   {
@@ -84,23 +85,30 @@ export const PROFILE_OPTIONS: ProfileOption[] = [
     title: 'Entreprise',
     emoji: '🏢',
     icon: Building2,
-    description: 'Présentez votre entreprise et développez votre visibilité B2B.',
+    description: 'Développez votre entreprise avec des outils professionnels.',
     price: 15000,
-    formattedPrice: '15 000 FCFA / mois',
+    formattedPrice: '15 000 FCFA/mois',
     trialDays: 10,
-    formattedTrial: '10 jours d\'essai gratuit',
+    formattedTrial: "10 jours d'essai",
     badge: 'Pro & B2B',
     benefits: [
-      'Visibilité réseau B2B prioritaire',
-      'Multicompte collaborateurs',
-      'Statistiques avancées & support dédié',
+      "10 jours d'essai",
+      'Tableau de bord avancé',
+      'Gestion multi-utilisateurs',
     ]
   },
 ];
 
-export default function Screen4Inscription({ onSignupSuccess, onGoToLogin }: Screen4InscriptionProps) {
-  // Process steps: 'step1' (Informations) | 'step2' (Vérification OTP) | 'step3' (Finalisation) | 'success'
-  const [currentStep, setCurrentStep] = useState<'step1' | 'step2' | 'step3' | 'success'>('step1');
+export default function Screen4Inscription({ onSignupSuccess, onGoToLogin, lang = 'fr', onLangChange }: Screen4InscriptionProps) {
+  const [currentLang, setCurrentLang] = useState<'fr' | 'en'>(lang);
+
+  const toggleLanguage = () => {
+    const nextLang = currentLang === 'fr' ? 'en' : 'fr';
+    setCurrentLang(nextLang);
+    if (onLangChange) onLangChange(nextLang);
+  };
+  // Process steps: 'step1' (Informations) | 'step2' (Finalisation) | 'success'
+  const [currentStep, setCurrentStep] = useState<'step1' | 'step2' | 'success'>('step1');
 
   // Form state
   const [formData, setFormData] = useState({
@@ -120,20 +128,10 @@ export default function Screen4Inscription({ onSignupSuccess, onGoToLogin }: Scr
   const [selectedProfile, setSelectedProfile] = useState<ProfileType | null>('client');
   const [isBottomSheetOpen, setIsBottomSheetOpen] = useState(false);
 
-  // OTP state
-  const [generatedOtp, setGeneratedOtp] = useState('849201');
-  const [currentDemoOtp, setCurrentDemoOtp] = useState<string>('849201');
-  const [inputOtp, setInputOtp] = useState('');
-  const [otpError, setOtpError] = useState('');
-  const [otpSuccess, setOtpSuccess] = useState('');
-  const [otpCountdown, setOtpCountdown] = useState(60);
-  const [isResendingOtp, setIsResendingOtp] = useState(false);
-
   // Payment state
   const [paymentOperator, setPaymentOperator] = useState<'momo' | 'orange'>('momo');
   const [paymentPhone, setPaymentPhone] = useState('');
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
-  const [isAutoAdvancing, setIsAutoAdvancing] = useState(false);
 
   const selectedProfileObj = useMemo(() => PROFILE_OPTIONS.find(p => p.id === selectedProfile), [selectedProfile]);
 
@@ -161,104 +159,11 @@ export default function Screen4Inscription({ onSignupSuccess, onGoToLogin }: Scr
     setTouchedFields(prev => ({ ...prev, [field]: true }));
   };
 
-  // Proceed from Step 1 to Step 2 with OTP generation
-  const handleProceedToOtp = async () => {
-    if (!isStep1Complete || isAutoAdvancing) return;
-    setIsAutoAdvancing(true);
-    setOtpError('');
-    setOtpSuccess('');
-
-    try {
-      const res = await otpService.sendOtp(formData.phone);
-      const code = res.code || Math.floor(100000 + Math.random() * 900000).toString();
-      setGeneratedOtp(code);
-      setCurrentDemoOtp(code);
-      setPaymentPhone(formData.phone);
-      setOtpCountdown(60);
-      setCurrentStep('step2');
-    } catch (err) {
-      console.error('[OTP] Error triggering sendOtp:', err);
-      const fallbackCode = Math.floor(100000 + Math.random() * 900000).toString();
-      setGeneratedOtp(fallbackCode);
-      setCurrentDemoOtp(fallbackCode);
-      setPaymentPhone(formData.phone);
-      setOtpCountdown(60);
-      setCurrentStep('step2');
-    } finally {
-      setIsAutoAdvancing(false);
-    }
-  };
-
-  // OTP Countdown timer
-  useEffect(() => {
-    if (currentStep !== 'step2' || otpCountdown <= 0) return;
-    const timer = setInterval(() => setOtpCountdown(prev => prev - 1), 1000);
-    return () => clearInterval(timer);
-  }, [currentStep, otpCountdown]);
-
-  // Auto-verify OTP when 6 digits are typed
-  useEffect(() => {
-    if (currentStep !== 'step2') return;
-    if (inputOtp.length === 6) {
-      otpService.verifyOtp(formData.phone, inputOtp).then((res) => {
-        if (res.success) {
-          setOtpError('');
-          setOtpSuccess('Vérification réussie');
-          setTimeout(() => {
-            setOtpSuccess('');
-            setCurrentStep('step3');
-          }, 800);
-        } else {
-          setOtpSuccess('');
-          setOtpError(res.message || 'Code OTP invalide');
-        }
-      });
-    } else {
-      setOtpError('');
-      setOtpSuccess('');
-    }
-  }, [inputOtp, currentStep, formData.phone]);
-
-  // Handle manual OTP submission
-  const handleVerifyOtpSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setOtpError('');
-    setOtpSuccess('');
-    const res = await otpService.verifyOtp(formData.phone, inputOtp);
-    if (res.success) {
-      setOtpError('');
-      setOtpSuccess('Vérification réussie');
-      setTimeout(() => {
-        setOtpSuccess('');
-        setCurrentStep('step3');
-      }, 800);
-    } else {
-      setOtpSuccess('');
-      setOtpError(res.message || 'Code OTP invalide');
-    }
-  };
-
-  // Handle Resend OTP
-  const handleResendOtp = async () => {
-    setIsResendingOtp(true);
-    setOtpError('');
-    setOtpSuccess('');
-    try {
-      const res = await otpService.resendOtp(formData.phone);
-      const newCode = res.code || Math.floor(100000 + Math.random() * 900000).toString();
-      setGeneratedOtp(newCode);
-      setCurrentDemoOtp(newCode);
-      setOtpSuccess('Nouveau code OTP généré avec succès !');
-      setOtpCountdown(60);
-    } catch (err) {
-      const fallbackCode = Math.floor(100000 + Math.random() * 900000).toString();
-      setGeneratedOtp(fallbackCode);
-      setCurrentDemoOtp(fallbackCode);
-      setOtpSuccess('Nouveau code OTP généré avec succès !');
-      setOtpCountdown(60);
-    } finally {
-      setIsResendingOtp(false);
-    }
+  // Proceed directly from Step 1 to Step 2 (Finalisation)
+  const handleProceedToFinalization = () => {
+    if (!isStep1Complete) return;
+    setPaymentPhone(formData.phone);
+    setCurrentStep('step2');
   };
 
   // Handle Payment Submission
@@ -272,106 +177,114 @@ export default function Screen4Inscription({ onSignupSuccess, onGoToLogin }: Scr
   };
 
   // Step Index for progress calculation
-  const stepIndex = currentStep === 'step1' ? 1 : currentStep === 'step2' ? 2 : currentStep === 'step3' ? 3 : 4;
+  const stepIndex = currentStep === 'step1' ? 1 : 2;
+  const progressPercent = currentStep === 'step1' ? 50 : 100;
+  const stepTitle = currentStep === 'step1'
+    ? (currentLang === 'fr' ? 'Informations' : 'Information')
+    : (currentLang === 'fr' ? 'Finalisation' : 'Finalization');
 
   return (
-    <div className="w-full max-w-md sm:max-w-lg mx-auto bg-[#FFFFFF] text-[#0F172A] rounded-[24px] overflow-hidden shadow-xl border border-[#E5E7EB] p-4 sm:p-6 flex flex-col justify-between min-h-[600px] relative font-sans transition-all duration-300">
+    <div className="w-full max-w-[540px] mx-auto bg-white text-[#0F172A] rounded-[24px] sm:rounded-[32px] overflow-hidden shadow-[0_16px_48px_rgba(15,23,42,0.12)] border border-slate-200/90 p-5 sm:p-7 flex flex-col justify-between min-h-[90vh] sm:min-h-[660px] relative font-sans transition-all duration-300">
       
-      {/* 2. Compact Header with Official AfriNova Logo & Slogan */}
-      <div className="shrink-0">
-        <div className="flex items-center justify-between pb-2.5 border-b border-[#E5E7EB] gap-2">
-          <div className="flex items-center gap-2.5 min-w-0 flex-1 pr-1">
-            {/* AfriNova Logo Badge */}
-            <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-gradient-to-br from-[#16A34A] to-[#0F172A] text-white flex items-center justify-center font-black text-base shadow-sm shrink-0">
-              <Globe className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-400 animate-pulse" />
+      {/* 1. Header with Enlarged Logo (25-30% bigger), City Badge, Slogan & Language Toggle */}
+      <div className="shrink-0 space-y-3">
+        <div className="flex items-center justify-between pb-3 border-b border-slate-100 gap-3">
+          {/* Logo & City Badge */}
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="w-11 h-11 sm:w-13 sm:h-13 rounded-2xl bg-gradient-to-br from-[#16A34A] via-[#15803D] to-[#0F172A] text-white flex items-center justify-center font-black shadow-md shadow-emerald-600/20 shrink-0 transform hover:scale-105 transition-transform duration-200">
+              <Globe className="w-6 h-6 sm:w-7 sm:h-7 text-emerald-300 animate-pulse" />
             </div>
-            <div className="text-left min-w-0 flex-1">
-              <div className="flex items-center gap-1.5 flex-wrap">
-                <span className="text-sm sm:text-base font-black text-[#0F172A] font-display tracking-tight leading-none">
+            <div className="text-left min-w-0">
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="text-xl sm:text-2xl font-black text-[#0F172A] font-display tracking-tight leading-none">
                   Afri<span className="text-[#16A34A]">Nova</span>
                 </span>
-                <span className="text-[8px] sm:text-[9px] font-extrabold uppercase bg-[#16A34A] text-white px-1.5 py-0.5 rounded-md tracking-wider shrink-0">
+                <span className="text-[10px] sm:text-[11px] font-black uppercase bg-[#16A34A] text-white px-2.5 py-0.5 rounded-lg tracking-wider shrink-0 shadow-2xs">
                   Bafoussam
                 </span>
               </div>
-              <p className="text-[10px] sm:text-[11px] text-[#16A34A] font-extrabold tracking-tight mt-0.5 leading-snug break-words max-w-full">
-                « L'Afrique connectée au monde. »
-              </p>
             </div>
           </div>
 
-          <span className="text-[9px] sm:text-[10px] font-extrabold text-[#16A34A] bg-[#DCFCE7] px-2 py-1 rounded-full border border-emerald-200/80 flex items-center gap-1 shadow-2xs shrink-0 whitespace-nowrap">
-            <Sparkles className="w-3 h-3 text-[#16A34A]" />
-            <span className="hidden xs:inline">International</span>
-            <span className="xs:hidden">Intl</span>
-          </span>
+          {/* Right Language Selector FR/EN */}
+          <button
+            type="button"
+            onClick={toggleLanguage}
+            className="px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-full bg-slate-50 hover:bg-emerald-50 text-slate-700 hover:text-[#16A34A] border border-slate-200 hover:border-emerald-300 flex items-center gap-1.5 text-xs font-black transition-all cursor-pointer active:scale-95 shrink-0 shadow-2xs"
+            title="Changer de langue / Switch language"
+          >
+            <Globe className="w-4 h-4 text-[#16A34A]" />
+            <span className={currentLang === 'fr' ? 'text-[#16A34A] font-extrabold' : 'text-slate-400'}>FR</span>
+            <span className="text-slate-300 text-[10px]">|</span>
+            <span className={currentLang === 'en' ? 'text-[#16A34A] font-extrabold' : 'text-slate-400'}>EN</span>
+          </button>
         </div>
 
-        {/* 3. Modernized 3-Step Indicator with 60 FPS transitions */}
-        <div className="pt-3 pb-1 px-1">
-          <div className="flex items-center justify-between relative">
-            {/* Background Step Line 1 -> 2 */}
-            <div className="absolute top-3.5 sm:top-4 left-6 right-1/2 h-0.5 bg-[#E5E7EB] -z-0">
-              <motion.div 
-                className="h-full bg-[#16A34A]" 
-                initial={false}
-                animate={{ width: stepIndex > 1 ? '100%' : '0%' }}
-                transition={{ duration: 0.25, ease: 'easeInOut' }}
-              />
-            </div>
-            {/* Background Step Line 2 -> 3 */}
-            <div className="absolute top-3.5 sm:top-4 left-1/2 right-6 h-0.5 bg-[#E5E7EB] -z-0">
-              <motion.div 
-                className="h-full bg-[#16A34A]" 
-                initial={false}
-                animate={{ width: stepIndex > 2 ? '100%' : '0%' }}
-                transition={{ duration: 0.25, ease: 'easeInOut' }}
-              />
-            </div>
+        {/* Spacious Slogan Container */}
+        <div className="bg-emerald-50/60 border border-emerald-200/60 px-3.5 py-2.5 rounded-2xl text-left shadow-2xs flex items-center gap-2">
+          <Sparkles className="w-4 h-4 text-[#16A34A] shrink-0 animate-spin-slow" />
+          <p className="text-xs sm:text-sm text-[#16A34A] font-extrabold tracking-tight leading-relaxed">
+            « {currentLang === 'fr' ? "L'Afrique connectée au monde." : "Africa connected to the world."} »
+          </p>
+        </div>
 
-            {/* Step 1 Circle */}
-            <div className="flex flex-col items-center gap-1 z-10 shrink-0">
-              <div className={`w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center font-extrabold text-[11px] sm:text-xs transition-all duration-200 ${
-                stepIndex > 1
-                  ? 'bg-[#16A34A] text-white shadow-xs'
-                  : 'bg-[#16A34A] text-white ring-4 ring-[#DCFCE7] ring-offset-1 shadow-sm'
+        {/* 2. Progress Bar Header & 2-Step Indicators */}
+        <div className="pt-2 pb-1 space-y-2">
+          {/* Progress Header Label & Percentage */}
+          <div className="flex items-center justify-between text-xs font-black">
+            <span className="text-[#0F172A] uppercase tracking-wider flex items-center gap-1.5">
+              <span className="text-[#16A34A]">Étape {stepIndex} / 2</span> • {stepTitle}
+            </span>
+            <span className="font-mono text-[#16A34A] bg-[#DCFCE7] border border-emerald-300 px-2.5 py-0.5 rounded-full shadow-2xs text-[11px]">
+              {progressPercent} %
+            </span>
+          </div>
+
+          {/* Animated Progress Bar */}
+          <div className="w-full h-2.5 bg-slate-100 rounded-full overflow-hidden p-0.5 border border-slate-200/60 shadow-inner">
+            <motion.div 
+              className="h-full bg-gradient-to-r from-[#16A34A] via-[#15803D] to-[#16A34A] rounded-full shadow-xs"
+              initial={{ width: '50%' }}
+              animate={{ width: `${progressPercent}%` }}
+              transition={{ duration: 0.35, ease: 'easeInOut' }}
+            />
+          </div>
+
+          {/* 2 Step Pills */}
+          <div className="grid grid-cols-2 gap-2 pt-1">
+            {/* Step 1 Pill */}
+            <div className={`py-1.5 px-3 rounded-xl text-center flex items-center justify-center gap-2 transition-all duration-200 ${
+              stepIndex > 1
+                ? 'bg-[#16A34A] text-white shadow-2xs font-extrabold'
+                : stepIndex === 1
+                ? 'bg-[#16A34A] text-white ring-2 ring-[#DCFCE7] shadow-md shadow-emerald-600/20 font-black'
+                : 'bg-[#F8FAFC] text-slate-400 border border-slate-200 font-bold'
+            }`}>
+              <div className={`w-4 h-4 rounded-full flex items-center justify-center text-[10px] shrink-0 font-bold ${
+                stepIndex >= 1 ? 'bg-white text-[#16A34A]' : 'bg-slate-200 text-slate-500'
               }`}>
-                {stepIndex > 1 ? <Check className="w-3.5 h-3.5 sm:w-4 sm:h-4 stroke-[3]" /> : '1'}
+                {stepIndex > 1 ? <Check className="w-3 h-3 stroke-[3]" /> : '1'}
               </div>
-              <span className={`text-[9px] sm:text-[10px] font-extrabold text-center ${stepIndex === 1 ? 'text-[#16A34A]' : 'text-slate-500'}`}>
-                Informations
+              <span className="text-xs truncate">
+                {currentLang === 'fr' ? '1. Informations' : '1. Information'}
               </span>
             </div>
 
-            {/* Step 2 Circle */}
-            <div className="flex flex-col items-center gap-1 z-10 shrink-0">
-              <div className={`w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center font-extrabold text-[11px] sm:text-xs transition-all duration-200 ${
-                stepIndex > 2
-                  ? 'bg-[#16A34A] text-white shadow-xs'
-                  : stepIndex === 2
-                  ? 'bg-[#16A34A] text-white ring-4 ring-[#DCFCE7] ring-offset-1 shadow-sm'
-                  : 'bg-[#F8FAFC] text-slate-400 border-2 border-[#E5E7EB]'
+            {/* Step 2 Pill */}
+            <div className={`py-1.5 px-3 rounded-xl text-center flex items-center justify-center gap-2 transition-all duration-200 ${
+              stepIndex === 2 && currentStep === 'success'
+                ? 'bg-[#16A34A] text-white shadow-2xs font-extrabold'
+                : stepIndex === 2
+                ? 'bg-[#16A34A] text-white ring-2 ring-[#DCFCE7] shadow-md shadow-emerald-600/20 font-black'
+                : 'bg-[#F8FAFC] text-slate-400 border border-slate-200 font-bold'
+            }`}>
+              <div className={`w-4 h-4 rounded-full flex items-center justify-center text-[10px] shrink-0 font-bold ${
+                stepIndex === 2 ? 'bg-white text-[#16A34A]' : 'bg-slate-200 text-slate-500'
               }`}>
-                {stepIndex > 2 ? <Check className="w-3.5 h-3.5 sm:w-4 sm:h-4 stroke-[3]" /> : '2'}
+                {currentStep === 'success' ? <Check className="w-3 h-3 stroke-[3]" /> : '2'}
               </div>
-              <span className={`text-[9px] sm:text-[10px] font-extrabold text-center ${stepIndex === 2 ? 'text-[#16A34A]' : 'text-slate-400'}`}>
-                Vérification
-              </span>
-            </div>
-
-            {/* Step 3 Circle */}
-            <div className="flex flex-col items-center gap-1 z-10 shrink-0">
-              <div className={`w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center font-extrabold text-[11px] sm:text-xs transition-all duration-200 ${
-                stepIndex === 4
-                  ? 'bg-[#16A34A] text-white shadow-xs'
-                  : stepIndex === 3
-                  ? 'bg-[#16A34A] text-white ring-4 ring-[#DCFCE7] ring-offset-1 shadow-sm'
-                  : 'bg-[#F8FAFC] text-slate-400 border-2 border-[#E5E7EB]'
-              }`}>
-                {stepIndex === 4 ? <Check className="w-3.5 h-3.5 sm:w-4 sm:h-4 stroke-[3]" /> : '3'}
-              </div>
-              <span className={`text-[9px] sm:text-[10px] font-extrabold text-center ${stepIndex >= 3 ? 'text-[#16A34A]' : 'text-slate-400'}`}>
-                Finalisation
+              <span className="text-xs truncate">
+                {currentLang === 'fr' ? '2. Finalisation' : '2. Finalization'}
               </span>
             </div>
           </div>
@@ -390,64 +303,64 @@ export default function Screen4Inscription({ onSignupSuccess, onGoToLogin }: Scr
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: 15 }}
               transition={{ duration: 0.25, ease: 'easeOut' }}
-              className="space-y-3"
+              className="space-y-4 pt-1"
             >
               {/* Nom & Prénom */}
-              <div className="grid grid-cols-2 gap-2.5">
+              <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-[10px] font-extrabold text-slate-700 uppercase mb-1">
-                    Nom <span className="text-red-500">*</span>
+                  <label className="block text-xs sm:text-[13px] font-extrabold text-slate-700 uppercase tracking-wide mb-1.5">
+                    {currentLang === 'fr' ? 'Nom' : 'Last Name'} <span className="text-red-500">*</span>
                   </label>
                   <div className="relative">
-                    <UserIcon className="w-4 h-4 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                    <UserIcon className="w-5 h-5 text-slate-400 absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none" />
                     <input
                       type="text"
                       value={formData.lastName}
                       onBlur={() => markFieldTouched('lastName')}
                       onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
-                      placeholder="Ex: Kamdem"
+                      placeholder="Jean Kamdem"
                       required
-                      className={`w-full h-[42px] pl-9 pr-8 bg-white border rounded-[16px] text-xs text-[#0F172A] font-medium shadow-[0_2px_8px_rgba(0,0,0,0.03)] focus:outline-none focus:ring-2 focus:ring-[#16A34A]/20 focus:border-[#16A34A] transition-all duration-200 ease-out placeholder:text-slate-400 ${
-                        touchedFields.lastName && !isLastNameValid ? 'border-red-400 bg-red-50/20' : 'border-[#E8E8E8]'
+                      className={`w-full h-[58px] pl-12 pr-10 bg-[#F8FAFC] focus:bg-white border rounded-[18px] text-sm sm:text-base text-[#0F172A] font-semibold shadow-2xs focus:outline-none focus:ring-2 focus:ring-[#16A34A]/25 focus:border-[#16A34A] transition-all duration-200 placeholder:text-slate-400 ${
+                        touchedFields.lastName && !isLastNameValid ? 'border-red-500 bg-red-50/20' : 'border-[#E2E8F0]'
                       }`}
                     />
                     {isLastNameValid && (
-                      <CheckCircle2 className="w-4 h-4 text-[#16A34A] absolute right-2.5 top-1/2 -translate-y-1/2 shrink-0" />
+                      <CheckCircle2 className="w-5 h-5 text-[#16A34A] absolute right-3.5 top-1/2 -translate-y-1/2 shrink-0 animate-in fade-in" />
                     )}
                   </div>
                   {touchedFields.lastName && !isLastNameValid && (
-                    <p className="text-[10px] text-red-500 font-bold mt-0.5 flex items-center gap-1">
-                      <AlertCircle className="w-3 h-3" />
-                      <span>Au moins 2 caractères</span>
+                    <p className="text-xs text-red-500 font-bold mt-1 flex items-center gap-1">
+                      <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                      <span>{currentLang === 'fr' ? 'Au moins 2 caractères' : 'At least 2 characters'}</span>
                     </p>
                   )}
                 </div>
 
                 <div>
-                  <label className="block text-[10px] font-extrabold text-slate-700 uppercase mb-1">
-                    Prénom <span className="text-red-500">*</span>
+                  <label className="block text-xs sm:text-[13px] font-extrabold text-slate-700 uppercase tracking-wide mb-1.5">
+                    {currentLang === 'fr' ? 'Prénom' : 'First Name'} <span className="text-red-500">*</span>
                   </label>
                   <div className="relative">
-                    <UserIcon className="w-4 h-4 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                    <UserIcon className="w-5 h-5 text-slate-400 absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none" />
                     <input
                       type="text"
                       value={formData.firstName}
                       onBlur={() => markFieldTouched('firstName')}
                       onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
-                      placeholder="Ex: Paul"
+                      placeholder="Jean"
                       required
-                      className={`w-full h-[42px] pl-9 pr-8 bg-white border rounded-[16px] text-xs text-[#0F172A] font-medium shadow-[0_2px_8px_rgba(0,0,0,0.03)] focus:outline-none focus:ring-2 focus:ring-[#16A34A]/20 focus:border-[#16A34A] transition-all duration-200 ease-out placeholder:text-slate-400 ${
-                        touchedFields.firstName && !isFirstNameValid ? 'border-red-400 bg-red-50/20' : 'border-[#E8E8E8]'
+                      className={`w-full h-[58px] pl-12 pr-10 bg-[#F8FAFC] focus:bg-white border rounded-[18px] text-sm sm:text-base text-[#0F172A] font-semibold shadow-2xs focus:outline-none focus:ring-2 focus:ring-[#16A34A]/25 focus:border-[#16A34A] transition-all duration-200 placeholder:text-slate-400 ${
+                        touchedFields.firstName && !isFirstNameValid ? 'border-red-500 bg-red-50/20' : 'border-[#E2E8F0]'
                       }`}
                     />
                     {isFirstNameValid && (
-                      <CheckCircle2 className="w-4 h-4 text-[#16A34A] absolute right-2.5 top-1/2 -translate-y-1/2 shrink-0" />
+                      <CheckCircle2 className="w-5 h-5 text-[#16A34A] absolute right-3.5 top-1/2 -translate-y-1/2 shrink-0 animate-in fade-in" />
                     )}
                   </div>
                   {touchedFields.firstName && !isFirstNameValid && (
-                    <p className="text-[10px] text-red-500 font-bold mt-0.5 flex items-center gap-1">
-                      <AlertCircle className="w-3 h-3" />
-                      <span>Au moins 2 caractères</span>
+                    <p className="text-xs text-red-500 font-bold mt-1 flex items-center gap-1">
+                      <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                      <span>{currentLang === 'fr' ? 'Au moins 2 caractères' : 'At least 2 characters'}</span>
                     </p>
                   )}
                 </div>
@@ -455,72 +368,72 @@ export default function Screen4Inscription({ onSignupSuccess, onGoToLogin }: Scr
 
               {/* Téléphone */}
               <div>
-                <label className="block text-[10px] font-extrabold text-slate-700 uppercase mb-1">
-                  Téléphone (WhatsApp / MoMo / Orange) <span className="text-red-500">*</span>
+                <label className="block text-xs sm:text-[13px] font-extrabold text-slate-700 uppercase tracking-wide mb-1.5">
+                  {currentLang === 'fr' ? 'Téléphone (WhatsApp / MoMo / Orange)' : 'Phone (WhatsApp / MoMo / Orange)'} <span className="text-red-500">*</span>
                 </label>
                 <div className="relative">
-                  <Phone className="w-4 h-4 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                  <Phone className="w-5 h-5 text-slate-400 absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none" />
                   <input
                     type="tel"
                     value={formData.phone}
                     onBlur={() => markFieldTouched('phone')}
                     onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                    placeholder="Ex: 699123456"
+                    placeholder="677894512"
                     required
-                    className={`w-full h-[42px] pl-9 pr-8 bg-white border rounded-[16px] text-xs text-[#0F172A] font-mono shadow-[0_2px_8px_rgba(0,0,0,0.03)] focus:outline-none focus:ring-2 focus:ring-[#16A34A]/20 focus:border-[#16A34A] transition-all duration-200 ease-out placeholder:text-slate-400 ${
-                      touchedFields.phone && !isPhoneValid ? 'border-red-400 bg-red-50/20' : 'border-[#E8E8E8]'
+                    className={`w-full h-[58px] pl-12 pr-10 bg-[#F8FAFC] focus:bg-white border rounded-[18px] text-sm sm:text-base text-[#0F172A] font-mono font-semibold shadow-2xs focus:outline-none focus:ring-2 focus:ring-[#16A34A]/25 focus:border-[#16A34A] transition-all duration-200 placeholder:text-slate-400 ${
+                      touchedFields.phone && !isPhoneValid ? 'border-red-500 bg-red-50/20' : 'border-[#E2E8F0]'
                     }`}
                   />
                   {isPhoneValid && (
-                    <CheckCircle2 className="w-4 h-4 text-[#16A34A] absolute right-2.5 top-1/2 -translate-y-1/2 shrink-0" />
+                    <CheckCircle2 className="w-5 h-5 text-[#16A34A] absolute right-3.5 top-1/2 -translate-y-1/2 shrink-0 animate-in fade-in" />
                   )}
                 </div>
                 {touchedFields.phone && !isPhoneValid && (
-                  <p className="text-[10px] text-red-500 font-bold mt-0.5 flex items-center gap-1">
-                    <AlertCircle className="w-3 h-3" />
-                    <span>Numéro valide (au moins 9 chiffres)</span>
+                  <p className="text-xs text-red-500 font-bold mt-1 flex items-center gap-1">
+                    <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                    <span>{currentLang === 'fr' ? 'Numéro valide (ex: 677894512)' : 'Valid phone number (e.g. 677894512)'}</span>
                   </p>
                 )}
               </div>
 
               {/* Email */}
               <div>
-                <label className="block text-[10px] font-extrabold text-slate-700 uppercase mb-1">
-                  Email <span className="text-red-500">*</span>
+                <label className="block text-xs sm:text-[13px] font-extrabold text-slate-700 uppercase tracking-wide mb-1.5">
+                  {currentLang === 'fr' ? 'Email' : 'Email address'} <span className="text-red-500">*</span>
                 </label>
                 <div className="relative">
-                  <Mail className="w-4 h-4 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                  <Mail className="w-5 h-5 text-slate-400 absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none" />
                   <input
                     type="email"
                     value={formData.email}
                     onBlur={() => markFieldTouched('email')}
                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                    placeholder="votre.email@domaine.cm"
+                    placeholder="jean.kamdem@gmail.com"
                     required
-                    className={`w-full h-[42px] pl-9 pr-8 bg-white border rounded-[16px] text-xs text-[#0F172A] font-medium shadow-[0_2px_8px_rgba(0,0,0,0.03)] focus:outline-none focus:ring-2 focus:ring-[#16A34A]/20 focus:border-[#16A34A] transition-all duration-200 ease-out placeholder:text-slate-400 ${
-                      touchedFields.email && !isEmailValid ? 'border-red-400 bg-red-50/20' : 'border-[#E8E8E8]'
+                    className={`w-full h-[58px] pl-12 pr-10 bg-[#F8FAFC] focus:bg-white border rounded-[18px] text-sm sm:text-base text-[#0F172A] font-semibold shadow-2xs focus:outline-none focus:ring-2 focus:ring-[#16A34A]/25 focus:border-[#16A34A] transition-all duration-200 placeholder:text-slate-400 ${
+                      touchedFields.email && !isEmailValid ? 'border-red-500 bg-red-50/20' : 'border-[#E2E8F0]'
                     }`}
                   />
                   {isEmailValid && (
-                    <CheckCircle2 className="w-4 h-4 text-[#16A34A] absolute right-2.5 top-1/2 -translate-y-1/2 shrink-0" />
+                    <CheckCircle2 className="w-5 h-5 text-[#16A34A] absolute right-3.5 top-1/2 -translate-y-1/2 shrink-0 animate-in fade-in" />
                   )}
                 </div>
                 {touchedFields.email && !isEmailValid && (
-                  <p className="text-[10px] text-red-500 font-bold mt-0.5 flex items-center gap-1">
-                    <AlertCircle className="w-3 h-3" />
-                    <span>Adresse email valide requise</span>
+                  <p className="text-xs text-red-500 font-bold mt-1 flex items-center gap-1">
+                    <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                    <span>{currentLang === 'fr' ? 'Adresse email valide requise' : 'Valid email address required'}</span>
                   </p>
                 )}
               </div>
 
               {/* Mot de passe & Confirmation */}
-              <div className="grid grid-cols-2 gap-2.5">
+              <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-[10px] font-extrabold text-slate-700 uppercase mb-1">
-                    Mot de passe <span className="text-red-500">*</span>
+                  <label className="block text-xs sm:text-[13px] font-extrabold text-slate-700 uppercase tracking-wide mb-1.5">
+                    {currentLang === 'fr' ? 'Mot de passe' : 'Password'} <span className="text-red-500">*</span>
                   </label>
                   <div className="relative">
-                    <Lock className="w-4 h-4 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                    <Lock className="w-5 h-5 text-slate-400 absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none" />
                     <input
                       type="password"
                       value={formData.password}
@@ -529,28 +442,28 @@ export default function Screen4Inscription({ onSignupSuccess, onGoToLogin }: Scr
                       placeholder="••••••••"
                       required
                       minLength={8}
-                      className={`w-full h-[42px] pl-9 pr-8 bg-white border rounded-[16px] text-xs text-[#0F172A] font-medium shadow-[0_2px_8px_rgba(0,0,0,0.03)] focus:outline-none focus:ring-2 focus:ring-[#16A34A]/20 focus:border-[#16A34A] transition-all duration-200 ease-out placeholder:text-slate-400 ${
-                        touchedFields.password && !isPasswordValid ? 'border-red-400 bg-red-50/20' : 'border-[#E8E8E8]'
+                      className={`w-full h-[58px] pl-12 pr-10 bg-[#F8FAFC] focus:bg-white border rounded-[18px] text-sm sm:text-base text-[#0F172A] font-semibold shadow-2xs focus:outline-none focus:ring-2 focus:ring-[#16A34A]/25 focus:border-[#16A34A] transition-all duration-200 placeholder:text-slate-400 ${
+                        touchedFields.password && !isPasswordValid ? 'border-red-500 bg-red-50/20' : 'border-[#E2E8F0]'
                       }`}
                     />
                     {isPasswordValid && (
-                      <CheckCircle2 className="w-4 h-4 text-[#16A34A] absolute right-2.5 top-1/2 -translate-y-1/2 shrink-0" />
+                      <CheckCircle2 className="w-5 h-5 text-[#16A34A] absolute right-3.5 top-1/2 -translate-y-1/2 shrink-0 animate-in fade-in" />
                     )}
                   </div>
                   {touchedFields.password && !isPasswordValid && (
-                    <p className="text-[10px] text-red-500 font-bold mt-0.5 flex items-center gap-1">
-                      <AlertCircle className="w-3 h-3" />
-                      <span>Au moins 8 caractères</span>
+                    <p className="text-xs text-red-500 font-bold mt-1 flex items-center gap-1">
+                      <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                      <span>{currentLang === 'fr' ? 'Au moins 8 car.' : 'At least 8 chars.'}</span>
                     </p>
                   )}
                 </div>
 
                 <div>
-                  <label className="block text-[10px] font-extrabold text-slate-700 uppercase mb-1">
-                    Confirmation <span className="text-red-500">*</span>
+                  <label className="block text-xs sm:text-[13px] font-extrabold text-slate-700 uppercase tracking-wide mb-1.5">
+                    {currentLang === 'fr' ? 'Confirmation' : 'Confirm'} <span className="text-red-500">*</span>
                   </label>
                   <div className="relative">
-                    <Lock className="w-4 h-4 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                    <Lock className="w-5 h-5 text-slate-400 absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none" />
                     <input
                       type="password"
                       value={formData.confirmPassword}
@@ -559,18 +472,18 @@ export default function Screen4Inscription({ onSignupSuccess, onGoToLogin }: Scr
                       placeholder="••••••••"
                       required
                       minLength={8}
-                      className={`w-full h-[42px] pl-9 pr-8 bg-white border rounded-[16px] text-xs text-[#0F172A] font-medium shadow-[0_2px_8px_rgba(0,0,0,0.03)] focus:outline-none focus:ring-2 focus:ring-[#16A34A]/20 focus:border-[#16A34A] transition-all duration-200 ease-out placeholder:text-slate-400 ${
-                        touchedFields.confirmPassword && !isConfirmPasswordValid ? 'border-red-400 bg-red-50/20' : 'border-[#E8E8E8]'
+                      className={`w-full h-[58px] pl-12 pr-10 bg-[#F8FAFC] focus:bg-white border rounded-[18px] text-sm sm:text-base text-[#0F172A] font-semibold shadow-2xs focus:outline-none focus:ring-2 focus:ring-[#16A34A]/25 focus:border-[#16A34A] transition-all duration-200 placeholder:text-slate-400 ${
+                        touchedFields.confirmPassword && !isConfirmPasswordValid ? 'border-red-500 bg-red-50/20' : 'border-[#E2E8F0]'
                       }`}
                     />
                     {isConfirmPasswordValid && (
-                      <CheckCircle2 className="w-4 h-4 text-[#16A34A] absolute right-2.5 top-1/2 -translate-y-1/2 shrink-0" />
+                      <CheckCircle2 className="w-5 h-5 text-[#16A34A] absolute right-3.5 top-1/2 -translate-y-1/2 shrink-0 animate-in fade-in" />
                     )}
                   </div>
                   {touchedFields.confirmPassword && !isConfirmPasswordValid && (
-                    <p className="text-[10px] text-red-500 font-bold mt-0.5 flex items-center gap-1">
-                      <AlertCircle className="w-3 h-3" />
-                      <span>Mots de passe identiques</span>
+                    <p className="text-xs text-red-500 font-bold mt-1 flex items-center gap-1">
+                      <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                      <span>{currentLang === 'fr' ? 'Identique' : 'Must match'}</span>
                     </p>
                   )}
                 </div>
@@ -578,15 +491,15 @@ export default function Screen4Inscription({ onSignupSuccess, onGoToLogin }: Scr
 
               {/* Quartier */}
               <div>
-                <label className="block text-[10px] font-extrabold text-slate-700 uppercase mb-1">
-                  Quartier à Bafoussam <span className="text-red-500">*</span>
+                <label className="block text-xs sm:text-[13px] font-extrabold text-slate-700 uppercase tracking-wide mb-1.5">
+                  {currentLang === 'fr' ? 'Quartier à Bafoussam' : 'Neighborhood in Bafoussam'} <span className="text-red-500">*</span>
                 </label>
                 <div className="relative">
-                  <MapPin className="w-4 h-4 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                  <MapPin className="w-5 h-5 text-slate-400 absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none" />
                   <select
                     value={formData.neighborhood}
                     onChange={(e) => setFormData({ ...formData, neighborhood: e.target.value })}
-                    className="w-full h-[42px] pl-9 pr-8 bg-white border border-[#E8E8E8] rounded-[16px] text-xs text-[#0F172A] font-medium shadow-[0_2px_8px_rgba(0,0,0,0.03)] focus:outline-none focus:ring-2 focus:ring-[#16A34A]/20 focus:border-[#16A34A] transition-all duration-200 ease-out appearance-none cursor-pointer"
+                    className="w-full h-[58px] pl-12 pr-10 bg-[#F8FAFC] focus:bg-white border border-[#E2E8F0] rounded-[18px] text-sm sm:text-base text-[#0F172A] font-semibold shadow-2xs focus:outline-none focus:ring-2 focus:ring-[#16A34A]/25 focus:border-[#16A34A] transition-all duration-200 appearance-none cursor-pointer"
                   >
                     <option value="march-a">Marché A (Centre Commercial)</option>
                     <option value="march-b">Marché B (Ancien Marché)</option>
@@ -598,29 +511,29 @@ export default function Screen4Inscription({ onSignupSuccess, onGoToLogin }: Scr
                 </div>
               </div>
 
-              {/* 5. Bloc "Profil sélectionné" - Premium Card Design with Benefits */}
+              {/* Selected Profile Card Design */}
               <div className="pt-1">
                 {!selectedProfileObj ? (
                   <button
                     type="button"
                     onClick={() => setIsBottomSheetOpen(true)}
-                    className="w-full p-2.5 sm:p-3 rounded-[16px] bg-white border border-[#E8E8E8] hover:border-[#16A34A] hover:bg-[#F0FDF4]/50 transition-all duration-200 flex items-center justify-between shadow-[0_2px_8px_rgba(0,0,0,0.03)] group cursor-pointer text-left active:scale-[0.98]"
+                    className="w-full p-4 rounded-[18px] bg-white border-2 border-dashed border-slate-300 hover:border-[#16A34A] hover:bg-[#F0FDF4]/50 transition-all duration-200 flex items-center justify-between shadow-2xs group cursor-pointer text-left active:scale-[0.98]"
                   >
-                    <div className="flex items-center gap-2.5 sm:gap-3 min-w-0 flex-1">
-                      <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-[12px] bg-[#DCFCE7] text-[#16A34A] flex items-center justify-center text-sm sm:text-base font-bold shrink-0">
+                    <div className="flex items-center gap-3 min-w-0 flex-1">
+                      <div className="w-10 h-10 rounded-2xl bg-[#DCFCE7] text-[#16A34A] flex items-center justify-center text-lg font-bold shrink-0">
                         👤
                       </div>
                       <div className="min-w-0 flex-1">
-                        <h4 className="text-xs font-black text-[#0F172A] uppercase tracking-wider flex items-center gap-1 truncate">
-                          Choisir mon profil <span className="text-red-500">*</span>
+                        <h4 className="text-xs sm:text-sm font-black text-[#0F172A] uppercase tracking-wider flex items-center gap-1 truncate">
+                          {currentLang === 'fr' ? 'Choisir mon profil' : 'Choose my profile'} <span className="text-red-500">*</span>
                         </h4>
-                        <p className="text-[10px] sm:text-[11px] text-slate-500 font-medium mt-0.5 truncate">
+                        <p className="text-xs text-slate-500 font-medium mt-0.5 truncate">
                           Client • Vendeur • Prestataire • Entreprise
                         </p>
                       </div>
                     </div>
-                    <div className="w-7 h-7 rounded-full bg-[#F8FAFC] group-hover:bg-[#DCFCE7] text-slate-400 group-hover:text-[#16A34A] flex items-center justify-center transition-colors shrink-0 ml-2">
-                      <ChevronRight className="w-4 h-4" />
+                    <div className="w-8 h-8 rounded-full bg-slate-100 group-hover:bg-[#DCFCE7] text-slate-400 group-hover:text-[#16A34A] flex items-center justify-center transition-colors shrink-0 ml-2">
+                      <ChevronRight className="w-5 h-5" />
                     </div>
                   </button>
                 ) : (
@@ -629,24 +542,24 @@ export default function Screen4Inscription({ onSignupSuccess, onGoToLogin }: Scr
                     initial={{ opacity: 0, scale: 0.97 }}
                     animate={{ opacity: 1, scale: 1 }}
                     transition={{ duration: 0.2 }}
-                    className="w-full p-3 sm:p-3.5 rounded-[16px] bg-[#F0FDF4] border-2 border-[#16A34A] shadow-[0_2px_8px_rgba(22,163,74,0.08)] relative overflow-hidden"
+                    className="w-full p-4 rounded-[20px] bg-[#F0FDF4] border-2 border-[#16A34A] shadow-[0_4px_20px_rgba(22,163,74,0.1)] relative overflow-hidden"
                   >
-                    <div className="flex items-start justify-between gap-2 pb-2 border-b border-emerald-200/80">
-                      <div className="flex items-center gap-2.5 sm:gap-3 min-w-0 flex-1">
-                        <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-[12px] bg-[#16A34A] text-white flex items-center justify-center text-sm sm:text-base font-bold shrink-0 shadow-xs">
+                    <div className="flex items-start justify-between gap-3 pb-3 border-b border-emerald-200/80">
+                      <div className="flex items-center gap-3 min-w-0 flex-1">
+                        <div className="w-11 h-11 rounded-2xl bg-[#16A34A] text-white flex items-center justify-center text-xl font-bold shrink-0 shadow-sm">
                           {selectedProfileObj.emoji}
                         </div>
                         <div className="min-w-0 flex-1">
                           <div className="flex items-center gap-1.5 flex-wrap">
-                            <span className="text-[10px] font-black text-[#15803D] uppercase tracking-wider flex items-center gap-1 shrink-0">
-                              Profil sélectionné <CheckCircle2 className="w-3 h-3 text-[#16A34A]" />
+                            <span className="text-xs font-black text-[#15803D] uppercase tracking-wider flex items-center gap-1 shrink-0">
+                              {currentLang === 'fr' ? 'Profil sélectionné' : 'Selected profile'} <CheckCircle2 className="w-4 h-4 text-[#16A34A]" />
                             </span>
-                            <span className="text-[9px] font-bold px-1.5 py-0.2 rounded-md bg-white text-[#16A34A] border border-emerald-200 shrink-0">
+                            <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-white text-[#16A34A] border border-emerald-200 shrink-0">
                               {selectedProfileObj.badge}
                             </span>
                           </div>
-                          <h4 className="text-xs font-black text-[#0F172A] truncate mt-0.5">
-                            {selectedProfileObj.title} <span className="font-mono text-[10px] sm:text-[11px] font-extrabold text-[#15803D]">({selectedProfileObj.formattedPrice})</span>
+                          <h4 className="text-sm font-black text-[#0F172A] truncate mt-0.5">
+                            {selectedProfileObj.title} <span className="font-mono text-xs font-extrabold text-[#15803D]">({selectedProfileObj.formattedPrice})</span>
                           </h4>
                         </div>
                       </div>
@@ -654,21 +567,21 @@ export default function Screen4Inscription({ onSignupSuccess, onGoToLogin }: Scr
                       <button
                         type="button"
                         onClick={() => setIsBottomSheetOpen(true)}
-                        className="px-2.5 sm:px-3 py-1.5 rounded-[12px] bg-white hover:bg-emerald-50 text-[#16A34A] border border-emerald-300 text-[10px] sm:text-[11px] font-extrabold transition shrink-0 cursor-pointer shadow-2xs active:scale-[0.98] ml-1"
+                        className="px-3 py-1.5 rounded-xl bg-white hover:bg-emerald-50 text-[#16A34A] border border-emerald-300 text-xs font-extrabold transition shrink-0 cursor-pointer shadow-2xs active:scale-95 ml-1"
                       >
-                        Modifier
+                        {currentLang === 'fr' ? 'Changer' : 'Change'}
                       </button>
                     </div>
 
                     {/* Display Benefits Checklist */}
-                    <div className="pt-2 space-y-1">
-                      <p className="text-[10px] font-extrabold text-[#15803D] uppercase tracking-wider">
-                        Avantages exclusifs inclus ({selectedProfileObj.formattedTrial}) :
+                    <div className="pt-2.5 space-y-1">
+                      <p className="text-[11px] font-extrabold text-[#15803D] uppercase tracking-wider">
+                        {currentLang === 'fr' ? 'Avantages inclus' : 'Included benefits'} ({selectedProfileObj.formattedTrial}) :
                       </p>
-                      <ul className="space-y-0.5">
+                      <ul className="space-y-1">
                         {selectedProfileObj.benefits.map((benefit, i) => (
-                          <li key={i} className="text-[11px] text-slate-700 font-medium flex items-center gap-1.5">
-                            <CheckCircle2 className="w-3.5 h-3.5 text-[#16A34A] shrink-0" />
+                          <li key={i} className="text-xs text-slate-700 font-medium flex items-center gap-2">
+                            <CheckCircle2 className="w-4 h-4 text-[#16A34A] shrink-0" />
                             <span>{benefit}</span>
                           </li>
                         ))}
@@ -678,236 +591,150 @@ export default function Screen4Inscription({ onSignupSuccess, onGoToLogin }: Scr
                 )}
               </div>
 
-              {/* Info Text */}
-              <p className="text-center text-xs text-slate-500 font-medium pt-1">
-                Les informations seront vérifiées automatiquement avant de passer à l'étape suivante.
-              </p>
-
-              {/* Primary Button "Continuer" */}
+              {/* Primary Button "Continuer vers la finalisation →" */}
               <button
                 type="button"
-                disabled={!isStep1Complete || isAutoAdvancing}
+                disabled={!isStep1Complete}
                 onClick={() => {
                   if (typeof window !== 'undefined' && 'vibrate' in navigator) {
                     try { navigator.vibrate(10); } catch (e) {}
                   }
-                  handleProceedToOtp();
+                  handleProceedToFinalization();
                 }}
-                className={`w-full h-[54px] rounded-[16px] text-sm font-extrabold flex items-center justify-center gap-2 transition-all duration-200 cursor-pointer ${
+                className={`w-full h-[58px] rounded-[18px] text-sm sm:text-base font-extrabold flex items-center justify-center gap-2 transition-all duration-200 cursor-pointer ${
                   !isStep1Complete
-                    ? 'bg-slate-100 text-slate-400 border border-slate-200 cursor-not-allowed shadow-none'
-                    : 'bg-[#16A34A] hover:bg-[#15803D] text-white shadow-[0_8px_20px_rgba(22,163,74,0.25)] active:scale-[0.99]'
+                    ? 'bg-[#DCFCE7]/60 text-slate-400 border border-emerald-200 cursor-not-allowed shadow-none'
+                    : 'bg-gradient-to-r from-[#16A34A] via-[#15803D] to-[#16A34A] hover:brightness-105 text-white shadow-[0_8px_24px_rgba(22,163,74,0.3)] active:scale-[0.98]'
                 }`}
               >
-                {isAutoAdvancing ? (
-                  <>
-                    <Loader2 className="w-5 h-5 animate-spin" />
-                    <span>Envoi du code OTP...</span>
-                  </>
-                ) : (
-                  <>
-                    <span>Continuer vers la vérification</span>
-                    <ArrowRight className="w-4 h-4" />
-                  </>
-                )}
+                <span>{currentLang === 'fr' ? 'Continuer vers la finalisation' : 'Continue to finalization'}</span>
+                <ArrowRight className="w-5 h-5" />
               </button>
 
-              {/* Footer Badges */}
-              <div className="pt-2">
-                <div className="flex items-center justify-around gap-2 text-center text-[11px] font-semibold text-slate-600 bg-[#F8FAFC] p-2.5 sm:p-3 rounded-[16px] border border-[#E8E8E8]">
-                  <div className="flex items-center gap-1.5">
-                    <ShieldCheck className="w-4 h-4 text-[#16A34A]" />
-                    <span>Paiement sécurisé</span>
+              {/* 9. Premium Footer Component */}
+              <div className="pt-2 space-y-3">
+                {/* 3 Guarantees Badges */}
+                <div className="grid grid-cols-3 gap-2 p-3 rounded-[18px] bg-[#F8FAFC] border border-slate-200/80 text-[11px] font-bold text-slate-700 text-center">
+                  <div className="flex flex-col items-center gap-1">
+                    <ShieldCheck className="w-4.5 h-4.5 text-[#16A34A]" />
+                    <span className="leading-tight">{currentLang === 'fr' ? 'Paiement sécurisé' : 'Secure payment'}</span>
                   </div>
-                  <span className="text-slate-300">•</span>
-                  <div className="flex items-center gap-1.5">
-                    <Truck className="w-4 h-4 text-[#16A34A]" />
-                    <span>Livraison rapide</span>
+                  <div className="flex flex-col items-center gap-1">
+                    <Truck className="w-4.5 h-4.5 text-[#16A34A]" />
+                    <span className="leading-tight">{currentLang === 'fr' ? 'Livraison rapide' : 'Fast delivery'}</span>
                   </div>
-                  <span className="text-slate-300">•</span>
-                  <div className="flex items-center gap-1.5">
-                    <Headphones className="w-4 h-4 text-[#16A34A]" />
-                    <span>Support 24/7</span>
+                  <div className="flex flex-col items-center gap-1">
+                    <Headphones className="w-4.5 h-4.5 text-[#16A34A]" />
+                    <span className="leading-tight">{currentLang === 'fr' ? 'Support 24/7' : '24/7 Support'}</span>
                   </div>
                 </div>
-              </div>
 
+                {/* Direct Contact Links & Copyright */}
+                <div className="flex flex-col items-center gap-2 pt-1 border-t border-slate-100 text-xs text-slate-500">
+                  <div className="flex items-center gap-3 flex-wrap justify-center font-semibold">
+                    <a 
+                      href="https://wa.me/237699000000" 
+                      target="_blank" 
+                      rel="noopener noreferrer" 
+                      className="flex items-center gap-1 text-[#16A34A] hover:underline font-extrabold"
+                    >
+                      <MessageCircle className="w-3.5 h-3.5" />
+                      <span>WhatsApp</span>
+                    </a>
+                    <span className="text-slate-300">•</span>
+                    <a href="tel:+237699000000" className="flex items-center gap-1 hover:text-[#0F172A]">
+                      <PhoneCall className="w-3.5 h-3.5 text-slate-400" />
+                      <span>Téléphone</span>
+                    </a>
+                    <span className="text-slate-300">•</span>
+                    <a href="mailto:support@afrinova.cm" className="flex items-center gap-1 hover:text-[#0F172A]">
+                      <Mail className="w-3.5 h-3.5 text-slate-400" />
+                      <span>Email</span>
+                    </a>
+                  </div>
+
+                  <p className="text-[11px] text-slate-400">
+                    © 2026 AfriNova. Tous droits réservés.
+                  </p>
+                </div>
+              </div>
             </motion.div>
           )}
 
-          {/* STEP 2: VÉRIFICATION OTP */}
+          {/* STEP 2: FINALISATION / PAIEMENT SÉCURISÉ */}
           {currentStep === 'step2' && (
             <motion.div
-              key="step2-otp"
-              initial={{ opacity: 0, x: 15 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -15 }}
-              transition={{ duration: 0.25, ease: 'easeOut' }}
-              className="space-y-4 py-2"
-            >
-              {/* Visible Test OTP Code Card */}
-              <div className="bg-[#0F172A] text-white rounded-2xl p-4 shadow-lg border-2 border-[#16A34A] relative overflow-hidden">
-                <div className="absolute top-0 left-0 w-1.5 h-full bg-[#16A34A]"></div>
-                <div className="flex items-center justify-between gap-2 mb-2">
-                  <div className="flex items-center gap-1.5">
-                    <Sparkles className="w-4 h-4 text-[#16A34A] animate-pulse shrink-0" />
-                    <span className="text-xs font-black text-[#16A34A] uppercase tracking-wider">
-                      Code de test OTP
-                    </span>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setInputOtp(currentDemoOtp || generatedOtp || '');
-                      setOtpError('');
-                    }}
-                    className="text-[11px] font-extrabold bg-[#16A34A] hover:bg-[#15803D] text-white px-2.5 py-1 rounded-lg transition-all cursor-pointer active:scale-95 shadow-2xs"
-                  >
-                    Copier / Remplir
-                  </button>
-                </div>
-
-                <div className="flex items-center justify-between bg-slate-900/90 px-3.5 py-2.5 rounded-xl border border-slate-700/80">
-                  <span className="text-xs text-slate-300 font-medium">Code généré :</span>
-                  <span className="font-mono text-xl font-black text-yellow-400 tracking-[0.2em] underline">
-                    {currentDemoOtp || generatedOtp || '123456'}
-                  </span>
-                </div>
-
-                <p className="text-[10px] text-slate-400 mt-2 text-center">
-                  Saisissez ce code ci-dessous ou cliquez sur <strong className="text-white font-bold">Copier / Remplir</strong> pour continuer.
-                </p>
-              </div>
-
-              <div className="text-center">
-                <h3 className="font-extrabold text-[#0F172A] text-sm">Vérification du numéro de téléphone</h3>
-                <p className="text-xs text-slate-500 mt-1">
-                  Code transmis au <span className="font-mono text-[#16A34A] font-bold">{formData.phone}</span>
-                </p>
-              </div>
-
-              {otpSuccess && (
-                <div className="bg-emerald-50 border border-emerald-300 text-emerald-800 p-3 rounded-2xl text-xs font-extrabold text-center flex items-center justify-center gap-2 animate-bounce">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-                  <span>{otpSuccess}</span>
-                </div>
-              )}
-
-              {otpError && (
-                <div className="bg-red-50 border border-red-300 text-red-700 p-3 rounded-2xl text-xs font-extrabold text-center flex items-center justify-center gap-2 animate-shake">
-                  <AlertCircle className="w-4 h-4 text-red-600 shrink-0" />
-                  <span>{otpError}</span>
-                </div>
-              )}
-
-              <form onSubmit={handleVerifyOtpSubmit} className="space-y-4">
-                <div>
-                  <input
-                    type="text"
-                    maxLength={6}
-                    value={inputOtp}
-                    onChange={(e) => setInputOtp(e.target.value.replace(/\D/g, ''))}
-                    placeholder="000000"
-                    autoFocus
-                    className="w-full text-center tracking-[0.5em] font-mono text-2xl font-black bg-[#F8FAFC] border border-[#E5E7EB] rounded-2xl py-3 text-[#0F172A] focus:outline-none focus:ring-2 focus:ring-[#16A34A]/30 focus:border-[#16A34A] transition shadow-xs"
-                  />
-                </div>
-
-                <div className="flex items-center justify-between text-xs text-slate-500">
-                  <button
-                    type="button"
-                    onClick={() => setCurrentStep('step1')}
-                    className="text-slate-600 font-bold hover:underline cursor-pointer active:scale-[0.98]"
-                  >
-                    ← Modifier le profil/numéro
-                  </button>
-
-                  <button
-                    type="button"
-                    disabled={isResendingOtp || otpCountdown > 0}
-                    onClick={handleResendOtp}
-                    className="text-[#16A34A] font-bold disabled:text-slate-400 hover:underline cursor-pointer active:scale-[0.98]"
-                  >
-                    {isResendingOtp ? 'Renvoi...' : otpCountdown > 0 ? `Renvoyer (${otpCountdown}s)` : 'Renvoyer le code'}
-                  </button>
-                </div>
-
-                {/* 7. Modernized Button with active press scale */}
-                <button
-                  type="submit"
-                  className="w-full h-12 bg-[#16A34A] hover:bg-[#15803D] text-white font-extrabold text-xs rounded-xl shadow-lg shadow-emerald-600/20 transition flex items-center justify-center gap-1.5 cursor-pointer active:scale-[0.98]"
-                >
-                  <span>Valider le code OTP</span>
-                  <ArrowRight className="w-4 h-4" />
-                </button>
-              </form>
-            </motion.div>
-          )}
-
-          {/* STEP 3: FINALISATION / PAIEMENT SÉCURISÉ */}
-          {currentStep === 'step3' && (
-            <motion.div
-              key="step3-finalisation"
+              key="step2-finalisation"
               initial={{ opacity: 0, x: 15 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -15 }}
               transition={{ duration: 0.25, ease: 'easeOut' }}
               className="space-y-4 py-1"
             >
+              {/* Back to Step 1 Button */}
+              <button
+                type="button"
+                onClick={() => setCurrentStep('step1')}
+                className="text-xs font-extrabold text-slate-500 hover:text-[#16A34A] flex items-center gap-1 transition cursor-pointer active:scale-95"
+              >
+                <ArrowLeft className="w-4 h-4" />
+                <span>{currentLang === 'fr' ? 'Modifier mes informations' : 'Edit my information'}</span>
+              </button>
+
               {/* Profile Summary Card */}
-              <div className="bg-[#DCFCE7]/70 border border-emerald-300/80 rounded-2xl p-4 space-y-2 shadow-2xs">
+              <div className="bg-[#DCFCE7]/70 border border-emerald-300/80 rounded-[20px] p-4 space-y-2.5 shadow-2xs">
                 <div className="flex items-center justify-between">
-                  <span className="text-[10px] font-black text-[#15803D] uppercase tracking-wider">
-                    Résumé de votre abonnement
+                  <span className="text-xs font-black text-[#15803D] uppercase tracking-wider">
+                    {currentLang === 'fr' ? 'Résumé de votre abonnement' : 'Subscription Summary'}
                   </span>
-                  <span className="text-[10px] font-extrabold bg-white text-[#16A34A] px-2 py-0.5 rounded-full border border-emerald-200">
-                    Période d'essai incluse
+                  <span className="text-[10px] font-extrabold bg-white text-[#16A34A] px-2.5 py-0.5 rounded-full border border-emerald-200">
+                    {currentLang === 'fr' ? "Période d'essai incluse" : 'Free trial included'}
                   </span>
                 </div>
 
                 <div className="flex items-center gap-3 pt-1">
-                  <div className="w-10 h-10 rounded-xl bg-[#16A34A] text-white flex items-center justify-center text-lg font-bold shrink-0">
+                  <div className="w-11 h-11 rounded-2xl bg-[#16A34A] text-white flex items-center justify-center text-xl font-bold shrink-0 shadow-sm">
                     {selectedProfileObj?.emoji || '👤'}
                   </div>
                   <div>
-                    <h4 className="text-sm font-black text-[#0F172A]">
+                    <h4 className="text-sm sm:text-base font-black text-[#0F172A]">
                       {selectedProfileObj?.title}
                     </h4>
-                    <p className="text-xs text-[#15803D] font-mono font-bold">
+                    <p className="text-xs sm:text-sm text-[#15803D] font-mono font-bold">
                       {selectedProfileObj?.formattedPrice}
                     </p>
                   </div>
                 </div>
 
-                <div className="border-t border-emerald-200/80 pt-2 text-[11px] text-slate-600 space-y-1">
+                <div className="border-t border-emerald-200/80 pt-2.5 text-xs text-slate-600 space-y-1">
                   <div className="flex justify-between">
-                    <span>Titulaire :</span>
+                    <span>{currentLang === 'fr' ? 'Titulaire :' : 'Account holder:'}</span>
                     <span className="font-bold text-[#0F172A]">{formData.firstName} {formData.lastName}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span>Téléphone :</span>
+                    <span>{currentLang === 'fr' ? 'Téléphone :' : 'Phone:'}</span>
                     <span className="font-mono font-bold text-[#0F172A]">{formData.phone}</span>
                   </div>
                 </div>
               </div>
 
               {/* Select Mobile Money Operator */}
-              <form onSubmit={handleProcessPayment} className="space-y-3">
-                <label className="block text-[10px] font-extrabold text-slate-700 uppercase">
-                  Moyen de paiement sécurisé
+              <form onSubmit={handleProcessPayment} className="space-y-3.5">
+                <label className="block text-xs font-extrabold text-slate-700 uppercase tracking-wide">
+                  {currentLang === 'fr' ? 'Moyen de paiement sécurisé' : 'Secure payment method'}
                 </label>
 
                 <div className="grid grid-cols-2 gap-3">
                   <button
                     type="button"
                     onClick={() => setPaymentOperator('momo')}
-                    className={`p-3 rounded-2xl border-2 flex flex-col items-center justify-center text-center cursor-pointer transition active:scale-[0.98] ${
+                    className={`p-3.5 rounded-[18px] border-2 flex flex-col items-center justify-center text-center cursor-pointer transition active:scale-[0.98] ${
                       paymentOperator === 'momo'
                         ? 'border-[#16A34A] bg-[#DCFCE7]/60 text-[#0F172A] shadow-2xs'
-                        : 'border-[#E5E7EB] bg-white text-slate-600 hover:border-slate-300'
+                        : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300'
                     }`}
                   >
-                    <div className="w-9 h-9 rounded-full bg-yellow-400 text-slate-900 font-black text-xs flex items-center justify-center mb-1 shadow-2xs">
+                    <div className="w-10 h-10 rounded-full bg-yellow-400 text-slate-900 font-black text-xs flex items-center justify-center mb-1.5 shadow-2xs">
                       MTN
                     </div>
                     <span className="text-xs font-bold">MTN MoMo</span>
@@ -916,13 +743,13 @@ export default function Screen4Inscription({ onSignupSuccess, onGoToLogin }: Scr
                   <button
                     type="button"
                     onClick={() => setPaymentOperator('orange')}
-                    className={`p-3 rounded-2xl border-2 flex flex-col items-center justify-center text-center cursor-pointer transition active:scale-[0.98] ${
+                    className={`p-3.5 rounded-[18px] border-2 flex flex-col items-center justify-center text-center cursor-pointer transition active:scale-[0.98] ${
                       paymentOperator === 'orange'
                         ? 'border-[#16A34A] bg-[#DCFCE7]/60 text-[#0F172A] shadow-2xs'
-                        : 'border-[#E5E7EB] bg-white text-slate-600 hover:border-slate-300'
+                        : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300'
                     }`}
                   >
-                    <div className="w-9 h-9 rounded-full bg-orange-500 text-white font-black text-xs flex items-center justify-center mb-1 shadow-2xs">
+                    <div className="w-10 h-10 rounded-full bg-orange-500 text-white font-black text-xs flex items-center justify-center mb-1.5 shadow-2xs">
                       OM
                     </div>
                     <span className="text-xs font-bold">Orange Money</span>
@@ -930,32 +757,32 @@ export default function Screen4Inscription({ onSignupSuccess, onGoToLogin }: Scr
                 </div>
 
                 <div>
-                  <label className="block text-[10px] font-extrabold text-slate-700 uppercase mb-1">
-                    Numéro de débit Mobile Money
+                  <label className="block text-xs font-extrabold text-slate-700 uppercase tracking-wide mb-1.5">
+                    {currentLang === 'fr' ? 'Numéro de débit Mobile Money' : 'Mobile Money billing number'}
                   </label>
                   <input
                     type="tel"
                     value={paymentPhone}
                     onChange={(e) => setPaymentPhone(e.target.value)}
                     required
-                    className="w-full h-11 px-3 bg-[#F8FAFC] border border-[#E5E7EB] rounded-xl text-xs text-[#0F172A] font-mono shadow-xs focus:outline-none focus:ring-2 focus:ring-[#16A34A]/25 focus:border-[#16A34A]"
+                    className="w-full h-[54px] sm:h-[58px] px-4 bg-[#F8FAFC] focus:bg-white border border-[#E2E8F0] rounded-[16px] sm:rounded-[18px] text-sm sm:text-base text-[#0F172A] font-mono font-semibold shadow-2xs focus:outline-none focus:ring-2 focus:ring-[#16A34A]/25 focus:border-[#16A34A] transition"
                   />
                 </div>
 
                 <button
                   type="submit"
                   disabled={isProcessingPayment}
-                  className="w-full h-12 px-6 bg-[#16A34A] hover:bg-[#15803D] disabled:bg-emerald-300 text-white font-extrabold text-xs rounded-xl shadow-lg shadow-emerald-600/20 flex items-center justify-center gap-2 transition cursor-pointer active:scale-[0.98]"
+                  className="w-full h-[54px] sm:h-[58px] px-6 bg-gradient-to-r from-[#16A34A] via-[#15803D] to-[#16A34A] hover:brightness-105 disabled:bg-slate-300 text-white font-extrabold text-sm sm:text-base rounded-[18px] shadow-[0_8px_24px_rgba(22,163,74,0.3)] flex items-center justify-center gap-2 transition cursor-pointer active:scale-[0.98]"
                 >
                   {isProcessingPayment ? (
                     <>
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                      <span>Validation du paiement USSD...</span>
+                      <Loader2 className="w-5 h-5 animate-spin" />
+                      <span>{currentLang === 'fr' ? 'Validation du paiement USSD...' : 'Validating USSD payment...'}</span>
                     </>
                   ) : (
                     <>
-                      <CreditCard className="w-4 h-4" />
-                      <span>Procéder au paiement sécurisé</span>
+                      <CreditCard className="w-5 h-5" />
+                      <span>{currentLang === 'fr' ? 'Procéder au paiement sécurisé' : 'Proceed to secure payment'}</span>
                     </>
                   )}
                 </button>
@@ -970,27 +797,29 @@ export default function Screen4Inscription({ onSignupSuccess, onGoToLogin }: Scr
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.25 }}
-              className="text-center py-4 space-y-3"
+              className="text-center py-6 space-y-4"
             >
-              <div className="w-14 h-14 bg-[#DCFCE7] text-[#16A34A] rounded-full flex items-center justify-center mx-auto border border-emerald-300 shadow-xs">
-                <Check className="w-8 h-8 stroke-[3]" />
+              <div className="w-16 h-16 bg-[#DCFCE7] text-[#16A34A] rounded-full flex items-center justify-center mx-auto border-2 border-emerald-300 shadow-md">
+                <Check className="w-9 h-9 stroke-[3]" />
               </div>
 
-              <h3 className="text-lg font-black text-[#0F172A] font-display">
-                Compte créé avec succès ! 🎉
+              <h3 className="text-xl sm:text-2xl font-black text-[#0F172A] font-display">
+                {currentLang === 'fr' ? 'Compte créé avec succès ! 🎉' : 'Account created successfully! 🎉'}
               </h3>
 
-              <p className="text-xs text-slate-500 max-w-xs mx-auto">
-                Bienvenue sur AfriNova Bafoussam. Votre accès est activé.
+              <p className="text-xs sm:text-sm text-slate-500 max-w-xs mx-auto">
+                {currentLang === 'fr'
+                  ? 'Bienvenue sur AfriNova Bafoussam. Votre accès est activé.'
+                  : 'Welcome to AfriNova Bafoussam. Your access is active.'}
               </p>
 
-              <div className="bg-[#F8FAFC] rounded-2xl p-3 border border-[#E5E7EB] text-left text-xs space-y-1.5 max-w-xs mx-auto font-medium">
+              <div className="bg-[#F8FAFC] rounded-[18px] p-4 border border-[#E2E8F0] text-left text-xs sm:text-sm space-y-2 max-w-xs mx-auto font-medium shadow-2xs">
                 <div className="flex justify-between">
-                  <span className="text-slate-400">Titulaire :</span>
+                  <span className="text-slate-400">{currentLang === 'fr' ? 'Titulaire :' : 'Account holder:'}</span>
                   <span className="font-bold text-[#0F172A]">{formData.firstName} {formData.lastName}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-slate-400">Profil :</span>
+                  <span className="text-slate-400">{currentLang === 'fr' ? 'Profil :' : 'Profile:'}</span>
                   <span className="font-bold text-[#16A34A]">{selectedProfileObj?.title}</span>
                 </div>
               </div>
@@ -1000,10 +829,10 @@ export default function Screen4Inscription({ onSignupSuccess, onGoToLogin }: Scr
                 onClick={() => {
                   if (onSignupSuccess) onSignupSuccess();
                 }}
-                className="w-full h-12 bg-[#16A34A] hover:bg-[#15803D] text-white font-extrabold text-xs rounded-xl shadow-md transition flex items-center justify-center gap-2 cursor-pointer mt-2 active:scale-[0.98]"
+                className="w-full h-[54px] sm:h-[58px] bg-gradient-to-r from-[#16A34A] via-[#15803D] to-[#16A34A] hover:brightness-105 text-white font-extrabold text-sm sm:text-base rounded-[18px] shadow-[0_8px_24px_rgba(22,163,74,0.3)] transition flex items-center justify-center gap-2 cursor-pointer mt-2 active:scale-[0.98]"
               >
-                <span>Accéder à mon espace</span>
-                <ArrowRight className="w-4 h-4" />
+                <span>{currentLang === 'fr' ? 'Accéder à mon espace' : 'Go to my account'}</span>
+                <ArrowRight className="w-5 h-5" />
               </button>
             </motion.div>
           )}
@@ -1012,15 +841,15 @@ export default function Screen4Inscription({ onSignupSuccess, onGoToLogin }: Scr
       </div>
 
       {/* Footer Link to Login */}
-      <div className="pt-2.5 border-t border-[#E5E7EB] text-center shrink-0">
-        <p className="text-xs text-slate-500">
-          Vous avez déjà un compte ?{' '}
+      <div className="pt-3 border-t border-[#E2E8F0] text-center shrink-0">
+        <p className="text-xs sm:text-sm text-slate-500">
+          {currentLang === 'fr' ? 'Vous avez déjà un compte ?' : 'Already have an account?'}{' '}
           <button 
             type="button"
             onClick={onGoToLogin}
             className="font-black text-[#16A34A] hover:underline cursor-pointer active:scale-[0.98]"
           >
-            Se connecter
+            {currentLang === 'fr' ? 'Se connecter' : 'Sign in'}
           </button>
         </p>
       </div>
@@ -1077,69 +906,76 @@ export default function Screen4Inscription({ onSignupSuccess, onGoToLogin }: Scr
               </div>
 
               {/* Profile Grid Options */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
-                {PROFILE_OPTIONS.map((profile) => {
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 pt-1">
+                {PROFILE_OPTIONS.map((profile, index) => {
                   const isSelected = selectedProfile === profile.id;
                   const IconComponent = profile.icon;
 
                   return (
-                    <div
+                    <motion.div
                       key={profile.id}
+                      initial={{ opacity: 0, y: 15 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.25, delay: index * 0.05 }}
                       onClick={() => {
                         if (typeof window !== 'undefined' && 'vibrate' in navigator) {
                           try { navigator.vibrate(10); } catch (e) {}
                         }
                         setSelectedProfile(profile.id);
-                        setTimeout(() => setIsBottomSheetOpen(false), 150);
+                        setTimeout(() => setIsBottomSheetOpen(false), 200);
                       }}
-                      className={`p-3.5 rounded-[20px] transition-all duration-200 cursor-pointer relative flex flex-col justify-between border active:scale-[0.98] ${
+                      className={`p-4 rounded-[22px] transition-all duration-200 cursor-pointer relative flex flex-col justify-between border active:scale-[0.98] ${
                         isSelected
-                          ? 'bg-[#DCFCE7]/70 border-2 border-[#16A34A] shadow-md'
-                          : 'bg-[#FFFFFF] border-[#E5E7EB] hover:border-slate-300 hover:bg-[#F8FAFC] shadow-2xs'
+                          ? 'bg-[#F0FDF4] border-2 border-[#16A34A] shadow-md shadow-emerald-600/10 ring-2 ring-[#DCFCE7]'
+                          : 'bg-white border-slate-200 hover:border-emerald-300 hover:bg-slate-50/80 shadow-2xs'
                       }`}
                     >
-                      <div className="space-y-2">
+                      <div className="space-y-2.5">
+                        {/* Header with Emoji/Icon, Title & Radio Indicator */}
                         <div className="flex items-start justify-between gap-2">
                           <div className="flex items-center gap-2.5 min-w-0">
-                            <div className={`w-8 h-8 rounded-xl flex items-center justify-center text-xs shrink-0 ${
-                              isSelected ? 'bg-[#16A34A] text-white shadow-2xs' : 'bg-[#F8FAFC] text-slate-600 border border-[#E5E7EB]'
+                            <div className={`w-10 h-10 rounded-2xl flex items-center justify-center text-lg shrink-0 shadow-2xs ${
+                              isSelected ? 'bg-[#16A34A] text-white' : 'bg-[#DCFCE7]/70 text-[#16A34A] border border-emerald-200/80'
                             }`}>
-                              <IconComponent className="w-4 h-4" />
+                              {profile.emoji}
                             </div>
                             <div className="min-w-0">
-                              <div className="flex items-center gap-1">
-                                <span className="text-xs">{profile.emoji}</span>
-                                <h4 className="text-xs font-black text-[#0F172A] truncate font-display">
-                                  {profile.title}
-                                </h4>
-                              </div>
-                              <span className="text-[9px] font-extrabold uppercase text-slate-400 tracking-wider block">
-                                {profile.badge}
+                              <h4 className="text-sm font-black text-[#0F172A] font-display flex items-center gap-1">
+                                {profile.title}
+                              </h4>
+                              <span className="text-[10px] font-bold text-[#16A34A] font-mono block">
+                                {profile.formattedPrice}
                               </span>
                             </div>
                           </div>
 
                           <div className="flex items-center gap-1.5 shrink-0">
-                            <span className={`text-[10px] font-black font-mono px-2 py-0.5 rounded-lg ${
-                              isSelected ? 'bg-[#16A34A] text-white' : 'bg-[#F8FAFC] text-[#0F172A] border border-[#E5E7EB]'
-                            }`}>
-                              {profile.formattedPrice}
-                            </span>
                             {isSelected ? (
-                              <div className="w-5 h-5 rounded-full bg-[#16A34A] text-white flex items-center justify-center shrink-0 shadow-2xs">
-                                <Check className="w-3.5 h-3.5 stroke-[3]" />
+                              <div className="w-6 h-6 rounded-full bg-[#16A34A] text-white flex items-center justify-center shrink-0 shadow-sm animate-in zoom-in-75 duration-200">
+                                <Check className="w-4 h-4 stroke-[3]" />
                               </div>
                             ) : (
-                              <div className="w-5 h-5 rounded-full border-2 border-slate-300 shrink-0" />
+                              <div className="w-6 h-6 rounded-full border-2 border-slate-300 shrink-0" />
                             )}
                           </div>
                         </div>
 
-                        <p className="text-[11px] text-slate-500 leading-snug line-clamp-2 pt-0.5">
+                        {/* Description */}
+                        <p className="text-xs text-slate-600 leading-snug font-medium">
                           {profile.description}
                         </p>
+
+                        {/* Benefits list */}
+                        <div className="pt-1.5 border-t border-slate-100 space-y-1">
+                          {profile.benefits.map((benefit, i) => (
+                            <div key={i} className="text-[11px] text-slate-700 font-semibold flex items-center gap-1.5">
+                              <CheckCircle2 className={`w-3.5 h-3.5 shrink-0 ${isSelected ? 'text-[#16A34A]' : 'text-slate-400'}`} />
+                              <span>{benefit}</span>
+                            </div>
+                          ))}
+                        </div>
                       </div>
-                    </div>
+                    </motion.div>
                   );
                 })}
               </div>

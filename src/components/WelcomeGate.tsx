@@ -131,7 +131,7 @@ export default function WelcomeGate({ onSuccess, lang, onLangChange }: WelcomeGa
 
   const [paymentOperator, setPaymentOperator] = useState<'momo' | 'orange' | null>('momo');
   const [phoneForPayment, setPhoneForPayment] = useState('');
-  const [step, setStep] = useState<'form' | 'login' | 'searching-subscription' | 'otp-verification' | 'payment-select' | 'processing' | 'ussd-prompt' | 'success'>('form');
+  const [step, setStep] = useState<'form' | 'login' | 'searching-subscription' | 'payment-select' | 'processing' | 'ussd-prompt' | 'success'>('form');
   const [pin, setPin] = useState('');
   const [transactionRef, setTransactionRef] = useState('');
   const [validationError, setValidationError] = useState('');
@@ -141,15 +141,6 @@ export default function WelcomeGate({ onSuccess, lang, onLangChange }: WelcomeGa
   const [loginPhone, setLoginPhone] = useState('');
   const [loginPassword, setLoginPassword] = useState('');
   const [showLoginPassword, setShowLoginPassword] = useState(false);
-
-  // OTP State
-  const [generatedOtp, setGeneratedOtp] = useState('');
-  const [currentDemoOtp, setCurrentDemoOtp] = useState('');
-  const [inputOtp, setInputOtp] = useState('');
-  const [isOtpResending, setIsOtpResending] = useState(false);
-  const [otpCountdown, setOtpCountdown] = useState(60);
-  const [otpSuccessMessage, setOtpSuccessMessage] = useState('');
-  const [unverifiedUserToActivate, setUnverifiedUserToActivate] = useState<User | null>(null);
 
   // Rate limiting & user verification states
   const [failedLoginCount, setFailedLoginCount] = useState(0);
@@ -177,18 +168,6 @@ export default function WelcomeGate({ onSuccess, lang, onLangChange }: WelcomeGa
     isNeighborhoodValid && 
     hasChosenProfile;
 
-  // Countdown timer for OTP resend (60 seconds)
-  useEffect(() => {
-    if (step !== 'otp-verification') return;
-    if (otpCountdown <= 0) return;
-
-    const timer = setInterval(() => {
-      setOtpCountdown((prev) => prev - 1);
-    }, 1000);
-
-    return () => clearInterval(timer);
-  }, [step, otpCountdown]);
-
   // Countdown timer for lockout
   useEffect(() => {
     if (!loginLockoutEndTime) return;
@@ -209,7 +188,7 @@ export default function WelcomeGate({ onSuccess, lang, onLangChange }: WelcomeGa
     return () => clearInterval(interval);
   }, [loginLockoutEndTime]);
 
-  // Smart Auto-Advance from Step 1 Form to Step 2 OTP when all required fields are valid
+  // Smart Auto-Advance from Step 1 Form to Finalization when all required fields are valid
   useEffect(() => {
     if (step !== 'form' || !isStep1FormComplete || isAutoAdvancing) return;
 
@@ -220,31 +199,6 @@ export default function WelcomeGate({ onSuccess, lang, onLangChange }: WelcomeGa
 
     return () => clearTimeout(timer);
   }, [isStep1FormComplete, step, isAutoAdvancing]);
-
-  // Auto-verify OTP when 6 digits are typed
-  useEffect(() => {
-    if (step !== 'otp-verification') return;
-    if (inputOtp.length === 6) {
-      const targetPhone = formData.phone || (unverifiedUserToActivate ? unverifiedUserToActivate.phone : '');
-      otpService.verifyOtp(targetPhone, inputOtp).then((res) => {
-        if (res.success) {
-          setValidationError('');
-          setOtpSuccessMessage('Vérification réussie');
-          setTimeout(() => {
-            setOtpSuccessMessage('');
-            setPhoneForPayment(targetPhone);
-            setStep('payment-select');
-          }, 800);
-        } else {
-          setOtpSuccessMessage('');
-          setValidationError(res.message || 'Code OTP invalide');
-        }
-      });
-    } else {
-      setValidationError('');
-      setOtpSuccessMessage('');
-    }
-  }, [inputOtp, step, formData.phone, unverifiedUserToActivate]);
 
   // Seed registered users list if empty
   useEffect(() => {
@@ -326,18 +280,12 @@ export default function WelcomeGate({ onSuccess, lang, onLangChange }: WelcomeGa
     setGpsDetails(null);
     setIsVerifyingLocation(true);
 
-    const proceedWithOtp = async () => {
+    const proceedToPayment = async () => {
       setIsVerifyingLocation(false);
       setIsAutoAdvancing(false);
-      const targetPhone = formData.phone || (unverifiedUserToActivate ? unverifiedUserToActivate.phone : '');
-      const res = await otpService.sendOtp(targetPhone);
-      if (res.code) {
-        setGeneratedOtp(res.code);
-        setCurrentDemoOtp(res.code);
-      }
-      setInputOtp('');
-      setOtpCountdown(60);
-      setStep('otp-verification');
+      const targetPhone = formData.phone;
+      setPhoneForPayment(targetPhone);
+      setStep('payment-select');
     };
 
     if (!navigator.geolocation) {
@@ -355,7 +303,7 @@ export default function WelcomeGate({ onSuccess, lang, onLangChange }: WelcomeGa
         setGpsDetails({ latitude, longitude, distance: dist });
 
         if (dist <= rayonMaxKm) {
-          proceedWithOtp();
+          proceedToPayment();
         } else {
           setIsVerifyingLocation(false);
           setIsAutoAdvancing(false);
@@ -454,17 +402,6 @@ export default function WelcomeGate({ onSuccess, lang, onLangChange }: WelcomeGa
           return;
         }
 
-        if (matchedUser.isVerifiedPhone === false) {
-          setStep('login');
-          setUnverifiedError(true);
-          setUnverifiedUserToActivate(matchedUser);
-          setValidationError(
-            getTranslation('unverifiedPhoneLoginError') ||
-            (lang === 'fr' ? "Veuillez confirmer votre numéro de téléphone avant de vous connecter." : "Please confirm your phone number before logging in.")
-          );
-          return;
-        }
-
         const expectedPassword = matchedUser.password || 'password123';
         if (loginPassword !== expectedPassword) {
           const nextFailedCount = failedLoginCount + 1;
@@ -501,49 +438,6 @@ export default function WelcomeGate({ onSuccess, lang, onLangChange }: WelcomeGa
     }, 1200);
   };
 
-  const handleVerifyOtp = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setValidationError('');
-    setOtpSuccessMessage('');
-    const targetPhone = formData.phone || (unverifiedUserToActivate ? unverifiedUserToActivate.phone : '');
-    const res = await otpService.verifyOtp(targetPhone, inputOtp);
-    if (!res.success) {
-      setOtpSuccessMessage('');
-      setValidationError(res.message || 'Code OTP invalide');
-      return;
-    }
-    setValidationError('');
-    setOtpSuccessMessage('Vérification réussie');
-    setTimeout(() => {
-      setOtpSuccessMessage('');
-      setPhoneForPayment(targetPhone);
-      setStep('payment-select');
-    }, 800);
-  };
-
-  const handleResendOtp = async () => {
-    setIsOtpResending(true);
-    setValidationError('');
-    setOtpSuccessMessage('');
-    try {
-      const targetPhone = formData.phone || (unverifiedUserToActivate ? unverifiedUserToActivate.phone : '');
-      const res = await otpService.resendOtp(targetPhone);
-      const newCode = res.code || Math.floor(100000 + Math.random() * 900000).toString();
-      setGeneratedOtp(newCode);
-      setCurrentDemoOtp(newCode);
-      setOtpSuccessMessage('Nouveau code OTP généré avec succès !');
-      setOtpCountdown(60);
-    } catch (err) {
-      const fallbackCode = Math.floor(100000 + Math.random() * 900000).toString();
-      setGeneratedOtp(fallbackCode);
-      setCurrentDemoOtp(fallbackCode);
-      setOtpSuccessMessage('Nouveau code OTP généré avec succès !');
-      setOtpCountdown(60);
-    } finally {
-      setIsOtpResending(false);
-    }
-  };
-
   const handleSelectOperator = (op: 'momo' | 'orange') => {
     setPaymentOperator(op);
     setStep('processing');
@@ -578,13 +472,7 @@ export default function WelcomeGate({ onSuccess, lang, onLangChange }: WelcomeGa
     const expiry = new Date();
     expiry.setMonth(today.getMonth() + 3);
 
-    const newUser: User = unverifiedUserToActivate ? {
-      ...unverifiedUserToActivate,
-      accountType: selectedProfile,
-      isVerifiedPhone: true,
-      isSubscribed: true,
-      isInTrial: false,
-    } : {
+    const newUser: User = {
       id: `u-${Date.now()}`,
       name: formData.name,
       email: formData.email,
@@ -618,11 +506,10 @@ export default function WelcomeGate({ onSuccess, lang, onLangChange }: WelcomeGa
     onSuccess(newUser);
   };
 
-  // Determine current active step for the 3-step progress bar
+  // Determine current active step for the 2-step progress bar
   const currentStepIndex = 
     step === 'form' ? 1 : 
-    step === 'otp-verification' ? 2 : 
-    step === 'success' ? 4 : 3;
+    step === 'success' ? 3 : 2;
 
   return (
     <div className="min-h-screen bg-[#F8FAFC] flex items-center justify-center p-3 sm:p-6 font-sans selection:bg-[#DCFCE7] selection:text-[#15803D] relative" id="welcome-gate-container">
@@ -669,23 +556,15 @@ export default function WelcomeGate({ onSuccess, lang, onLangChange }: WelcomeGa
           </div>
         </div>
 
-        {/* 3-Step Stepper Progress Bar (Only shown during registration steps) */}
+        {/* 2-Step Stepper Progress Bar (Only shown during registration steps) */}
         {step !== 'login' && step !== 'searching-subscription' && (
           <div className="mb-4 px-1">
-            <div className="flex items-center justify-between relative">
+            <div className="flex items-center justify-between relative px-4">
               {/* Line 1-2 */}
-              <div className="absolute top-3.5 sm:top-4 left-6 right-1/2 h-[1.5px] bg-[#E8E8E8] -z-0">
+              <div className="absolute top-3.5 sm:top-4 left-10 right-10 h-[1.5px] bg-[#E8E8E8] -z-0">
                 <div 
                   className="h-full bg-[#16A34A] transition-all duration-250 ease-out" 
                   style={{ width: currentStepIndex > 1 ? '100%' : '0%' }}
-                />
-              </div>
-
-              {/* Line 2-3 */}
-              <div className="absolute top-3.5 sm:top-4 left-1/2 right-6 h-[1.5px] bg-[#E8E8E8] -z-0">
-                <div 
-                  className="h-full bg-[#16A34A] transition-all duration-250 ease-out" 
-                  style={{ width: currentStepIndex > 2 ? '100%' : '0%' }}
                 />
               </div>
 
@@ -694,7 +573,7 @@ export default function WelcomeGate({ onSuccess, lang, onLangChange }: WelcomeGa
                 <div className={`w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center font-extrabold text-[11px] sm:text-xs transition-all duration-250 ease-out ${
                   currentStepIndex > 1
                     ? 'bg-[#16A34A] text-white shadow-2xs'
-                    : 'bg-[#16A34A] text-white ring-4 ring-[#DCFCE7] ring-offset-1 shadow-xs'
+                    : 'bg-[#16A34A] text-[#FFFFFF] ring-4 ring-[#DCFCE7] ring-offset-1 shadow-xs'
                 }`}>
                   {currentStepIndex > 1 ? <Check className="w-3.5 h-3.5 sm:w-4 sm:h-4 stroke-[3]" /> : '1'}
                 </div>
@@ -706,31 +585,15 @@ export default function WelcomeGate({ onSuccess, lang, onLangChange }: WelcomeGa
               {/* Step 2 Circle */}
               <div className="flex flex-col items-center gap-1 z-10 shrink-0">
                 <div className={`w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center font-extrabold text-[11px] sm:text-xs transition-all duration-250 ease-out ${
-                  currentStepIndex > 2
+                  currentStepIndex === 3
                     ? 'bg-[#16A34A] text-white shadow-2xs'
                     : currentStepIndex === 2
                     ? 'bg-[#16A34A] text-white ring-4 ring-[#DCFCE7] ring-offset-1 shadow-xs'
                     : 'bg-[#F8FAFC] text-slate-400 border border-[#E8E8E8]'
                 }`}>
-                  {currentStepIndex > 2 ? <Check className="w-3.5 h-3.5 sm:w-4 sm:h-4 stroke-[3]" /> : '2'}
+                  {currentStepIndex === 3 ? <Check className="w-3.5 h-3.5 sm:w-4 sm:h-4 stroke-[3]" /> : '2'}
                 </div>
-                <span className={`text-[9px] sm:text-[10px] font-extrabold transition-colors duration-250 text-center ${currentStepIndex === 2 ? 'text-[#16A34A]' : 'text-slate-400'}`}>
-                  Vérification
-                </span>
-              </div>
-
-              {/* Step 3 Circle */}
-              <div className="flex flex-col items-center gap-1 z-10 shrink-0">
-                <div className={`w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center font-extrabold text-[11px] sm:text-xs transition-all duration-250 ease-out ${
-                  currentStepIndex === 4
-                    ? 'bg-[#16A34A] text-white shadow-2xs'
-                    : currentStepIndex === 3
-                    ? 'bg-[#16A34A] text-white ring-4 ring-[#DCFCE7] ring-offset-1 shadow-xs'
-                    : 'bg-[#F8FAFC] text-slate-400 border border-[#E8E8E8]'
-                }`}>
-                  {currentStepIndex === 4 ? <Check className="w-3.5 h-3.5 sm:w-4 sm:h-4 stroke-[3]" /> : '3'}
-                </div>
-                <span className={`text-[9px] sm:text-[10px] font-extrabold transition-colors duration-250 text-center ${currentStepIndex >= 3 ? 'text-[#16A34A]' : 'text-slate-400'}`}>
+                <span className={`text-[9px] sm:text-[10px] font-extrabold transition-colors duration-250 text-center ${currentStepIndex >= 2 ? 'text-[#16A34A]' : 'text-slate-400'}`}>
                   Finalisation
                 </span>
               </div>
@@ -972,11 +835,8 @@ export default function WelcomeGate({ onSuccess, lang, onLangChange }: WelcomeGa
                       onClick={() => {
                         setValidationError('');
                         setShowBypassOption(false);
-                        const code = Math.floor(100000 + Math.random() * 900000).toString();
-                        setGeneratedOtp(code);
-                        setInputOtp('');
-                        setOtpCountdown(60);
-                        setStep('otp-verification');
+                        setPhoneForPayment(formData.phone);
+                        setStep('payment-select');
                       }}
                       className="w-full bg-amber-600 hover:bg-amber-700 text-white font-semibold py-2 px-3 rounded-[12px] text-xs transition cursor-pointer text-center flex items-center justify-center gap-1.5"
                     >
@@ -1011,14 +871,9 @@ export default function WelcomeGate({ onSuccess, lang, onLangChange }: WelcomeGa
                       <Loader2 className="w-5 h-5 animate-spin" />
                       <span>Vérification de la géolocalisation...</span>
                     </>
-                  ) : isAutoAdvancing ? (
-                    <>
-                      <Loader2 className="w-5 h-5 animate-spin" />
-                      <span>Envoi du code OTP...</span>
-                    </>
                   ) : (
                     <>
-                      <span>Continuer vers la vérification</span>
+                      <span>Continuer vers la finalisation</span>
                       <ArrowRight className="w-4 h-4" />
                     </>
                   )}
@@ -1067,117 +922,7 @@ export default function WelcomeGate({ onSuccess, lang, onLangChange }: WelcomeGa
             </motion.div>
           )}
 
-          {/* STEP 2: VÉRIFICATION OTP */}
-          {step === 'otp-verification' && (
-            <motion.div
-              key="otp-verification-step"
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              transition={{ duration: 0.2 }}
-            >
-              {/* Visible Test OTP Code Card */}
-              <div className="bg-[#0F172A] text-white rounded-2xl p-4 mb-4 shadow-lg border-2 border-[#16A34A] relative overflow-hidden">
-                <div className="absolute top-0 left-0 w-1.5 h-full bg-[#16A34A]" />
-                <div className="flex items-center justify-between gap-2 mb-2">
-                  <div className="flex items-center gap-1.5">
-                    <Sparkles className="w-4 h-4 text-[#16A34A] animate-pulse shrink-0" />
-                    <span className="text-xs font-black text-[#16A34A] uppercase tracking-wider">
-                      Code de test OTP
-                    </span>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setInputOtp(currentDemoOtp || generatedOtp || '');
-                      setValidationError('');
-                    }}
-                    className="text-[11px] font-extrabold bg-[#16A34A] hover:bg-[#15803D] text-white px-2.5 py-1 rounded-lg transition-all cursor-pointer active:scale-95 shadow-2xs"
-                  >
-                    Copier / Remplir
-                  </button>
-                </div>
-
-                <div className="flex items-center justify-between bg-slate-900/90 px-3.5 py-2.5 rounded-xl border border-slate-700/80">
-                  <span className="text-xs text-slate-300 font-medium">Code généré :</span>
-                  <span className="font-mono text-xl font-black text-yellow-400 tracking-[0.2em] underline">
-                    {currentDemoOtp || generatedOtp || '123456'}
-                  </span>
-                </div>
-
-                <p className="text-[10px] text-slate-400 mt-2 text-center">
-                  Saisissez ce code ci-dessous ou cliquez sur <strong className="text-white font-bold">Copier / Remplir</strong> pour continuer.
-                </p>
-              </div>
-
-              <div className="text-center mb-5">
-                <h3 className="font-extrabold text-[#0F172A] text-sm">Vérification de sécurité</h3>
-                <p className="text-xs text-slate-500 mt-1">
-                  Code SMS envoyé au <span className="font-mono text-[#16A34A] font-bold">{formData.phone || unverifiedUserToActivate?.phone}</span>.
-                </p>
-              </div>
-
-              {otpSuccessMessage && (
-                <div className="text-emerald-700 text-xs font-extrabold p-3 bg-emerald-50 border border-emerald-200 rounded-xl text-center animate-bounce mb-3 flex items-center justify-center gap-2">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-                  <span>{otpSuccessMessage}</span>
-                </div>
-              )}
-
-              <form onSubmit={handleVerifyOtp} className="space-y-4">
-                <div>
-                  <input
-                    type="text"
-                    maxLength={6}
-                    required
-                    autoFocus
-                    placeholder="000000"
-                    className="w-full text-center tracking-[0.5em] font-mono text-2xl font-black bg-[#F8FAFC] border border-[#E5E7EB] rounded-2xl py-3 focus:outline-none focus:ring-2 focus:ring-[#16A34A]/30 focus:border-[#16A34A] text-[#0F172A] transition"
-                    value={inputOtp}
-                    onChange={(e) => setInputOtp(e.target.value.replace(/\D/g, ''))}
-                  />
-                </div>
-
-                {validationError && (
-                  <div className="text-red-600 text-xs font-semibold p-3 bg-red-50 border border-red-100 rounded-xl text-center">
-                    {validationError}
-                  </div>
-                )}
-
-                <div className="flex gap-2.5">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setValidationError('');
-                      setStep('form');
-                    }}
-                    className="bg-[#F8FAFC] hover:bg-slate-200 text-slate-700 font-bold py-2.5 px-3 rounded-xl text-xs cursor-pointer transition text-center border border-[#E5E7EB]"
-                  >
-                    Retour
-                  </button>
-
-                  <button
-                    type="button"
-                    disabled={isOtpResending || otpCountdown > 0}
-                    onClick={handleResendOtp}
-                    className="bg-[#F8FAFC] hover:bg-slate-200 text-slate-700 font-bold py-2.5 px-3 rounded-xl text-xs cursor-pointer transition text-center border border-[#E5E7EB] disabled:opacity-50"
-                  >
-                    {isOtpResending ? 'Génération...' : otpCountdown > 0 ? `Renvoyer (${otpCountdown}s)` : 'Renvoyer'}
-                  </button>
-
-                  <button
-                    type="submit"
-                    className="bg-[#16A34A] hover:bg-[#15803D] text-white font-extrabold py-2.5 px-4 rounded-xl text-xs flex items-center justify-center gap-1.5 cursor-pointer transition shadow-xs flex-1"
-                  >
-                    <span>Valider</span>
-                    <ArrowRight className="w-4 h-4" />
-                  </button>
-                </div>
-              </form>
-            </motion.div>
-          )}
-
-          {/* STEP 3: FINALISATION & PAIEMENT */}
+          {/* STEP 2: FINALISATION & PAIEMENT */}
           {step === 'payment-select' && (
             <motion.div
               key="payment-step"
@@ -1215,11 +960,11 @@ export default function WelcomeGate({ onSuccess, lang, onLangChange }: WelcomeGa
                 <div className="border-t border-emerald-200/80 pt-2 text-[11px] text-slate-600 space-y-1">
                   <div className="flex justify-between">
                     <span>Abonné :</span>
-                    <span className="font-bold text-[#0F172A]">{formData.name || unverifiedUserToActivate?.name}</span>
+                    <span className="font-bold text-[#0F172A]">{formData.name}</span>
                   </div>
                   <div className="flex justify-between">
                     <span>Téléphone :</span>
-                    <span className="font-mono font-bold text-[#0F172A]">{formData.phone || unverifiedUserToActivate?.phone}</span>
+                    <span className="font-mono font-bold text-[#0F172A]">{formData.phone}</span>
                   </div>
                 </div>
               </div>
@@ -1367,7 +1112,7 @@ export default function WelcomeGate({ onSuccess, lang, onLangChange }: WelcomeGa
               <div className="bg-[#F8FAFC] rounded-2xl p-4 border border-[#E5E7EB] text-left space-y-2 text-xs max-w-sm mx-auto">
                 <div className="flex justify-between">
                   <span className="text-slate-400">Titulaire :</span>
-                  <span className="font-bold text-[#0F172A]">{formData.name || unverifiedUserToActivate?.name}</span>
+                  <span className="font-bold text-[#0F172A]">{formData.name}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-slate-400">Profil :</span>
