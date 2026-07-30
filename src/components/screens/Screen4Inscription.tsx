@@ -1,9 +1,11 @@
 import React, { useState, useMemo } from 'react';
 import { 
   User as UserIcon, Mail, Phone, Lock, Check, ShieldCheck, ArrowRight, Sparkles, 
-  Store, Building2, Wrench, MapPin, ChevronRight, X, AlertCircle, Loader2, CreditCard, RefreshCw, CheckCircle2, Globe, Truck, Headphones, MessageCircle, PhoneCall, ArrowLeft
+  Store, Building2, Wrench, MapPin, ChevronRight, ChevronDown, X, AlertCircle, Loader2, CreditCard, RefreshCw, CheckCircle2, Globe, Truck, Headphones, MessageCircle, PhoneCall, ArrowLeft
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import NeighborhoodSelectModal from '../NeighborhoodSelectModal';
+import { BAFOUSSAM_NEIGHBORHOODS } from '../../data/mockData';
 
 interface Screen4InscriptionProps {
   onSignupSuccess?: () => void;
@@ -118,15 +120,30 @@ export default function Screen4Inscription({ onSignupSuccess, onGoToLogin, lang 
     email: '',
     password: '',
     confirmPassword: '',
-    neighborhood: 'march-a',
+    neighborhood: '',
   });
 
   // Track field touched state for inline validations
   const [touchedFields, setTouchedFields] = useState<Record<string, boolean>>({});
+  const [formError, setFormError] = useState('');
+  const [isNavigating, setIsNavigating] = useState(false);
 
-  // Profile selection state
-  const [selectedProfile, setSelectedProfile] = useState<ProfileType | null>('client');
+  // Profile selection state (default null so no profile is pre-selected)
+  const [selectedProfile, setSelectedProfile] = useState<ProfileType | null>(null);
   const [isBottomSheetOpen, setIsBottomSheetOpen] = useState(false);
+  const [isNeighborhoodModalOpen, setIsNeighborhoodModalOpen] = useState(false);
+
+  // Selected neighborhood display name
+  const selectedNeighborhoodObj = useMemo(() => {
+    if (!formData.neighborhood) return null;
+    return BAFOUSSAM_NEIGHBORHOODS.find(
+      n => n.id === formData.neighborhood || n.name.toLowerCase() === formData.neighborhood.toLowerCase()
+    );
+  }, [formData.neighborhood]);
+
+  const selectedNeighborhoodName = selectedNeighborhoodObj
+    ? selectedNeighborhoodObj.name
+    : formData.neighborhood;
 
   // Payment state
   const [paymentOperator, setPaymentOperator] = useState<'momo' | 'orange'>('momo');
@@ -138,7 +155,7 @@ export default function Screen4Inscription({ onSignupSuccess, onGoToLogin, lang 
   // Validations per field
   const isLastNameValid = formData.lastName.trim().length >= 2;
   const isFirstNameValid = formData.firstName.trim().length >= 2;
-  const isPhoneValid = formData.phone.replace(/\s+/g, '').replace(/[^0-9+]/g, '').length >= 9;
+  const isPhoneValid = formData.phone.replace(/\s+/g, '').replace(/[^0-9+]/g, '').length >= 8;
   const isEmailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email.trim());
   const isPasswordValid = formData.password.length >= 8;
   const isConfirmPasswordValid = formData.confirmPassword.length >= 8 && formData.confirmPassword === formData.password;
@@ -159,11 +176,109 @@ export default function Screen4Inscription({ onSignupSuccess, onGoToLogin, lang 
     setTouchedFields(prev => ({ ...prev, [field]: true }));
   };
 
+  // Helper function to auto-fill valid test data for easy testing
+  const handleAutoFillTestData = () => {
+    console.log("⚡ Auto-filling valid test data into form...");
+    setFormData({
+      lastName: 'Kamdem',
+      firstName: 'Jean',
+      phone: '677894512',
+      email: 'jean.kamdem@afrinova.cm',
+      password: 'Password123!',
+      confirmPassword: 'Password123!',
+      neighborhood: 'march-a',
+    });
+    setSelectedProfile('client');
+    setFormError('');
+  };
+
   // Proceed directly from Step 1 to Step 2 (Finalisation)
   const handleProceedToFinalization = () => {
-    if (!isStep1Complete) return;
-    setPaymentPhone(formData.phone);
-    setCurrentStep('step2');
+    try {
+      console.log("👉 [Screen4Inscription] Triggering handleProceedToFinalization...", {
+        formData,
+        selectedProfile,
+        isLastNameValid,
+        isFirstNameValid,
+        isPhoneValid,
+        isEmailValid,
+        isPasswordValid,
+        isConfirmPasswordValid,
+        isNeighborhoodValid,
+        isProfileSelected,
+        isStep1Complete
+      });
+
+      // Mark all fields as touched to display validation indicators
+      setTouchedFields({
+        lastName: true,
+        firstName: true,
+        phone: true,
+        email: true,
+        password: true,
+        confirmPassword: true,
+        neighborhood: true,
+      });
+
+      if (!isLastNameValid || !isFirstNameValid) {
+        const msg = currentLang === 'fr' ? 'Veuillez remplir votre nom et prénom (au moins 2 caractères).' : 'Please enter your last and first name (at least 2 characters).';
+        console.warn("❌ [Screen4Inscription] Validation failed: name invalid", { lastName: formData.lastName, firstName: formData.firstName });
+        setFormError(msg);
+        return;
+      }
+      if (!isPhoneValid) {
+        const msg = currentLang === 'fr' ? 'Veuillez entrer un numéro de téléphone valide (ex: 677894512).' : 'Please enter a valid phone number (e.g. 677894512).';
+        console.warn("❌ [Screen4Inscription] Validation failed: phone invalid", formData.phone);
+        setFormError(msg);
+        return;
+      }
+      if (!isEmailValid) {
+        const msg = currentLang === 'fr' ? 'Veuillez entrer une adresse email valide.' : 'Please enter a valid email address.';
+        console.warn("❌ [Screen4Inscription] Validation failed: email invalid", formData.email);
+        setFormError(msg);
+        return;
+      }
+      if (!isPasswordValid) {
+        const msg = currentLang === 'fr' ? 'Le mot de passe doit contenir au moins 8 caractères.' : 'Password must be at least 8 characters.';
+        console.warn("❌ [Screen4Inscription] Validation failed: password invalid");
+        setFormError(msg);
+        return;
+      }
+      if (!isConfirmPasswordValid) {
+        const msg = currentLang === 'fr' ? 'La confirmation du mot de passe ne correspond pas.' : 'Password confirmation does not match.';
+        console.warn("❌ [Screen4Inscription] Validation failed: confirm password mismatch");
+        setFormError(msg);
+        return;
+      }
+      if (!isNeighborhoodValid) {
+        const msg = currentLang === 'fr' ? 'Veuillez sélectionner votre quartier.' : 'Please select your neighborhood.';
+        console.warn("❌ [Screen4Inscription] Validation failed: neighborhood missing");
+        setFormError(msg);
+        return;
+      }
+      if (!isProfileSelected) {
+        const msg = currentLang === 'fr' ? 'Veuillez choisir un profil d\'utilisation.' : 'Please choose a profile.';
+        console.warn("❌ [Screen4Inscription] Validation failed: profile missing");
+        setFormError(msg);
+        return;
+      }
+
+      console.log("✅ [Screen4Inscription] All 7 fields valid! Transitioning to step 2 Finalisation...");
+      setFormError('');
+      setIsNavigating(true);
+      setPaymentPhone(formData.phone);
+      
+      // Fast transition to Step 2
+      setTimeout(() => {
+        setIsNavigating(false);
+        setCurrentStep('step2');
+        console.log("🎉 [Screen4Inscription] Successfully navigated to Step 2 (Finalisation)");
+      }, 150);
+    } catch (err) {
+      console.error("❌ [Screen4Inscription] Error navigating to finalization:", err);
+      setIsNavigating(false);
+      setFormError(currentLang === 'fr' ? 'Une erreur est survenue lors de la validation.' : 'An error occurred during validation.');
+    }
   };
 
   // Handle Payment Submission
@@ -305,6 +420,14 @@ export default function Screen4Inscription({ onSignupSuccess, onGoToLogin, lang 
               transition={{ duration: 0.25, ease: 'easeOut' }}
               className="space-y-4 pt-1"
             >
+
+
+              {formError && (
+                <div className="bg-red-50 border border-red-200 text-red-700 p-3.5 rounded-[16px] text-xs sm:text-sm font-extrabold flex items-center gap-2 animate-shake">
+                  <AlertCircle className="w-4 h-4 text-red-600 shrink-0" />
+                  <span>{formError}</span>
+                </div>
+              )}
               {/* Nom & Prénom */}
               <div className="grid grid-cols-2 gap-3">
                 <div>
@@ -495,47 +618,85 @@ export default function Screen4Inscription({ onSignupSuccess, onGoToLogin, lang 
                   {currentLang === 'fr' ? 'Quartier à Bafoussam' : 'Neighborhood in Bafoussam'} <span className="text-red-500">*</span>
                 </label>
                 <div className="relative">
-                  <MapPin className="w-5 h-5 text-slate-400 absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none" />
-                  <select
-                    value={formData.neighborhood}
-                    onChange={(e) => setFormData({ ...formData, neighborhood: e.target.value })}
-                    className="w-full h-[58px] pl-12 pr-10 bg-[#F8FAFC] focus:bg-white border border-[#E2E8F0] rounded-[18px] text-sm sm:text-base text-[#0F172A] font-semibold shadow-2xs focus:outline-none focus:ring-2 focus:ring-[#16A34A]/25 focus:border-[#16A34A] transition-all duration-200 appearance-none cursor-pointer"
+                  <button
+                    type="button"
+                    onClick={() => {
+                      markFieldTouched('neighborhood');
+                      setIsNeighborhoodModalOpen(true);
+                    }}
+                    className={`w-full h-[58px] pl-12 pr-10 bg-[#F8FAFC] hover:bg-white focus:bg-white border rounded-[18px] text-sm sm:text-base font-semibold shadow-2xs focus:outline-none focus:ring-2 focus:ring-[#16A34A]/25 focus:border-[#16A34A] transition-all duration-200 flex items-center text-left cursor-pointer ${
+                      !formData.neighborhood ? 'text-slate-400' : 'text-[#0F172A]'
+                    } ${
+                      touchedFields.neighborhood && !isNeighborhoodValid ? 'border-red-500 bg-red-50/20' : 'border-[#E2E8F0]'
+                    }`}
                   >
-                    <option value="march-a">Marché A (Centre Commercial)</option>
-                    <option value="march-b">Marché B (Ancien Marché)</option>
-                    <option value="tamdja">Tamdja (Quartier Administratif)</option>
-                    <option value="djeleng">Djeleng (Zone Résidentielle)</option>
-                    <option value="houkaha">Houkaha</option>
-                    <option value="kamkop">Kamkop</option>
-                  </select>
+                    <MapPin className="w-5 h-5 text-slate-400 absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none" />
+                    <span className="truncate flex-1">
+                      {selectedNeighborhoodName || (currentLang === 'fr' ? 'Sélectionnez votre quartier' : 'Select your neighborhood')}
+                    </span>
+                    <ChevronDown className="w-5 h-5 text-slate-400 absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none" />
+                  </button>
                 </div>
+                {touchedFields.neighborhood && !isNeighborhoodValid && (
+                  <p className="text-xs text-red-500 font-bold mt-1.5 flex items-center gap-1 animate-in fade-in">
+                    <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                    <span>{currentLang === 'fr' ? 'Veuillez sélectionner votre quartier.' : 'Please select your neighborhood.'}</span>
+                  </p>
+                )}
+
+                {/* Neighborhood Search Modal */}
+                <NeighborhoodSelectModal
+                  isOpen={isNeighborhoodModalOpen}
+                  onClose={() => setIsNeighborhoodModalOpen(false)}
+                  selectedId={formData.neighborhood}
+                  onSelect={(id, name) => {
+                    setFormData(prev => ({ ...prev, neighborhood: id }));
+                    markFieldTouched('neighborhood');
+                  }}
+                  lang={currentLang}
+                />
               </div>
 
               {/* Selected Profile Card Design */}
               <div className="pt-1">
                 {!selectedProfileObj ? (
-                  <button
-                    type="button"
-                    onClick={() => setIsBottomSheetOpen(true)}
-                    className="w-full p-4 rounded-[18px] bg-white border-2 border-dashed border-slate-300 hover:border-[#16A34A] hover:bg-[#F0FDF4]/50 transition-all duration-200 flex items-center justify-between shadow-2xs group cursor-pointer text-left active:scale-[0.98]"
-                  >
-                    <div className="flex items-center gap-3 min-w-0 flex-1">
-                      <div className="w-10 h-10 rounded-2xl bg-[#DCFCE7] text-[#16A34A] flex items-center justify-center text-lg font-bold shrink-0">
-                        👤
+                  <div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        markFieldTouched('profile');
+                        setIsBottomSheetOpen(true);
+                      }}
+                      className={`w-full p-4 rounded-[18px] bg-white border-2 border-dashed transition-all duration-200 flex items-center justify-between shadow-2xs group cursor-pointer text-left active:scale-[0.98] ${
+                        touchedFields.profile && !isProfileSelected
+                          ? 'border-red-500 bg-red-50/20'
+                          : 'border-slate-300 hover:border-[#16A34A] hover:bg-[#F0FDF4]/50'
+                      }`}
+                    >
+                      <div className="flex items-center gap-3 min-w-0 flex-1">
+                        <div className="w-10 h-10 rounded-2xl bg-[#DCFCE7] text-[#16A34A] flex items-center justify-center text-lg font-bold shrink-0">
+                          👤
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <h4 className="text-xs sm:text-sm font-black text-[#0F172A] uppercase tracking-wider flex items-center gap-1 truncate">
+                            {currentLang === 'fr' ? 'Choisir mon profil' : 'Choose my profile'} <span className="text-red-500">*</span>
+                          </h4>
+                          <p className="text-xs text-slate-500 font-medium mt-0.5 truncate">
+                            Client • Vendeur • Prestataire • Entreprise
+                          </p>
+                        </div>
                       </div>
-                      <div className="min-w-0 flex-1">
-                        <h4 className="text-xs sm:text-sm font-black text-[#0F172A] uppercase tracking-wider flex items-center gap-1 truncate">
-                          {currentLang === 'fr' ? 'Choisir mon profil' : 'Choose my profile'} <span className="text-red-500">*</span>
-                        </h4>
-                        <p className="text-xs text-slate-500 font-medium mt-0.5 truncate">
-                          Client • Vendeur • Prestataire • Entreprise
-                        </p>
+                      <div className="w-8 h-8 rounded-full bg-slate-100 group-hover:bg-[#DCFCE7] text-slate-400 group-hover:text-[#16A34A] flex items-center justify-center transition-colors shrink-0 ml-2">
+                        <ChevronRight className="w-5 h-5" />
                       </div>
-                    </div>
-                    <div className="w-8 h-8 rounded-full bg-slate-100 group-hover:bg-[#DCFCE7] text-slate-400 group-hover:text-[#16A34A] flex items-center justify-center transition-colors shrink-0 ml-2">
-                      <ChevronRight className="w-5 h-5" />
-                    </div>
-                  </button>
+                    </button>
+                    {touchedFields.profile && !isProfileSelected && (
+                      <p className="text-xs text-red-500 font-bold mt-1.5 flex items-center gap-1 animate-in fade-in">
+                        <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                        <span>{currentLang === 'fr' ? 'Veuillez sélectionner un profil.' : 'Please select a profile.'}</span>
+                      </p>
+                    )}
+                  </div>
                 ) : (
                   <motion.div 
                     layout
@@ -569,7 +730,7 @@ export default function Screen4Inscription({ onSignupSuccess, onGoToLogin, lang 
                         onClick={() => setIsBottomSheetOpen(true)}
                         className="px-3 py-1.5 rounded-xl bg-white hover:bg-emerald-50 text-[#16A34A] border border-emerald-300 text-xs font-extrabold transition shrink-0 cursor-pointer shadow-2xs active:scale-95 ml-1"
                       >
-                        {currentLang === 'fr' ? 'Changer' : 'Change'}
+                        {currentLang === 'fr' ? 'Modifier' : 'Modify'}
                       </button>
                     </div>
 
@@ -594,21 +755,37 @@ export default function Screen4Inscription({ onSignupSuccess, onGoToLogin, lang 
               {/* Primary Button "Continuer vers la finalisation →" */}
               <button
                 type="button"
-                disabled={!isStep1Complete}
-                onClick={() => {
+                disabled={!isStep1Complete || isNavigating}
+                onClick={(e) => {
+                  e.preventDefault();
+                  console.log("👉 [Screen4Inscription] 'Continuer vers la finalisation' button clicked", {
+                    isStep1Complete,
+                    isNavigating,
+                    formData,
+                    selectedProfile
+                  });
                   if (typeof window !== 'undefined' && 'vibrate' in navigator) {
-                    try { navigator.vibrate(10); } catch (e) {}
+                    try { navigator.vibrate(10); } catch (err) {}
                   }
                   handleProceedToFinalization();
                 }}
-                className={`w-full h-[58px] rounded-[18px] text-sm sm:text-base font-extrabold flex items-center justify-center gap-2 transition-all duration-200 cursor-pointer ${
+                className={`w-full h-[58px] rounded-[18px] text-sm sm:text-base font-extrabold flex items-center justify-center gap-2 transition-all duration-300 ease-in-out ${
                   !isStep1Complete
-                    ? 'bg-[#DCFCE7]/60 text-slate-400 border border-emerald-200 cursor-not-allowed shadow-none'
-                    : 'bg-gradient-to-r from-[#16A34A] via-[#15803D] to-[#16A34A] hover:brightness-105 text-white shadow-[0_8px_24px_rgba(22,163,74,0.3)] active:scale-[0.98]'
+                    ? 'bg-[#E2E8F0] text-slate-400 opacity-60 shadow-none border border-slate-200 cursor-not-allowed'
+                    : 'bg-gradient-to-r from-[#16A34A] via-[#15803D] to-[#16A34A] hover:brightness-105 active:scale-[0.98] text-white shadow-[0_8px_24px_rgba(22,163,74,0.3)] cursor-pointer'
                 }`}
               >
-                <span>{currentLang === 'fr' ? 'Continuer vers la finalisation' : 'Continue to finalization'}</span>
-                <ArrowRight className="w-5 h-5" />
+                {isNavigating ? (
+                  <>
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                    <span>{currentLang === 'fr' ? 'Chargement de la finalisation...' : 'Loading finalization...'}</span>
+                  </>
+                ) : (
+                  <>
+                    <span>{currentLang === 'fr' ? 'Continuer vers la finalisation' : 'Continue to finalization'}</span>
+                    <ArrowRight className="w-5 h-5" />
+                  </>
+                )}
               </button>
 
               {/* 9. Premium Footer Component */}

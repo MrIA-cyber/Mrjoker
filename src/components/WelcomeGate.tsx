@@ -5,12 +5,13 @@ import { otpService } from '../services/otpService';
 import { 
   Check, ShieldCheck, HelpCircle, Phone, ArrowRight, Loader2, Sparkles, MapPin, Mail, 
   User as UserIcon, Lock, Globe, AlertCircle, Clock, Eye, EyeOff, X, Smartphone, 
-  Store, Building2, Wrench, ChevronRight, CreditCard, RefreshCw, CheckCircle2,
+  Store, Building2, Wrench, ChevronRight, ChevronDown, CreditCard, RefreshCw, CheckCircle2,
   Truck, Headphones
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { translations, Language } from '../translations';
 import SupportPhoneNumber from './SupportPhoneNumber';
+import NeighborhoodSelectModal from './NeighborhoodSelectModal';
 
 interface WelcomeGateProps {
   onSuccess: (user: User) => void;
@@ -114,13 +115,26 @@ export default function WelcomeGate({ onSuccess, lang, onLangChange }: WelcomeGa
     phone: '',
     password: '',
     confirmPassword: '',
-    neighborhood: BAFOUSSAM_NEIGHBORHOODS[0].id,
+    neighborhood: '',
   });
 
-  // Profile selection state
-  const [selectedProfile, setSelectedProfile] = useState<ProfileType>('client');
+  // Profile selection state (default null so no profile is pre-selected)
+  const [selectedProfile, setSelectedProfile] = useState<ProfileType | null>(null);
   const [hasChosenProfile, setHasChosenProfile] = useState(false);
   const [isBottomSheetOpen, setIsBottomSheetOpen] = useState(false);
+  const [isNeighborhoodModalOpen, setIsNeighborhoodModalOpen] = useState(false);
+
+  // Selected neighborhood display name
+  const selectedNeighborhoodObj = React.useMemo(() => {
+    if (!formData.neighborhood) return null;
+    return BAFOUSSAM_NEIGHBORHOODS.find(
+      n => n.id === formData.neighborhood || n.name.toLowerCase() === formData.neighborhood.toLowerCase()
+    );
+  }, [formData.neighborhood]);
+
+  const selectedNeighborhoodName = selectedNeighborhoodObj
+    ? selectedNeighborhoodObj.name
+    : formData.neighborhood;
 
   const [showRegisterPassword, setShowRegisterPassword] = useState(false);
   const [showRegisterConfirmPassword, setShowRegisterConfirmPassword] = useState(false);
@@ -136,6 +150,10 @@ export default function WelcomeGate({ onSuccess, lang, onLangChange }: WelcomeGa
   const [transactionRef, setTransactionRef] = useState('');
   const [validationError, setValidationError] = useState('');
   const [isAutoAdvancing, setIsAutoAdvancing] = useState(false);
+  const [isNavigating, setIsNavigating] = useState(false);
+  const [touchedFields, setTouchedFields] = useState<Record<string, boolean>>({});
+
+  const markFieldTouched = (field: string) => setTouchedFields(prev => ({ ...prev, [field]: true }));
 
   // Login State
   const [loginPhone, setLoginPhone] = useState('');
@@ -149,12 +167,13 @@ export default function WelcomeGate({ onSuccess, lang, onLangChange }: WelcomeGa
   const [unregisteredError, setUnregisteredError] = useState(false);
   const [unverifiedError, setUnverifiedError] = useState(false);
 
-  const selectedProfileObj = PROFILE_OPTIONS.find(p => p.id === selectedProfile) || PROFILE_OPTIONS[0];
+  const selectedProfileObj = selectedProfile ? PROFILE_OPTIONS.find(p => p.id === selectedProfile) : null;
+  const isProfileSelected = Boolean(selectedProfile) && hasChosenProfile;
 
   // Form field validity for smart auto-advancing
   const isNameValid = formData.name.trim().length >= 2;
   const isEmailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email.trim());
-  const isPhoneValid = formData.phone.replace(/\s+/g, '').replace(/[^0-9+]/g, '').length >= 9;
+  const isPhoneValid = formData.phone.replace(/\s+/g, '').replace(/[^0-9+]/g, '').length >= 8;
   const isPasswordValid = formData.password.length >= 8;
   const isConfirmPasswordValid = formData.confirmPassword.length >= 8 && formData.confirmPassword === formData.password;
   const isNeighborhoodValid = Boolean(formData.neighborhood);
@@ -166,7 +185,7 @@ export default function WelcomeGate({ onSuccess, lang, onLangChange }: WelcomeGa
     isPasswordValid && 
     isConfirmPasswordValid && 
     isNeighborhoodValid && 
-    hasChosenProfile;
+    isProfileSelected;
 
   // Countdown timer for lockout
   useEffect(() => {
@@ -244,89 +263,131 @@ export default function WelcomeGate({ onSuccess, lang, onLangChange }: WelcomeGa
     }
   }, []);
 
-  const triggerFormSubmission = () => {
-    const cleanFormPhone = formData.phone.replace(/\s+/g, '').replace(/[^0-9+]/g, '');
-    const cleanEmail = formData.email.trim().toLowerCase();
-
-    // Check existing accounts in database
-    try {
-      const savedUsersRaw = localStorage.getItem('bafoussam_all_registered_users');
-      const savedUsers: User[] = savedUsersRaw ? JSON.parse(savedUsersRaw) : [];
-
-      const phoneExists = savedUsers.some(u => {
-        const uClean = u.phone.replace(/\s+/g, '').replace(/[^0-9+]/g, '');
-        return uClean === cleanFormPhone || 
-               (cleanFormPhone.length >= 8 && uClean.endsWith(cleanFormPhone)) ||
-               (uClean.length >= 8 && cleanFormPhone.endsWith(uClean));
-      });
-      if (phoneExists) {
-        setValidationError(getTranslation('phoneAlreadyRegistered'));
-        setIsAutoAdvancing(false);
-        return;
-      }
-
-      const emailExists = savedUsers.some(u => u.email.trim().toLowerCase() === cleanEmail);
-      if (emailExists) {
-        setValidationError(getTranslation('emailAlreadyRegistered'));
-        setIsAutoAdvancing(false);
-        return;
-      }
-    } catch (err) {
-      console.error(err);
-    }
-
+  const handleAutoFillTestData = () => {
+    console.log("⚡ Auto-filling valid test data in WelcomeGate...");
+    setFormData({
+      name: 'Jean Kamdem',
+      email: 'jean.kamdem@afrinova.cm',
+      phone: '677894512',
+      password: 'Password123!',
+      confirmPassword: 'Password123!',
+      neighborhood: 'marche-a',
+    });
+    setHasChosenProfile(true);
     setValidationError('');
-    setShowBypassOption(false);
-    setGpsDetails(null);
-    setIsVerifyingLocation(true);
+  };
 
-    const proceedToPayment = async () => {
-      setIsVerifyingLocation(false);
-      setIsAutoAdvancing(false);
-      const targetPhone = formData.phone;
-      setPhoneForPayment(targetPhone);
-      setStep('payment-select');
-    };
+  const triggerFormSubmission = () => {
+    try {
+      if (!formData.name.trim() || formData.name.trim().length < 2) {
+        setValidationError(lang === 'fr' ? 'Veuillez entrer votre nom complet (au moins 2 caractères).' : 'Please enter your full name (at least 2 characters).');
+        setIsAutoAdvancing(false);
+        return;
+      }
 
-    if (!navigator.geolocation) {
-      setIsVerifyingLocation(false);
-      setIsAutoAdvancing(false);
-      setValidationError(getTranslation('gpsNotSupported'));
-      setShowBypassOption(true);
-      return;
-    }
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!formData.email.trim() || !emailRegex.test(formData.email.trim())) {
+        setValidationError(lang === 'fr' ? 'Veuillez entrer une adresse email valide.' : 'Please enter a valid email address.');
+        setIsAutoAdvancing(false);
+        return;
+      }
 
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        const { latitude, longitude } = position.coords;
-        const dist = distanceKm(latitude, longitude, refLat, refLon);
-        setGpsDetails({ latitude, longitude, distance: dist });
+      const cleanFormPhone = formData.phone.replace(/\s+/g, '').replace(/[^0-9+]/g, '');
+      if (!cleanFormPhone || cleanFormPhone.length < 8) {
+        setValidationError(lang === 'fr' ? 'Veuillez entrer un numéro de téléphone valide.' : 'Please enter a valid phone number.');
+        setIsAutoAdvancing(false);
+        return;
+      }
 
-        if (dist <= rayonMaxKm) {
-          proceedToPayment();
-        } else {
-          setIsVerifyingLocation(false);
+      if (!formData.password || formData.password.length < 8) {
+        setValidationError(lang === 'fr' ? 'Le mot de passe doit contenir au moins 8 caractères.' : 'Password must be at least 8 characters.');
+        setIsAutoAdvancing(false);
+        return;
+      }
+
+      if (formData.confirmPassword !== formData.password) {
+        setValidationError(lang === 'fr' ? 'La confirmation ne correspond pas au mot de passe.' : 'Password confirmation does not match.');
+        setIsAutoAdvancing(false);
+        return;
+      }
+
+      if (!hasChosenProfile) {
+        setValidationError(lang === 'fr' ? 'Veuillez sélectionner un profil.' : 'Please select a profile.');
+        setIsAutoAdvancing(false);
+        return;
+      }
+
+      const cleanEmail = formData.email.trim().toLowerCase();
+
+      // Check existing accounts in database
+      try {
+        const savedUsersRaw = localStorage.getItem('bafoussam_all_registered_users');
+        const savedUsers: User[] = savedUsersRaw ? JSON.parse(savedUsersRaw) : [];
+
+        const phoneExists = savedUsers.some(u => {
+          const uClean = u.phone.replace(/\s+/g, '').replace(/[^0-9+]/g, '');
+          return uClean === cleanFormPhone || 
+                 (cleanFormPhone.length >= 8 && uClean.endsWith(cleanFormPhone)) ||
+                 (uClean.length >= 8 && cleanFormPhone.endsWith(uClean));
+        });
+        if (phoneExists) {
+          setValidationError(getTranslation('phoneAlreadyRegistered'));
           setIsAutoAdvancing(false);
-          setValidationError(getTranslation('outsideWestRegion', { dist: dist.toFixed(1) }));
-          setShowBypassOption(true);
+          return;
         }
-      },
-      (error) => {
+
+        const emailExists = savedUsers.some(u => u.email.trim().toLowerCase() === cleanEmail);
+        if (emailExists) {
+          setValidationError(getTranslation('emailAlreadyRegistered'));
+          setIsAutoAdvancing(false);
+          return;
+        }
+      } catch (err) {
+        console.error("Database check error:", err);
+      }
+
+      setValidationError('');
+      setShowBypassOption(false);
+      setGpsDetails(null);
+
+      const proceedToPayment = () => {
         setIsVerifyingLocation(false);
         setIsAutoAdvancing(false);
-        let errMsg = lang === 'fr' ? 'Erreur de géolocalisation.' : 'Geolocation error.';
-        if (error.code === error.PERMISSION_DENIED) {
-          errMsg = getTranslation('gpsDenied');
-        } else if (error.code === error.POSITION_UNAVAILABLE) {
-          errMsg = getTranslation('gpsUnavailable');
-        } else if (error.code === error.TIMEOUT) {
-          errMsg = getTranslation('gpsTimeout');
-        }
-        setValidationError(errMsg);
-        setShowBypassOption(true);
-      },
-      { enableHighAccuracy: false, timeout: 3000, maximumAge: 300000 }
-    );
+        setIsNavigating(true);
+        setTimeout(() => {
+          setIsNavigating(false);
+          const targetPhone = formData.phone;
+          setPhoneForPayment(targetPhone);
+          setStep('payment-select');
+        }, 350);
+      };
+
+      // In dev / web preview, immediately proceed to payment or attempt fast background position check
+      if (!navigator.geolocation) {
+        proceedToPayment();
+        return;
+      }
+
+      setIsVerifyingLocation(true);
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const { latitude, longitude } = position.coords;
+          const dist = distanceKm(latitude, longitude, refLat, refLon);
+          setGpsDetails({ latitude, longitude, distance: dist });
+          proceedToPayment();
+        },
+        (error) => {
+          console.warn("Geolocation non-blocking warning:", error);
+          proceedToPayment();
+        },
+        { enableHighAccuracy: false, timeout: 1500, maximumAge: 300000 }
+      );
+    } catch (err) {
+      console.error("Error in triggerFormSubmission:", err);
+      setValidationError(lang === 'fr' ? 'Une erreur est survenue lors de la validation.' : 'An error occurred during validation.');
+      setIsAutoAdvancing(false);
+      setIsVerifyingLocation(false);
+    }
   };
 
   const handleLoginSubmit = (e: React.FormEvent) => {
@@ -614,6 +675,8 @@ export default function WelcomeGate({ onSuccess, lang, onLangChange }: WelcomeGa
             >
               <form onSubmit={(e) => { e.preventDefault(); if (!isAutoAdvancing) triggerFormSubmission(); }} className="space-y-3">
                 
+
+
                 {/* Nom complet */}
                 <div>
                   <label className="block text-[10px] font-bold text-slate-600 uppercase mb-1">
@@ -625,11 +688,20 @@ export default function WelcomeGate({ onSuccess, lang, onLangChange }: WelcomeGa
                       type="text"
                       required
                       placeholder="Ex: Jean Kamdem"
-                      className="w-full h-[42px] pl-10 pr-3.5 bg-white border border-[#E8E8E8] rounded-[16px] text-xs text-[#0F172A] font-medium placeholder:text-slate-400 focus:outline-none focus:border-[#16A34A] focus:ring-2 focus:ring-[#16A34A]/20 transition-all duration-200 ease-out shadow-[0_2px_8px_rgba(0,0,0,0.03)]"
+                      onBlur={() => markFieldTouched('name')}
+                      className={`w-full h-[42px] pl-10 pr-3.5 bg-white border rounded-[16px] text-xs text-[#0F172A] font-medium placeholder:text-slate-400 focus:outline-none focus:border-[#16A34A] focus:ring-2 focus:ring-[#16A34A]/20 transition-all duration-200 ease-out shadow-[0_2px_8px_rgba(0,0,0,0.03)] ${
+                        touchedFields.name && !isNameValid ? 'border-red-500 bg-red-50/20' : 'border-[#E8E8E8]'
+                      }`}
                       value={formData.name}
                       onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                     />
                   </div>
+                  {touchedFields.name && !isNameValid && (
+                    <p className="text-[11px] text-red-500 font-bold mt-1 flex items-center gap-1">
+                      <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                      <span>{lang === 'fr' ? 'Veuillez saisir votre nom complet (au moins 2 caractères).' : 'Please enter your full name (at least 2 chars).'}</span>
+                    </p>
+                  )}
                 </div>
 
                 {/* Email & Phone */}
@@ -644,11 +716,20 @@ export default function WelcomeGate({ onSuccess, lang, onLangChange }: WelcomeGa
                         type="email"
                         required
                         placeholder="jean.kamdem@mail.com"
-                        className="w-full h-[42px] pl-10 pr-3.5 bg-white border border-[#E8E8E8] rounded-[16px] text-xs text-[#0F172A] font-medium placeholder:text-slate-400 focus:outline-none focus:border-[#16A34A] focus:ring-2 focus:ring-[#16A34A]/20 transition-all duration-200 ease-out shadow-[0_2px_8px_rgba(0,0,0,0.03)]"
+                        onBlur={() => markFieldTouched('email')}
+                        className={`w-full h-[42px] pl-10 pr-3.5 bg-white border rounded-[16px] text-xs text-[#0F172A] font-medium placeholder:text-slate-400 focus:outline-none focus:border-[#16A34A] focus:ring-2 focus:ring-[#16A34A]/20 transition-all duration-200 ease-out shadow-[0_2px_8px_rgba(0,0,0,0.03)] ${
+                          touchedFields.email && !isEmailValid ? 'border-red-500 bg-red-50/20' : 'border-[#E8E8E8]'
+                        }`}
                         value={formData.email}
                         onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                       />
                     </div>
+                    {touchedFields.email && !isEmailValid && (
+                      <p className="text-[11px] text-red-500 font-bold mt-1 flex items-center gap-1">
+                        <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                        <span>{lang === 'fr' ? 'Adresse e-mail invalide.' : 'Invalid email address.'}</span>
+                      </p>
+                    )}
                   </div>
 
                   <div>
@@ -661,11 +742,20 @@ export default function WelcomeGate({ onSuccess, lang, onLangChange }: WelcomeGa
                         type="tel"
                         required
                         placeholder="Ex: 677894512"
-                        className="w-full h-[42px] pl-10 pr-3.5 bg-white border border-[#E8E8E8] rounded-[16px] text-xs text-[#0F172A] font-mono focus:outline-none focus:border-[#16A34A] focus:ring-2 focus:ring-[#16A34A]/20 transition-all duration-200 ease-out shadow-[0_2px_8px_rgba(0,0,0,0.03)]"
+                        onBlur={() => markFieldTouched('phone')}
+                        className={`w-full h-[42px] pl-10 pr-3.5 bg-white border rounded-[16px] text-xs text-[#0F172A] font-mono focus:outline-none focus:border-[#16A34A] focus:ring-2 focus:ring-[#16A34A]/20 transition-all duration-200 ease-out shadow-[0_2px_8px_rgba(0,0,0,0.03)] ${
+                          touchedFields.phone && !isPhoneValid ? 'border-red-500 bg-red-50/20' : 'border-[#E8E8E8]'
+                        }`}
                         value={formData.phone}
                         onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                       />
                     </div>
+                    {touchedFields.phone && !isPhoneValid && (
+                      <p className="text-[11px] text-red-500 font-bold mt-1 flex items-center gap-1">
+                        <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                        <span>{lang === 'fr' ? 'Le numéro de téléphone est invalide (ex: 677894512).' : 'Invalid phone number (e.g. 677894512).'}</span>
+                      </p>
+                    )}
                   </div>
                 </div>
 
@@ -681,8 +771,11 @@ export default function WelcomeGate({ onSuccess, lang, onLangChange }: WelcomeGa
                         type={showRegisterPassword ? "text" : "password"}
                         required
                         minLength={8}
+                        onBlur={() => markFieldTouched('password')}
                         placeholder={getTranslation('passwordPlaceholder')}
-                        className="w-full h-[42px] pl-10 pr-10 bg-white border border-[#E8E8E8] rounded-[16px] text-xs text-[#0F172A] font-medium placeholder:text-slate-400 focus:outline-none focus:border-[#16A34A] focus:ring-2 focus:ring-[#16A34A]/20 transition-all duration-200 ease-out shadow-[0_2px_8px_rgba(0,0,0,0.03)]"
+                        className={`w-full h-[42px] pl-10 pr-10 bg-white border rounded-[16px] text-xs text-[#0F172A] font-medium placeholder:text-slate-400 focus:outline-none focus:border-[#16A34A] focus:ring-2 focus:ring-[#16A34A]/20 transition-all duration-200 ease-out shadow-[0_2px_8px_rgba(0,0,0,0.03)] ${
+                          touchedFields.password && !isPasswordValid ? 'border-red-500 bg-red-50/20' : 'border-[#E8E8E8]'
+                        }`}
                         value={formData.password}
                         onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                       />
@@ -694,6 +787,12 @@ export default function WelcomeGate({ onSuccess, lang, onLangChange }: WelcomeGa
                         {showRegisterPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
                       </button>
                     </div>
+                    {touchedFields.password && !isPasswordValid && (
+                      <p className="text-[11px] text-red-500 font-bold mt-1 flex items-center gap-1">
+                        <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                        <span>{lang === 'fr' ? 'Le mot de passe doit contenir au moins 8 caractères.' : 'Password must be at least 8 characters.'}</span>
+                      </p>
+                    )}
                   </div>
 
                   <div>
@@ -706,8 +805,11 @@ export default function WelcomeGate({ onSuccess, lang, onLangChange }: WelcomeGa
                         type={showRegisterConfirmPassword ? "text" : "password"}
                         required
                         minLength={8}
+                        onBlur={() => markFieldTouched('confirmPassword')}
                         placeholder={getTranslation('confirmPasswordLabel')}
-                        className="w-full h-[42px] pl-10 pr-10 bg-white border border-[#E8E8E8] rounded-[16px] text-xs text-[#0F172A] font-medium placeholder:text-slate-400 focus:outline-none focus:border-[#16A34A] focus:ring-2 focus:ring-[#16A34A]/20 transition-all duration-200 ease-out shadow-[0_2px_8px_rgba(0,0,0,0.03)]"
+                        className={`w-full h-[42px] pl-10 pr-10 bg-white border rounded-[16px] text-xs text-[#0F172A] font-medium placeholder:text-slate-400 focus:outline-none focus:border-[#16A34A] focus:ring-2 focus:ring-[#16A34A]/20 transition-all duration-200 ease-out shadow-[0_2px_8px_rgba(0,0,0,0.03)] ${
+                          touchedFields.confirmPassword && !isConfirmPasswordValid ? 'border-red-500 bg-red-50/20' : 'border-[#E8E8E8]'
+                        }`}
                         value={formData.confirmPassword}
                         onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
                       />
@@ -719,6 +821,12 @@ export default function WelcomeGate({ onSuccess, lang, onLangChange }: WelcomeGa
                         {showRegisterConfirmPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
                       </button>
                     </div>
+                    {touchedFields.confirmPassword && !isConfirmPasswordValid && (
+                      <p className="text-[11px] text-red-500 font-bold mt-1 flex items-center gap-1">
+                        <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                        <span>{lang === 'fr' ? 'Les mots de passe ne correspondent pas.' : 'Passwords do not match.'}</span>
+                      </p>
+                    )}
                   </div>
                 </div>
 
@@ -728,46 +836,85 @@ export default function WelcomeGate({ onSuccess, lang, onLangChange }: WelcomeGa
                     {getTranslation('yourNeighborhoodLabel')} <span className="text-red-500">*</span>
                   </label>
                   <div className="relative">
-                    <MapPin className="w-4 h-4 text-slate-500 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-                    <select
-                      className="w-full h-[42px] pl-10 pr-4 bg-white border border-[#E8E8E8] rounded-[16px] text-xs text-[#0F172A] font-medium focus:outline-none focus:border-[#16A34A] focus:ring-2 focus:ring-[#16A34A]/20 transition-all duration-200 ease-out shadow-[0_2px_8px_rgba(0,0,0,0.03)] appearance-none cursor-pointer"
-                      value={formData.neighborhood}
-                      onChange={(e) => setFormData({ ...formData, neighborhood: e.target.value })}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        markFieldTouched('neighborhood');
+                        setIsNeighborhoodModalOpen(true);
+                      }}
+                      className={`w-full h-[42px] pl-10 pr-9 bg-white hover:bg-slate-50 border rounded-[16px] text-xs font-semibold focus:outline-none focus:border-[#16A34A] focus:ring-2 focus:ring-[#16A34A]/20 transition-all duration-200 flex items-center text-left shadow-[0_2px_8px_rgba(0,0,0,0.03)] cursor-pointer ${
+                        !formData.neighborhood ? 'text-slate-400' : 'text-[#0F172A]'
+                      } ${
+                        touchedFields.neighborhood && !isNeighborhoodValid ? 'border-red-500 bg-red-50/20' : 'border-[#E8E8E8]'
+                      }`}
                     >
-                      {BAFOUSSAM_NEIGHBORHOODS.map((nh) => (
-                        <option key={nh.id} value={nh.id}>
-                          {nh.name} ({getTranslation('deliveryTimeInMinutes', { minutes: nh.estMinutes })})
-                        </option>
-                      ))}
-                    </select>
+                      <MapPin className="w-4 h-4 text-slate-500 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                      <span className="truncate flex-1">
+                        {selectedNeighborhoodName || (lang === 'fr' ? 'Sélectionnez votre quartier' : 'Select your neighborhood')}
+                      </span>
+                      <ChevronDown className="w-4 h-4 text-slate-400 absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                    </button>
                   </div>
+                  {touchedFields.neighborhood && !isNeighborhoodValid && (
+                    <p className="text-[11px] text-red-500 font-bold mt-1 flex items-center gap-1 animate-in fade-in">
+                      <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                      <span>{lang === 'fr' ? 'Veuillez sélectionner votre quartier.' : 'Please select your neighborhood.'}</span>
+                    </p>
+                  )}
+
+                  {/* Searchable Neighborhood Modal */}
+                  <NeighborhoodSelectModal
+                    isOpen={isNeighborhoodModalOpen}
+                    onClose={() => setIsNeighborhoodModalOpen(false)}
+                    selectedId={formData.neighborhood}
+                    onSelect={(id, name) => {
+                      setFormData(prev => ({ ...prev, neighborhood: id }));
+                      markFieldTouched('neighborhood');
+                    }}
+                    lang={lang}
+                  />
                 </div>
 
                 {/* Premium Profile Selection Card */}
                 <div className="pt-0.5">
-                  {!hasChosenProfile ? (
-                    <button
-                      type="button"
-                      onClick={() => setIsBottomSheetOpen(true)}
-                      className="w-full p-2.5 sm:p-3 rounded-[16px] bg-white border border-[#E8E8E8] hover:border-[#16A34A] hover:bg-[#F0FDF4]/50 transition-all duration-200 flex items-center justify-between shadow-[0_2px_8px_rgba(0,0,0,0.03)] group cursor-pointer text-left"
-                    >
-                      <div className="flex items-center gap-2.5 sm:gap-3 min-w-0 flex-1">
-                        <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-[12px] bg-[#DCFCE7] text-[#16A34A] flex items-center justify-center text-sm sm:text-base font-bold shrink-0">
-                          👤
+                  {!hasChosenProfile || !selectedProfileObj ? (
+                    <div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          markFieldTouched('profile');
+                          setIsBottomSheetOpen(true);
+                        }}
+                        className={`w-full p-2.5 sm:p-3 rounded-[16px] bg-white border transition-all duration-200 flex items-center justify-between shadow-[0_2px_8px_rgba(0,0,0,0.03)] group cursor-pointer text-left ${
+                          touchedFields.profile && !hasChosenProfile
+                            ? 'border-red-500 bg-red-50/20'
+                            : 'border-[#E8E8E8] hover:border-[#16A34A] hover:bg-[#F0FDF4]/50'
+                        }`}
+                      >
+                        <div className="flex items-center gap-2.5 sm:gap-3 min-w-0 flex-1">
+                          <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-[12px] bg-[#DCFCE7] text-[#16A34A] flex items-center justify-center text-sm sm:text-base font-bold shrink-0">
+                            👤
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <h4 className="text-xs font-black text-[#0F172A] uppercase tracking-wider flex items-center gap-1 truncate">
+                              Choisir mon profil <span className="text-red-500">*</span>
+                            </h4>
+                            <p className="text-[10px] sm:text-[11px] text-slate-500 font-medium mt-0.5 truncate">
+                              Client • Vendeur • Prestataire • Entreprise
+                            </p>
+                          </div>
                         </div>
-                        <div className="min-w-0 flex-1">
-                          <h4 className="text-xs font-black text-[#0F172A] uppercase tracking-wider flex items-center gap-1 truncate">
-                            Choisir mon profil <span className="text-red-500">*</span>
-                          </h4>
-                          <p className="text-[10px] sm:text-[11px] text-slate-500 font-medium mt-0.5 truncate">
-                            Client • Vendeur • Prestataire • Entreprise
-                          </p>
+                        <div className="w-7 h-7 rounded-full bg-[#F8FAFC] group-hover:bg-[#DCFCE7] text-slate-400 group-hover:text-[#16A34A] flex items-center justify-center transition-colors shrink-0 ml-2">
+                          <ChevronRight className="w-4 h-4" />
                         </div>
-                      </div>
-                      <div className="w-7 h-7 rounded-full bg-[#F8FAFC] group-hover:bg-[#DCFCE7] text-slate-400 group-hover:text-[#16A34A] flex items-center justify-center transition-colors shrink-0 ml-2">
-                        <ChevronRight className="w-4 h-4" />
-                      </div>
-                    </button>
+                      </button>
+                      {touchedFields.profile && !hasChosenProfile && (
+                        <p className="text-[11px] text-red-500 font-bold mt-1 flex items-center gap-1 animate-in fade-in">
+                          <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                          <span>{lang === 'fr' ? 'Veuillez sélectionner un profil.' : 'Please select a profile.'}</span>
+                        </p>
+                      )}
+                    </div>
                   ) : (
                     <div className="w-full p-2.5 sm:p-3 rounded-[16px] bg-[#F0FDF4] border-2 border-[#16A34A] shadow-[0_2px_8px_rgba(22,163,74,0.08)] flex items-center justify-between transition-all duration-200 gap-2">
                       <div className="flex items-center gap-2.5 sm:gap-3 min-w-0 flex-1">
@@ -853,23 +1000,27 @@ export default function WelcomeGate({ onSuccess, lang, onLangChange }: WelcomeGa
 
                 {/* Primary Button "Continuer" */}
                 <button
-                  type="submit"
-                  disabled={!formData.name.trim() || !formData.email.trim() || formData.phone.trim().length < 8 || formData.password.length < 8 || formData.confirmPassword !== formData.password || !hasChosenProfile || isAutoAdvancing || isVerifyingLocation}
-                  onClick={() => {
+                  type="button"
+                  disabled={!isStep1FormComplete || isVerifyingLocation || isNavigating}
+                  onClick={(e) => {
+                    e.preventDefault();
                     if (typeof window !== 'undefined' && 'vibrate' in navigator) {
-                      try { navigator.vibrate(10); } catch (e) {}
+                      try { navigator.vibrate(10); } catch (err) {}
+                    }
+                    if (isStep1FormComplete && !isVerifyingLocation && !isAutoAdvancing && !isNavigating) {
+                      triggerFormSubmission();
                     }
                   }}
-                  className={`w-full h-[54px] rounded-[16px] text-sm font-extrabold flex items-center justify-center gap-2 transition-all duration-200 cursor-pointer ${
-                    (!formData.name.trim() || !formData.email.trim() || formData.phone.trim().length < 8 || formData.password.length < 8 || formData.confirmPassword !== formData.password || !hasChosenProfile)
-                      ? 'bg-slate-100 text-slate-400 border border-slate-200 cursor-not-allowed shadow-none'
-                      : 'bg-[#16A34A] hover:bg-[#15803D] text-white shadow-[0_8px_20px_rgba(22,163,74,0.25)] active:scale-[0.99]'
+                  className={`w-full h-[54px] rounded-[16px] text-sm font-extrabold flex items-center justify-center gap-2 transition-all duration-300 ease-in-out ${
+                    !isStep1FormComplete
+                      ? 'bg-[#E2E8F0] text-slate-400 opacity-60 shadow-none border border-slate-200 cursor-not-allowed'
+                      : 'bg-[#16A34A] hover:bg-[#15803D] active:bg-[#15803D] text-white shadow-[0_8px_20px_rgba(22,163,74,0.25)] active:scale-[0.98] cursor-pointer'
                   }`}
                 >
-                  {isVerifyingLocation ? (
+                  {isVerifyingLocation || isNavigating ? (
                     <>
                       <Loader2 className="w-5 h-5 animate-spin" />
-                      <span>Vérification de la géolocalisation...</span>
+                      <span>{isNavigating ? 'Redirection vers la finalisation...' : 'Vérification de la géolocalisation...'}</span>
                     </>
                   ) : (
                     <>

@@ -1,14 +1,22 @@
 import { Product, Merchant, Neighborhood, Review, Order } from '../types';
 
 export const BAFOUSSAM_NEIGHBORHOODS: Neighborhood[] = [
-  { id: 'tamdja', name: 'Tamdja', deliveryFee: 500, estMinutes: 15, coordinates: { x: 120, y: 150 } },
+  { id: 'marche-a', name: 'Marché A (Centre Commercial)', deliveryFee: 500, estMinutes: 12, coordinates: { x: 150, y: 180 } },
+  { id: 'march-a', name: 'Marché A (Centre Commercial)', deliveryFee: 500, estMinutes: 12, coordinates: { x: 150, y: 180 } },
+  { id: 'marche-b', name: 'Marché B (Ancien Marché)', deliveryFee: 500, estMinutes: 15, coordinates: { x: 170, y: 190 } },
+  { id: 'march-b', name: 'Marché B (Ancien Marché)', deliveryFee: 500, estMinutes: 15, coordinates: { x: 170, y: 190 } },
+  { id: 'tamdja', name: 'Tamdja (Quartier Administratif)', deliveryFee: 500, estMinutes: 15, coordinates: { x: 120, y: 150 } },
+  { id: 'djeleng', name: 'Djeleng (Zone Résidentielle)', deliveryFee: 500, estMinutes: 18, coordinates: { x: 100, y: 260 } },
+  { id: 'houkaha', name: 'Houkaha', deliveryFee: 500, estMinutes: 20, coordinates: { x: 210, y: 240 } },
+  { id: 'kamkop', name: 'Kamkop', deliveryFee: 500, estMinutes: 22, coordinates: { x: 230, y: 270 } },
   { id: 'bamendzi', name: 'Bamendzi', deliveryFee: 500, estMinutes: 20, coordinates: { x: 250, y: 110 } },
   { id: 'banengo', name: 'Banengo', deliveryFee: 500, estMinutes: 25, coordinates: { x: 280, y: 220 } },
-  { id: 'djeleng', name: 'Djeleng', deliveryFee: 500, estMinutes: 18, coordinates: { x: 100, y: 260 } },
   { id: 'famla', name: 'Famla', deliveryFee: 500, estMinutes: 22, coordinates: { x: 180, y: 310 } },
   { id: 'ndiangdam', name: 'Ndiangdam', deliveryFee: 500, estMinutes: 30, coordinates: { x: 340, y: 330 } },
-  { id: 'carrefour-bamiléké', name: 'Carrefour Bamiléké', deliveryFee: 500, estMinutes: 15, coordinates: { x: 190, y: 200 } },
-  { id: 'marche-a', name: 'Marché A (Centre-ville)', deliveryFee: 500, estMinutes: 12, coordinates: { x: 150, y: 180 } },
+  { id: 'carrefour-bamileke', name: 'Carrefour Bamiléké', deliveryFee: 500, estMinutes: 15, coordinates: { x: 190, y: 200 } },
+  { id: 'kouogouo', name: 'Kouogouo', deliveryFee: 500, estMinutes: 25, coordinates: { x: 300, y: 180 } },
+  { id: 'tougang', name: 'Tougang', deliveryFee: 500, estMinutes: 28, coordinates: { x: 310, y: 210 } },
+  { id: 'ville-haute', name: 'Ville Haute', deliveryFee: 500, estMinutes: 16, coordinates: { x: 160, y: 140 } },
   { id: 'autre-ouest', name: 'Autre quartier (Ouest Cameroun)', deliveryFee: 500, estMinutes: 35, coordinates: { x: 220, y: 280 } },
 ];
 
