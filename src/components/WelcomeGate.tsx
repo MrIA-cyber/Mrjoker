@@ -168,7 +168,7 @@ export default function WelcomeGate({ onSuccess, lang, onLangChange }: WelcomeGa
   const [unverifiedError, setUnverifiedError] = useState(false);
 
   const selectedProfileObj = selectedProfile ? PROFILE_OPTIONS.find(p => p.id === selectedProfile) : null;
-  const isProfileSelected = Boolean(selectedProfile) && hasChosenProfile;
+  const isProfileSelected = Boolean(selectedProfile);
 
   // Form field validity for smart auto-advancing
   const isNameValid = formData.name.trim().length >= 2;
@@ -176,7 +176,6 @@ export default function WelcomeGate({ onSuccess, lang, onLangChange }: WelcomeGa
   const isPhoneValid = formData.phone.replace(/\s+/g, '').replace(/[^0-9+]/g, '').length >= 8;
   const isPasswordValid = formData.password.length >= 8;
   const isConfirmPasswordValid = formData.confirmPassword.length >= 8 && formData.confirmPassword === formData.password;
-  const isNeighborhoodValid = Boolean(formData.neighborhood);
 
   const isStep1FormComplete = 
     isNameValid && 
@@ -184,7 +183,6 @@ export default function WelcomeGate({ onSuccess, lang, onLangChange }: WelcomeGa
     isPhoneValid && 
     isPasswordValid && 
     isConfirmPasswordValid && 
-    isNeighborhoodValid && 
     isProfileSelected;
 
   // Countdown timer for lockout
@@ -266,13 +264,14 @@ export default function WelcomeGate({ onSuccess, lang, onLangChange }: WelcomeGa
   const handleAutoFillTestData = () => {
     console.log("⚡ Auto-filling valid test data in WelcomeGate...");
     setFormData({
-      name: 'Jean Kamdem',
-      email: 'jean.kamdem@afrinova.cm',
-      phone: '677894512',
-      password: 'Password123!',
-      confirmPassword: 'Password123!',
-      neighborhood: 'marche-a',
+      name: 'Utilisateur Test',
+      email: 'test.user@afrinova.cm',
+      phone: '670000001',
+      password: 'Test@12345',
+      confirmPassword: 'Test@12345',
+      neighborhood: '',
     });
+    setSelectedProfile('client');
     setHasChosenProfile(true);
     setValidationError('');
   };
@@ -311,7 +310,7 @@ export default function WelcomeGate({ onSuccess, lang, onLangChange }: WelcomeGa
         return;
       }
 
-      if (!hasChosenProfile) {
+      if (!selectedProfile) {
         setValidationError(lang === 'fr' ? 'Veuillez sélectionner un profil.' : 'Please select a profile.');
         setIsAutoAdvancing(false);
         return;
@@ -350,38 +349,16 @@ export default function WelcomeGate({ onSuccess, lang, onLangChange }: WelcomeGa
       setShowBypassOption(false);
       setGpsDetails(null);
 
-      const proceedToPayment = () => {
-        setIsVerifyingLocation(false);
-        setIsAutoAdvancing(false);
-        setIsNavigating(true);
-        setTimeout(() => {
-          setIsNavigating(false);
-          const targetPhone = formData.phone;
-          setPhoneForPayment(targetPhone);
-          setStep('payment-select');
-        }, 350);
-      };
-
-      // In dev / web preview, immediately proceed to payment or attempt fast background position check
-      if (!navigator.geolocation) {
-        proceedToPayment();
-        return;
-      }
-
-      setIsVerifyingLocation(true);
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          const { latitude, longitude } = position.coords;
-          const dist = distanceKm(latitude, longitude, refLat, refLon);
-          setGpsDetails({ latitude, longitude, distance: dist });
-          proceedToPayment();
-        },
-        (error) => {
-          console.warn("Geolocation non-blocking warning:", error);
-          proceedToPayment();
-        },
-        { enableHighAccuracy: false, timeout: 1500, maximumAge: 300000 }
-      );
+      // Instantly advance to Step 2 (payment-select)
+      setIsVerifyingLocation(false);
+      setIsAutoAdvancing(false);
+      setIsNavigating(true);
+      setTimeout(() => {
+        setIsNavigating(false);
+        const targetPhone = formData.phone;
+        setPhoneForPayment(targetPhone);
+        setStep('payment-select');
+      }, 150);
     } catch (err) {
       console.error("Error in triggerFormSubmission:", err);
       setValidationError(lang === 'fr' ? 'Une erreur est survenue lors de la validation.' : 'An error occurred during validation.');
@@ -828,51 +805,6 @@ export default function WelcomeGate({ onSuccess, lang, onLangChange }: WelcomeGa
                       </p>
                     )}
                   </div>
-                </div>
-
-                {/* Quartier */}
-                <div>
-                  <label className="block text-[10px] font-bold text-slate-600 uppercase mb-1">
-                    {getTranslation('yourNeighborhoodLabel')} <span className="text-red-500">*</span>
-                  </label>
-                  <div className="relative">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        markFieldTouched('neighborhood');
-                        setIsNeighborhoodModalOpen(true);
-                      }}
-                      className={`w-full h-[42px] pl-10 pr-9 bg-white hover:bg-slate-50 border rounded-[16px] text-xs font-semibold focus:outline-none focus:border-[#16A34A] focus:ring-2 focus:ring-[#16A34A]/20 transition-all duration-200 flex items-center text-left shadow-[0_2px_8px_rgba(0,0,0,0.03)] cursor-pointer ${
-                        !formData.neighborhood ? 'text-slate-400' : 'text-[#0F172A]'
-                      } ${
-                        touchedFields.neighborhood && !isNeighborhoodValid ? 'border-red-500 bg-red-50/20' : 'border-[#E8E8E8]'
-                      }`}
-                    >
-                      <MapPin className="w-4 h-4 text-slate-500 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-                      <span className="truncate flex-1">
-                        {selectedNeighborhoodName || (lang === 'fr' ? 'Sélectionnez votre quartier' : 'Select your neighborhood')}
-                      </span>
-                      <ChevronDown className="w-4 h-4 text-slate-400 absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-                    </button>
-                  </div>
-                  {touchedFields.neighborhood && !isNeighborhoodValid && (
-                    <p className="text-[11px] text-red-500 font-bold mt-1 flex items-center gap-1 animate-in fade-in">
-                      <AlertCircle className="w-3.5 h-3.5 shrink-0" />
-                      <span>{lang === 'fr' ? 'Veuillez sélectionner votre quartier.' : 'Please select your neighborhood.'}</span>
-                    </p>
-                  )}
-
-                  {/* Searchable Neighborhood Modal */}
-                  <NeighborhoodSelectModal
-                    isOpen={isNeighborhoodModalOpen}
-                    onClose={() => setIsNeighborhoodModalOpen(false)}
-                    selectedId={formData.neighborhood}
-                    onSelect={(id, name) => {
-                      setFormData(prev => ({ ...prev, neighborhood: id }));
-                      markFieldTouched('neighborhood');
-                    }}
-                    lang={lang}
-                  />
                 </div>
 
                 {/* Premium Profile Selection Card */}

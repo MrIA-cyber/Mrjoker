@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { 
   User as UserIcon, Mail, Phone, Lock, Check, ShieldCheck, ArrowRight, Sparkles, 
-  Store, Building2, Wrench, MapPin, ChevronRight, ChevronDown, X, AlertCircle, Loader2, CreditCard, RefreshCw, CheckCircle2, Globe, Truck, Headphones, MessageCircle, PhoneCall, ArrowLeft
+  Store, Building2, Wrench, MapPin, ChevronRight, ChevronDown, X, AlertCircle, Loader2, CreditCard, RefreshCw, CheckCircle2, Globe, Truck, Headphones, MessageCircle, PhoneCall, ArrowLeft, Eye, EyeOff
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import NeighborhoodSelectModal from '../NeighborhoodSelectModal';
@@ -36,7 +36,7 @@ const PROFILE_OPTIONS: ProfileOption[] = [
     title: 'Client',
     emoji: '👤',
     icon: UserIcon,
-    description: 'Achetez facilement auprès des meilleurs vendeurs.',
+    description: "J'achète des produits et profite des services locaux.",
     price: 3000,
     formattedPrice: '3 000 FCFA/mois',
     trialDays: 5,
@@ -51,9 +51,9 @@ const PROFILE_OPTIONS: ProfileOption[] = [
   {
     id: 'vendeur',
     title: 'Vendeur',
-    emoji: '🏪',
+    emoji: '🛒',
     icon: Store,
-    description: 'Créez votre boutique et vendez dans toute la région.',
+    description: "Je vends mes produits sur le marché AfriNova.",
     price: 5000,
     formattedPrice: '5 000 FCFA/mois',
     trialDays: 10,
@@ -68,9 +68,9 @@ const PROFILE_OPTIONS: ProfileOption[] = [
   {
     id: 'prestataire',
     title: 'Prestataire',
-    emoji: '🛠️',
+    emoji: '🔧',
     icon: Wrench,
-    description: 'Proposez vos services à des milliers de clients.',
+    description: "Je propose mes services professionnels aux clients.",
     price: 5000,
     formattedPrice: '5 000 FCFA/mois',
     trialDays: 10,
@@ -87,7 +87,7 @@ const PROFILE_OPTIONS: ProfileOption[] = [
     title: 'Entreprise',
     emoji: '🏢',
     icon: Building2,
-    description: 'Développez votre entreprise avec des outils professionnels.',
+    description: "Je représente une entreprise et gère une équipe.",
     price: 15000,
     formattedPrice: '15 000 FCFA/mois',
     trialDays: 10,
@@ -120,7 +120,6 @@ export default function Screen4Inscription({ onSignupSuccess, onGoToLogin, lang 
     email: '',
     password: '',
     confirmPassword: '',
-    neighborhood: '',
   });
 
   // Track field touched state for inline validations
@@ -131,19 +130,24 @@ export default function Screen4Inscription({ onSignupSuccess, onGoToLogin, lang 
   // Profile selection state (default null so no profile is pre-selected)
   const [selectedProfile, setSelectedProfile] = useState<ProfileType | null>(null);
   const [isBottomSheetOpen, setIsBottomSheetOpen] = useState(false);
-  const [isNeighborhoodModalOpen, setIsNeighborhoodModalOpen] = useState(false);
 
-  // Selected neighborhood display name
-  const selectedNeighborhoodObj = useMemo(() => {
-    if (!formData.neighborhood) return null;
-    return BAFOUSSAM_NEIGHBORHOODS.find(
-      n => n.id === formData.neighborhood || n.name.toLowerCase() === formData.neighborhood.toLowerCase()
-    );
-  }, [formData.neighborhood]);
+  // Password visibility state
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
-  const selectedNeighborhoodName = selectedNeighborhoodObj
-    ? selectedNeighborhoodObj.name
-    : formData.neighborhood;
+  // Password strength calculation
+  const passwordStrength = useMemo(() => {
+    const pwd = formData.password;
+    if (!pwd) return { score: 0, label: '', color: 'bg-slate-200', textColor: 'text-slate-400' };
+    let score = 0;
+    if (pwd.length >= 8) score++;
+    if (/[0-9]/.test(pwd)) score++;
+    if (/[A-Z]/.test(pwd) || /[^A-Za-z0-9]/.test(pwd)) score++;
+    
+    if (score <= 1) return { score: 1, label: '🔴 Faible', color: 'bg-red-500', textColor: 'text-red-500' };
+    if (score === 2) return { score: 2, label: '🟠 Moyen', color: 'bg-amber-500', textColor: 'text-amber-500' };
+    return { score: 3, label: '🟢 Fort', color: 'bg-[#16A34A]', textColor: 'text-[#16A34A]' };
+  }, [formData.password]);
 
   // Payment state
   const [paymentOperator, setPaymentOperator] = useState<'momo' | 'orange'>('momo');
@@ -152,14 +156,13 @@ export default function Screen4Inscription({ onSignupSuccess, onGoToLogin, lang 
 
   const selectedProfileObj = useMemo(() => PROFILE_OPTIONS.find(p => p.id === selectedProfile), [selectedProfile]);
 
-  // Validations per field
+  // Validations per required field (5 required criteria: Nom complet, Email, Phone, Password, Profile)
   const isLastNameValid = formData.lastName.trim().length >= 2;
   const isFirstNameValid = formData.firstName.trim().length >= 2;
   const isPhoneValid = formData.phone.replace(/\s+/g, '').replace(/[^0-9+]/g, '').length >= 8;
   const isEmailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email.trim());
   const isPasswordValid = formData.password.length >= 8;
   const isConfirmPasswordValid = formData.confirmPassword.length >= 8 && formData.confirmPassword === formData.password;
-  const isNeighborhoodValid = Boolean(formData.neighborhood);
   const isProfileSelected = Boolean(selectedProfile);
 
   const isStep1Complete = 
@@ -169,7 +172,6 @@ export default function Screen4Inscription({ onSignupSuccess, onGoToLogin, lang 
     isEmailValid && 
     isPasswordValid && 
     isConfirmPasswordValid && 
-    isNeighborhoodValid && 
     isProfileSelected;
 
   const markFieldTouched = (field: string) => {
@@ -180,13 +182,12 @@ export default function Screen4Inscription({ onSignupSuccess, onGoToLogin, lang 
   const handleAutoFillTestData = () => {
     console.log("⚡ Auto-filling valid test data into form...");
     setFormData({
-      lastName: 'Kamdem',
-      firstName: 'Jean',
-      phone: '677894512',
-      email: 'jean.kamdem@afrinova.cm',
-      password: 'Password123!',
-      confirmPassword: 'Password123!',
-      neighborhood: 'march-a',
+      lastName: 'Utilisateur',
+      firstName: 'Test',
+      phone: '670000001',
+      email: 'test.user@afrinova.cm',
+      password: 'Test@12345',
+      confirmPassword: 'Test@12345',
     });
     setSelectedProfile('client');
     setFormError('');
@@ -204,7 +205,6 @@ export default function Screen4Inscription({ onSignupSuccess, onGoToLogin, lang 
         isEmailValid,
         isPasswordValid,
         isConfirmPasswordValid,
-        isNeighborhoodValid,
         isProfileSelected,
         isStep1Complete
       });
@@ -217,7 +217,7 @@ export default function Screen4Inscription({ onSignupSuccess, onGoToLogin, lang 
         email: true,
         password: true,
         confirmPassword: true,
-        neighborhood: true,
+        profile: true,
       });
 
       if (!isLastNameValid || !isFirstNameValid) {
@@ -250,12 +250,6 @@ export default function Screen4Inscription({ onSignupSuccess, onGoToLogin, lang 
         setFormError(msg);
         return;
       }
-      if (!isNeighborhoodValid) {
-        const msg = currentLang === 'fr' ? 'Veuillez sélectionner votre quartier.' : 'Please select your neighborhood.';
-        console.warn("❌ [Screen4Inscription] Validation failed: neighborhood missing");
-        setFormError(msg);
-        return;
-      }
       if (!isProfileSelected) {
         const msg = currentLang === 'fr' ? 'Veuillez choisir un profil d\'utilisation.' : 'Please choose a profile.';
         console.warn("❌ [Screen4Inscription] Validation failed: profile missing");
@@ -263,7 +257,7 @@ export default function Screen4Inscription({ onSignupSuccess, onGoToLogin, lang 
         return;
       }
 
-      console.log("✅ [Screen4Inscription] All 7 fields valid! Transitioning to step 2 Finalisation...");
+      console.log("✅ [Screen4Inscription] All 5 required fields valid! Transitioning to step 2 Finalisation...");
       setFormError('');
       setIsNavigating(true);
       setPaymentPhone(formData.phone);
@@ -301,21 +295,21 @@ export default function Screen4Inscription({ onSignupSuccess, onGoToLogin, lang 
   return (
     <div className="w-full max-w-[540px] mx-auto bg-white text-[#0F172A] rounded-[24px] sm:rounded-[32px] overflow-hidden shadow-[0_16px_48px_rgba(15,23,42,0.12)] border border-slate-200/90 p-5 sm:p-7 flex flex-col justify-between min-h-[90vh] sm:min-h-[660px] relative font-sans transition-all duration-300">
       
-      {/* 1. Header with Enlarged Logo (25-30% bigger), City Badge, Slogan & Language Toggle */}
+      {/* 1. Header with 30% Enlarged Logo, City Badge, Slogan & Language Toggle */}
       <div className="shrink-0 space-y-3">
         <div className="flex items-center justify-between pb-3 border-b border-slate-100 gap-3">
           {/* Logo & City Badge */}
           <div className="flex items-center gap-3 min-w-0">
-            <div className="w-11 h-11 sm:w-13 sm:h-13 rounded-2xl bg-gradient-to-br from-[#16A34A] via-[#15803D] to-[#0F172A] text-white flex items-center justify-center font-black shadow-md shadow-emerald-600/20 shrink-0 transform hover:scale-105 transition-transform duration-200">
-              <Globe className="w-6 h-6 sm:w-7 sm:h-7 text-emerald-300 animate-pulse" />
+            <div className="w-13 h-13 sm:w-16 sm:h-16 rounded-2xl bg-gradient-to-br from-[#16A34A] via-[#15803D] to-[#0F172A] text-white flex items-center justify-center font-black shadow-md shadow-emerald-600/25 shrink-0 transform hover:scale-105 transition-transform duration-200">
+              <Globe className="w-7 h-7 sm:w-8 sm:h-8 text-emerald-300 animate-pulse" />
             </div>
             <div className="text-left min-w-0">
               <div className="flex items-center gap-2 flex-wrap">
-                <span className="text-xl sm:text-2xl font-black text-[#0F172A] font-display tracking-tight leading-none">
+                <span className="text-2xl sm:text-3xl font-black text-[#0F172A] font-display tracking-tight leading-none">
                   Afri<span className="text-[#16A34A]">Nova</span>
                 </span>
-                <span className="text-[10px] sm:text-[11px] font-black uppercase bg-[#16A34A] text-white px-2.5 py-0.5 rounded-lg tracking-wider shrink-0 shadow-2xs">
-                  Bafoussam
+                <span className="text-[11px] font-black uppercase bg-[#16A34A] text-white px-2.5 py-0.5 rounded-lg tracking-wider shrink-0 shadow-2xs">
+                  BAFOUSSAM
                 </span>
               </div>
             </div>
@@ -335,27 +329,26 @@ export default function Screen4Inscription({ onSignupSuccess, onGoToLogin, lang 
           </button>
         </div>
 
-        {/* Spacious Slogan Container */}
-        <div className="bg-emerald-50/60 border border-emerald-200/60 px-3.5 py-2.5 rounded-2xl text-left shadow-2xs flex items-center gap-2">
-          <Sparkles className="w-4 h-4 text-[#16A34A] shrink-0 animate-spin-slow" />
+        {/* Subtitle Slogan Container */}
+        <div className="bg-emerald-50/70 border border-emerald-200/70 px-4 py-2.5 rounded-2xl text-left shadow-2xs flex items-center gap-2.5">
+          <Sparkles className="w-4.5 h-4.5 text-[#16A34A] shrink-0 animate-spin-slow" />
           <p className="text-xs sm:text-sm text-[#16A34A] font-extrabold tracking-tight leading-relaxed">
             « {currentLang === 'fr' ? "L'Afrique connectée au monde." : "Africa connected to the world."} »
           </p>
         </div>
 
-        {/* 2. Progress Bar Header & 2-Step Indicators */}
+        {/* 3. Real Animated Progress Bar */}
         <div className="pt-2 pb-1 space-y-2">
-          {/* Progress Header Label & Percentage */}
           <div className="flex items-center justify-between text-xs font-black">
             <span className="text-[#0F172A] uppercase tracking-wider flex items-center gap-1.5">
-              <span className="text-[#16A34A]">Étape {stepIndex} / 2</span> • {stepTitle}
+              <span className="text-[#16A34A]">{currentStep === 'step1' ? '🟢 Étape 1' : '🟢 Étape 2'}</span> • {stepTitle}
             </span>
-            <span className="font-mono text-[#16A34A] bg-[#DCFCE7] border border-emerald-300 px-2.5 py-0.5 rounded-full shadow-2xs text-[11px]">
+            <span className="font-mono text-[#16A34A] bg-[#DCFCE7] border border-emerald-300 px-2.5 py-0.5 rounded-full text-[11px] font-bold">
               {progressPercent} %
             </span>
           </div>
 
-          {/* Animated Progress Bar */}
+          {/* Fluid Progress Bar Line */}
           <div className="w-full h-2.5 bg-slate-100 rounded-full overflow-hidden p-0.5 border border-slate-200/60 shadow-inner">
             <motion.div 
               className="h-full bg-gradient-to-r from-[#16A34A] via-[#15803D] to-[#16A34A] rounded-full shadow-xs"
@@ -365,42 +358,30 @@ export default function Screen4Inscription({ onSignupSuccess, onGoToLogin, lang 
             />
           </div>
 
-          {/* 2 Step Pills */}
-          <div className="grid grid-cols-2 gap-2 pt-1">
-            {/* Step 1 Pill */}
+          {/* 2 Step Badges */}
+          <div className="grid grid-cols-2 gap-2 pt-0.5">
             <div className={`py-1.5 px-3 rounded-xl text-center flex items-center justify-center gap-2 transition-all duration-200 ${
-              stepIndex > 1
+              currentStep !== 'step1'
                 ? 'bg-[#16A34A] text-white shadow-2xs font-extrabold'
-                : stepIndex === 1
-                ? 'bg-[#16A34A] text-white ring-2 ring-[#DCFCE7] shadow-md shadow-emerald-600/20 font-black'
-                : 'bg-[#F8FAFC] text-slate-400 border border-slate-200 font-bold'
+                : 'bg-[#16A34A] text-white ring-2 ring-[#DCFCE7] shadow-md shadow-emerald-600/20 font-black'
             }`}>
-              <div className={`w-4 h-4 rounded-full flex items-center justify-center text-[10px] shrink-0 font-bold ${
-                stepIndex >= 1 ? 'bg-white text-[#16A34A]' : 'bg-slate-200 text-slate-500'
-              }`}>
-                {stepIndex > 1 ? <Check className="w-3 h-3 stroke-[3]" /> : '1'}
+              <div className="w-4 h-4 rounded-full bg-white text-[#16A34A] flex items-center justify-center text-[10px] shrink-0 font-bold">
+                {currentStep !== 'step1' ? <Check className="w-3 h-3 stroke-[3]" /> : '🟢'}
               </div>
-              <span className="text-xs truncate">
-                {currentLang === 'fr' ? '1. Informations' : '1. Information'}
-              </span>
+              <span className="text-xs truncate">1. Informations</span>
             </div>
 
-            {/* Step 2 Pill */}
             <div className={`py-1.5 px-3 rounded-xl text-center flex items-center justify-center gap-2 transition-all duration-200 ${
-              stepIndex === 2 && currentStep === 'success'
-                ? 'bg-[#16A34A] text-white shadow-2xs font-extrabold'
-                : stepIndex === 2
+              currentStep === 'step2' || currentStep === 'success'
                 ? 'bg-[#16A34A] text-white ring-2 ring-[#DCFCE7] shadow-md shadow-emerald-600/20 font-black'
                 : 'bg-[#F8FAFC] text-slate-400 border border-slate-200 font-bold'
             }`}>
               <div className={`w-4 h-4 rounded-full flex items-center justify-center text-[10px] shrink-0 font-bold ${
-                stepIndex === 2 ? 'bg-white text-[#16A34A]' : 'bg-slate-200 text-slate-500'
+                currentStep === 'step2' ? 'bg-white text-[#16A34A]' : 'bg-slate-200 text-slate-500'
               }`}>
-                {currentStep === 'success' ? <Check className="w-3 h-3 stroke-[3]" /> : '2'}
+                {currentStep === 'success' ? <Check className="w-3 h-3 stroke-[3]" /> : '⚪'}
               </div>
-              <span className="text-xs truncate">
-                {currentLang === 'fr' ? '2. Finalisation' : '2. Finalization'}
-              </span>
+              <span className="text-xs truncate">2. Finalisation</span>
             </div>
           </div>
         </div>
@@ -418,9 +399,8 @@ export default function Screen4Inscription({ onSignupSuccess, onGoToLogin, lang 
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: 15 }}
               transition={{ duration: 0.25, ease: 'easeOut' }}
-              className="space-y-4 pt-1"
+              className="space-y-3.5 pt-1"
             >
-
 
               {formError && (
                 <div className="bg-red-50 border border-red-200 text-red-700 p-3.5 rounded-[16px] text-xs sm:text-sm font-extrabold flex items-center gap-2 animate-shake">
@@ -428,12 +408,20 @@ export default function Screen4Inscription({ onSignupSuccess, onGoToLogin, lang 
                   <span>{formError}</span>
                 </div>
               )}
+
               {/* Nom & Prénom */}
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs sm:text-[13px] font-extrabold text-slate-700 uppercase tracking-wide mb-1.5">
-                    {currentLang === 'fr' ? 'Nom' : 'Last Name'} <span className="text-red-500">*</span>
-                  </label>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="block text-xs sm:text-[13px] font-extrabold text-slate-700 uppercase tracking-wide">
+                      {currentLang === 'fr' ? 'Nom' : 'Last Name'} <span className="text-red-500">*</span>
+                    </label>
+                    {isLastNameValid && (
+                      <span className="text-[10px] font-extrabold text-[#16A34A] flex items-center gap-0.5">
+                        <CheckCircle2 className="w-3 h-3" /> Nom valide
+                      </span>
+                    )}
+                  </div>
                   <div className="relative">
                     <UserIcon className="w-5 h-5 text-slate-400 absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none" />
                     <input
@@ -441,9 +429,9 @@ export default function Screen4Inscription({ onSignupSuccess, onGoToLogin, lang 
                       value={formData.lastName}
                       onBlur={() => markFieldTouched('lastName')}
                       onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
-                      placeholder="Jean Kamdem"
+                      placeholder="Kamdem"
                       required
-                      className={`w-full h-[58px] pl-12 pr-10 bg-[#F8FAFC] focus:bg-white border rounded-[18px] text-sm sm:text-base text-[#0F172A] font-semibold shadow-2xs focus:outline-none focus:ring-2 focus:ring-[#16A34A]/25 focus:border-[#16A34A] transition-all duration-200 placeholder:text-slate-400 ${
+                      className={`w-full h-[54px] pl-12 pr-10 bg-[#F8FAFC] focus:bg-white border rounded-[16px] text-sm text-[#0F172A] font-semibold shadow-2xs focus:outline-none focus:ring-2 focus:ring-[#16A34A]/25 focus:border-[#16A34A] transition-all duration-200 placeholder:text-slate-400 ${
                         touchedFields.lastName && !isLastNameValid ? 'border-red-500 bg-red-50/20' : 'border-[#E2E8F0]'
                       }`}
                     />
@@ -460,9 +448,16 @@ export default function Screen4Inscription({ onSignupSuccess, onGoToLogin, lang 
                 </div>
 
                 <div>
-                  <label className="block text-xs sm:text-[13px] font-extrabold text-slate-700 uppercase tracking-wide mb-1.5">
-                    {currentLang === 'fr' ? 'Prénom' : 'First Name'} <span className="text-red-500">*</span>
-                  </label>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="block text-xs sm:text-[13px] font-extrabold text-slate-700 uppercase tracking-wide">
+                      {currentLang === 'fr' ? 'Prénom' : 'First Name'} <span className="text-red-500">*</span>
+                    </label>
+                    {isFirstNameValid && (
+                      <span className="text-[10px] font-extrabold text-[#16A34A] flex items-center gap-0.5">
+                        <CheckCircle2 className="w-3 h-3" /> Prénom valide
+                      </span>
+                    )}
+                  </div>
                   <div className="relative">
                     <UserIcon className="w-5 h-5 text-slate-400 absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none" />
                     <input
@@ -472,7 +467,7 @@ export default function Screen4Inscription({ onSignupSuccess, onGoToLogin, lang 
                       onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
                       placeholder="Jean"
                       required
-                      className={`w-full h-[58px] pl-12 pr-10 bg-[#F8FAFC] focus:bg-white border rounded-[18px] text-sm sm:text-base text-[#0F172A] font-semibold shadow-2xs focus:outline-none focus:ring-2 focus:ring-[#16A34A]/25 focus:border-[#16A34A] transition-all duration-200 placeholder:text-slate-400 ${
+                      className={`w-full h-[54px] pl-12 pr-10 bg-[#F8FAFC] focus:bg-white border rounded-[16px] text-sm text-[#0F172A] font-semibold shadow-2xs focus:outline-none focus:ring-2 focus:ring-[#16A34A]/25 focus:border-[#16A34A] transition-all duration-200 placeholder:text-slate-400 ${
                         touchedFields.firstName && !isFirstNameValid ? 'border-red-500 bg-red-50/20' : 'border-[#E2E8F0]'
                       }`}
                     />
@@ -491,9 +486,16 @@ export default function Screen4Inscription({ onSignupSuccess, onGoToLogin, lang 
 
               {/* Téléphone */}
               <div>
-                <label className="block text-xs sm:text-[13px] font-extrabold text-slate-700 uppercase tracking-wide mb-1.5">
-                  {currentLang === 'fr' ? 'Téléphone (WhatsApp / MoMo / Orange)' : 'Phone (WhatsApp / MoMo / Orange)'} <span className="text-red-500">*</span>
-                </label>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="block text-xs sm:text-[13px] font-extrabold text-slate-700 uppercase tracking-wide">
+                    {currentLang === 'fr' ? 'Téléphone (WhatsApp / MoMo / Orange)' : 'Phone (WhatsApp / MoMo / Orange)'} <span className="text-red-500">*</span>
+                  </label>
+                  {isPhoneValid && (
+                    <span className="text-[10px] font-extrabold text-[#16A34A] flex items-center gap-0.5">
+                      <CheckCircle2 className="w-3 h-3" /> Téléphone valide
+                    </span>
+                  )}
+                </div>
                 <div className="relative">
                   <Phone className="w-5 h-5 text-slate-400 absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none" />
                   <input
@@ -503,7 +505,7 @@ export default function Screen4Inscription({ onSignupSuccess, onGoToLogin, lang 
                     onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                     placeholder="677894512"
                     required
-                    className={`w-full h-[58px] pl-12 pr-10 bg-[#F8FAFC] focus:bg-white border rounded-[18px] text-sm sm:text-base text-[#0F172A] font-mono font-semibold shadow-2xs focus:outline-none focus:ring-2 focus:ring-[#16A34A]/25 focus:border-[#16A34A] transition-all duration-200 placeholder:text-slate-400 ${
+                    className={`w-full h-[54px] pl-12 pr-10 bg-[#F8FAFC] focus:bg-white border rounded-[16px] text-sm text-[#0F172A] font-mono font-semibold shadow-2xs focus:outline-none focus:ring-2 focus:ring-[#16A34A]/25 focus:border-[#16A34A] transition-all duration-200 placeholder:text-slate-400 ${
                       touchedFields.phone && !isPhoneValid ? 'border-red-500 bg-red-50/20' : 'border-[#E2E8F0]'
                     }`}
                   />
@@ -514,16 +516,23 @@ export default function Screen4Inscription({ onSignupSuccess, onGoToLogin, lang 
                 {touchedFields.phone && !isPhoneValid && (
                   <p className="text-xs text-red-500 font-bold mt-1 flex items-center gap-1">
                     <AlertCircle className="w-3.5 h-3.5 shrink-0" />
-                    <span>{currentLang === 'fr' ? 'Numéro valide (ex: 677894512)' : 'Valid phone number (e.g. 677894512)'}</span>
+                    <span>{currentLang === 'fr' ? 'Numéro valide requis (ex: 677894512)' : 'Valid phone number required (e.g. 677894512)'}</span>
                   </p>
                 )}
               </div>
 
               {/* Email */}
               <div>
-                <label className="block text-xs sm:text-[13px] font-extrabold text-slate-700 uppercase tracking-wide mb-1.5">
-                  {currentLang === 'fr' ? 'Email' : 'Email address'} <span className="text-red-500">*</span>
-                </label>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="block text-xs sm:text-[13px] font-extrabold text-slate-700 uppercase tracking-wide">
+                    {currentLang === 'fr' ? 'Email' : 'Email address'} <span className="text-red-500">*</span>
+                  </label>
+                  {isEmailValid && (
+                    <span className="text-[10px] font-extrabold text-[#16A34A] flex items-center gap-0.5">
+                      <CheckCircle2 className="w-3 h-3" /> Email valide
+                    </span>
+                  )}
+                </div>
                 <div className="relative">
                   <Mail className="w-5 h-5 text-slate-400 absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none" />
                   <input
@@ -533,7 +542,7 @@ export default function Screen4Inscription({ onSignupSuccess, onGoToLogin, lang 
                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                     placeholder="jean.kamdem@gmail.com"
                     required
-                    className={`w-full h-[58px] pl-12 pr-10 bg-[#F8FAFC] focus:bg-white border rounded-[18px] text-sm sm:text-base text-[#0F172A] font-semibold shadow-2xs focus:outline-none focus:ring-2 focus:ring-[#16A34A]/25 focus:border-[#16A34A] transition-all duration-200 placeholder:text-slate-400 ${
+                    className={`w-full h-[54px] pl-12 pr-10 bg-[#F8FAFC] focus:bg-white border rounded-[16px] text-sm text-[#0F172A] font-semibold shadow-2xs focus:outline-none focus:ring-2 focus:ring-[#16A34A]/25 focus:border-[#16A34A] transition-all duration-200 placeholder:text-slate-400 ${
                       touchedFields.email && !isEmailValid ? 'border-red-500 bg-red-50/20' : 'border-[#E2E8F0]'
                     }`}
                   />
@@ -549,30 +558,52 @@ export default function Screen4Inscription({ onSignupSuccess, onGoToLogin, lang 
                 )}
               </div>
 
-              {/* Mot de passe & Confirmation */}
+              {/* Mot de passe & Confirmation avec indicateur de force & Toggle Mask */}
               <div className="grid grid-cols-2 gap-3">
+                {/* Mot de passe */}
                 <div>
-                  <label className="block text-xs sm:text-[13px] font-extrabold text-slate-700 uppercase tracking-wide mb-1.5">
-                    {currentLang === 'fr' ? 'Mot de passe' : 'Password'} <span className="text-red-500">*</span>
-                  </label>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="block text-xs sm:text-[13px] font-extrabold text-slate-700 uppercase tracking-wide">
+                      {currentLang === 'fr' ? 'Mot de passe' : 'Password'} <span className="text-red-500">*</span>
+                    </label>
+                    {formData.password && (
+                      <span className={`text-[10px] font-extrabold ${passwordStrength.textColor}`}>
+                        {passwordStrength.label}
+                      </span>
+                    )}
+                  </div>
                   <div className="relative">
                     <Lock className="w-5 h-5 text-slate-400 absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none" />
                     <input
-                      type="password"
+                      type={showPassword ? 'text' : 'password'}
                       value={formData.password}
                       onBlur={() => markFieldTouched('password')}
                       onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                       placeholder="••••••••"
                       required
                       minLength={8}
-                      className={`w-full h-[58px] pl-12 pr-10 bg-[#F8FAFC] focus:bg-white border rounded-[18px] text-sm sm:text-base text-[#0F172A] font-semibold shadow-2xs focus:outline-none focus:ring-2 focus:ring-[#16A34A]/25 focus:border-[#16A34A] transition-all duration-200 placeholder:text-slate-400 ${
+                      className={`w-full h-[54px] pl-12 pr-11 bg-[#F8FAFC] focus:bg-white border rounded-[16px] text-sm text-[#0F172A] font-semibold shadow-2xs focus:outline-none focus:ring-2 focus:ring-[#16A34A]/25 focus:border-[#16A34A] transition-all duration-200 placeholder:text-slate-400 ${
                         touchedFields.password && !isPasswordValid ? 'border-red-500 bg-red-50/20' : 'border-[#E2E8F0]'
                       }`}
                     />
-                    {isPasswordValid && (
-                      <CheckCircle2 className="w-5 h-5 text-[#16A34A] absolute right-3.5 top-1/2 -translate-y-1/2 shrink-0 animate-in fade-in" />
-                    )}
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3.5 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-[#16A34A] transition-colors cursor-pointer"
+                    >
+                      {showPassword ? <EyeOff className="w-4.5 h-4.5" /> : <Eye className="w-4.5 h-4.5" />}
+                    </button>
                   </div>
+                  {/* Visual Strength Meter */}
+                  {formData.password.length > 0 && (
+                    <div className="mt-1.5 flex items-center gap-1.5">
+                      <div className="flex-1 h-1.5 bg-slate-100 rounded-full overflow-hidden flex gap-1">
+                        <div className={`h-full flex-1 rounded-full transition-all duration-300 ${passwordStrength.score >= 1 ? passwordStrength.color : 'bg-slate-200'}`} />
+                        <div className={`h-full flex-1 rounded-full transition-all duration-300 ${passwordStrength.score >= 2 ? passwordStrength.color : 'bg-slate-200'}`} />
+                        <div className={`h-full flex-1 rounded-full transition-all duration-300 ${passwordStrength.score >= 3 ? passwordStrength.color : 'bg-slate-200'}`} />
+                      </div>
+                    </div>
+                  )}
                   {touchedFields.password && !isPasswordValid && (
                     <p className="text-xs text-red-500 font-bold mt-1 flex items-center gap-1">
                       <AlertCircle className="w-3.5 h-3.5 shrink-0" />
@@ -581,80 +612,47 @@ export default function Screen4Inscription({ onSignupSuccess, onGoToLogin, lang 
                   )}
                 </div>
 
+                {/* Confirmation */}
                 <div>
-                  <label className="block text-xs sm:text-[13px] font-extrabold text-slate-700 uppercase tracking-wide mb-1.5">
-                    {currentLang === 'fr' ? 'Confirmation' : 'Confirm'} <span className="text-red-500">*</span>
-                  </label>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="block text-xs sm:text-[13px] font-extrabold text-slate-700 uppercase tracking-wide">
+                      {currentLang === 'fr' ? 'Confirmation' : 'Confirm'} <span className="text-red-500">*</span>
+                    </label>
+                    {isConfirmPasswordValid && (
+                      <span className="text-[10px] font-extrabold text-[#16A34A] flex items-center gap-0.5">
+                        <CheckCircle2 className="w-3 h-3" /> Identique
+                      </span>
+                    )}
+                  </div>
                   <div className="relative">
                     <Lock className="w-5 h-5 text-slate-400 absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none" />
                     <input
-                      type="password"
+                      type={showConfirmPassword ? 'text' : 'password'}
                       value={formData.confirmPassword}
                       onBlur={() => markFieldTouched('confirmPassword')}
                       onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
                       placeholder="••••••••"
                       required
                       minLength={8}
-                      className={`w-full h-[58px] pl-12 pr-10 bg-[#F8FAFC] focus:bg-white border rounded-[18px] text-sm sm:text-base text-[#0F172A] font-semibold shadow-2xs focus:outline-none focus:ring-2 focus:ring-[#16A34A]/25 focus:border-[#16A34A] transition-all duration-200 placeholder:text-slate-400 ${
+                      className={`w-full h-[54px] pl-12 pr-11 bg-[#F8FAFC] focus:bg-white border rounded-[16px] text-sm text-[#0F172A] font-semibold shadow-2xs focus:outline-none focus:ring-2 focus:ring-[#16A34A]/25 focus:border-[#16A34A] transition-all duration-200 placeholder:text-slate-400 ${
                         touchedFields.confirmPassword && !isConfirmPasswordValid ? 'border-red-500 bg-red-50/20' : 'border-[#E2E8F0]'
                       }`}
                     />
-                    {isConfirmPasswordValid && (
-                      <CheckCircle2 className="w-5 h-5 text-[#16A34A] absolute right-3.5 top-1/2 -translate-y-1/2 shrink-0 animate-in fade-in" />
-                    )}
+                    <button
+                      type="button"
+                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                      className="absolute right-3.5 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-[#16A34A] transition-colors cursor-pointer"
+                    >
+                      {showConfirmPassword ? <EyeOff className="w-4.5 h-4.5" /> : <Eye className="w-4.5 h-4.5" />}
+                    </button>
                   </div>
                   {touchedFields.confirmPassword && !isConfirmPasswordValid && (
                     <p className="text-xs text-red-500 font-bold mt-1 flex items-center gap-1">
                       <AlertCircle className="w-3.5 h-3.5 shrink-0" />
-                      <span>{currentLang === 'fr' ? 'Identique' : 'Must match'}</span>
+                      <span>{currentLang === 'fr' ? 'Non identique' : 'Must match'}</span>
                     </p>
                   )}
                 </div>
-              </div>
-
-              {/* Quartier */}
-              <div>
-                <label className="block text-xs sm:text-[13px] font-extrabold text-slate-700 uppercase tracking-wide mb-1.5">
-                  {currentLang === 'fr' ? 'Quartier à Bafoussam' : 'Neighborhood in Bafoussam'} <span className="text-red-500">*</span>
-                </label>
-                <div className="relative">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      markFieldTouched('neighborhood');
-                      setIsNeighborhoodModalOpen(true);
-                    }}
-                    className={`w-full h-[58px] pl-12 pr-10 bg-[#F8FAFC] hover:bg-white focus:bg-white border rounded-[18px] text-sm sm:text-base font-semibold shadow-2xs focus:outline-none focus:ring-2 focus:ring-[#16A34A]/25 focus:border-[#16A34A] transition-all duration-200 flex items-center text-left cursor-pointer ${
-                      !formData.neighborhood ? 'text-slate-400' : 'text-[#0F172A]'
-                    } ${
-                      touchedFields.neighborhood && !isNeighborhoodValid ? 'border-red-500 bg-red-50/20' : 'border-[#E2E8F0]'
-                    }`}
-                  >
-                    <MapPin className="w-5 h-5 text-slate-400 absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none" />
-                    <span className="truncate flex-1">
-                      {selectedNeighborhoodName || (currentLang === 'fr' ? 'Sélectionnez votre quartier' : 'Select your neighborhood')}
-                    </span>
-                    <ChevronDown className="w-5 h-5 text-slate-400 absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none" />
-                  </button>
-                </div>
-                {touchedFields.neighborhood && !isNeighborhoodValid && (
-                  <p className="text-xs text-red-500 font-bold mt-1.5 flex items-center gap-1 animate-in fade-in">
-                    <AlertCircle className="w-3.5 h-3.5 shrink-0" />
-                    <span>{currentLang === 'fr' ? 'Veuillez sélectionner votre quartier.' : 'Please select your neighborhood.'}</span>
-                  </p>
-                )}
-
-                {/* Neighborhood Search Modal */}
-                <NeighborhoodSelectModal
-                  isOpen={isNeighborhoodModalOpen}
-                  onClose={() => setIsNeighborhoodModalOpen(false)}
-                  selectedId={formData.neighborhood}
-                  onSelect={(id, name) => {
-                    setFormData(prev => ({ ...prev, neighborhood: id }));
-                    markFieldTouched('neighborhood');
-                  }}
-                  lang={currentLang}
-                />
               </div>
 
               {/* Selected Profile Card Design */}
@@ -682,7 +680,7 @@ export default function Screen4Inscription({ onSignupSuccess, onGoToLogin, lang 
                             {currentLang === 'fr' ? 'Choisir mon profil' : 'Choose my profile'} <span className="text-red-500">*</span>
                           </h4>
                           <p className="text-xs text-slate-500 font-medium mt-0.5 truncate">
-                            Client • Vendeur • Prestataire • Entreprise
+                            👤 Client • 🛒 Vendeur • 🏢 Entreprise • 🔧 Prestataire
                           </p>
                         </div>
                       </div>
@@ -752,7 +750,7 @@ export default function Screen4Inscription({ onSignupSuccess, onGoToLogin, lang 
                 )}
               </div>
 
-              {/* Primary Button "Continuer vers la finalisation →" */}
+              {/* 8. Primary Button "Continuer vers la finalisation →" */}
               <button
                 type="button"
                 disabled={!isStep1Complete || isNavigating}
@@ -769,10 +767,10 @@ export default function Screen4Inscription({ onSignupSuccess, onGoToLogin, lang 
                   }
                   handleProceedToFinalization();
                 }}
-                className={`w-full h-[58px] rounded-[18px] text-sm sm:text-base font-extrabold flex items-center justify-center gap-2 transition-all duration-300 ease-in-out ${
+                className={`w-full h-[54px] sm:h-[56px] rounded-[18px] text-sm sm:text-base font-extrabold flex items-center justify-center gap-2 transition-all duration-300 ease-in-out ${
                   !isStep1Complete
                     ? 'bg-[#E2E8F0] text-slate-400 opacity-60 shadow-none border border-slate-200 cursor-not-allowed'
-                    : 'bg-gradient-to-r from-[#16A34A] via-[#15803D] to-[#16A34A] hover:brightness-105 active:scale-[0.98] text-white shadow-[0_8px_24px_rgba(22,163,74,0.3)] cursor-pointer'
+                    : 'bg-gradient-to-r from-[#16A34A] via-[#15803D] to-[#16A34A] hover:brightness-105 active:scale-[0.98] text-white shadow-[0_8px_24px_rgba(22,163,74,0.3)] cursor-pointer animate-in zoom-in-95'
                 }`}
               >
                 {isNavigating ? (
@@ -788,21 +786,28 @@ export default function Screen4Inscription({ onSignupSuccess, onGoToLogin, lang 
                 )}
               </button>
 
-              {/* 9. Premium Footer Component */}
+              {/* 9. Premium Footer Component (5 Badges) */}
               <div className="pt-2 space-y-3">
-                {/* 3 Guarantees Badges */}
-                <div className="grid grid-cols-3 gap-2 p-3 rounded-[18px] bg-[#F8FAFC] border border-slate-200/80 text-[11px] font-bold text-slate-700 text-center">
-                  <div className="flex flex-col items-center gap-1">
-                    <ShieldCheck className="w-4.5 h-4.5 text-[#16A34A]" />
-                    <span className="leading-tight">{currentLang === 'fr' ? 'Paiement sécurisé' : 'Secure payment'}</span>
+                <div className="grid grid-cols-5 gap-1 p-2.5 rounded-[18px] bg-[#F8FAFC] border border-slate-200/80 text-[10px] font-bold text-slate-700 text-center shadow-2xs">
+                  <div className="flex flex-col items-center justify-center gap-1 p-1">
+                    <ShieldCheck className="w-4 h-4 text-[#16A34A]" />
+                    <span className="leading-tight truncate w-full">🔒 Sécurisé</span>
                   </div>
-                  <div className="flex flex-col items-center gap-1">
-                    <Truck className="w-4.5 h-4.5 text-[#16A34A]" />
-                    <span className="leading-tight">{currentLang === 'fr' ? 'Livraison rapide' : 'Fast delivery'}</span>
+                  <div className="flex flex-col items-center justify-center gap-1 p-1">
+                    <Truck className="w-4 h-4 text-[#16A34A]" />
+                    <span className="leading-tight truncate w-full">🚚 Rapide</span>
                   </div>
-                  <div className="flex flex-col items-center gap-1">
-                    <Headphones className="w-4.5 h-4.5 text-[#16A34A]" />
-                    <span className="leading-tight">{currentLang === 'fr' ? 'Support 24/7' : '24/7 Support'}</span>
+                  <div className="flex flex-col items-center justify-center gap-1 p-1">
+                    <CheckCircle2 className="w-4 h-4 text-[#16A34A]" />
+                    <span className="leading-tight truncate w-full">✔ Vérifié</span>
+                  </div>
+                  <div className="flex flex-col items-center justify-center gap-1 p-1">
+                    <Headphones className="w-4 h-4 text-[#16A34A]" />
+                    <span className="leading-tight truncate w-full">🎧 24/7</span>
+                  </div>
+                  <div className="flex flex-col items-center justify-center gap-1 p-1">
+                    <MapPin className="w-4 h-4 text-[#16A34A]" />
+                    <span className="leading-tight truncate w-full">📍 Local</span>
                   </div>
                 </div>
 
