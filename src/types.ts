@@ -101,6 +101,7 @@ export interface Product {
   rating: number;
   reviewsCount: number;
   origin: string; // "Local (Bafoussam)", "Importé", etc.
+  neighborhood?: string; // e.g. "Tamdja", "Marché A"
   specifications?: { label: string; value: string }[];
   weight?: string;
   dimensions?: string;

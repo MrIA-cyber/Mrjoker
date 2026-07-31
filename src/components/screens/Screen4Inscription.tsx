@@ -8,7 +8,7 @@ import NeighborhoodSelectModal from '../NeighborhoodSelectModal';
 import { BAFOUSSAM_NEIGHBORHOODS } from '../../data/mockData';
 
 interface Screen4InscriptionProps {
-  onSignupSuccess?: () => void;
+  onSignupSuccess?: (data?: any) => void;
   onGoToLogin?: () => void;
   lang?: 'fr' | 'en';
   onLangChange?: (lang: 'fr' | 'en') => void;
@@ -127,8 +127,8 @@ export default function Screen4Inscription({ onSignupSuccess, onGoToLogin, lang 
   const [formError, setFormError] = useState('');
   const [isNavigating, setIsNavigating] = useState(false);
 
-  // Profile selection state (default null so no profile is pre-selected)
-  const [selectedProfile, setSelectedProfile] = useState<ProfileType | null>(null);
+  // Profile selection state (default to 'client' so user is never blocked by profile selection)
+  const [selectedProfile, setSelectedProfile] = useState<ProfileType | null>('client');
   const [isBottomSheetOpen, setIsBottomSheetOpen] = useState(false);
 
   // Password visibility state
@@ -209,6 +209,11 @@ export default function Screen4Inscription({ onSignupSuccess, onGoToLogin, lang 
         isStep1Complete
       });
 
+      // Ensure profile has a default fallback if null
+      if (!selectedProfile) {
+        setSelectedProfile('client');
+      }
+
       // Mark all fields as touched to display validation indicators
       setTouchedFields({
         lastName: true,
@@ -220,44 +225,49 @@ export default function Screen4Inscription({ onSignupSuccess, onGoToLogin, lang 
         profile: true,
       });
 
+      const scrollToTop = () => {
+        try {
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        } catch (e) {}
+      };
+
       if (!isLastNameValid || !isFirstNameValid) {
         const msg = currentLang === 'fr' ? 'Veuillez remplir votre nom et prénom (au moins 2 caractères).' : 'Please enter your last and first name (at least 2 characters).';
         console.warn("❌ [Screen4Inscription] Validation failed: name invalid", { lastName: formData.lastName, firstName: formData.firstName });
         setFormError(msg);
+        scrollToTop();
         return;
       }
       if (!isPhoneValid) {
         const msg = currentLang === 'fr' ? 'Veuillez entrer un numéro de téléphone valide (ex: 677894512).' : 'Please enter a valid phone number (e.g. 677894512).';
         console.warn("❌ [Screen4Inscription] Validation failed: phone invalid", formData.phone);
         setFormError(msg);
+        scrollToTop();
         return;
       }
       if (!isEmailValid) {
         const msg = currentLang === 'fr' ? 'Veuillez entrer une adresse email valide.' : 'Please enter a valid email address.';
         console.warn("❌ [Screen4Inscription] Validation failed: email invalid", formData.email);
         setFormError(msg);
+        scrollToTop();
         return;
       }
       if (!isPasswordValid) {
         const msg = currentLang === 'fr' ? 'Le mot de passe doit contenir au moins 8 caractères.' : 'Password must be at least 8 characters.';
         console.warn("❌ [Screen4Inscription] Validation failed: password invalid");
         setFormError(msg);
+        scrollToTop();
         return;
       }
       if (!isConfirmPasswordValid) {
         const msg = currentLang === 'fr' ? 'La confirmation du mot de passe ne correspond pas.' : 'Password confirmation does not match.';
         console.warn("❌ [Screen4Inscription] Validation failed: confirm password mismatch");
         setFormError(msg);
-        return;
-      }
-      if (!isProfileSelected) {
-        const msg = currentLang === 'fr' ? 'Veuillez choisir un profil d\'utilisation.' : 'Please choose a profile.';
-        console.warn("❌ [Screen4Inscription] Validation failed: profile missing");
-        setFormError(msg);
+        scrollToTop();
         return;
       }
 
-      console.log("✅ [Screen4Inscription] All 5 required fields valid! Transitioning to step 2 Finalisation...");
+      console.log("✅ [Screen4Inscription] All required fields valid! Transitioning to step 2 Finalisation...");
       setFormError('');
       setIsNavigating(true);
       setPaymentPhone(formData.phone);
@@ -266,6 +276,7 @@ export default function Screen4Inscription({ onSignupSuccess, onGoToLogin, lang 
       setTimeout(() => {
         setIsNavigating(false);
         setCurrentStep('step2');
+        scrollToTop();
         console.log("🎉 [Screen4Inscription] Successfully navigated to Step 2 (Finalisation)");
       }, 150);
     } catch (err) {
@@ -281,7 +292,17 @@ export default function Screen4Inscription({ onSignupSuccess, onGoToLogin, lang 
     setIsProcessingPayment(true);
     setTimeout(() => {
       setIsProcessingPayment(false);
-      setCurrentStep('success');
+      const createdUserData = {
+        name: `${formData.firstName} ${formData.lastName}`.trim() || 'Membre Bafoussam',
+        phone: formData.phone || paymentPhone || '+237 670 000 001',
+        email: formData.email || 'membre@bafoussam-market.cm',
+        profile: selectedProfile || 'client'
+      };
+      if (onSignupSuccess) {
+        onSignupSuccess(createdUserData);
+      } else {
+        setCurrentStep('success');
+      }
     }, 1200);
   };
 
@@ -395,6 +416,7 @@ export default function Screen4Inscription({ onSignupSuccess, onGoToLogin, lang 
           {currentStep === 'step1' && (
             <motion.form
               key="step1-informations"
+              noValidate
               initial={{ opacity: 0, x: -15 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: 15 }}
@@ -406,6 +428,18 @@ export default function Screen4Inscription({ onSignupSuccess, onGoToLogin, lang 
               }}
               className="space-y-3.5 pt-1"
             >
+              {/* Quick Auto-Fill Test Button */}
+              <div className="flex justify-end">
+                <button
+                  type="button"
+                  onClick={handleAutoFillTestData}
+                  className="text-[11px] font-bold text-[#16A34A] hover:text-[#15803D] bg-emerald-50 hover:bg-emerald-100/70 border border-emerald-200/80 px-2.5 py-1 rounded-full transition flex items-center gap-1 cursor-pointer"
+                  title="Remplir automatiquement avec des données de test"
+                >
+                  <Sparkles className="w-3 h-3 text-[#16A34A]" />
+                  <span>{currentLang === 'fr' ? 'Remplissage rapide test ⚡' : 'Quick test auto-fill ⚡'}</span>
+                </button>
+              </div>
 
               {formError && (
                 <div className="bg-red-50 border border-red-200 text-red-700 p-3.5 rounded-[16px] text-xs sm:text-sm font-extrabold flex items-center gap-2 animate-shake">
@@ -759,18 +793,10 @@ export default function Screen4Inscription({ onSignupSuccess, onGoToLogin, lang 
               <button
                 type="submit"
                 disabled={isNavigating}
-                onClick={(e) => {
-                  console.log("👉 [Screen4Inscription] 'Continuer vers la finalisation' button clicked", {
-                    isStep1Complete,
-                    isNavigating,
-                    formData,
-                    selectedProfile
-                  });
+                onClick={() => {
                   if (typeof window !== 'undefined' && 'vibrate' in navigator) {
                     try { navigator.vibrate(10); } catch (err) {}
                   }
-                  // Submit event will be triggered via form onSubmit or explicit handleProceedToFinalization
-                  handleProceedToFinalization();
                 }}
                 className={`w-full h-[54px] sm:h-[56px] rounded-[18px] text-sm sm:text-base font-extrabold flex items-center justify-center gap-2 transition-all duration-300 ease-in-out ${
                   isNavigating
@@ -781,11 +807,11 @@ export default function Screen4Inscription({ onSignupSuccess, onGoToLogin, lang 
                 {isNavigating ? (
                   <>
                     <Loader2 className="w-5 h-5 animate-spin" />
-                    <span>{currentLang === 'fr' ? 'Chargement de la finalisation...' : 'Loading finalization...'}</span>
+                    <span>{currentLang === 'fr' ? 'Création du compte...' : 'Creating account...'}</span>
                   </>
                 ) : (
                   <>
-                    <span>{currentLang === 'fr' ? 'Continuer vers la finalisation' : 'Continue to finalization'}</span>
+                    <span>{currentLang === 'fr' ? 'Créer mon compte' : 'Create my account'}</span>
                     <ArrowRight className="w-5 h-5" />
                   </>
                 )}
@@ -1014,7 +1040,14 @@ export default function Screen4Inscription({ onSignupSuccess, onGoToLogin, lang 
               <button
                 type="button"
                 onClick={() => {
-                  if (onSignupSuccess) onSignupSuccess();
+                  if (onSignupSuccess) {
+                    onSignupSuccess({
+                      name: `${formData.firstName} ${formData.lastName}`.trim() || 'Membre Bafoussam',
+                      phone: formData.phone || paymentPhone || '+237 670 000 001',
+                      email: formData.email || 'membre@bafoussam-market.cm',
+                      profile: selectedProfile || 'client'
+                    });
+                  }
                 }}
                 className="w-full h-[54px] sm:h-[58px] bg-gradient-to-r from-[#16A34A] via-[#15803D] to-[#16A34A] hover:brightness-105 text-white font-extrabold text-sm sm:text-base rounded-[18px] shadow-[0_8px_24px_rgba(22,163,74,0.3)] transition flex items-center justify-center gap-2 cursor-pointer mt-2 active:scale-[0.98]"
               >

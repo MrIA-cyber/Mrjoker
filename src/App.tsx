@@ -24,6 +24,8 @@ import SubscriptionNotificationBanner from './components/SubscriptionNotificatio
 import SupportPhoneNumber from './components/SupportPhoneNumber';
 import RestrictedAuthModal from './components/RestrictedAuthModal';
 import SplashScreen from './components/SplashScreen';
+import BafoussamMarketHomePage from './components/BafoussamMarketHomePage';
+import AddProductModal from './components/AddProductModal';
 import Screen2Onboarding from './components/screens/Screen2Onboarding';
 import Screen3Connexion from './components/screens/Screen3Connexion';
 import Screen4Inscription from './components/screens/Screen4Inscription';
@@ -181,6 +183,7 @@ export default function App() {
   const [isRestrictedAuthOpen, setIsRestrictedAuthOpen] = useState(false);
   const [isAppBooting, setIsAppBooting] = useState(true);
   const [isSubscriptionModalOpen, setIsSubscriptionModalOpen] = useState(false);
+  const [isAddProductOpen, setIsAddProductOpen] = useState(false);
 
   // Toast Notification State
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'info' | 'error' } | null>(null);
@@ -766,103 +769,98 @@ export default function App() {
           lang={lang}
         />
 
-        {/* 1. Header Navigation Block */}
-        <StoreHeader
-          currentUser={currentUser}
-          activeView={activeView}
-          onViewChange={(view) => {
-            const exitingAdmin = activeView === 'admin' && view !== 'admin';
-            setActiveView(view);
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-            if (exitingAdmin) {
-              setIsAdminUnlocked(false);
-              localStorage.setItem('bafoussam_admin_unlocked', 'false');
-              localStorage.setItem('bafoussam_active_view', view);
-              window.location.reload();
-            }
-          }}
-          cartItemsCount={cartItemsCount}
-          onOpenCart={() => setIsCartOpen(true)}
-          searchTerm={searchTerm}
-          onSearchChange={(term) => {
-            setSearchTerm(term);
-            if (term.trim() !== '') {
-              setSelectedCategory('Tous');
-            }
-          }}
-          onSearchSubmit={() => {
-            const checkTerm = searchTerm.trim().toLowerCase();
-            if (checkTerm === 'chris237') {
-              setSearchTerm('');
-              setIsRestrictedAuthOpen(true);
-            }
-          }}
-          selectedCategory={selectedCategory}
-          onCategoryChange={setSelectedCategory}
-          onLogout={handleLogout}
-          isAdminUnlocked={isAdminUnlocked}
-          theme={theme}
-          onToggleTheme={handleToggleTheme}
-          onSimulateUserExpiration={handleSimulateUserExpiration}
-          lang={lang}
-          onLangChange={handleLangChange}
-          onOpenSubscriptions={() => setIsSubscriptionModalOpen(true)}
-        />
+        {/* 1. Header Navigation Block (Rendered for sub-views, as BafoussamMarketHomePage has its own reference header) */}
+        {activeView !== 'shop' && (
+          <StoreHeader
+            currentUser={currentUser}
+            activeView={activeView}
+            onViewChange={(view) => {
+              const exitingAdmin = activeView === 'admin' && view !== 'admin';
+              setActiveView(view);
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+              if (exitingAdmin) {
+                setIsAdminUnlocked(false);
+                localStorage.setItem('bafoussam_admin_unlocked', 'false');
+                localStorage.setItem('bafoussam_active_view', view);
+                window.location.reload();
+              }
+            }}
+            cartItemsCount={cartItemsCount}
+            onOpenCart={() => setIsCartOpen(true)}
+            searchTerm={searchTerm}
+            onSearchChange={(term) => {
+              setSearchTerm(term);
+              if (term.trim() !== '') {
+                setSelectedCategory('Tous');
+              }
+            }}
+            onSearchSubmit={() => {
+              const checkTerm = searchTerm.trim().toLowerCase();
+              if (checkTerm === 'chris237') {
+                setSearchTerm('');
+                setIsRestrictedAuthOpen(true);
+              }
+            }}
+            selectedCategory={selectedCategory}
+            onCategoryChange={setSelectedCategory}
+            onLogout={handleLogout}
+            isAdminUnlocked={isAdminUnlocked}
+            theme={theme}
+            onToggleTheme={handleToggleTheme}
+            onSimulateUserExpiration={handleSimulateUserExpiration}
+            lang={lang}
+            onLangChange={handleLangChange}
+            onOpenSubscriptions={() => setIsSubscriptionModalOpen(true)}
+          />
+        )}
 
-        {/* Discrete Session Expiry / Safe Badge (Top Floating Pill) */}
-        <AnimatePresence>
-          {currentUser && timeRemaining !== null && (
-            <motion.div
-              initial={{ opacity: 0, scale: 0.9, y: -10 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.9, y: -10 }}
-              className="fixed top-16 right-4 z-50 bg-slate-900/90 dark:bg-slate-950/95 text-white backdrop-blur-md px-3.5 py-2 rounded-full shadow-lg border border-amber-500/30 flex items-center gap-2 text-xs font-semibold"
-              id="session-countdown-pill"
-            >
-              <span className="w-2 h-2 rounded-full bg-amber-400 animate-ping shrink-0" />
-              <span className="text-amber-300 font-extrabold text-[11px]">Session:</span>
-              <span className="font-mono bg-amber-500/20 text-amber-200 px-1.5 py-0.5 rounded text-[11px] font-bold">
-                {Math.floor(timeRemaining / 60000)}m {Math.floor((timeRemaining % 60000) / 1000)}s
-              </span>
-              <button
-                onClick={() => {
-                  const mockStart = Date.now() - (10 * 60 * 1000) + 15000;
-                  localStorage.setItem('bafoussam_session_start_time', mockStart.toString());
-                  setSessionStartTime(mockStart);
-                }}
-                className="ml-1 text-[9px] bg-amber-500 hover:bg-amber-600 text-slate-950 font-black px-2 py-0.5 rounded-full cursor-pointer transition"
-                title="Simuler expiration (15s)"
-              >
-                15s
-              </button>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        {/* Purchase Confirmation Safe Pill */}
-        <AnimatePresence>
-          {currentUser && orders.some(o => o.userId === currentUser.id) && (
-            <motion.div
-              initial={{ opacity: 0, scale: 0.9, y: -10 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.9, y: -10 }}
-              className="fixed top-16 right-4 z-50 bg-emerald-950/90 text-emerald-100 backdrop-blur-md px-3.5 py-2 rounded-full shadow-lg border border-emerald-500/30 flex items-center gap-2 text-xs font-semibold"
-              id="session-safe-pill"
-            >
-              <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0" />
-              <span className="text-[11px]">
-                ✓ <strong className="text-emerald-300">Session Illimitée Activée</strong>
-              </span>
-            </motion.div>
-          )}
-        </AnimatePresence>
+        {/* Floating countdown pills removed per minimal premium UI directive */}
 
       {/* 2. Main Body Content Switcher */}
       <main className="flex-1 pb-16">
         <AnimatePresence mode="wait">
           
-          {/* Shop View Layout - Clean & Direct */}
+          {/* Shop View Layout - Bafoussam Market Home Page */}
           {activeView === 'shop' && (
+            <motion.div
+              key="shop-view"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              id="shop-view-wrapper"
+            >
+              <BafoussamMarketHomePage
+                products={sortedAndFilteredProducts}
+                merchants={merchants}
+                currentUser={currentUser}
+                cartItemsCount={cartItemsCount}
+                onOpenCart={() => setIsCartOpen(true)}
+                onSelectProduct={handleSelectProduct}
+                onAddToCart={handleAddToCart}
+                onNavigateView={(view) => {
+                  setActiveView(view);
+                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                }}
+                onOpenAddModal={() => setIsAddProductOpen(true)}
+                searchTerm={searchTerm}
+                onSearchChange={(term) => {
+                  setSearchTerm(term);
+                  if (term.trim() !== '') setSelectedCategory('Tous');
+                }}
+                selectedCategory={selectedCategory}
+                onCategoryChange={setSelectedCategory}
+                lang={lang}
+                onLangChange={handleLangChange}
+                onLogout={handleLogout}
+                orders={orders}
+                theme={theme}
+                onToggleTheme={handleToggleTheme}
+              />
+            </motion.div>
+          )}
+
+          {/* OLD SHOP VIEW REMOVED */}
+          {false && activeView === 'shop-old' && (
             <motion.div
               key="shop-view"
               initial={{ opacity: 0 }}
@@ -1178,6 +1176,23 @@ export default function App() {
             </motion.div>
           )}
 
+          {/* Connexion & Inscription Real Auth Page View */}
+          {(activeView === 'connexion' || activeView === 'inscription') && (
+            <motion.div
+              key="auth-view"
+              initial={{ opacity: 0, y: 15 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -15 }}
+              className="w-full flex justify-center py-4"
+            >
+              <WelcomeGate
+                onSuccess={handleUserSubscriptionSuccess}
+                lang={lang}
+                onLangChange={handleLangChange}
+              />
+            </motion.div>
+          )}
+
           {/* City News Feed Layout */}
           {activeView === 'news' && (
             <motion.div
@@ -1477,6 +1492,31 @@ export default function App() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Add Product Modal */}
+      {isAddProductOpen && (
+        <AddProductModal
+          merchant={merchants[0] || {
+            id: 'm1',
+            name: 'Bafoussam Commerce',
+            category: 'Alimentation',
+            location: 'Bafoussam Central',
+            phone: '+237 600 000 000',
+            rating: 4.9,
+            salesCount: 150,
+            isVerified: true,
+            isPremium: true,
+            createdAt: new Date().toISOString()
+          }}
+          onClose={() => setIsAddProductOpen(false)}
+          onPublishProduct={(newProduct) => {
+            setProducts((prev) => [newProduct, ...prev]);
+            setIsAddProductOpen(false);
+            triggerToast(lang === 'fr' ? 'Produit ajouté avec succès !' : 'Product published successfully!', 'success');
+          }}
+          lang={lang}
+        />
+      )}
 
       </div>
     </div>

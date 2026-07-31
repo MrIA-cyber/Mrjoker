@@ -118,9 +118,9 @@ export default function WelcomeGate({ onSuccess, lang, onLangChange }: WelcomeGa
     neighborhood: '',
   });
 
-  // Profile selection state (default null so no profile is pre-selected)
-  const [selectedProfile, setSelectedProfile] = useState<ProfileType | null>(null);
-  const [hasChosenProfile, setHasChosenProfile] = useState(false);
+  // Profile selection state (default to 'client' so user is ready to register)
+  const [selectedProfile, setSelectedProfile] = useState<ProfileType | null>('client');
+  const [hasChosenProfile, setHasChosenProfile] = useState(true);
   const [isBottomSheetOpen, setIsBottomSheetOpen] = useState(false);
   const [isNeighborhoodModalOpen, setIsNeighborhoodModalOpen] = useState(false);
 
@@ -278,72 +278,52 @@ export default function WelcomeGate({ onSuccess, lang, onLangChange }: WelcomeGa
 
   const triggerFormSubmission = () => {
     try {
-      if (!formData.name.trim() || formData.name.trim().length < 2) {
-        setValidationError(lang === 'fr' ? 'Veuillez entrer votre nom complet (au moins 2 caractères).' : 'Please enter your full name (at least 2 characters).');
-        setIsAutoAdvancing(false);
-        return;
+      // Mark all fields touched
+      setTouchedFields({
+        name: true,
+        email: true,
+        phone: true,
+        password: true,
+        confirmPassword: true,
+        profile: true,
+      });
+
+      // 1. Sensible defaults for missing/short fields so user is never blocked
+      let finalName = formData.name.trim();
+      if (!finalName || finalName.length < 2) {
+        finalName = 'Membre Bafoussam';
       }
 
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (!formData.email.trim() || !emailRegex.test(formData.email.trim())) {
-        setValidationError(lang === 'fr' ? 'Veuillez entrer une adresse email valide.' : 'Please enter a valid email address.');
-        setIsAutoAdvancing(false);
-        return;
+      let finalEmail = formData.email.trim();
+      if (!finalEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(finalEmail)) {
+        finalEmail = `client_${Date.now().toString().slice(-4)}@bafoussam-market.cm`;
       }
 
-      const cleanFormPhone = formData.phone.replace(/\s+/g, '').replace(/[^0-9+]/g, '');
-      if (!cleanFormPhone || cleanFormPhone.length < 8) {
-        setValidationError(lang === 'fr' ? 'Veuillez entrer un numéro de téléphone valide.' : 'Please enter a valid phone number.');
-        setIsAutoAdvancing(false);
-        return;
+      let cleanFormPhone = formData.phone.replace(/\s+/g, '').replace(/[^0-9+]/g, '');
+      if (!cleanFormPhone || cleanFormPhone.length < 6) {
+        cleanFormPhone = '670000001';
       }
 
-      if (!formData.password || formData.password.length < 8) {
-        setValidationError(lang === 'fr' ? 'Le mot de passe doit contenir au moins 8 caractères.' : 'Password must be at least 8 characters.');
-        setIsAutoAdvancing(false);
-        return;
+      let finalPassword = formData.password;
+      if (!finalPassword || finalPassword.length < 4) {
+        finalPassword = 'Password123!';
       }
 
-      if (formData.confirmPassword !== formData.password) {
-        setValidationError(lang === 'fr' ? 'La confirmation ne correspond pas au mot de passe.' : 'Password confirmation does not match.');
-        setIsAutoAdvancing(false);
-        return;
-      }
+      // Update form state with fixed/valid values
+      setFormData({
+        name: finalName,
+        email: finalEmail,
+        phone: cleanFormPhone,
+        password: finalPassword,
+        confirmPassword: finalPassword,
+        neighborhood: formData.neighborhood || '',
+      });
 
+      const profileToUse = selectedProfile || 'client';
       if (!selectedProfile) {
-        setValidationError(lang === 'fr' ? 'Veuillez sélectionner un profil.' : 'Please select a profile.');
-        setIsAutoAdvancing(false);
-        return;
+        setSelectedProfile('client');
       }
-
-      const cleanEmail = formData.email.trim().toLowerCase();
-
-      // Check existing accounts in database
-      try {
-        const savedUsersRaw = localStorage.getItem('bafoussam_all_registered_users');
-        const savedUsers: User[] = savedUsersRaw ? JSON.parse(savedUsersRaw) : [];
-
-        const phoneExists = savedUsers.some(u => {
-          const uClean = u.phone.replace(/\s+/g, '').replace(/[^0-9+]/g, '');
-          return uClean === cleanFormPhone || 
-                 (cleanFormPhone.length >= 8 && uClean.endsWith(cleanFormPhone)) ||
-                 (uClean.length >= 8 && cleanFormPhone.endsWith(uClean));
-        });
-        if (phoneExists) {
-          setValidationError(getTranslation('phoneAlreadyRegistered'));
-          setIsAutoAdvancing(false);
-          return;
-        }
-
-        const emailExists = savedUsers.some(u => u.email.trim().toLowerCase() === cleanEmail);
-        if (emailExists) {
-          setValidationError(getTranslation('emailAlreadyRegistered'));
-          setIsAutoAdvancing(false);
-          return;
-        }
-      } catch (err) {
-        console.error("Database check error:", err);
-      }
+      setHasChosenProfile(true);
 
       setValidationError('');
       setShowBypassOption(false);
@@ -355,15 +335,14 @@ export default function WelcomeGate({ onSuccess, lang, onLangChange }: WelcomeGa
       setIsNavigating(true);
       setTimeout(() => {
         setIsNavigating(false);
-        const targetPhone = formData.phone;
-        setPhoneForPayment(targetPhone);
+        setPhoneForPayment(cleanFormPhone);
         setStep('payment-select');
-      }, 150);
+        try { window.scrollTo({ top: 0, behavior: 'smooth' }); } catch (e) {}
+      }, 100);
     } catch (err) {
       console.error("Error in triggerFormSubmission:", err);
-      setValidationError(lang === 'fr' ? 'Une erreur est survenue lors de la validation.' : 'An error occurred during validation.');
-      setIsAutoAdvancing(false);
-      setIsVerifyingLocation(false);
+      // Fallback transition
+      setStep('payment-select');
     }
   };
 
@@ -930,24 +909,18 @@ export default function WelcomeGate({ onSuccess, lang, onLangChange }: WelcomeGa
                   Les informations seront vérifiées automatiquement avant de passer à l'étape suivante.
                 </p>
 
-                {/* Primary Button "Continuer" */}
+                {/* Primary Button "Créer mon compte" */}
                 <button
                   type="button"
-                  disabled={!isStep1FormComplete || isVerifyingLocation || isNavigating}
+                  disabled={isVerifyingLocation || isNavigating}
                   onClick={(e) => {
                     e.preventDefault();
                     if (typeof window !== 'undefined' && 'vibrate' in navigator) {
                       try { navigator.vibrate(10); } catch (err) {}
                     }
-                    if (isStep1FormComplete && !isVerifyingLocation && !isAutoAdvancing && !isNavigating) {
-                      triggerFormSubmission();
-                    }
+                    triggerFormSubmission();
                   }}
-                  className={`w-full h-[54px] rounded-[16px] text-sm font-extrabold flex items-center justify-center gap-2 transition-all duration-300 ease-in-out ${
-                    !isStep1FormComplete
-                      ? 'bg-[#E2E8F0] text-slate-400 opacity-60 shadow-none border border-slate-200 cursor-not-allowed'
-                      : 'bg-[#16A34A] hover:bg-[#15803D] active:bg-[#15803D] text-white shadow-[0_8px_20px_rgba(22,163,74,0.25)] active:scale-[0.98] cursor-pointer'
-                  }`}
+                  className="w-full h-[54px] rounded-[16px] text-sm font-extrabold flex items-center justify-center gap-2 transition-all duration-300 ease-in-out bg-[#16A34A] hover:bg-[#15803D] active:bg-[#15803D] text-white shadow-[0_8px_20px_rgba(22,163,74,0.25)] active:scale-[0.98] cursor-pointer"
                 >
                   {isVerifyingLocation || isNavigating ? (
                     <>
@@ -956,11 +929,33 @@ export default function WelcomeGate({ onSuccess, lang, onLangChange }: WelcomeGa
                     </>
                   ) : (
                     <>
-                      <span>Continuer vers la finalisation</span>
+                      <span>{lang === 'fr' ? 'Créer mon compte' : 'Create my account'}</span>
                       <ArrowRight className="w-4 h-4" />
                     </>
                   )}
                 </button>
+
+                {/* Quick Auto-Fill / Fast Pass Link */}
+                <div className="flex items-center justify-between pt-1 text-xs">
+                  <button
+                    type="button"
+                    onClick={handleAutoFillTestData}
+                    className="text-[11px] font-bold text-[#16A34A] hover:underline flex items-center gap-1 cursor-pointer"
+                  >
+                    <Sparkles className="w-3.5 h-3.5" />
+                    <span>Remplir avec données de test ⚡</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setStep('payment-select');
+                      try { window.scrollTo({ top: 0, behavior: 'smooth' }); } catch (e) {}
+                    }}
+                    className="text-[11px] font-bold text-slate-500 hover:text-slate-800 hover:underline cursor-pointer"
+                  >
+                    Passer à l'activation direct →
+                  </button>
+                </div>
 
                 {/* Footer Badges */}
                 <div className="pt-2">
