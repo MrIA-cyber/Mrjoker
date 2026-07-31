@@ -393,12 +393,17 @@ export default function Screen4Inscription({ onSignupSuccess, onGoToLogin, lang 
           
           {/* STEP 1: INFORMATIONS */}
           {currentStep === 'step1' && (
-            <motion.div
+            <motion.form
               key="step1-informations"
               initial={{ opacity: 0, x: -15 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: 15 }}
               transition={{ duration: 0.25, ease: 'easeOut' }}
+              onSubmit={(e) => {
+                e.preventDefault();
+                console.log("👉 Form submitted in Step 1");
+                handleProceedToFinalization();
+              }}
               className="space-y-3.5 pt-1"
             >
 
@@ -752,10 +757,9 @@ export default function Screen4Inscription({ onSignupSuccess, onGoToLogin, lang 
 
               {/* 8. Primary Button "Continuer vers la finalisation →" */}
               <button
-                type="button"
-                disabled={!isStep1Complete || isNavigating}
+                type="submit"
+                disabled={isNavigating}
                 onClick={(e) => {
-                  e.preventDefault();
                   console.log("👉 [Screen4Inscription] 'Continuer vers la finalisation' button clicked", {
                     isStep1Complete,
                     isNavigating,
@@ -765,11 +769,12 @@ export default function Screen4Inscription({ onSignupSuccess, onGoToLogin, lang 
                   if (typeof window !== 'undefined' && 'vibrate' in navigator) {
                     try { navigator.vibrate(10); } catch (err) {}
                   }
+                  // Submit event will be triggered via form onSubmit or explicit handleProceedToFinalization
                   handleProceedToFinalization();
                 }}
                 className={`w-full h-[54px] sm:h-[56px] rounded-[18px] text-sm sm:text-base font-extrabold flex items-center justify-center gap-2 transition-all duration-300 ease-in-out ${
-                  !isStep1Complete
-                    ? 'bg-[#E2E8F0] text-slate-400 opacity-60 shadow-none border border-slate-200 cursor-not-allowed'
+                  isNavigating
+                    ? 'bg-[#E2E8F0] text-slate-400 opacity-60 shadow-none border border-slate-200 cursor-wait'
                     : 'bg-gradient-to-r from-[#16A34A] via-[#15803D] to-[#16A34A] hover:brightness-105 active:scale-[0.98] text-white shadow-[0_8px_24px_rgba(22,163,74,0.3)] cursor-pointer animate-in zoom-in-95'
                 }`}
               >
@@ -840,7 +845,7 @@ export default function Screen4Inscription({ onSignupSuccess, onGoToLogin, lang 
                   </p>
                 </div>
               </div>
-            </motion.div>
+            </motion.form>
           )}
 
           {/* STEP 2: FINALISATION / PAIEMENT SÉCURISÉ */}
