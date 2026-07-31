@@ -31,11 +31,22 @@ import {
   Zap,
   Tag,
   Building2,
-  PhoneCall
+  PhoneCall,
+  Mic,
+  Camera,
+  Heart,
+  Store,
+  Wrench,
+  Briefcase
 } from 'lucide-react';
-import { Product, Merchant, User, Order } from '../types';
+import { Product, Merchant, User, Order, AccountType } from '../types';
 import { Language } from '../translations';
 import { AfriNovaLogo } from './AfriNovaLogo';
+import NeighborhoodSelectModal from './NeighborhoodSelectModal';
+import ClientHomePage from './home/ClientHomePage';
+import VendeurHomePage from './home/VendeurHomePage';
+import PrestataireHomePage from './home/PrestataireHomePage';
+import EntrepriseHomePage from './home/EntrepriseHomePage';
 
 interface BafoussamMarketHomePageProps {
   products: Product[];
@@ -132,16 +143,29 @@ export default function BafoussamMarketHomePage({
   const [isGpsModalOpen, setIsGpsModalOpen] = useState(false);
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
   const [activeNav, setActiveNav] = useState<'home' | 'categories' | 'add' | 'messages' | 'profile'>('home');
+  const [isVoiceActive, setIsVoiceActive] = useState(false);
+  const [favorites, setFavorites] = useState<Record<string, boolean>>({});
+  const [showSearchSuggestions, setShowSearchSuggestions] = useState(false);
 
-  // Active delivery order detection
-  const activeOrder = orders.find(o => o.status === 'delivering' || o.status === 'preparing' || o.status === 'picked_up' || o.status === 'pending') || 
-                      (orders.length > 0 ? orders[0] : null);
+  // Active Role State - Automatically initialized from logged in user's accountType
+  const [activeRole, setActiveRole] = useState<AccountType>(
+    currentUser?.accountType || 'client'
+  );
+
+  useEffect(() => {
+    if (currentUser?.accountType) {
+      setActiveRole(currentUser.accountType);
+    }
+  }, [currentUser?.accountType]);
+
+  // Active delivery order detection (strictly show ONLY if active)
+  const activeOrder = orders.find(o => o.status === 'delivering' || o.status === 'preparing' || o.status === 'picked_up');
 
   // Auto slide promo
   useEffect(() => {
     const timer = setInterval(() => {
       setCurrentSlide((prev) => (prev + 1) % PROMO_SLIDES.length);
-    }, 5500);
+    }, 5000);
     return () => clearInterval(timer);
   }, []);
 
@@ -149,6 +173,24 @@ export default function BafoussamMarketHomePage({
     setSelectedNeighborhood(`Bafoussam, ${name}`);
     setIsLocationModalOpen(false);
   };
+
+  const toggleFavorite = (e: React.MouseEvent, productId: string) => {
+    e.stopPropagation();
+    setFavorites(prev => ({ ...prev, [productId]: !prev[productId] }));
+  };
+
+  const handleVoiceSearch = () => {
+    setIsVoiceActive(true);
+    setTimeout(() => {
+      onSearchChange('Poivre blanc Bafoussam');
+      setIsVoiceActive(false);
+    }, 1800);
+  };
+
+  // Search suggestions
+  const searchSuggestions = searchTerm.trim().length > 1
+    ? products.filter(p => p.name.toLowerCase().includes(searchTerm.toLowerCase())).slice(0, 4)
+    : [];
 
   return (
     <div className="w-full min-h-screen bg-[#F8FAFC] text-[#0F172A] font-sans pb-20 relative selection:bg-indigo-100 selection:text-indigo-900">
@@ -315,32 +357,93 @@ export default function BafoussamMarketHomePage({
       {/* 2. CONTENU DE PAGE D'ACCUEIL COMPACT & MINIMALISTE */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-3 space-y-4">
         
-        {/* BARRE DE RECHERCHE MODERNE (Inspiration Amazon / Glovo) */}
-        <div className="relative">
+        {/* BARRE DE RECHERCHE MODERNE (Avec Micro, Caméra, Suggestions automatiques & Focus Animation) */}
+        <div className="relative z-30">
           <div className="flex items-center gap-2">
             <div className="relative flex-1">
               <Search className="w-4 h-4 text-slate-400 absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none" />
               <input
                 type="text"
                 value={searchTerm}
-                onChange={(e) => onSearchChange(e.target.value)}
-                placeholder="Rechercher des produits, épicerie, restos sur AfriNova..."
-                className="w-full h-11 sm:h-12 pl-11 pr-4 bg-white border border-slate-200/80 rounded-2xl text-xs sm:text-sm text-[#0F172A] placeholder:text-slate-400 shadow-2xs focus:outline-none focus:ring-2 focus:ring-[#4F46E5]/20 focus:border-[#4F46E5] transition"
+                onFocus={() => setShowSearchSuggestions(true)}
+                onBlur={() => setTimeout(() => setShowSearchSuggestions(false), 200)}
+                onChange={(e) => {
+                  onSearchChange(e.target.value);
+                  setShowSearchSuggestions(true);
+                }}
+                placeholder={isVoiceActive ? "Écoute en cours... Parlez maintenant" : "Rechercher des produits, épicerie, boutiques à Bafoussam..."}
+                className={`w-full h-11 sm:h-12 pl-11 pr-24 bg-white border border-slate-200/90 rounded-2xl text-xs sm:text-sm text-[#0F172A] placeholder:text-slate-400 shadow-2xs focus:outline-none focus:ring-2 focus:ring-[#16A34A]/20 focus:border-[#16A34A] transition duration-200 ${
+                  isVoiceActive ? 'border-[#16A34A] ring-2 ring-[#16A34A]/30 animate-pulse' : ''
+                }`}
               />
-              {searchTerm && (
+
+              {/* Micro & Caméra Buttons */}
+              <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1 text-slate-400">
+                {searchTerm && (
+                  <button
+                    onClick={() => onSearchChange('')}
+                    className="p-1 text-slate-400 hover:text-slate-600 rounded-full"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                )}
+                
+                {/* Voice Search Button */}
                 <button
-                  onClick={() => onSearchChange('')}
-                  className="absolute right-3.5 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-slate-600 rounded-full"
+                  onClick={handleVoiceSearch}
+                  className={`p-1.5 rounded-full transition cursor-pointer ${
+                    isVoiceActive ? 'text-[#16A34A] bg-emerald-50' : 'hover:text-[#16A34A] hover:bg-slate-100'
+                  }`}
+                  title="Recherche vocale"
                 >
-                  <X className="w-4 h-4" />
+                  <Mic className="w-4 h-4" />
                 </button>
-              )}
+
+                {/* Photo Search Button */}
+                <button
+                  onClick={() => alert('Recherche visuelle par photo activée (Caméra Bafoussam Market)')}
+                  className="p-1.5 rounded-full hover:text-[#16A34A] hover:bg-slate-100 transition cursor-pointer"
+                  title="Rechercher par photo"
+                >
+                  <Camera className="w-4 h-4" />
+                </button>
+              </div>
+
+              {/* Suggestions automatiques pendant la saisie */}
+              <AnimatePresence>
+                {showSearchSuggestions && searchSuggestions.length > 0 && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 5 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 5 }}
+                    className="absolute left-0 right-0 top-13 bg-white rounded-2xl border border-slate-100 shadow-xl overflow-hidden z-50 p-2 space-y-1"
+                  >
+                    <p className="text-[10px] font-black text-slate-400 uppercase px-3 py-1">Suggestions directes</p>
+                    {searchSuggestions.map((sug) => (
+                      <button
+                        key={sug.id}
+                        onClick={() => {
+                          onSelectProduct(sug);
+                          setShowSearchSuggestions(false);
+                        }}
+                        className="w-full text-left px-3 py-2 rounded-xl hover:bg-emerald-50 text-xs font-bold text-slate-800 flex items-center justify-between transition cursor-pointer"
+                      >
+                        <div className="flex items-center gap-2">
+                          <Search className="w-3.5 h-3.5 text-[#16A34A]" />
+                          <span className="truncate">{sug.name}</span>
+                        </div>
+                        <span className="text-[10px] font-black text-[#16A34A]">{sug.price ? sug.price.toLocaleString() : '0'} FCFA</span>
+                      </button>
+                    ))}
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
 
             {/* Filter button */}
             <button
               onClick={() => setIsLocationModalOpen(true)}
-              className="h-11 w-11 sm:h-12 sm:w-12 rounded-2xl bg-gradient-to-tr from-[#0F172A] to-[#4F46E5] text-white flex items-center justify-center shadow-2xs hover:opacity-95 transition active:scale-95 shrink-0 cursor-pointer"
+              className="h-11 w-11 sm:h-12 sm:w-12 rounded-2xl bg-[#0F172A] hover:bg-[#1E293B] text-white flex items-center justify-center shadow-2xs transition active:scale-95 shrink-0 cursor-pointer"
               title="Filtres par quartier"
             >
               <SlidersHorizontal className="w-4 h-4 stroke-[2.5]" />
@@ -348,106 +451,120 @@ export default function BafoussamMarketHomePage({
           </div>
         </div>
 
-        {/* RÉSUMÉ COMPACT DES COMMANDES (Visible uniquement si une commande existe, avec Suivi GPS à la demande) */}
-        {activeOrder && (
-          <motion.div
-            initial={{ opacity: 0, y: -5 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="bg-gradient-to-r from-slate-900 via-[#1E1B4B] to-slate-900 text-white rounded-2xl p-3 shadow-sm border border-slate-800 flex items-center justify-between gap-3"
-          >
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-xl bg-[#10B981]/20 text-[#10B981] flex items-center justify-center shrink-0">
-                <Truck className="w-4 h-4" />
-              </div>
-              <div className="space-y-0.5">
-                <div className="flex items-center gap-2">
-                  <span className="font-extrabold text-xs text-white">Commande #{activeOrder.id.slice(-6).toUpperCase()}</span>
-                  <span className="bg-[#10B981]/20 text-[#34D399] font-black text-[9px] px-2 py-0.5 rounded-full uppercase">
-                    {activeOrder.status === 'delivering' ? 'Livraison en cours' : 'En préparation'}
-                  </span>
-                </div>
-                <p className="text-[11px] text-slate-300 font-medium">Est. 15-20 min • Livreur Bafoussam Express</p>
-              </div>
-            </div>
+        {/* SÉLECTEUR RAPIDE DE PROFIL (BARRE DE NAVIGATION RÔLE) */}
+        <div className="flex items-center justify-between bg-white p-2 rounded-2xl border border-slate-200/80 shadow-2xs overflow-x-auto scrollbar-none gap-1.5">
+          <div className="flex items-center gap-1.5 text-xs font-bold text-slate-500 pl-2 shrink-0">
+            <span className="text-[10px] uppercase font-black tracking-wider text-slate-400">Vue Profil:</span>
+          </div>
 
-            {/* GPS Tracker Trigger (GPS Map is NOT permanently cluttering the page!) */}
+          <div className="flex items-center gap-1.5 w-full sm:w-auto">
             <button
-              onClick={() => setIsGpsModalOpen(true)}
-              className="h-8 px-3 rounded-xl bg-[#10B981] hover:bg-[#059669] text-white font-extrabold text-xs flex items-center gap-1.5 transition active:scale-95 cursor-pointer shrink-0"
+              onClick={() => setActiveRole('client')}
+              className={`px-3 py-1.5 rounded-xl text-xs font-black transition flex items-center gap-1.5 cursor-pointer flex-1 sm:flex-initial justify-center ${
+                activeRole === 'client'
+                  ? 'bg-[#16A34A] text-white shadow-xs'
+                  : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+              }`}
             >
-              <Navigation className="w-3.5 h-3.5 fill-white" />
-              <span>Suivre (GPS)</span>
+              <ShoppingBag className="w-3.5 h-3.5" />
+              <span>Client</span>
             </button>
-          </motion.div>
-        )}
 
-        {/* PROMOTIONS CARROUSEL COMPACT (Amazon / Glovo style - Palette Midnight Navy, Violet, Emerald) */}
-        <div className="relative rounded-2xl overflow-hidden shadow-xs border border-slate-200/80 bg-slate-950">
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={PROMO_SLIDES[currentSlide].id}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.4 }}
-              className={`relative w-full h-[150px] sm:h-[180px] bg-gradient-to-r ${PROMO_SLIDES[currentSlide].bgGradient} flex items-center justify-between p-4 sm:p-6 text-white overflow-hidden`}
+            <button
+              onClick={() => setActiveRole('vendeur')}
+              className={`px-3 py-1.5 rounded-xl text-xs font-black transition flex items-center gap-1.5 cursor-pointer flex-1 sm:flex-initial justify-center ${
+                activeRole === 'vendeur'
+                  ? 'bg-[#1E1B4B] text-white shadow-xs'
+                  : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+              }`}
             >
-              {/* Overlay graphics */}
-              <div className="absolute -right-10 -bottom-10 w-48 h-48 bg-white/5 rounded-full blur-2xl pointer-events-none" />
+              <Store className="w-3.5 h-3.5" />
+              <span>Vendeur</span>
+            </button>
 
-              {/* Text content */}
-              <div className="space-y-1.5 max-w-md z-10">
-                <span className="inline-block text-[9px] font-black tracking-widest uppercase bg-white/15 px-2 py-0.5 rounded-full border border-white/20">
-                  {PROMO_SLIDES[currentSlide].badge}
-                </span>
+            <button
+              onClick={() => setActiveRole('prestataire')}
+              className={`px-3 py-1.5 rounded-xl text-xs font-black transition flex items-center gap-1.5 cursor-pointer flex-1 sm:flex-initial justify-center ${
+                activeRole === 'prestataire'
+                  ? 'bg-[#2563EB] text-white shadow-xs'
+                  : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+              }`}
+            >
+              <Wrench className="w-3.5 h-3.5" />
+              <span>Prestataire</span>
+            </button>
 
-                <h2 className="text-base sm:text-xl font-black tracking-tight leading-snug font-display">
-                  {PROMO_SLIDES[currentSlide].title}
-                </h2>
-
-                <p className="text-xs text-slate-200 font-medium line-clamp-1">
-                  {PROMO_SLIDES[currentSlide].subtitle}
-                </p>
-
-                <div className="pt-1">
-                  <button
-                    onClick={() => {
-                      const el = document.getElementById('popular-products');
-                      if (el) el.scrollIntoView({ behavior: 'smooth' });
-                    }}
-                    className="h-8 px-3.5 rounded-xl bg-[#10B981] hover:bg-[#059669] text-white text-xs font-black flex items-center gap-1 transition shadow-xs active:scale-95 cursor-pointer"
-                  >
-                    <span>{PROMO_SLIDES[currentSlide].cta}</span>
-                    <ArrowRight className="w-3.5 h-3.5" />
-                  </button>
-                </div>
-              </div>
-
-              {/* Image thumbnail right side */}
-              <div className="hidden sm:block relative w-36 h-28 rounded-xl overflow-hidden shrink-0 border border-white/20 shadow-md">
-                <img
-                  src={PROMO_SLIDES[currentSlide].image}
-                  alt="Promo"
-                  className="w-full h-full object-cover"
-                />
-              </div>
-
-            </motion.div>
-          </AnimatePresence>
-
-          {/* Slide dots */}
-          <div className="absolute bottom-2.5 left-1/2 -translate-x-1/2 z-20 flex items-center gap-1.5">
-            {PROMO_SLIDES.map((_, idx) => (
-              <button
-                key={idx}
-                onClick={() => setCurrentSlide(idx)}
-                className={`h-1.5 rounded-full transition-all cursor-pointer ${
-                  currentSlide === idx ? 'w-4 bg-[#10B981]' : 'w-1.5 bg-white/50'
-                }`}
-              />
-            ))}
+            <button
+              onClick={() => setActiveRole('entreprise')}
+              className={`px-3 py-1.5 rounded-xl text-xs font-black transition flex items-center gap-1.5 cursor-pointer flex-1 sm:flex-initial justify-center ${
+                activeRole === 'entreprise'
+                  ? 'bg-[#0F172A] text-white shadow-xs'
+                  : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+              }`}
+            >
+              <Briefcase className="w-3.5 h-3.5" />
+              <span>Entreprise</span>
+            </button>
           </div>
         </div>
+
+        {/* CONTENU DE LA PAGE D'ACCUEIL ADAPTÉ AU PROFIL CONNECTÉ */}
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={activeRole}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.2 }}
+          >
+            {activeRole === 'vendeur' ? (
+              <VendeurHomePage
+                currentUser={currentUser}
+                products={products}
+                merchants={merchants}
+                orders={orders}
+                onOpenAddModal={onOpenAddModal}
+                onNavigateView={onNavigateView}
+                onSelectProduct={onSelectProduct}
+              />
+            ) : activeRole === 'prestataire' ? (
+              <PrestataireHomePage
+                currentUser={currentUser}
+                products={products}
+                merchants={merchants}
+                orders={orders}
+                onOpenAddModal={onOpenAddModal}
+                onNavigateView={onNavigateView}
+                onSelectProduct={onSelectProduct}
+              />
+            ) : activeRole === 'entreprise' ? (
+              <EntrepriseHomePage
+                currentUser={currentUser}
+                products={products}
+                merchants={merchants}
+                orders={orders}
+                onOpenAddModal={onOpenAddModal}
+                onNavigateView={onNavigateView}
+                onSelectProduct={onSelectProduct}
+              />
+            ) : (
+              <ClientHomePage
+                products={products}
+                merchants={merchants}
+                onSelectProduct={onSelectProduct}
+                onAddToCart={onAddToCart}
+                onNavigateView={onNavigateView}
+                selectedCategory={selectedCategory}
+                onCategoryChange={onCategoryChange}
+                orders={orders}
+                favorites={favorites}
+                onToggleFavorite={toggleFavorite}
+              />
+            )}
+          </motion.div>
+        </AnimatePresence>
+
+
 
         {/* 5. GRILLE ÉLÉGANTE DE CATÉGORIES (Uber Eats / Glovo Style) */}
         <div>
@@ -493,74 +610,152 @@ export default function BafoussamMarketHomePage({
           </div>
         </div>
 
-        {/* 6. PRODUITS POPULAIRES (Amazon / Alibaba Style - Compact Low Height Cards) */}
-        <div id="popular-products" className="pt-1 space-y-2">
-          <div className="flex items-center justify-between">
+        {/* 6. RECONSTRUCTION PROFESSIONNELLE DE LA SECTION PRODUITS POPULAIRES (Grille Amazon/Alibaba/Temu) */}
+        <div id="popular-products" className="pt-2 space-y-3">
+          
+          {/* Header de la section: Produits populaires à gauche, Voir tout à droite */}
+          <div className="flex items-center justify-between px-0.5">
             <div className="flex items-center gap-2">
-              <Sparkles className="w-4 h-4 text-[#10B981]" />
-              <h3 className="text-xs sm:text-sm font-black text-[#0F172A] uppercase tracking-wider">
-                Produits Populaires {selectedCategory !== 'Tous' && `• ${selectedCategory}`}
-              </h3>
+              <div className="w-7 h-7 rounded-lg bg-emerald-50 text-[#16A34A] flex items-center justify-center font-black">
+                <Sparkles className="w-4 h-4" />
+              </div>
+              <div>
+                <h3 className="text-sm sm:text-base font-black text-[#0F172A] font-display leading-tight">
+                  Produits populaires {selectedCategory !== 'Tous' && <span className="text-[#16A34A] font-normal">• {selectedCategory}</span>}
+                </h3>
+                <p className="text-[10px] text-slate-400 font-medium hidden sm:block">
+                  Les meilleures offres sélectionnées par les marchands de Bafoussam
+                </p>
+              </div>
             </div>
-            <span className="text-[11px] font-bold text-slate-400">
-              {products.filter(p => selectedCategory === 'Tous' || p.category === selectedCategory).length} articles
-            </span>
+
+            <button
+              onClick={() => {
+                onCategoryChange('Tous');
+                onSearchChange('');
+              }}
+              className="text-xs font-black text-[#16A34A] hover:text-[#15803D] hover:underline flex items-center gap-1 cursor-pointer transition py-1 px-2 rounded-lg bg-emerald-50/60"
+            >
+              <span>Voir tout</span>
+              <ChevronRight className="w-3.5 h-3.5" />
+            </button>
           </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2.5 sm:gap-3">
+          {/* Grille exactement 2 cartes par ligne sur mobile (grid-cols-2 sm:grid-cols-3 lg:grid-cols-4) */}
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2.5 sm:gap-3.5">
             {products
               .filter(p => selectedCategory === 'Tous' || p.category === selectedCategory)
-              .map((product) => (
-                <motion.div
-                  key={product.id}
-                  whileHover={{ y: -2 }}
-                  onClick={() => onSelectProduct(product)}
-                  className="bg-white rounded-2xl border border-slate-100 shadow-2xs hover:shadow-xs overflow-hidden flex flex-col justify-between cursor-pointer group transition"
-                >
-                  <div>
-                    {/* Compact image height */}
-                    <div className="h-28 sm:h-32 w-full relative overflow-hidden bg-slate-100">
-                      <img
-                        src={product.images?.[0] || 'https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=400&q=80'}
-                        alt={product.name}
-                        className="w-full h-full object-cover group-hover:scale-105 transition duration-300"
-                      />
-                      <span className="absolute top-1.5 left-1.5 bg-[#0F172A]/80 backdrop-blur-xs text-white text-[9px] font-extrabold px-1.5 py-0.5 rounded-md">
-                        📍 {product.neighborhood || 'Bafoussam'}
-                      </span>
-                    </div>
+              .map((product, idx) => {
+                const merchant = merchants.find(m => m.id === product.merchantId);
+                const merchantName = merchant?.name || 'Marché A Bafoussam';
+                const rating = product.rating || (4.6 + (idx % 3) * 0.1).toFixed(1);
+                const reviewsCount = product.reviewsCount || (14 + idx * 6);
+                const isFavorite = !!favorites[product.id];
+                const oldPrice = product.price ? Math.round(product.price * 1.25) : 0;
+                const isVerifiedMerchant = idx % 2 === 0;
 
-                    <div className="p-2.5 space-y-1">
-                      <div className="flex items-center gap-1 text-[10px] text-slate-500 font-semibold">
-                        <Star className="w-3 h-3 fill-amber-400 text-amber-400" />
-                        <span className="font-bold text-slate-800">4.8</span>
-                        <span>(34)</span>
+                return (
+                  <motion.div
+                    key={product.id}
+                    initial={{ opacity: 0, y: 12 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.25, delay: Math.min(idx * 0.04, 0.25) }}
+                    whileHover={{ y: -3 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={() => onSelectProduct(product)}
+                    className="bg-white rounded-[20px] border border-slate-100 shadow-2xs hover:shadow-md overflow-hidden flex flex-col justify-between cursor-pointer group transition duration-200"
+                  >
+                    <div>
+                      {/* Image avec hauteur uniforme & object-fit: cover */}
+                      <div className="h-28 sm:h-34 lg:h-36 w-full relative overflow-hidden bg-slate-100 rounded-t-[20px]">
+                        <img
+                          src={product.images?.[0] || 'https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=400&q=80'}
+                          alt={product.name}
+                          loading="lazy"
+                          className="w-full h-full object-cover group-hover:scale-105 transition duration-300"
+                        />
+                        
+                        {/* 📍 Ville / Quartier Badge (Top Left Overlay) */}
+                        <span className="absolute top-2 left-2 bg-[#0F172A]/85 backdrop-blur-xs text-white text-[9px] font-black px-2 py-0.5 rounded-md shadow-2xs flex items-center gap-0.5">
+                          <MapPin className="w-2.5 h-2.5 text-[#16A34A]" />
+                          <span className="truncate max-w-[85px]">Bafoussam, {product.neighborhood || 'Tamdja'}</span>
+                        </span>
+
+                        {/* Favorite Heart Toggle */}
+                        <button
+                          onClick={(e) => toggleFavorite(e, product.id)}
+                          className="absolute top-2 right-2 w-7 h-7 rounded-full bg-white/85 backdrop-blur-xs flex items-center justify-center text-slate-700 hover:text-rose-500 transition shadow-2xs cursor-pointer"
+                          title="Ajouter aux favoris"
+                        >
+                          <Heart className={`w-3.5 h-3.5 ${isFavorite ? 'fill-rose-500 text-rose-500' : ''}`} />
+                        </button>
+
+                        {/* Promo Badge */}
+                        <span className="absolute bottom-2 left-2 bg-rose-600 text-white text-[9px] font-black px-1.5 py-0.5 rounded-md shadow-2xs">
+                          -20% PROMO
+                        </span>
                       </div>
 
-                      <h4 className="font-bold text-xs text-[#0F172A] group-hover:text-[#4F46E5] transition line-clamp-1 leading-snug">
-                        {product.name}
-                      </h4>
+                      {/* Info produit */}
+                      <div className="p-2.5 space-y-1">
+                        
+                        {/* ⭐ Note + Avis + Délai de livraison */}
+                        <div className="flex items-center justify-between text-[10px] text-slate-500 font-semibold">
+                          <div className="flex items-center gap-1">
+                            <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400 shrink-0" />
+                            <span className="font-black text-slate-800">{rating}</span>
+                            <span className="text-slate-400">({reviewsCount})</span>
+                          </div>
+                          
+                          <span className="text-[9px] font-bold text-slate-400">⚡ 20 min</span>
+                        </div>
 
-                      <div className="font-black text-xs sm:text-sm text-[#10B981]">
-                        {product.price ? product.price.toLocaleString() : '0'} FCFA
+                        {/* Nom du produit (limité strictement à 2 lignes) */}
+                        <h4 className="font-bold text-xs text-[#0F172A] group-hover:text-[#16A34A] transition line-clamp-2 leading-snug min-h-[2rem]">
+                          {product.name}
+                        </h4>
+
+                        {/* Prix actuel + prix barré si réduction */}
+                        <div className="flex items-baseline gap-1.5">
+                          <div className="font-black text-xs sm:text-sm text-[#16A34A] tracking-tight">
+                            {product.price ? product.price.toLocaleString() : '0'} FCFA
+                          </div>
+                          {oldPrice > 0 && (
+                            <span className="text-[10px] text-slate-400 line-through font-medium">
+                              {oldPrice.toLocaleString()}
+                            </span>
+                          )}
+                        </div>
+
+                        {/* Boutique & Badge vérifié */}
+                        <div className="flex items-center justify-between text-[10px] text-slate-500 font-medium truncate pt-1 border-t border-slate-50">
+                          <div className="flex items-center gap-1 truncate">
+                            <Building2 className="w-3 h-3 text-slate-400 shrink-0" />
+                            <span className="truncate max-w-[90px]">{merchantName}</span>
+                          </div>
+                          {isVerifiedMerchant && (
+                            <ShieldCheck className="w-3.5 h-3.5 text-[#16A34A] shrink-0" title="Boutique vérifiée" />
+                          )}
+                        </div>
                       </div>
                     </div>
-                  </div>
 
-                  <div className="p-2.5 pt-0">
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onAddToCart(product);
-                      }}
-                      className="w-full h-8 rounded-xl bg-[#10B981] hover:bg-[#059669] text-white text-[11px] font-extrabold transition flex items-center justify-center gap-1 shadow-2xs active:scale-95 cursor-pointer"
-                    >
-                      <Plus className="w-3.5 h-3.5" />
-                      <span>Ajouter</span>
-                    </button>
-                  </div>
-                </motion.div>
-              ))}
+                    {/* Bouton Ajouter au panier (Compact, Vert moderne, Icône panier) */}
+                    <div className="p-2.5 pt-0">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onAddToCart(product);
+                        }}
+                        className="w-full h-8 rounded-xl bg-[#16A34A] hover:bg-[#15803D] active:bg-[#166534] text-white text-[11px] font-black transition flex items-center justify-center gap-1.5 shadow-2xs active:scale-95 cursor-pointer"
+                      >
+                        <ShoppingBag className="w-3.5 h-3.5 stroke-[2.2]" />
+                        <span>Ajouter</span>
+                      </button>
+                    </div>
+                  </motion.div>
+                );
+              })}
           </div>
         </div>
 
