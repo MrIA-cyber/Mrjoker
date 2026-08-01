@@ -462,6 +462,7 @@ export default function BafoussamMarketHomePage({
                 onOpenAddModal={onOpenAddModal}
                 onNavigateView={onNavigateView}
                 onSelectProduct={onSelectProduct}
+                onLogout={onLogout}
               />
             ) : activeRole === 'prestataire' ? (
               <PrestataireHomePage
@@ -472,6 +473,7 @@ export default function BafoussamMarketHomePage({
                 onOpenAddModal={onOpenAddModal}
                 onNavigateView={onNavigateView}
                 onSelectProduct={onSelectProduct}
+                onLogout={onLogout}
               />
             ) : activeRole === 'entreprise' ? (
               <EntrepriseHomePage
@@ -482,6 +484,7 @@ export default function BafoussamMarketHomePage({
                 onOpenAddModal={onOpenAddModal}
                 onNavigateView={onNavigateView}
                 onSelectProduct={onSelectProduct}
+                onLogout={onLogout}
               />
             ) : (
               <ClientHomePage
@@ -497,6 +500,9 @@ export default function BafoussamMarketHomePage({
                 favorites={favorites}
                 onToggleFavorite={toggleFavorite}
                 onOpenScanner={() => setIsScannerOpen(true)}
+                onLogout={onLogout}
+                cartCount={cartItemsCount}
+                onOpenCart={onOpenCart}
               />
             )}
           </motion.div>
