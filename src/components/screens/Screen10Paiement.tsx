@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { ShieldCheck, Lock, CheckCircle2, Phone, CreditCard, Wallet, Smartphone, ArrowRight, Check, Sparkles } from 'lucide-react';
+import PhoneCountryInput from '../PhoneCountryInput';
 
 interface Screen10PaiementProps {
   onPaymentSuccess?: () => void;
@@ -130,21 +131,16 @@ export default function Screen10Paiement({ onPaymentSuccess }: Screen10PaiementP
 
         {/* Mobile Money Phone Input if MoMo / Orange */}
         {(selectedMethod === 'momo' || selectedMethod === 'orange') && (
-          <div className="bg-white p-3 rounded-2xl border border-slate-200 space-y-2">
-            <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider">
-              Numéro {selectedMethod === 'momo' ? 'MTN Mobile Money' : 'Orange Money'}
-            </label>
-            <div className="relative">
-              <Phone className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
-              <input
-                type="tel"
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-                placeholder="Ex: 677123456"
-                className="w-full pl-9 pr-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#16A34A]/30 focus:border-[#16A34A]"
-              />
-            </div>
-            <p className="text-[10px] text-slate-500">
+          <div className="bg-white p-3.5 rounded-2xl border border-slate-200 space-y-2">
+            <PhoneCountryInput
+              id="payment-phone"
+              label={`Numéro ${selectedMethod === 'momo' ? 'MTN Mobile Money' : 'Orange Money'}`}
+              required
+              value={phone}
+              lang="fr"
+              onChange={(fullNum) => setPhone(fullNum)}
+            />
+            <p className="text-[10px] text-slate-500 font-medium">
               Un message USSD va apparaître sur votre téléphone pour valider le code PIN.
             </p>
           </div>

@@ -26,6 +26,7 @@ import {
 import { motion, AnimatePresence } from 'motion/react';
 import { Language } from '../translations';
 import SupportPhoneNumber from './SupportPhoneNumber';
+import PhoneCountryInput from './PhoneCountryInput';
 
 interface PremiumSubscriptionScreenProps {
   currentUser: User | null;
@@ -579,16 +580,13 @@ export default function PremiumSubscriptionScreen({
                   {/* Inputs according to Payment Method */}
                   {(paymentMethod === 'momo' || paymentMethod === 'orange') ? (
                     <div>
-                      <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">
-                        Numéro de téléphone du compte
-                      </label>
-                      <input
-                        type="tel"
+                      <PhoneCountryInput
+                        id="premium-sub-phone"
+                        label="Numéro de téléphone du compte"
                         required
-                        placeholder="Ex: 677 89 45 12"
                         value={paymentPhone}
-                        onChange={(e) => setPaymentPhone(e.target.value)}
-                        className="w-full px-4 py-3 bg-slate-950 border border-slate-800 rounded-xl font-mono text-center text-sm font-bold text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+                        lang={lang}
+                        onChange={(fullNum) => setPaymentPhone(fullNum)}
                       />
                     </div>
                   ) : (

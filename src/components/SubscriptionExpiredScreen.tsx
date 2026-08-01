@@ -4,6 +4,7 @@ import { AlertTriangle, CreditCard, ArrowRight, Loader2, Phone, CheckCircle2, Sh
 import { motion, AnimatePresence } from 'motion/react';
 import { Language } from '../translations';
 import SupportPhoneNumber from './SupportPhoneNumber';
+import PhoneCountryInput from './PhoneCountryInput';
 
 interface SubscriptionExpiredScreenProps {
   currentUser: User;
@@ -213,15 +214,13 @@ export default function SubscriptionExpiredScreen({
               </div>
 
               <div>
-                <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">
-                  {lang === 'fr' ? 'Numéro de débit de la souscription' : 'Debit number for the subscription'}
-                </label>
-                <input
-                  type="tel"
+                <PhoneCountryInput
+                  id="expired-sub-phone"
+                  label={lang === 'fr' ? 'Numéro de débit de la souscription' : 'Debit number for the subscription'}
+                  required
                   value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  placeholder="Ex: 677 89 45 12"
-                  className="w-full px-4 py-3 bg-slate-950 border border-slate-800 rounded-xl text-white font-mono text-center font-bold tracking-widest text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+                  lang={lang}
+                  onChange={(fullNum) => setPhone(fullNum)}
                 />
               </div>
 

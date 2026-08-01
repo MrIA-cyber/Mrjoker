@@ -11,6 +11,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import VerifiedBadge from './VerifiedBadge';
 import AddProductModal from './AddProductModal';
 import { Language, translations } from '../translations';
+import PhoneCountryInput from './PhoneCountryInput';
 
 interface MerchantDashboardProps {
   products: Product[];
@@ -2140,14 +2141,13 @@ export default function MerchantDashboard({
                 </div>
 
                 <div>
-                  <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Numéro de Téléphone Mobile Money *</label>
-                  <input
-                    type="tel"
+                  <PhoneCountryInput
+                    id="boost-phone-input"
+                    label="Numéro de Téléphone Mobile Money"
                     required
-                    placeholder="Ex: 677894512"
-                    className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/10 text-xs text-slate-950 font-mono transition"
                     value={boostPhone}
-                    onChange={(e) => setBoostPhone(e.target.value)}
+                    lang={lang || 'fr'}
+                    onChange={(fullNum) => setBoostPhone(fullNum)}
                   />
                 </div>
 

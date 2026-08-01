@@ -4,6 +4,7 @@ import { BAFOUSSAM_NEIGHBORHOODS } from '../data/mockData';
 import { X, Trash2, Plus, Minus, ArrowRight, ShieldCheck, MapPin, Phone, Loader2, CreditCard } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { translations, Language } from '../translations';
+import PhoneCountryInput from './PhoneCountryInput';
 
 interface CartDrawerProps {
   items: CartItem[];
@@ -391,23 +392,18 @@ export default function CartDrawer({
 
                   {/* Payment / Delivery Contact Phone Number */}
                   <div>
-                    <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5 font-bold">
-                      {paymentOperator === 'cash_on_delivery' 
-                        ? (lang === 'fr' ? 'Numéro de contact de livraison *' : 'Delivery Contact Number *')
-                        : `${t.momoPhoneLabel} *`
+                    <PhoneCountryInput
+                      id="cart-drawer-phone"
+                      label={
+                        paymentOperator === 'cash_on_delivery'
+                          ? (lang === 'fr' ? 'Numéro de contact de livraison' : 'Delivery Contact Number')
+                          : `${t.momoPhoneLabel}`
                       }
-                    </label>
-                    <div className="relative">
-                      <Phone className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
-                      <input
-                        type="tel"
-                        required
-                        placeholder={t.momoPhonePlaceholder}
-                        className="w-full pl-9 pr-3 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 rounded-xl text-slate-950 dark:text-slate-100 text-xs transition font-mono"
-                        value={paymentPhone}
-                        onChange={(e) => setPaymentPhone(e.target.value)}
-                      />
-                    </div>
+                      required
+                      value={paymentPhone}
+                      lang={lang}
+                      onChange={(fullNum) => setPaymentPhone(fullNum)}
+                    />
                   </div>
 
                   {validationError && (
