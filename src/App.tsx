@@ -35,6 +35,9 @@ import Screen7Marketplace from './components/screens/Screen7Marketplace';
 import Screen8DetailProduit from './components/screens/Screen8DetailProduit';
 import Screen9Panier from './components/screens/Screen9Panier';
 import Screen10Paiement from './components/screens/Screen10Paiement';
+import ProtectedRoute from './components/ProtectedRoute';
+import { mapAccountTypeToRole, getDashboardForRole, isViewAllowedForRole } from './lib/rbac';
+import { logAuditEvent } from './lib/auditLogger';
 import { Sparkles, ShoppingBag, ShieldCheck, Truck, Store, ArrowRight, HelpCircle, Bell, X, Lock, Key, Sun, Moon, AlertCircle, Clock, Smartphone, Layers, Headphones, Coins, CheckCircle2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
@@ -330,8 +333,24 @@ export default function App() {
   // Auth Action handlers
   const handleUserSubscriptionSuccess = (user: User) => {
     setCurrentUser(user);
-    setActiveView('shop');
-    
+
+    // Auto-identify unique role and load corresponding dashboard
+    const userRole = mapAccountTypeToRole(user.accountType);
+    if (userRole === 'BOUTIQUE') {
+      setActiveView('merchant');
+    } else {
+      setActiveView('shop');
+    }
+
+    logAuditEvent({
+      userId: user.id,
+      userName: user.name,
+      userRole: userRole,
+      action: 'LOGIN_AUTO_LOAD_ROLE_DASHBOARD',
+      resource: `dashboard_${userRole.toLowerCase()}`,
+      status: 'LOGIN',
+    });
+
     // Set session start time if not already present
     const now = Date.now();
     localStorage.setItem('bafoussam_session_start_time', now.toString());
@@ -1134,29 +1153,36 @@ export default function App() {
             </motion.div>
           )}
 
-          {/* Merchant Workspace View Layout */}
+          {/* Merchant Workspace View Layout with Strict RBAC Guard */}
           {activeView === 'merchant' && (
-            <motion.div
-              key="merchant-view"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
+            <ProtectedRoute
+              currentUser={currentUser}
+              allowedRoles={['BOUTIQUE', 'ADMIN']}
+              resourceName="dashboard_boutique"
+              onUnauthorizedRedirect={(fallback) => setActiveView('shop')}
             >
-              <MerchantDashboard
-                products={products}
-                merchants={merchants}
-                orders={orders}
-                onUpdateOrderStatus={handleUpdateOrderStatus}
-                onAddProduct={handleAddProductAsMerchant}
-                onDeleteProduct={handleDeleteProductAsMerchant}
-                onUpgradeMerchant={handleUpgradeMerchantToPremium}
-                onRegisterMerchant={(newMerchant) => setMerchants((prev) => [...prev, newMerchant])}
-                onSimulateMerchantExpiration={handleSimulateMerchantExpiration}
-                onBoostProduct={handleBoostProduct}
-                onSwitchToClientSpace={() => setActiveView('shop')}
-                lang={lang}
-              />
-            </motion.div>
+              <motion.div
+                key="merchant-view"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+              >
+                <MerchantDashboard
+                  products={products}
+                  merchants={merchants}
+                  orders={orders}
+                  onUpdateOrderStatus={handleUpdateOrderStatus}
+                  onAddProduct={handleAddProductAsMerchant}
+                  onDeleteProduct={handleDeleteProductAsMerchant}
+                  onUpgradeMerchant={handleUpgradeMerchantToPremium}
+                  onRegisterMerchant={(newMerchant) => setMerchants((prev) => [...prev, newMerchant])}
+                  onSimulateMerchantExpiration={handleSimulateMerchantExpiration}
+                  onBoostProduct={handleBoostProduct}
+                  onSwitchToClientSpace={() => setActiveView('shop')}
+                  lang={lang}
+                />
+              </motion.div>
+            </ProtectedRoute>
           )}
 
           {/* Active Delivery Tracking Map Layout */}

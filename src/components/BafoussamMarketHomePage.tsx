@@ -2,48 +2,29 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
   Search, 
-  SlidersHorizontal, 
   ShoppingBag, 
   Bell, 
   User as UserIcon, 
   MapPin, 
   Globe, 
   ChevronRight, 
-  Star, 
-  ArrowRight, 
   X, 
   Grid, 
   Home, 
-  MessageSquare, 
   Plus, 
-  Truck, 
-  Clock, 
-  CheckCircle2, 
-  Sparkles, 
-  Utensils, 
-  Smartphone, 
-  Shirt, 
-  Home as HomeIcon, 
-  Pill, 
-  Navigation,
   ChevronDown,
   ShieldCheck,
-  Zap,
-  Tag,
-  Building2,
-  PhoneCall,
-  Mic,
-  Camera,
-  Heart,
   Store,
-  Wrench,
-  Briefcase,
   QrCode,
   ScanLine,
   BarChart3,
-  Calendar,
-  Layers,
-  FileText
+  Mic,
+  ShieldAlert,
+  Lock,
+  FileText,
+  Building2,
+  Briefcase,
+  Wrench
 } from 'lucide-react';
 import { Product, Merchant, User, Order, AccountType } from '../types';
 import { Language } from '../translations';
@@ -52,6 +33,11 @@ import ClientHomePage from './home/ClientHomePage';
 import VendeurHomePage from './home/VendeurHomePage';
 import PrestataireHomePage from './home/PrestataireHomePage';
 import EntrepriseHomePage from './home/EntrepriseHomePage';
+import { UserRole, mapAccountTypeToRole, getDashboardForRole, isViewAllowedForRole } from '../lib/rbac';
+import { logAuditEvent } from '../lib/auditLogger';
+import { filterProductsByRole, filterOrdersByRole, filterMerchantsByRole } from '../lib/dataFilters';
+import AccessDeniedModal from './AccessDeniedModal';
+import AuditLogsModal from './AuditLogsModal';
 
 interface BafoussamMarketHomePageProps {
   products: Product[];
@@ -105,16 +91,18 @@ export default function BafoussamMarketHomePage({
   const [favorites, setFavorites] = useState<Record<string, boolean>>({});
   const [showSearchSuggestions, setShowSearchSuggestions] = useState(false);
 
-  // Active Role State - Default from logged in user or 'client'
-  const [activeRole, setActiveRole] = useState<AccountType>(
-    currentUser?.accountType || 'client'
-  );
+  // Security RBAC states
+  const [isAuditModalOpen, setIsAuditModalOpen] = useState(false);
+  const [deniedAttemptInfo, setDeniedAttemptInfo] = useState<{ isOpen: boolean; resource: string } | null>(null);
 
-  useEffect(() => {
-    if (currentUser?.accountType) {
-      setActiveRole(currentUser.accountType);
-    }
-  }, [currentUser?.accountType]);
+  // Strictly identify user's unique role
+  const userRole: UserRole = mapAccountTypeToRole(currentUser?.accountType);
+  const activeRole: AccountType = currentUser?.accountType || 'client';
+
+  // Apply strict role-based data filtering
+  const roleProducts = filterProductsByRole(products, currentUser);
+  const roleOrders = filterOrdersByRole(orders, currentUser);
+  const roleMerchants = filterMerchantsByRole(merchants, currentUser);
 
   const handleSelectNeighborhood = (name: string) => {
     setSelectedNeighborhood(`Bafoussam, ${name}`);
@@ -134,9 +122,34 @@ export default function BafoussamMarketHomePage({
     }, 1800);
   };
 
+  // Guard navigation to protected role dashboards
+  const handleProtectedNavigate = (targetRoleView: 'shop' | 'merchant' | 'orders' | 'admin') => {
+    const isAllowed = isViewAllowedForRole(targetRoleView, userRole);
+
+    if (!isAllowed && currentUser) {
+      logAuditEvent({
+        userId: currentUser.id,
+        userName: currentUser.name || 'Utilisateur',
+        userRole: userRole,
+        action: 'ATTEMPT_UNAUTHORIZED_VIEW',
+        resource: targetRoleView,
+        status: 'DENIED',
+        reason: `Rôle ${userRole} n'a pas accès à la vue ${targetRoleView}`,
+      });
+
+      setDeniedAttemptInfo({
+        isOpen: true,
+        resource: targetRoleView === 'merchant' ? 'Espace Pro Commerçant' : targetRoleView === 'admin' ? 'Panneau Admin' : targetRoleView,
+      });
+      return;
+    }
+
+    onNavigateView(targetRoleView);
+  };
+
   // Search suggestions
   const searchSuggestions = searchTerm.trim().length > 1
-    ? products.filter(p => p.name.toLowerCase().includes(searchTerm.toLowerCase())).slice(0, 4)
+    ? roleProducts.filter(p => p.name.toLowerCase().includes(searchTerm.toLowerCase())).slice(0, 4)
     : [];
 
   return (
@@ -146,7 +159,7 @@ export default function BafoussamMarketHomePage({
       <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-100 shadow-2xs px-4 sm:px-6 py-2.5">
         <div className="max-w-7xl mx-auto flex items-center justify-between gap-3">
           
-          {/* Gauche: Logo AfriNova & Localisation & Météo */}
+          {/* Gauche: Logo AfriNova & Localisation */}
           <div className="flex items-center gap-3">
             <div 
               onClick={() => {
@@ -171,6 +184,12 @@ export default function BafoussamMarketHomePage({
               <span className="truncate max-w-[140px] font-bold text-[#0F172A]">{selectedNeighborhood}</span>
               <ChevronDown className="w-3 h-3 text-slate-400" />
             </button>
+
+            {/* Role Badge indicator */}
+            <div className="hidden lg:flex items-center gap-1.5 bg-emerald-50 text-emerald-800 border border-emerald-200 px-2.5 py-1 rounded-full text-[11px] font-black uppercase">
+              <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
+              <span>Rôle RBAC: {userRole}</span>
+            </div>
           </div>
 
           {/* Droite: Actions Header (Notifications, Panier, Langue, User) */}
@@ -184,6 +203,15 @@ export default function BafoussamMarketHomePage({
               <MapPin className="w-3 h-3 text-[#16A34A]" />
               <span className="truncate max-w-[90px]">{selectedNeighborhood.split(',')[1] || 'Bafoussam'}</span>
               <ChevronDown className="w-3 h-3 text-slate-400" />
+            </button>
+
+            {/* Audit Logs Button */}
+            <button
+              onClick={() => setIsAuditModalOpen(true)}
+              className="p-2 text-slate-700 hover:text-indigo-600 hover:bg-indigo-50 rounded-full transition cursor-pointer relative"
+              title="Journaux d'Audit Sécurité RBAC"
+            >
+              <ShieldAlert className="w-5 h-5 text-indigo-600" />
             </button>
 
             {/* Toggle Langue (FR / EN) */}
@@ -200,7 +228,7 @@ export default function BafoussamMarketHomePage({
 
             {/* Notifications Icon with badge */}
             <button
-              onClick={() => onNavigateView('orders')}
+              onClick={() => handleProtectedNavigate('orders')}
               className="p-2 text-slate-700 hover:text-[#16A34A] hover:bg-slate-100 rounded-full transition cursor-pointer relative"
               title="Notifications & Commandes"
             >
@@ -208,21 +236,23 @@ export default function BafoussamMarketHomePage({
               <span className="absolute top-1 right-1 w-2 h-2 bg-[#EF4444] rounded-full ring-2 ring-white" />
             </button>
 
-            {/* Panier Cart Icon (Uniquement client) */}
-            <button
-              onClick={onOpenCart}
-              className="p-2 text-slate-700 hover:text-[#16A34A] hover:bg-slate-100 rounded-full transition cursor-pointer relative"
-              title="Mon Panier"
-            >
-              <ShoppingBag className="w-5 h-5 stroke-[2]" />
-              {cartItemsCount > 0 && (
-                <span className="absolute top-0.5 right-0.5 min-w-[18px] h-[18px] px-1 bg-[#16A34A] text-white font-black text-[10px] rounded-full flex items-center justify-center ring-2 ring-white shadow-xs">
-                  {cartItemsCount}
-                </span>
-              )}
-            </button>
+            {/* Panier Cart Icon (Strictly for Client role) */}
+            {userRole === 'CLIENT' && (
+              <button
+                onClick={onOpenCart}
+                className="p-2 text-slate-700 hover:text-[#16A34A] hover:bg-slate-100 rounded-full transition cursor-pointer relative"
+                title="Mon Panier"
+              >
+                <ShoppingBag className="w-5 h-5 stroke-[2]" />
+                {cartItemsCount > 0 && (
+                  <span className="absolute top-0.5 right-0.5 min-w-[18px] h-[18px] px-1 bg-[#16A34A] text-white font-black text-[10px] rounded-full flex items-center justify-center ring-2 ring-white shadow-xs">
+                    {cartItemsCount}
+                  </span>
+                )}
+              </button>
+            )}
 
-            {/* User Avatar & Dropdown */}
+            {/* User Avatar & Dropdown strictly tailored by role */}
             <div className="relative">
               <button
                 onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)}
@@ -237,36 +267,94 @@ export default function BafoussamMarketHomePage({
                     initial={{ opacity: 0, scale: 0.95, y: 5 }}
                     animate={{ opacity: 1, scale: 1, y: 0 }}
                     exit={{ opacity: 0, scale: 0.95, y: 5 }}
-                    className="absolute right-0 top-10 w-56 bg-white rounded-2xl shadow-xl border border-slate-100 py-2 z-50 text-xs font-medium space-y-1"
+                    className="absolute right-0 top-10 w-64 bg-white rounded-2xl shadow-xl border border-slate-100 py-2 z-50 text-xs font-medium space-y-1"
                   >
-                    <div className="px-3.5 py-2 border-b border-slate-100">
+                    <div className="px-3.5 py-2 border-b border-slate-100 bg-slate-50">
                       <p className="font-black text-[#0F172A] truncate">{currentUser?.name || 'Membre AfriNova'}</p>
                       <p className="text-[10px] text-slate-400 truncate">{currentUser?.phone || '+237 Bafoussam'}</p>
-                      <span className="inline-block mt-1 bg-emerald-50 text-[#16A34A] text-[9px] font-black px-2 py-0.5 rounded-full uppercase">
-                        Profil: {activeRole}
-                      </span>
+                      <div className="flex items-center gap-1 mt-1">
+                        <span className="bg-emerald-100 text-[#16A34A] text-[9px] font-black px-2 py-0.5 rounded-full uppercase border border-emerald-200">
+                          Rôle unique: {userRole}
+                        </span>
+                      </div>
                     </div>
 
-                    <button
-                      onClick={() => {
-                        setIsProfileMenuOpen(false);
-                        onNavigateView('orders');
-                      }}
-                      className="w-full text-left px-3.5 py-2 hover:bg-slate-50 text-slate-700 font-bold flex items-center gap-2"
-                    >
-                      <ShoppingBag className="w-4 h-4 text-[#16A34A]" />
-                      <span>Mes Commandes</span>
-                    </button>
+                    {/* Role-Specific Menu Options */}
+                    {userRole === 'CLIENT' && (
+                      <>
+                        <button
+                          onClick={() => {
+                            setIsProfileMenuOpen(false);
+                            onNavigateView('orders');
+                          }}
+                          className="w-full text-left px-3.5 py-2 hover:bg-slate-50 text-slate-700 font-bold flex items-center gap-2"
+                        >
+                          <ShoppingBag className="w-4 h-4 text-[#16A34A]" />
+                          <span>Mes Commandes Client</span>
+                        </button>
+                      </>
+                    )}
+
+                    {userRole === 'BOUTIQUE' && (
+                      <>
+                        <button
+                          onClick={() => {
+                            setIsProfileMenuOpen(false);
+                            onNavigateView('merchant');
+                          }}
+                          className="w-full text-left px-3.5 py-2 hover:bg-slate-50 text-slate-700 font-bold flex items-center gap-2"
+                        >
+                          <Store className="w-4 h-4 text-[#2563EB]" />
+                          <span>Mon Espace Boutique / Vendeur</span>
+                        </button>
+                        <button
+                          onClick={() => {
+                            setIsProfileMenuOpen(false);
+                            onOpenAddModal();
+                          }}
+                          className="w-full text-left px-3.5 py-2 hover:bg-slate-50 text-slate-700 font-bold flex items-center gap-2"
+                        >
+                          <Plus className="w-4 h-4 text-emerald-600" />
+                          <span>Ajouter un produit</span>
+                        </button>
+                      </>
+                    )}
+
+                    {userRole === 'ENTREPRISE' && (
+                      <button
+                        onClick={() => {
+                          setIsProfileMenuOpen(false);
+                          setActiveNav('home');
+                        }}
+                        className="w-full text-left px-3.5 py-2 hover:bg-slate-50 text-slate-700 font-bold flex items-center gap-2"
+                      >
+                        <Building2 className="w-4 h-4 text-purple-600" />
+                        <span>Tableau de Bord Entreprise</span>
+                      </button>
+                    )}
+
+                    {userRole === 'PRESTATAIRE' && (
+                      <button
+                        onClick={() => {
+                          setIsProfileMenuOpen(false);
+                          setActiveNav('home');
+                        }}
+                        className="w-full text-left px-3.5 py-2 hover:bg-slate-50 text-slate-700 font-bold flex items-center gap-2"
+                      >
+                        <Briefcase className="w-4 h-4 text-amber-600" />
+                        <span>Espace Prestataire & Services</span>
+                      </button>
+                    )}
 
                     <button
                       onClick={() => {
                         setIsProfileMenuOpen(false);
-                        onNavigateView('merchant');
+                        setIsAuditModalOpen(true);
                       }}
-                      className="w-full text-left px-3.5 py-2 hover:bg-slate-50 text-slate-700 font-bold flex items-center gap-2"
+                      className="w-full text-left px-3.5 py-2 hover:bg-indigo-50 text-indigo-700 font-bold flex items-center gap-2 border-t border-slate-100"
                     >
-                      <Store className="w-4 h-4 text-[#2563EB]" />
-                      <span>Espace Pro / Vendeur</span>
+                      <ShieldAlert className="w-4 h-4 text-indigo-600" />
+                      <span>Journaux d'Audit & Sécurité</span>
                     </button>
 
                     {onLogout && (
@@ -290,10 +378,10 @@ export default function BafoussamMarketHomePage({
         </div>
       </header>
 
-      {/* CONTENU PRINCIPAL */}
+      {/* CONTENU PRINCIPAL PAR RÔLE UNIQUE */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-3 space-y-4">
         
-        {/* 2. BARRE DE RECHERCHE INTELLIGENTE */}
+        {/* BARRE DE RECHERCHE INTELLIGENTE */}
         <div className="relative z-30 space-y-2">
           <div className="flex items-center gap-2">
             <div className="relative flex-1">
@@ -324,7 +412,6 @@ export default function BafoussamMarketHomePage({
                   </button>
                 )}
                 
-                {/* Voice Search Button */}
                 <button
                   onClick={handleVoiceSearch}
                   className={`p-1.5 rounded-full transition cursor-pointer ${
@@ -335,11 +422,10 @@ export default function BafoussamMarketHomePage({
                   <Mic className="w-4 h-4" />
                 </button>
 
-                {/* QR / Barcode Scanner Button */}
                 <button
                   onClick={() => setIsScannerOpen(true)}
                   className="p-1.5 rounded-full hover:text-[#16A34A] hover:bg-slate-100 transition cursor-pointer"
-                  title="Scanner QR Code & Code-barres"
+                  title="Scanner QR Code"
                 >
                   <ScanLine className="w-4 h-4" />
                 </button>
@@ -352,99 +438,32 @@ export default function BafoussamMarketHomePage({
                     initial={{ opacity: 0, y: 5 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: 5 }}
-                    className="absolute left-0 right-0 top-13 bg-white rounded-2xl border border-slate-100 shadow-xl overflow-hidden z-50 p-2 space-y-1"
+                    className="absolute top-14 left-0 right-0 bg-white rounded-2xl shadow-2xl border border-slate-100 overflow-hidden z-50 p-2 space-y-1"
                   >
-                    <p className="text-[10px] font-black text-slate-400 uppercase px-3 py-1">Suggestions directes</p>
-                    {searchSuggestions.map((sug) => (
-                      <button
-                        key={sug.id}
+                    {searchSuggestions.map((prod) => (
+                      <div
+                        key={prod.id}
                         onClick={() => {
-                          onSelectProduct(sug);
+                          onSelectProduct(prod);
                           setShowSearchSuggestions(false);
                         }}
-                        className="w-full text-left px-3 py-2 rounded-xl hover:bg-emerald-50 text-xs font-bold text-slate-800 flex items-center justify-between transition cursor-pointer"
+                        className="flex items-center gap-3 p-2 hover:bg-slate-50 rounded-xl cursor-pointer transition"
                       >
-                        <div className="flex items-center gap-2">
-                          <Search className="w-3.5 h-3.5 text-[#16A34A]" />
-                          <span className="truncate">{sug.name}</span>
+                        <img src={prod.image} alt={prod.name} className="w-9 h-9 rounded-lg object-cover shrink-0" />
+                        <div className="flex-1 min-w-0">
+                          <p className="font-bold text-xs text-[#0F172A] truncate">{prod.name}</p>
+                          <p className="text-[10px] text-slate-400">{prod.merchantName} • {prod.price.toLocaleString()} FCFA</p>
                         </div>
-                        <span className="text-[10px] font-black text-[#16A34A]">{sug.price ? sug.price.toLocaleString() : '0'} FCFA</span>
-                      </button>
+                      </div>
                     ))}
                   </motion.div>
                 )}
               </AnimatePresence>
             </div>
-
-            {/* Filter button */}
-            <button
-              onClick={() => setIsLocationModalOpen(true)}
-              className="h-11 w-11 sm:h-12 sm:w-12 rounded-2xl bg-[#0F172A] hover:bg-[#1E293B] text-white flex items-center justify-center shadow-2xs transition active:scale-95 shrink-0 cursor-pointer"
-              title="Filtres par quartier"
-            >
-              <SlidersHorizontal className="w-4 h-4 stroke-[2.5]" />
-            </button>
           </div>
         </div>
 
-        {/* 3. SÉLECTEUR DE PROFIL COMPLET (Barre de rôle) */}
-        <div className="flex items-center justify-between bg-white p-2 rounded-2xl border border-slate-200/80 shadow-2xs overflow-x-auto scrollbar-none gap-1.5">
-          <div className="flex items-center gap-1.5 text-xs font-bold text-slate-500 pl-2 shrink-0">
-            <span className="text-[10px] uppercase font-black tracking-wider text-slate-400">Rôle Actif:</span>
-          </div>
-
-          <div className="flex items-center gap-1.5 w-full sm:w-auto">
-            <button
-              onClick={() => setActiveRole('client')}
-              className={`px-3.5 py-1.5 rounded-xl text-xs font-black transition flex items-center gap-1.5 cursor-pointer flex-1 sm:flex-initial justify-center ${
-                activeRole === 'client'
-                  ? 'bg-[#16A34A] text-white shadow-xs'
-                  : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
-              }`}
-            >
-              <ShoppingBag className="w-3.5 h-3.5" />
-              <span>Client</span>
-            </button>
-
-            <button
-              onClick={() => setActiveRole('vendeur')}
-              className={`px-3.5 py-1.5 rounded-xl text-xs font-black transition flex items-center gap-1.5 cursor-pointer flex-1 sm:flex-initial justify-center ${
-                activeRole === 'vendeur'
-                  ? 'bg-[#1E1B4B] text-white shadow-xs'
-                  : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
-              }`}
-            >
-              <Store className="w-3.5 h-3.5" />
-              <span>Vendeur</span>
-            </button>
-
-            <button
-              onClick={() => setActiveRole('prestataire')}
-              className={`px-3.5 py-1.5 rounded-xl text-xs font-black transition flex items-center gap-1.5 cursor-pointer flex-1 sm:flex-initial justify-center ${
-                activeRole === 'prestataire'
-                  ? 'bg-[#2563EB] text-white shadow-xs'
-                  : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
-              }`}
-            >
-              <Wrench className="w-3.5 h-3.5" />
-              <span>Prestataire</span>
-            </button>
-
-            <button
-              onClick={() => setActiveRole('entreprise')}
-              className={`px-3.5 py-1.5 rounded-xl text-xs font-black transition flex items-center gap-1.5 cursor-pointer flex-1 sm:flex-initial justify-center ${
-                activeRole === 'entreprise'
-                  ? 'bg-[#0F172A] text-white shadow-xs'
-                  : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
-              }`}
-            >
-              <Briefcase className="w-3.5 h-3.5" />
-              <span>Entreprise</span>
-            </button>
-          </div>
-        </div>
-
-        {/* AFFICHAGE CONDITIONNEL TOTALEMENT SÉPARÉ SELON LE PROFIL */}
+        {/* AFFICHAGE DU TABLEAU DE BORD EXCLUSIF AU RÔLE UNIQUE */}
         <AnimatePresence mode="wait">
           <motion.div
             key={activeRole}
@@ -456,9 +475,9 @@ export default function BafoussamMarketHomePage({
             {activeRole === 'vendeur' ? (
               <VendeurHomePage
                 currentUser={currentUser}
-                products={products}
-                merchants={merchants}
-                orders={orders}
+                products={roleProducts}
+                merchants={roleMerchants}
+                orders={roleOrders}
                 onOpenAddModal={onOpenAddModal}
                 onNavigateView={onNavigateView}
                 onSelectProduct={onSelectProduct}
@@ -467,9 +486,9 @@ export default function BafoussamMarketHomePage({
             ) : activeRole === 'prestataire' ? (
               <PrestataireHomePage
                 currentUser={currentUser}
-                products={products}
-                merchants={merchants}
-                orders={orders}
+                products={roleProducts}
+                merchants={roleMerchants}
+                orders={roleOrders}
                 onOpenAddModal={onOpenAddModal}
                 onNavigateView={onNavigateView}
                 onSelectProduct={onSelectProduct}
@@ -478,9 +497,9 @@ export default function BafoussamMarketHomePage({
             ) : activeRole === 'entreprise' ? (
               <EntrepriseHomePage
                 currentUser={currentUser}
-                products={products}
-                merchants={merchants}
-                orders={orders}
+                products={roleProducts}
+                merchants={roleMerchants}
+                orders={roleOrders}
                 onOpenAddModal={onOpenAddModal}
                 onNavigateView={onNavigateView}
                 onSelectProduct={onSelectProduct}
@@ -488,15 +507,15 @@ export default function BafoussamMarketHomePage({
               />
             ) : (
               <ClientHomePage
-                products={products}
-                merchants={merchants}
+                products={roleProducts}
+                merchants={roleMerchants}
                 currentUser={currentUser}
                 onSelectProduct={onSelectProduct}
                 onAddToCart={onAddToCart}
                 onNavigateView={onNavigateView}
                 selectedCategory={selectedCategory}
                 onCategoryChange={onCategoryChange}
-                orders={orders}
+                orders={roleOrders}
                 favorites={favorites}
                 onToggleFavorite={toggleFavorite}
                 onOpenScanner={() => setIsScannerOpen(true)}
@@ -510,11 +529,11 @@ export default function BafoussamMarketHomePage({
 
       </main>
 
-      {/* 8. MENU INFÉRIEUR MODULAIRE SELON LE PROFIL */}
+      {/* MENU INFÉRIEUR STRICTEMENT SÉPARÉ PAR PROFIL/RÔLE */}
       <nav className="fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-slate-100 shadow-lg py-2 px-4 sm:px-8">
         <div className="max-w-md mx-auto flex items-center justify-between">
           
-          {/* Menu items for Client */}
+          {/* Menu items for CLIENT Role */}
           {activeRole === 'client' && (
             <>
               <button
@@ -580,7 +599,7 @@ export default function BafoussamMarketHomePage({
             </>
           )}
 
-          {/* Menu items for Vendeur */}
+          {/* Menu items for BOUTIQUE Role */}
           {activeRole === 'vendeur' && (
             <>
               <button
@@ -594,13 +613,13 @@ export default function BafoussamMarketHomePage({
               </button>
 
               <button
-                onClick={() => onNavigateView('shop')}
+                onClick={() => onNavigateView('merchant')}
                 className={`flex flex-col items-center gap-0.5 cursor-pointer ${
                   activeNav === 'products' ? 'text-[#1E1B4B]' : 'text-slate-400 hover:text-slate-700'
                 }`}
               >
                 <Store className="w-5 h-5 stroke-[2.2]" />
-                <span className="text-[10px] font-bold">Produits</span>
+                <span className="text-[10px] font-bold">Boutique</span>
               </button>
 
               <button
@@ -618,7 +637,7 @@ export default function BafoussamMarketHomePage({
                 }`}
               >
                 <ShoppingBag className="w-5 h-5 stroke-[2.2]" />
-                <span className="text-[10px] font-bold">Commandes</span>
+                <span className="text-[10px] font-bold">Ventes</span>
               </button>
 
               <button
@@ -633,7 +652,7 @@ export default function BafoussamMarketHomePage({
             </>
           )}
 
-          {/* Menu items for Prestataire */}
+          {/* Menu items for PRESTATAIRE Role */}
           {activeRole === 'prestataire' && (
             <>
               <button
@@ -643,42 +662,12 @@ export default function BafoussamMarketHomePage({
                 }`}
               >
                 <Home className="w-5 h-5 stroke-[2.2]" />
-                <span className="text-[10px] font-bold">Accueil</span>
-              </button>
-
-              <button
-                onClick={() => onNavigateView('shop')}
-                className={`flex flex-col items-center gap-0.5 cursor-pointer ${
-                  activeNav === 'services' ? 'text-[#2563EB]' : 'text-slate-400 hover:text-slate-700'
-                }`}
-              >
-                <Wrench className="w-5 h-5 stroke-[2.2]" />
                 <span className="text-[10px] font-bold">Services</span>
               </button>
 
               <button
-                onClick={onOpenAddModal}
-                className="w-11 h-11 rounded-full bg-[#2563EB] text-white flex items-center justify-center shadow-md border-2 border-white transition active:scale-95 cursor-pointer -top-2 relative"
-                title="Créer un service"
-              >
-                <Plus className="w-6 h-6 stroke-[3]" />
-              </button>
-
-              <button
-                onClick={() => onNavigateView('orders')}
-                className={`flex flex-col items-center gap-0.5 cursor-pointer ${
-                  activeNav === 'reservations' ? 'text-[#2563EB]' : 'text-slate-400 hover:text-slate-700'
-                }`}
-              >
-                <Calendar className="w-5 h-5 stroke-[2.2]" />
-                <span className="text-[10px] font-bold">Réservations</span>
-              </button>
-
-              <button
                 onClick={() => setIsProfileMenuOpen(true)}
-                className={`flex flex-col items-center gap-0.5 cursor-pointer ${
-                  activeNav === 'profile' ? 'text-[#2563EB]' : 'text-slate-400 hover:text-slate-700'
-                }`}
+                className={`flex flex-col items-center gap-0.5 cursor-pointer text-slate-400 hover:text-slate-700`}
               >
                 <UserIcon className="w-5 h-5 stroke-[2.2]" />
                 <span className="text-[10px] font-bold">Profil</span>
@@ -686,55 +675,25 @@ export default function BafoussamMarketHomePage({
             </>
           )}
 
-          {/* Menu items for Entreprise */}
+          {/* Menu items for ENTREPRISE Role */}
           {activeRole === 'entreprise' && (
             <>
               <button
                 onClick={() => setActiveNav('home')}
                 className={`flex flex-col items-center gap-0.5 cursor-pointer ${
-                  activeNav === 'home' ? 'text-[#0F172A]' : 'text-slate-400 hover:text-slate-700'
+                  activeNav === 'home' ? 'text-purple-700' : 'text-slate-400 hover:text-slate-700'
                 }`}
               >
                 <Home className="w-5 h-5 stroke-[2.2]" />
-                <span className="text-[10px] font-bold">Accueil</span>
-              </button>
-
-              <button
-                onClick={() => onNavigateView('merchant')}
-                className={`flex flex-col items-center gap-0.5 cursor-pointer ${
-                  activeNav === 'gestion' ? 'text-[#0F172A]' : 'text-slate-400 hover:text-slate-700'
-                }`}
-              >
-                <Layers className="w-5 h-5 stroke-[2.2]" />
-                <span className="text-[10px] font-bold">Gestion</span>
-              </button>
-
-              <button
-                onClick={onOpenAddModal}
-                className="w-11 h-11 rounded-full bg-[#0F172A] text-white flex items-center justify-center shadow-md border-2 border-white transition active:scale-95 cursor-pointer -top-2 relative"
-                title="Nouveau projet B2B"
-              >
-                <Plus className="w-6 h-6 stroke-[3]" />
-              </button>
-
-              <button
-                onClick={() => onNavigateView('orders')}
-                className={`flex flex-col items-center gap-0.5 cursor-pointer ${
-                  activeNav === 'reports' ? 'text-[#0F172A]' : 'text-slate-400 hover:text-slate-700'
-                }`}
-              >
-                <FileText className="w-5 h-5 stroke-[2.2]" />
-                <span className="text-[10px] font-bold">Rapports</span>
-              </button>
-
-              <button
-                onClick={() => onNavigateView('merchant')}
-                className={`flex flex-col items-center gap-0.5 cursor-pointer ${
-                  activeNav === 'corp' ? 'text-[#0F172A]' : 'text-slate-400 hover:text-slate-700'
-                }`}
-              >
-                <Building2 className="w-5 h-5 stroke-[2.2]" />
                 <span className="text-[10px] font-bold">Entreprise</span>
+              </button>
+
+              <button
+                onClick={() => setIsProfileMenuOpen(true)}
+                className={`flex flex-col items-center gap-0.5 cursor-pointer text-slate-400 hover:text-slate-700`}
+              >
+                <UserIcon className="w-5 h-5 stroke-[2.2]" />
+                <span className="text-[10px] font-bold">Profil</span>
               </button>
             </>
           )}
@@ -742,7 +701,25 @@ export default function BafoussamMarketHomePage({
         </div>
       </nav>
 
-      {/* MODAL SCANNER QR / CODE-BARRES */}
+      {/* ACCESS DENIED SECURITY MODAL */}
+      <AccessDeniedModal
+        isOpen={!!deniedAttemptInfo?.isOpen}
+        userRole={userRole}
+        attemptedResource={deniedAttemptInfo?.resource || 'Ressource restreinte'}
+        onClose={() => setDeniedAttemptInfo(null)}
+        onRedirectToHome={() => {
+          setDeniedAttemptInfo(null);
+          onNavigateView('shop');
+        }}
+      />
+
+      {/* AUDIT LOGS SECURITY MODAL */}
+      <AuditLogsModal
+        isOpen={isAuditModalOpen}
+        onClose={() => setIsAuditModalOpen(false)}
+      />
+
+      {/* MODAL SCANNER QR */}
       <AnimatePresence>
         {isScannerOpen && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md">
@@ -754,7 +731,7 @@ export default function BafoussamMarketHomePage({
             >
               <button
                 onClick={() => setIsScannerOpen(false)}
-                className="absolute top-4 right-4 p-1.5 text-slate-400 hover:text-white bg-white/10 rounded-full"
+                className="absolute top-4 right-4 p-1.5 text-slate-400 hover:text-white bg-white/10 rounded-full cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -765,7 +742,6 @@ export default function BafoussamMarketHomePage({
                 <p className="text-xs text-slate-400">Pointez la caméra vers un produit ou un QR marchand</p>
               </div>
 
-              {/* Viewport Frame Simulator */}
               <div className="relative w-full h-52 bg-slate-950 rounded-2xl border-2 border-dashed border-[#16A34A] flex items-center justify-center overflow-hidden">
                 <div className="absolute inset-x-0 h-0.5 bg-[#16A34A] shadow-[0_0_15px_#16A34A] animate-bounce" />
                 <p className="text-xs font-bold text-slate-500">Caméra active (Bafoussam)</p>

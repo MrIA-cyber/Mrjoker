@@ -22,13 +22,10 @@ import {
   CheckCircle2, 
   Tag, 
   Zap, 
-  Bot, 
-  Sun, 
   Wrench, 
   Award, 
   PhoneCall, 
   MessageSquare, 
-  Newspaper, 
   Check, 
   Globe, 
   History, 
@@ -41,7 +38,6 @@ import {
   Trash2, 
   AlertCircle, 
   MessageCircle, 
-  Moon, 
   User as UserIcon,
   Mic,
   ScanLine,
@@ -50,7 +46,18 @@ import {
   X,
   Package,
   FileText,
-  Bell
+  Bell,
+  Download,
+  Flag,
+  Lock,
+  Edit3,
+  Calendar,
+  Share2,
+  CheckCircle,
+  XCircle,
+  Eye,
+  SlidersHorizontal,
+  Crown
 } from 'lucide-react';
 import { Product, Merchant, Order, User } from '../../types';
 import { AfriNovaLogo } from '../AfriNovaLogo';
@@ -116,20 +123,21 @@ const CATEGORIES_GRID = [
   { id: 'Prestations & Services', name: 'Services & Artisanat', icon: Wrench, bg: 'bg-slate-100 text-slate-700', categoryName: 'Prestations & Services', count: '22' }
 ];
 
-// 3. POPULAR SERVICES
-const POPULAR_SERVICES = [
+// 3. SERVICES LIST
+const SERVICES_DATA = [
   {
     id: 'srv-1',
-    title: 'Installation & Dépannage Solaire',
+    title: 'Installation & Dépannage Solaire 5KVA',
     providerName: 'Jean-Pierre Nguemo',
     avatar: 'https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&w=200&q=80',
     category: 'Électricité & Énergie',
     rating: 4.9,
     reviewsCount: 38,
-    price: '15 000 FCFA',
+    price: 35000,
     verified: true,
     availableNow: true,
-    location: 'Tamdja',
+    location: 'Tamdja, Bafoussam',
+    description: 'Pose complète d\'onduleur, régulateur MPPT et câblage sécurisé avec garantie 1 an.',
     phone: '+237 677 12 34 56'
   },
   {
@@ -140,10 +148,11 @@ const POPULAR_SERVICES = [
     category: 'Plomberie',
     rating: 4.8,
     reviewsCount: 29,
-    price: '10 000 FCFA',
+    price: 15000,
     verified: true,
     availableNow: true,
-    location: 'Kamkop',
+    location: 'Kamkop, Bafoussam',
+    description: 'Raccordement tuyauterie PPR, chauffe-eau solaire et dépannage fuites d\'eau d\'urgence.',
     phone: '+237 699 98 76 54'
   },
   {
@@ -154,10 +163,11 @@ const POPULAR_SERVICES = [
     category: 'Restauration',
     rating: 5.0,
     reviewsCount: 52,
-    price: 'Sur devis',
+    price: 45000,
     verified: true,
     availableNow: true,
-    location: 'Marché A',
+    location: 'Marché A, Bafoussam',
+    description: 'Buffet taro sauce jaune, koki, poisson fumé pour cérémonies & événements.',
     phone: '+237 675 44 33 22'
   },
   {
@@ -168,10 +178,11 @@ const POPULAR_SERVICES = [
     category: 'Beauté & Bien-être',
     rating: 4.7,
     reviewsCount: 41,
-    price: '8 000 FCFA',
+    price: 12000,
     verified: true,
     availableNow: false,
-    location: 'Djeleng',
+    location: 'Djeleng, Bafoussam',
+    description: 'Tresses africaines, maquillage événementiel & soins de peau bio.',
     phone: '+237 680 11 22 33'
   }
 ];
@@ -307,22 +318,91 @@ export default function ClientHomePage({
   onOpenCart
 }: ClientHomePageProps) {
   // Navigation Tabs for Client Dashboard
-  const [activeTab, setActiveTab] = useState<'explore' | 'favorites' | 'orders' | 'delivery' | 'payments' | 'messages' | 'notifications' | 'reviews' | 'profile' | 'settings' | 'support'>('explore');
+  const [activeTab, setActiveTab] = useState<
+    'explore' | 'favorites' | 'orders' | 'delivery' | 'payments' | 
+    'messages' | 'notifications' | 'reviews' | 'subscription' | 'profile' | 'settings' | 'support'
+  >('explore');
+
+  // Search type filter (Produits, Services, Boutiques, Entreprises)
+  const [searchFilterType, setSearchFilterType] = useState<'all' | 'products' | 'services' | 'merchants' | 'companies'>('all');
 
   const [currentSlide, setCurrentSlide] = useState(0);
   const [searchTerm, setSearchTerm] = useState('');
   const [isVoiceActive, setIsVoiceActive] = useState(false);
   const [recentBrowsing, setRecentBrowsing] = useState<Product[]>([]);
 
-  // Local states for interactivity
+  // Local state for orders (to allow instant cancel, invoice download)
+  const [localOrders, setLocalOrders] = useState<Order[]>(orders.length > 0 ? orders : [
+    {
+      id: 'CMD-8492',
+      userId: 'client-1',
+      userName: 'Paul Kamdem',
+      createdAt: new Date().toISOString(),
+      status: 'delivering',
+      total: 24500,
+      deliveryNeighborhood: 'Tamdja',
+      deliveryDetails: 'près de la Pharmacie Centrale, Bafoussam',
+      paymentMethod: 'momo',
+      paymentPhone: '+237 677 89 45 12',
+      deliveryTimeEstimated: 20,
+      items: [
+        { product: { id: '1', name: 'Poivre Blanc Penja Agréé 500g', price: 4500 } as Product, quantity: 2 },
+        { product: { id: '2', name: 'Huile de Palme Rouge Bio 5L', price: 15500 } as Product, quantity: 1 }
+      ]
+    },
+    {
+      id: 'CMD-7310',
+      userId: 'client-1',
+      userName: 'Paul Kamdem',
+      createdAt: new Date(Date.now() - 86400000 * 3).toISOString(),
+      status: 'pending',
+      total: 12000,
+      deliveryNeighborhood: 'Kamkop',
+      deliveryDetails: 'Portail Bleu',
+      paymentMethod: 'orange',
+      paymentPhone: '+237 699 11 22 33',
+      deliveryTimeEstimated: 35,
+      items: [
+        { product: { id: '3', name: 'Miel Sauvage Ouest Cameroun 1L', price: 12000 } as Product, quantity: 1 }
+      ]
+    }
+  ]);
+
+  // Interactive Modals State
+  const [selectedService, setSelectedService] = useState<typeof SERVICES_DATA[0] | null>(null);
+  const [instantBuyProduct, setInstantBuyProduct] = useState<Product | null>(null);
+  const [instantBuyDeliveryMode, setInstantBuyDeliveryMode] = useState<'express' | 'relais' | 'magasin'>('express');
+  const [instantBuyPaymentMode, setInstantBuyPaymentMode] = useState<'momo' | 'orange' | 'card' | 'cash'>('momo');
+  
+  // Signalement Modal State
+  const [reportingTarget, setReportingTarget] = useState<{ type: 'product' | 'boutique' | 'prestataire', name: string } | null>(null);
+  const [reportReason, setReportReason] = useState('');
+
+  // Invoice Modal State
+  const [selectedInvoiceOrder, setSelectedInvoiceOrder] = useState<Order | null>(null);
+
+  // Review Form State
+  const [newReviewItem, setNewReviewItem] = useState('');
+  const [newReviewRating, setNewReviewRating] = useState(5);
+  const [newReviewComment, setNewReviewComment] = useState('');
+
+  // Profile Edit State
+  const [profileName, setProfileName] = useState(currentUser?.name || 'Paul Kamdem');
+  const [profilePhone, setProfilePhone] = useState(currentUser?.phone || '+237 677 89 45 12');
+  const [profileQuarter, setProfileQuarter] = useState('Tamdja, Bafoussam');
+  const [profileLandmark, setProfileLandmark] = useState('Face Pharmacie Centrale, Portail Vert');
+  const [oldPassword, setOldPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+
+  // Interactivity States
   const [messages, setMessages] = useState(INITIAL_MESSAGES);
-  const [activeChatId, setActiveChatId] = useState<string | null>(null);
+  const [activeChatId, setActiveChatId] = useState<string | null>('msg-1');
   const [newMessageText, setNewMessageText] = useState('');
   const [notifications, setNotifications] = useState(INITIAL_NOTIFICATIONS);
   const [clientReviews, setClientReviews] = useState(INITIAL_CLIENT_REVIEWS);
 
   // Active delivery detection
-  const activeOrder = orders.find(o => o.status === 'delivering' || o.status === 'preparing' || o.status === 'picked_up') || orders[0];
+  const activeOrder = localOrders.find(o => o.status === 'delivering' || o.status === 'preparing' || o.status === 'picked_up') || localOrders[0];
 
   // Auto-slide banner
   useEffect(() => {
@@ -331,6 +411,13 @@ export default function ClientHomePage({
     }, 5000);
     return () => clearInterval(timer);
   }, []);
+
+  // Sync orders if props change
+  useEffect(() => {
+    if (orders.length > 0) {
+      setLocalOrders(orders);
+    }
+  }, [orders]);
 
   // Update recent browsing history when selecting a product
   const handleProductClick = (product: Product) => {
@@ -357,6 +444,18 @@ export default function ClientHomePage({
     return matchCategory && matchSearch;
   });
 
+  const filteredServices = SERVICES_DATA.filter(s => {
+    return !searchTerm || s.title.toLowerCase().includes(searchTerm.toLowerCase()) || s.providerName.toLowerCase().includes(searchTerm.toLowerCase()) || s.category.toLowerCase().includes(searchTerm.toLowerCase());
+  });
+
+  const filteredMerchants = merchants.filter(m => {
+    return !searchTerm || m.name.toLowerCase().includes(searchTerm.toLowerCase()) || m.shopName?.toLowerCase().includes(searchTerm.toLowerCase()) || m.location?.toLowerCase().includes(searchTerm.toLowerCase());
+  });
+
+  const filteredCompanies = PARTNER_COMPANIES.filter(c => {
+    return !searchTerm || c.name.toLowerCase().includes(searchTerm.toLowerCase()) || c.industry.toLowerCase().includes(searchTerm.toLowerCase());
+  });
+
   // Saved / Favorited Products
   const favoritedProducts = products.filter(p => favorites[p.id]);
 
@@ -380,7 +479,67 @@ export default function ClientHomePage({
     setNewMessageText('');
   };
 
-  // Unread notification count
+  // Cancel order function
+  const handleCancelOrder = (orderId: string) => {
+    setLocalOrders(prev => prev.map(o => o.id === orderId ? { ...o, status: 'cancelled' } : o));
+    alert(`La commande #${orderId} a été annulée avec succès.`);
+  };
+
+  // Submit review function
+  const handleSubmitReview = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newReviewItem.trim() || !newReviewComment.trim()) return;
+    const newRev = {
+      id: `rev-${Date.now()}`,
+      productOrSeller: newReviewItem,
+      sellerName: 'Marché A Bafoussam',
+      rating: newReviewRating,
+      date: 'Aujourd\'hui',
+      comment: newReviewComment
+    };
+    setClientReviews([newRev, ...clientReviews]);
+    setNewReviewItem('');
+    setNewReviewComment('');
+    alert('Votre avis a été publié avec succès !');
+  };
+
+  // Submit report function
+  const handleSubmitReport = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!reportingTarget) return;
+    alert(`Votre signalement concernant ${reportingTarget.name} a été transmis à l'équipe modération AfriNova.`);
+    setReportingTarget(null);
+    setReportReason('');
+  };
+
+  // Instant Buy Confirm
+  const handleInstantBuyConfirm = () => {
+    if (!instantBuyProduct) return;
+    const mappedPaymentMethod: 'momo' | 'orange' | 'cash_on_delivery' = 
+      instantBuyPaymentMode === 'momo' ? 'momo' : 
+      instantBuyPaymentMode === 'orange' ? 'orange' : 'cash_on_delivery';
+
+    const newOrder: Order = {
+      id: `CMD-${Math.floor(1000 + Math.random() * 9000)}`,
+      userId: currentUser?.id || 'client-1',
+      userName: currentUser?.name || 'Paul Kamdem',
+      createdAt: new Date().toISOString(),
+      status: 'preparing',
+      total: (instantBuyProduct.price || 0) + (instantBuyDeliveryMode === 'express' ? 1000 : 0),
+      deliveryNeighborhood: profileQuarter,
+      deliveryDetails: profileLandmark,
+      paymentMethod: mappedPaymentMethod,
+      paymentPhone: profilePhone,
+      deliveryTimeEstimated: 20,
+      items: [{ product: instantBuyProduct, quantity: 1 }]
+    };
+    setLocalOrders([newOrder, ...localOrders]);
+    setInstantBuyProduct(null);
+    setActiveTab('delivery');
+    alert(`Achat immédiat validé ! Votre commande #${newOrder.id} est en préparation.`);
+  };
+
+  // Unread counts
   const unreadNotifCount = notifications.filter(n => n.unread).length;
   const unreadMessageCount = messages.filter(m => m.unread).length;
 
@@ -405,7 +564,7 @@ export default function ClientHomePage({
             </div>
           </div>
 
-          {/* Quick Client Actions (Notifications, Messages, Cart, Support) */}
+          {/* Quick Client Actions */}
           <div className="flex items-center gap-1.5 sm:gap-2">
             
             {/* Quick Messages */}
@@ -414,7 +573,7 @@ export default function ClientHomePage({
               className={`p-2 rounded-full transition relative cursor-pointer ${
                 activeTab === 'messages' ? 'bg-indigo-50 text-[#4F46E5]' : 'text-slate-600 hover:bg-slate-100'
               }`}
-              title="Discuter avec les vendeurs"
+              title="Discuter avec les vendeurs & prestataires"
             >
               <MessageSquare className="w-5 h-5" />
               {unreadMessageCount > 0 && (
@@ -483,13 +642,14 @@ export default function ClientHomePage({
           {[
             { id: 'explore', label: 'Recherche & Accueil', icon: Search },
             { id: 'favorites', label: `Favoris (${favoritedProducts.length})`, icon: Heart },
-            { id: 'orders', label: `Commandes (${orders.length})`, icon: Package },
+            { id: 'orders', label: `Commandes (${localOrders.length})`, icon: Package },
             { id: 'delivery', label: 'Suivi Livraison', icon: Truck, badge: activeOrder ? '1' : undefined },
             { id: 'payments', label: 'Moyens de Paiement', icon: CreditCard },
             { id: 'messages', label: 'Messages Vendeurs', icon: MessageCircle, badge: unreadMessageCount > 0 ? unreadMessageCount : undefined },
             { id: 'notifications', label: 'Notifications', icon: Bell, badge: unreadNotifCount > 0 ? unreadNotifCount : undefined },
-            { id: 'reviews', label: 'Avis Laissez', icon: Star },
-            { id: 'profile', label: 'Mon Profil', icon: UserIcon },
+            { id: 'reviews', label: 'Avis & Notes', icon: Star },
+            { id: 'subscription', label: 'Abonnement VIP', icon: Crown },
+            { id: 'profile', label: 'Mon Profil & Adresses', icon: UserIcon },
             { id: 'settings', label: 'Paramètres', icon: Settings },
             { id: 'support', label: 'Support 24/7', icon: HelpCircle },
           ].map((tab) => {
@@ -526,7 +686,7 @@ export default function ClientHomePage({
           <div className="space-y-6">
             
             {/* 1. BARRE DE RECHERCHE INTELLIGENTE */}
-            <div className="bg-white p-3.5 rounded-3xl border border-slate-200/90 shadow-2xs space-y-2">
+            <div className="bg-white p-3.5 rounded-3xl border border-slate-200/90 shadow-2xs space-y-3">
               <div className="flex items-center gap-2">
                 <div className="relative flex-1">
                   <Search className="w-4 h-4 text-slate-400 absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none" />
@@ -574,14 +734,38 @@ export default function ClientHomePage({
                 </div>
               </div>
 
-              {/* Quick Tags under Search */}
-              <div className="flex items-center gap-2 text-[10px] font-bold text-slate-500 overflow-x-auto scrollbar-none pt-1">
-                <span className="text-slate-400 font-extrabold uppercase shrink-0">Recherches populaires:</span>
+              {/* Type Filter Buttons */}
+              <div className="flex items-center gap-1.5 text-xs overflow-x-auto scrollbar-none pt-1">
+                <span className="text-slate-400 font-extrabold uppercase text-[10px] shrink-0">Filtrer par:</span>
+                {[
+                  { id: 'all', label: 'Tout' },
+                  { id: 'products', label: '🛍️ Produits' },
+                  { id: 'services', label: '🛠️ Services' },
+                  { id: 'merchants', label: '🏪 Boutiques' },
+                  { id: 'companies', label: '🏢 Entreprises' }
+                ].map((f) => (
+                  <button
+                    key={f.id}
+                    onClick={() => setSearchFilterType(f.id as any)}
+                    className={`px-3 py-1 rounded-xl font-bold transition shrink-0 cursor-pointer ${
+                      searchFilterType === f.id
+                        ? 'bg-[#16A34A] text-white shadow-2xs'
+                        : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                    }`}
+                  >
+                    {f.label}
+                  </button>
+                ))}
+              </div>
+
+              {/* Quick Search Tags */}
+              <div className="flex items-center gap-2 text-[10px] font-bold text-slate-500 overflow-x-auto scrollbar-none">
+                <span className="text-slate-400 font-extrabold uppercase shrink-0">Tendances:</span>
                 {['Poivre blanc Bafoussam', 'Chaussures Ndop', 'Smartphone 5G', 'Service Dépannage Solaire', 'Plantain Mbuy'].map((tag) => (
                   <button
                     key={tag}
                     onClick={() => setSearchTerm(tag)}
-                    className="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-emerald-50 hover:text-[#16A34A] transition shrink-0 cursor-pointer border border-slate-200/60"
+                    className="px-2.5 py-0.5 rounded-lg bg-slate-100 hover:bg-emerald-50 hover:text-[#16A34A] transition shrink-0 cursor-pointer border border-slate-200/60"
                   >
                     {tag}
                   </button>
@@ -698,228 +882,269 @@ export default function ClientHomePage({
             </div>
 
             {/* 4. PRODUITS RECOMMANDÉS */}
-            <div id="popular-products" className="space-y-3">
-              <div className="flex items-center justify-between px-0.5">
-                <div className="flex items-center gap-2">
-                  <div className="w-7 h-7 rounded-xl bg-emerald-50 text-[#16A34A] flex items-center justify-center font-black">
-                    <Sparkles className="w-4 h-4" />
-                  </div>
-                  <div>
-                    <h3 className="text-sm sm:text-base font-black text-[#0F172A] font-display leading-tight">
-                      Produits Recommandés
-                    </h3>
-                    <p className="text-[10px] text-slate-400 font-medium hidden sm:block">
-                      Sélection des meilleures offres au Marché A, Tamdja & Djeleng
-                    </p>
+            {(searchFilterType === 'all' || searchFilterType === 'products') && (
+              <div id="popular-products" className="space-y-3">
+                <div className="flex items-center justify-between px-0.5">
+                  <div className="flex items-center gap-2">
+                    <div className="w-7 h-7 rounded-xl bg-emerald-50 text-[#16A34A] flex items-center justify-center font-black">
+                      <Sparkles className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <h3 className="text-sm sm:text-base font-black text-[#0F172A] font-display leading-tight">
+                        Produits Recommandés ({filteredProducts.length})
+                      </h3>
+                      <p className="text-[10px] text-slate-400 font-medium hidden sm:block">
+                        Sélection des meilleures offres au Marché A, Tamdja & Djeleng
+                      </p>
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-                {filteredProducts.map((product, idx) => {
-                  const merchant = merchants.find(m => m.id === product.merchantId);
-                  const merchantName = merchant?.shopName || merchant?.name || 'Marché A Bafoussam';
-                  const rating = product.rating || (4.6 + (idx % 3) * 0.1).toFixed(1);
-                  const isFavorite = !!favorites[product.id];
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+                  {filteredProducts.map((product, idx) => {
+                    const merchant = merchants.find(m => m.id === product.merchantId);
+                    const merchantName = merchant?.shopName || merchant?.name || 'Marché A Bafoussam';
+                    const rating = product.rating || (4.6 + (idx % 3) * 0.1).toFixed(1);
+                    const isFavorite = !!favorites[product.id];
 
-                  return (
-                    <motion.div
-                      key={product.id}
-                      whileHover={{ y: -3 }}
-                      onClick={() => handleProductClick(product)}
-                      className="bg-white rounded-[20px] border border-slate-100 shadow-2xs hover:shadow-md overflow-hidden flex flex-col justify-between cursor-pointer group transition duration-200"
-                    >
-                      <div>
-                        <div className="h-28 sm:h-34 lg:h-36 w-full relative overflow-hidden bg-slate-100 rounded-t-[20px]">
-                          <img
-                            src={product.images?.[0] || 'https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=400&q=80'}
-                            alt={product.name}
-                            className="w-full h-full object-cover group-hover:scale-105 transition duration-300"
-                          />
+                    return (
+                      <motion.div
+                        key={product.id}
+                        whileHover={{ y: -3 }}
+                        onClick={() => handleProductClick(product)}
+                        className="bg-white rounded-[20px] border border-slate-100 shadow-2xs hover:shadow-md overflow-hidden flex flex-col justify-between cursor-pointer group transition duration-200"
+                      >
+                        <div>
+                          <div className="h-28 sm:h-34 lg:h-36 w-full relative overflow-hidden bg-slate-100 rounded-t-[20px]">
+                            <img
+                              src={product.images?.[0] || 'https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=400&q=80'}
+                              alt={product.name}
+                              className="w-full h-full object-cover group-hover:scale-105 transition duration-300"
+                            />
 
-                          <span className="absolute top-2 left-2 bg-[#0F172A]/85 backdrop-blur-xs text-white text-[9px] font-black px-2 py-0.5 rounded-md flex items-center gap-0.5">
-                            <MapPin className="w-2.5 h-2.5 text-[#16A34A]" />
-                            <span>{product.neighborhood || 'Tamdja'}</span>
-                          </span>
+                            <span className="absolute top-2 left-2 bg-[#0F172A]/85 backdrop-blur-xs text-white text-[9px] font-black px-2 py-0.5 rounded-md flex items-center gap-0.5">
+                              <MapPin className="w-2.5 h-2.5 text-[#16A34A]" />
+                              <span>{product.neighborhood || 'Tamdja'}</span>
+                            </span>
+
+                            <div className="absolute top-2 right-2 flex gap-1">
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setReportingTarget({ type: 'product', name: product.name });
+                                }}
+                                className="w-7 h-7 rounded-full bg-white/85 backdrop-blur-xs flex items-center justify-center text-slate-400 hover:text-rose-600 transition shadow-2xs cursor-pointer"
+                                title="Signaler ce produit"
+                              >
+                                <Flag className="w-3.5 h-3.5" />
+                              </button>
+                              <button
+                                onClick={(e) => onToggleFavorite(e, product.id)}
+                                className="w-7 h-7 rounded-full bg-white/85 backdrop-blur-xs flex items-center justify-center text-slate-700 hover:text-rose-500 transition shadow-2xs cursor-pointer"
+                                title="Favoris"
+                              >
+                                <Heart className={`w-3.5 h-3.5 ${isFavorite ? 'fill-rose-500 text-rose-500' : ''}`} />
+                              </button>
+                            </div>
+                          </div>
+
+                          <div className="p-2.5 space-y-1">
+                            <div className="flex items-center justify-between text-[10px] text-slate-500 font-semibold">
+                              <div className="flex items-center gap-1">
+                                <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400 shrink-0" />
+                                <span className="font-black text-slate-800">{rating}</span>
+                              </div>
+                              <span className="text-[9px] font-bold text-slate-400">⚡ 20 min</span>
+                            </div>
+
+                            <h4 className="font-bold text-xs text-[#0F172A] group-hover:text-[#16A34A] transition line-clamp-2 leading-snug min-h-[2rem]">
+                              {product.name}
+                            </h4>
+
+                            <div className="font-black text-xs sm:text-sm text-[#16A34A]">
+                              {product.price ? product.price.toLocaleString() : '0'} FCFA
+                            </div>
+
+                            <div className="flex items-center justify-between text-[10px] text-slate-500 truncate pt-1 border-t border-slate-50 font-medium">
+                              <span className="truncate">{merchantName}</span>
+                              <ShieldCheck className="w-3.5 h-3.5 text-[#16A34A] shrink-0" />
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="p-2.5 pt-0 flex gap-1.5">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onAddToCart(product);
+                            }}
+                            className="flex-1 h-8 rounded-xl bg-[#16A34A] hover:bg-[#15803D] active:bg-[#166534] text-white text-[10px] font-black transition flex items-center justify-center gap-1 shadow-2xs cursor-pointer"
+                          >
+                            <ShoppingBag className="w-3 h-3" />
+                            <span>Au Panier</span>
+                          </button>
 
                           <button
-                            onClick={(e) => onToggleFavorite(e, product.id)}
-                            className="absolute top-2 right-2 w-7 h-7 rounded-full bg-white/85 backdrop-blur-xs flex items-center justify-center text-slate-700 hover:text-rose-500 transition shadow-2xs cursor-pointer"
-                            title="Favoris"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setInstantBuyProduct(product);
+                            }}
+                            className="h-8 px-2.5 rounded-xl bg-[#0F172A] hover:bg-slate-800 text-white text-[10px] font-black transition flex items-center justify-center gap-1 shadow-2xs cursor-pointer"
+                            title="Acheter immédiatement"
                           >
-                            <Heart className={`w-3.5 h-3.5 ${isFavorite ? 'fill-rose-500 text-rose-500' : ''}`} />
+                            <Zap className="w-3 h-3 text-amber-400" />
+                            <span className="hidden sm:inline">Direct</span>
+                          </button>
+                        </div>
+                      </motion.div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* 5. SERVICES RECOMMANDÉS */}
+            {(searchFilterType === 'all' || searchFilterType === 'services') && (
+              <div className="space-y-3 pt-2">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <div className="w-7 h-7 rounded-xl bg-blue-50 text-[#2563EB] flex items-center justify-center font-black">
+                      <Wrench className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <h3 className="text-sm sm:text-base font-black text-[#0F172A] font-display leading-tight">
+                        Services & Prestataires Recommandés ({filteredServices.length})
+                      </h3>
+                      <p className="text-[10px] text-slate-400 font-medium hidden sm:block">
+                        Plomberie, électricité, traiteur, beauté & maintenance à Bafoussam
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
+                  {filteredServices.map((srv) => (
+                    <div
+                      key={srv.id}
+                      className="p-3.5 rounded-2xl bg-white border border-slate-100 shadow-2xs hover:shadow-md transition cursor-pointer flex flex-col justify-between space-y-3"
+                    >
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <span className="text-[9px] font-black text-[#2563EB] bg-blue-50 px-2 py-0.5 rounded-full">
+                            {srv.category}
+                          </span>
+                          <button
+                            onClick={() => setReportingTarget({ type: 'prestataire', name: srv.providerName })}
+                            className="p-1 text-slate-400 hover:text-rose-600 cursor-pointer"
+                            title="Signaler ce prestataire"
+                          >
+                            <Flag className="w-3 h-3" />
                           </button>
                         </div>
 
-                        <div className="p-2.5 space-y-1">
-                          <div className="flex items-center justify-between text-[10px] text-slate-500 font-semibold">
-                            <div className="flex items-center gap-1">
-                              <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400 shrink-0" />
-                              <span className="font-black text-slate-800">{rating}</span>
+                        <h4 className="font-extrabold text-xs text-[#0F172A] line-clamp-2">
+                          {srv.title}
+                        </h4>
+
+                        <div className="flex items-center gap-2">
+                          <img src={srv.avatar} alt={srv.providerName} className="w-7 h-7 rounded-full object-cover" />
+                          <div className="truncate">
+                            <p className="text-[11px] font-bold text-slate-800 truncate">{srv.providerName}</p>
+                            <div className="flex items-center gap-1 text-[10px] text-slate-400">
+                              <Star className="w-3 h-3 fill-amber-400 text-amber-400" />
+                              <span className="font-bold text-slate-700">{srv.rating}</span>
                             </div>
-                            <span className="text-[9px] font-bold text-slate-400">⚡ 20 min</span>
-                          </div>
-
-                          <h4 className="font-bold text-xs text-[#0F172A] group-hover:text-[#16A34A] transition line-clamp-2 leading-snug min-h-[2rem]">
-                            {product.name}
-                          </h4>
-
-                          <div className="font-black text-xs sm:text-sm text-[#16A34A]">
-                            {product.price ? product.price.toLocaleString() : '0'} FCFA
-                          </div>
-
-                          <div className="flex items-center justify-between text-[10px] text-slate-500 truncate pt-1 border-t border-slate-50 font-medium">
-                            <span className="truncate">{merchantName}</span>
-                            <ShieldCheck className="w-3.5 h-3.5 text-[#16A34A] shrink-0" />
                           </div>
                         </div>
                       </div>
 
-                      <div className="p-2.5 pt-0">
+                      <div className="pt-2 border-t border-slate-100 flex items-center justify-between">
+                        <span className="text-xs font-black text-[#16A34A]">{srv.price.toLocaleString()} FCFA</span>
                         <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            onAddToCart(product);
-                          }}
-                          className="w-full h-8 rounded-xl bg-[#16A34A] hover:bg-[#15803D] active:bg-[#166534] text-white text-[11px] font-black transition flex items-center justify-center gap-1.5 shadow-2xs cursor-pointer"
+                          onClick={() => setSelectedService(srv)}
+                          className="px-2.5 py-1 rounded-lg bg-blue-50 text-[#2563EB] hover:bg-blue-100 text-[10px] font-bold transition cursor-pointer"
                         >
-                          <ShoppingBag className="w-3.5 h-3.5" />
-                          <span>Ajouter au Panier</span>
+                          Détails & Réserver
                         </button>
                       </div>
-                    </motion.div>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* 5. SERVICES RECOMMANDÉS */}
-            <div className="space-y-3 pt-2">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <div className="w-7 h-7 rounded-xl bg-blue-50 text-[#2563EB] flex items-center justify-center font-black">
-                    <Wrench className="w-4 h-4" />
-                  </div>
-                  <div>
-                    <h3 className="text-sm sm:text-base font-black text-[#0F172A] font-display leading-tight">
-                      Services & Prestataires Recommandés
-                    </h3>
-                    <p className="text-[10px] text-slate-400 font-medium hidden sm:block">
-                      Plomberie, électricité, traiteur, beauté & maintenance à Bafoussam
-                    </p>
-                  </div>
+                    </div>
+                  ))}
                 </div>
               </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
-                {POPULAR_SERVICES.map((srv) => (
-                  <div
-                    key={srv.id}
-                    className="p-3.5 rounded-2xl bg-white border border-slate-100 shadow-2xs hover:shadow-md transition cursor-pointer flex flex-col justify-between space-y-3"
-                  >
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between">
-                        <span className="text-[9px] font-black text-[#2563EB] bg-blue-50 px-2 py-0.5 rounded-full">
-                          {srv.category}
-                        </span>
-                        {srv.availableNow && (
-                          <span className="text-[9px] font-black text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full flex items-center gap-1">
-                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                            Disponible
-                          </span>
-                        )}
-                      </div>
-
-                      <h4 className="font-extrabold text-xs text-[#0F172A] line-clamp-2">
-                        {srv.title}
-                      </h4>
-
-                      <div className="flex items-center gap-2">
-                        <img src={srv.avatar} alt={srv.providerName} className="w-7 h-7 rounded-full object-cover" />
-                        <div className="truncate">
-                          <p className="text-[11px] font-bold text-slate-800 truncate">{srv.providerName}</p>
-                          <div className="flex items-center gap-1 text-[10px] text-slate-400">
-                            <Star className="w-3 h-3 fill-amber-400 text-amber-400" />
-                            <span className="font-bold text-slate-700">{srv.rating}</span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="pt-2 border-t border-slate-100 flex items-center justify-between">
-                      <span className="text-xs font-black text-[#16A34A]">{srv.price}</span>
-                      <button
-                        onClick={() => {
-                          setActiveTab('messages');
-                        }}
-                        className="px-2.5 py-1 rounded-lg bg-blue-50 text-[#2563EB] hover:bg-blue-100 text-[10px] font-bold transition cursor-pointer"
-                      >
-                        Contacter / Réserver
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
+            )}
 
             {/* 6. BOUTIQUES ET PRESTATAIRES POPULAIRES */}
-            <div className="space-y-3 pt-2">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <div className="w-7 h-7 rounded-xl bg-indigo-50 text-[#4F46E5] flex items-center justify-center font-black">
-                    <Building2 className="w-4 h-4" />
+            {(searchFilterType === 'all' || searchFilterType === 'merchants') && (
+              <div className="space-y-3 pt-2">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <div className="w-7 h-7 rounded-xl bg-indigo-50 text-[#4F46E5] flex items-center justify-center font-black">
+                      <Building2 className="w-4 h-4" />
+                    </div>
+                    <h3 className="text-sm sm:text-base font-black text-[#0F172A]">
+                      Boutiques Partenaires ({filteredMerchants.length})
+                    </h3>
                   </div>
-                  <h3 className="text-sm sm:text-base font-black text-[#0F172A]">
-                    Boutiques & Prestataires Populaires
-                  </h3>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  {filteredMerchants.slice(0, 6).map((merchant) => (
+                    <div
+                      key={merchant.id}
+                      className="p-4 rounded-2xl bg-white border border-slate-100 shadow-2xs hover:shadow-md transition space-y-2 cursor-pointer relative"
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-xl bg-[#0F172A] text-white flex items-center justify-center font-black text-xs shrink-0 overflow-hidden">
+                            {merchant.logo ? <img src={merchant.logo} alt={merchant.name} className="w-full h-full object-cover" /> : 'BM'}
+                          </div>
+                          <div className="truncate">
+                            <div className="flex items-center gap-1">
+                              <h4 className="font-extrabold text-xs text-[#0F172A] truncate">{merchant.shopName || merchant.name}</h4>
+                              <ShieldCheck className="w-3.5 h-3.5 text-[#16A34A] shrink-0" />
+                            </div>
+                            <p className="text-[10px] text-slate-500">{merchant.location || 'Bafoussam Centre'}</p>
+                          </div>
+                        </div>
+
+                        <button
+                          onClick={() => setReportingTarget({ type: 'boutique', name: merchant.shopName || merchant.name })}
+                          className="p-1 text-slate-400 hover:text-rose-600 cursor-pointer"
+                          title="Signaler la boutique"
+                        >
+                          <Flag className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                      <p className="text-[11px] text-slate-600 line-clamp-1">Commerçant vérifié AfriNova</p>
+                    </div>
+                  ))}
                 </div>
               </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                {merchants.slice(0, 3).map((merchant) => (
-                  <div
-                    key={merchant.id}
-                    className="p-4 rounded-2xl bg-white border border-slate-100 shadow-2xs hover:shadow-md transition space-y-2 cursor-pointer"
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-xl bg-[#0F172A] text-white flex items-center justify-center font-black text-xs shrink-0 overflow-hidden">
-                        {merchant.logo ? <img src={merchant.logo} alt={merchant.name} className="w-full h-full object-cover" /> : 'BM'}
-                      </div>
-                      <div className="truncate">
-                        <div className="flex items-center gap-1">
-                          <h4 className="font-extrabold text-xs text-[#0F172A] truncate">{merchant.shopName || merchant.name}</h4>
-                          <ShieldCheck className="w-3.5 h-3.5 text-[#16A34A] shrink-0" />
-                        </div>
-                        <p className="text-[10px] text-slate-500">{merchant.location || 'Bafoussam Centre'}</p>
-                      </div>
-                    </div>
-                    <p className="text-[11px] text-slate-600 line-clamp-1">Commerçant agréé AfriNova</p>
-                  </div>
-                ))}
-              </div>
-            </div>
+            )}
 
             {/* 7. ENTREPRISES POPULAIRES */}
-            <div className="space-y-3 pt-2">
-              <div className="flex items-center gap-2">
-                <Building2 className="w-4 h-4 text-[#0F172A]" />
-                <h3 className="text-sm font-black text-[#0F172A]">Entreprises Partenaires Bafoussam</h3>
-              </div>
+            {(searchFilterType === 'all' || searchFilterType === 'companies') && (
+              <div className="space-y-3 pt-2">
+                <div className="flex items-center gap-2">
+                  <Building2 className="w-4 h-4 text-[#0F172A]" />
+                  <h3 className="text-sm font-black text-[#0F172A]">Entreprises Agréées ({filteredCompanies.length})</h3>
+                </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                {PARTNER_COMPANIES.map((corp) => (
-                  <div key={corp.id} className="p-3.5 rounded-2xl bg-white border border-slate-100 shadow-2xs space-y-2">
-                    <div className="flex items-center gap-2.5">
-                      <img src={corp.logo} alt={corp.name} className="w-9 h-9 rounded-lg object-cover" />
-                      <div className="truncate">
-                        <h4 className="font-bold text-xs text-[#0F172A] truncate">{corp.name}</h4>
-                        <p className="text-[9px] text-slate-500">{corp.industry}</p>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  {filteredCompanies.map((corp) => (
+                    <div key={corp.id} className="p-3.5 rounded-2xl bg-white border border-slate-100 shadow-2xs space-y-2">
+                      <div className="flex items-center gap-2.5">
+                        <img src={corp.logo} alt={corp.name} className="w-9 h-9 rounded-lg object-cover" />
+                        <div className="truncate">
+                          <h4 className="font-bold text-xs text-[#0F172A] truncate">{corp.name}</h4>
+                          <p className="text-[9px] text-slate-500">{corp.industry}</p>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
 
             {/* 8. HISTORIQUE DE NAVIGATION */}
             {recentBrowsing.length > 0 && (
@@ -962,7 +1187,7 @@ export default function ClientHomePage({
             <div className="flex items-center justify-between border-b border-slate-200 pb-3">
               <div className="flex items-center gap-2">
                 <Heart className="w-5 h-5 text-rose-500 fill-rose-500" />
-                <h2 className="text-lg font-black text-[#0F172A]">Mes Produits Favoris ({favoritedProducts.length})</h2>
+                <h2 className="text-lg font-black text-[#0F172A]">Mes Produits & Services Favoris ({favoritedProducts.length})</h2>
               </div>
             </div>
 
@@ -1009,36 +1234,72 @@ export default function ClientHomePage({
             <div className="flex items-center justify-between border-b border-slate-200 pb-3">
               <div className="flex items-center gap-2">
                 <Package className="w-5 h-5 text-[#16A34A]" />
-                <h2 className="text-lg font-black text-[#0F172A]">Mes Commandes ({orders.length})</h2>
+                <h2 className="text-lg font-black text-[#0F172A]">Mes Commandes & Historique ({localOrders.length})</h2>
               </div>
             </div>
 
-            {orders.length > 0 ? (
+            {localOrders.length > 0 ? (
               <div className="space-y-3">
-                {orders.map((order) => (
+                {localOrders.map((order) => (
                   <div key={order.id} className="p-4 bg-white rounded-2xl border border-slate-100 shadow-2xs space-y-3">
                     <div className="flex items-center justify-between border-b border-slate-100 pb-2">
                       <div>
                         <span className="font-mono text-xs font-black text-slate-900">Commande #{order.id}</span>
                         <p className="text-[10px] text-slate-400">Passée le {new Date(order.createdAt).toLocaleDateString()}</p>
                       </div>
-                      <span className="px-2.5 py-1 rounded-full text-[10px] font-black bg-emerald-50 text-[#16A34A]">
-                        {order.status === 'delivering' ? 'En cours de livraison' : order.status === 'completed' ? 'Livrée avec succès' : 'En cours de préparation'}
+                      <span className={`px-2.5 py-1 rounded-full text-[10px] font-black ${
+                        order.status === 'delivering' ? 'bg-blue-50 text-blue-700' :
+                        order.status === 'completed' ? 'bg-emerald-50 text-[#16A34A]' :
+                        order.status === 'cancelled' ? 'bg-rose-50 text-rose-600' : 'bg-amber-50 text-amber-700'
+                      }`}>
+                        {order.status === 'delivering' ? '🚚 En cours de livraison' : 
+                         order.status === 'completed' ? '✅ Livrée avec succès' : 
+                         order.status === 'cancelled' ? '❌ Annulée' : '⏳ En préparation'}
                       </span>
                     </div>
 
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs font-bold text-slate-600">{order.items?.length || 1} article(s)</span>
+                    <div className="space-y-1">
+                      {order.items?.map((item, idx) => {
+                        const itemName = item.product?.name || (item as any).name || 'Article';
+                        const itemPrice = item.product?.price || (item as any).price || 0;
+                        return (
+                          <div key={idx} className="flex justify-between items-center text-xs text-slate-700">
+                            <span>{item.quantity}x {itemName}</span>
+                            <span className="font-bold">{itemPrice.toLocaleString()} FCFA</span>
+                          </div>
+                        );
+                      })}
+                    </div>
+
+                    <div className="flex items-center justify-between pt-2 border-t border-slate-50">
+                      <span className="text-xs font-bold text-slate-500">Total payé ({order.paymentMethod || 'Mobile Money'}):</span>
                       <span className="text-sm font-black text-[#16A34A]">{order.total ? order.total.toLocaleString() : '0'} FCFA</span>
                     </div>
 
-                    <div className="flex gap-2">
+                    <div className="flex flex-wrap gap-2 pt-1">
                       <button
                         onClick={() => setActiveTab('delivery')}
                         className="px-3 py-1.5 bg-[#0F172A] text-white text-xs font-bold rounded-xl cursor-pointer"
                       >
                         Suivre la livraison
                       </button>
+
+                      <button
+                        onClick={() => setSelectedInvoiceOrder(order)}
+                        className="px-3 py-1.5 bg-slate-100 text-slate-700 hover:bg-slate-200 text-xs font-bold rounded-xl flex items-center gap-1 cursor-pointer"
+                      >
+                        <FileText className="w-3.5 h-3.5 text-[#16A34A]" />
+                        <span>Télécharger Facture</span>
+                      </button>
+
+                      {order.status === 'pending' && (
+                        <button
+                          onClick={() => handleCancelOrder(order.id)}
+                          className="px-3 py-1.5 bg-rose-50 text-rose-600 hover:bg-rose-100 text-xs font-bold rounded-xl cursor-pointer"
+                        >
+                          Annuler la commande
+                        </button>
+                      )}
                     </div>
                   </div>
                 ))}
@@ -1057,13 +1318,13 @@ export default function ClientHomePage({
           <div className="space-y-4">
             <div className="flex items-center gap-2 border-b border-slate-200 pb-3">
               <Truck className="w-5 h-5 text-[#16A34A]" />
-              <h2 className="text-lg font-black text-[#0F172A]">Suivi de Livraison Express Bafoussam</h2>
+              <h2 className="text-lg font-black text-[#0F172A]">Suivi de Livraison Express Bafoussam (Temps Réel)</h2>
             </div>
 
-            <div className="p-5 bg-gradient-to-br from-slate-900 to-indigo-950 text-white rounded-3xl space-y-4 shadow-md">
+            <div className="p-5 bg-gradient-to-br from-slate-900 via-slate-800 to-indigo-950 text-white rounded-3xl space-y-5 shadow-md">
               <div className="flex items-center justify-between">
                 <div>
-                  <span className="text-[10px] font-black uppercase text-emerald-400">Statut de la livraison</span>
+                  <span className="text-[10px] font-black uppercase text-emerald-400">Statut en direct</span>
                   <h3 className="text-base font-black text-white">Coursier AfriNova Express en route 🛵</h3>
                 </div>
                 <span className="px-3 py-1 bg-emerald-500/20 text-emerald-300 text-xs font-black rounded-full border border-emerald-500/30">
@@ -1071,10 +1332,30 @@ export default function ClientHomePage({
                 </span>
               </div>
 
-              <div className="bg-white/10 p-3 rounded-2xl backdrop-blur-md space-y-2 text-xs">
+              {/* Progress Steps Visualizer */}
+              <div className="grid grid-cols-4 gap-2 text-center text-[10px] font-bold">
+                <div className="space-y-1">
+                  <div className="w-7 h-7 rounded-full bg-emerald-500 text-white flex items-center justify-center mx-auto font-black">1</div>
+                  <span className="text-emerald-400">Confirmée</span>
+                </div>
+                <div className="space-y-1">
+                  <div className="w-7 h-7 rounded-full bg-emerald-500 text-white flex items-center justify-center mx-auto font-black">2</div>
+                  <span className="text-emerald-400">Préparation</span>
+                </div>
+                <div className="space-y-1">
+                  <div className="w-7 h-7 rounded-full bg-emerald-500 text-white flex items-center justify-center mx-auto font-black ring-4 ring-emerald-500/30 animate-pulse">3</div>
+                  <span className="text-emerald-300 font-black">En route</span>
+                </div>
+                <div className="space-y-1">
+                  <div className="w-7 h-7 rounded-full bg-slate-700 text-slate-400 flex items-center justify-center mx-auto font-black">4</div>
+                  <span className="text-slate-400">Livrée</span>
+                </div>
+              </div>
+
+              <div className="bg-white/10 p-4 rounded-2xl backdrop-blur-md space-y-2 text-xs">
                 <div className="flex items-center justify-between">
-                  <span className="text-slate-300">Quartier de livraison:</span>
-                  <span className="font-extrabold text-white">Carrefour Bamiléké, Tamdja</span>
+                  <span className="text-slate-300">Adresse de livraison:</span>
+                  <span className="font-extrabold text-white">{profileQuarter} ({profileLandmark})</span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-slate-300">Nom du coursier:</span>
@@ -1082,7 +1363,7 @@ export default function ClientHomePage({
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-slate-300">Téléphone coursier:</span>
-                  <span className="font-mono font-bold text-amber-400">+237 677 89 45 12</span>
+                  <a href="tel:+237677894512" className="font-mono font-bold text-amber-400 hover:underline">+237 677 89 45 12</a>
                 </div>
               </div>
             </div>
@@ -1097,25 +1378,32 @@ export default function ClientHomePage({
               <h2 className="text-lg font-black text-[#0F172A]">Moyens de Paiement Sécurisés</h2>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
               <div className="p-4 bg-white rounded-2xl border border-slate-200 space-y-2">
                 <span className="text-xl">💛</span>
                 <h4 className="font-extrabold text-xs text-[#0F172A]">MTN Mobile Money</h4>
-                <p className="text-[10px] text-slate-500">Paiement instantané par code USSD</p>
-                <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full inline-block">Actif</span>
+                <p className="text-[10px] text-slate-500">Paiement par code USSD (*126#)</p>
+                <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full inline-block">Configuré</span>
               </div>
 
               <div className="p-4 bg-white rounded-2xl border border-slate-200 space-y-2">
                 <span className="text-xl">🧡</span>
                 <h4 className="font-extrabold text-xs text-[#0F172A]">Orange Money</h4>
-                <p className="text-[10px] text-slate-500">Validation sécurisée par OTP/PIN</p>
-                <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full inline-block">Actif</span>
+                <p className="text-[10px] text-slate-500">Validation par code PIN (#150#)</p>
+                <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full inline-block">Configuré</span>
+              </div>
+
+              <div className="p-4 bg-white rounded-2xl border border-slate-200 space-y-2">
+                <span className="text-xl">💳</span>
+                <h4 className="font-extrabold text-xs text-[#0F172A]">Carte Visa / MasterCard</h4>
+                <p className="text-[10px] text-slate-500">Paiement bancaire en ligne sécurisé</p>
+                <span className="text-[10px] font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full inline-block">Disponible</span>
               </div>
 
               <div className="p-4 bg-white rounded-2xl border border-slate-200 space-y-2">
                 <span className="text-xl">💵</span>
-                <h4 className="font-extrabold text-xs text-[#0F172A]">Paiement à la Livraison</h4>
-                <p className="text-[10px] text-slate-500">Payez en espèces directement au coursier</p>
+                <h4 className="font-extrabold text-xs text-[#0F172A]">Paiement Cash à la Livraison</h4>
+                <p className="text-[10px] text-slate-500">Payez en espèces à la réception</p>
                 <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full inline-block">Disponible</span>
               </div>
             </div>
@@ -1127,7 +1415,7 @@ export default function ClientHomePage({
           <div className="space-y-4">
             <div className="flex items-center gap-2 border-b border-slate-200 pb-3">
               <MessageSquare className="w-5 h-5 text-[#16A34A]" />
-              <h2 className="text-lg font-black text-[#0F172A]">Discussions avec les Vendeurs & Prestataires</h2>
+              <h2 className="text-lg font-black text-[#0F172A]">Discussions Directes Vendeurs & Prestataires</h2>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 bg-white rounded-3xl border border-slate-200 overflow-hidden min-h-[400px]">
@@ -1144,7 +1432,10 @@ export default function ClientHomePage({
                   >
                     <img src={m.avatar} alt={m.partnerName} className="w-9 h-9 rounded-full object-cover" />
                     <div className="flex-1 truncate">
-                      <h5 className="font-bold text-xs truncate">{m.partnerName}</h5>
+                      <div className="flex justify-between items-center">
+                        <h5 className="font-bold text-xs truncate">{m.partnerName}</h5>
+                        <span className="text-[9px] text-slate-400">{m.time}</span>
+                      </div>
                       <p className={`text-[10px] truncate ${activeChatId === m.id ? 'text-slate-300' : 'text-slate-400'}`}>
                         {m.lastMessage}
                       </p>
@@ -1179,7 +1470,7 @@ export default function ClientHomePage({
                         value={newMessageText}
                         onChange={(e) => setNewMessageText(e.target.value)}
                         onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
-                        placeholder="Écrivez votre message..."
+                        placeholder="Écrivez votre message au vendeur/prestataire..."
                         className="flex-1 h-10 px-4 bg-white border border-slate-200 rounded-xl text-xs text-slate-900 focus:outline-none focus:border-[#16A34A]"
                       />
                       <button
@@ -1192,7 +1483,7 @@ export default function ClientHomePage({
                   </>
                 ) : (
                   <div className="text-center py-20 text-slate-400 text-xs font-bold">
-                    Sélectionnez une conversation pour discuter avec un vendeur.
+                    Sélectionnez une conversation pour discuter.
                   </div>
                 )}
               </div>
@@ -1206,7 +1497,7 @@ export default function ClientHomePage({
             <div className="flex items-center justify-between border-b border-slate-200 pb-3">
               <div className="flex items-center gap-2">
                 <Bell className="w-5 h-5 text-[#16A34A]" />
-                <h2 className="text-lg font-black text-[#0F172A]">Centre de Notifications</h2>
+                <h2 className="text-lg font-black text-[#0F172A]">Notifications Client</h2>
               </div>
               <button
                 onClick={() => setNotifications(prev => prev.map(n => ({ ...n, unread: false })))}
@@ -1230,13 +1521,58 @@ export default function ClientHomePage({
           </div>
         )}
 
-        {/* ------------------ TAB 8: AVIS LAISSÉS ------------------ */}
+        {/* ------------------ TAB 8: AVIS & NOTES ------------------ */}
         {activeTab === 'reviews' && (
-          <div className="space-y-4">
+          <div className="space-y-6">
             <div className="flex items-center gap-2 border-b border-slate-200 pb-3">
               <Star className="w-5 h-5 text-amber-500 fill-amber-500" />
               <h2 className="text-lg font-black text-[#0F172A]">Mes Avis & Évaluations Laissés</h2>
             </div>
+
+            {/* Formulaire de publication d'avis */}
+            <form onSubmit={handleSubmitReview} className="p-5 bg-white rounded-3xl border border-slate-200 space-y-3 shadow-xs">
+              <h3 className="font-black text-sm text-[#0F172A]">Donner une note et publier un avis</h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="text-[10px] font-bold uppercase text-slate-400">Produit, Service ou Boutique concerné</label>
+                  <input
+                    type="text"
+                    value={newReviewItem}
+                    onChange={(e) => setNewReviewItem(e.target.value)}
+                    placeholder="Ex: Poivre Blanc Penja / Dépannage Solaire"
+                    className="w-full px-3 py-2 bg-slate-50 border rounded-xl text-xs font-bold"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="text-[10px] font-bold uppercase text-slate-400">Note (sur 5 étoiles)</label>
+                  <select
+                    value={newReviewRating}
+                    onChange={(e) => setNewReviewRating(Number(e.target.value))}
+                    className="w-full px-3 py-2 bg-slate-50 border rounded-xl text-xs font-bold"
+                  >
+                    <option value={5}>⭐⭐⭐⭐⭐ (5/5) Excellent</option>
+                    <option value={4}>⭐⭐⭐⭐ (4/5) Très Bon</option>
+                    <option value={3}>⭐⭐⭐ (3/5) Moyen</option>
+                    <option value={2}>⭐⭐ (2/5) Passable</option>
+                    <option value={1}>⭐ (1/5) Insatisfaisant</option>
+                  </select>
+                </div>
+              </div>
+              <div>
+                <label className="text-[10px] font-bold uppercase text-slate-400">Votre commentaire détaillé</label>
+                <textarea
+                  value={newReviewComment}
+                  onChange={(e) => setNewReviewComment(e.target.value)}
+                  placeholder="Partagez votre expérience sur la qualité du produit et la ponctualité de livraison..."
+                  className="w-full px-3 py-2 bg-slate-50 border rounded-xl text-xs font-bold h-20"
+                  required
+                />
+              </div>
+              <button type="submit" className="px-5 py-2 bg-[#16A34A] text-white font-bold text-xs rounded-xl cursor-pointer">
+                Publier mon Avis
+              </button>
+            </form>
 
             <div className="space-y-3">
               {clientReviews.map((rev) => (
@@ -1259,35 +1595,143 @@ export default function ClientHomePage({
           </div>
         )}
 
-        {/* ------------------ TAB 9: PROFIL ------------------ */}
-        {activeTab === 'profile' && (
+        {/* ------------------ TAB 9: ABONNEMENT VIP ------------------ */}
+        {activeTab === 'subscription' && (
           <div className="space-y-4">
             <div className="flex items-center gap-2 border-b border-slate-200 pb-3">
-              <UserIcon className="w-5 h-5 text-[#16A34A]" />
-              <h2 className="text-lg font-black text-[#0F172A]">Mon Profil Client Certifié</h2>
+              <Crown className="w-5 h-5 text-amber-500" />
+              <h2 className="text-lg font-black text-[#0F172A]">Abonnement Client VIP AfriNova</h2>
             </div>
 
-            <div className="p-6 bg-white rounded-3xl border border-slate-200 space-y-4 max-w-lg mx-auto text-center shadow-xs">
-              <div className="w-20 h-20 rounded-full bg-[#0F172A] text-white flex items-center justify-center font-black text-2xl mx-auto">
-                {currentUser?.name?.[0] || 'C'}
-              </div>
-
-              <div>
-                <h3 className="text-base font-black text-[#0F172A]">{currentUser?.name || 'Paul Kamdem'}</h3>
-                <p className="text-xs text-slate-500 font-mono font-bold">{currentUser?.phone || '+237 677 89 45 12'}</p>
-                <p className="text-xs text-[#16A34A] font-bold mt-1">📍 Bafoussam, Quartier Tamdja</p>
-              </div>
-
-              <div className="pt-2 border-t border-slate-100 flex justify-center gap-2">
-                <span className="px-3 py-1 bg-emerald-50 text-[#16A34A] text-xs font-extrabold rounded-full border border-emerald-200">
-                  Membre Client Actif
+            <div className="p-6 bg-gradient-to-br from-[#0F172A] to-[#1E1B4B] text-white rounded-3xl space-y-4 shadow-md">
+              <div className="flex justify-between items-center">
+                <span className="px-3 py-1 bg-amber-400/20 text-amber-300 font-black text-xs rounded-full border border-amber-400/30 flex items-center gap-1">
+                  <Crown className="w-3.5 h-3.5 text-amber-400" /> Client Privilège Bafoussam
                 </span>
+                <span className="text-xs font-bold text-slate-300">Statut: Actif</span>
+              </div>
+
+              <div className="space-y-2">
+                <h3 className="text-xl font-black font-display">Avantages de votre Pass Client</h3>
+                <ul className="text-xs text-slate-200 space-y-1.5 list-disc list-inside">
+                  <li>Livraison Express 20 min prioritaire à Bafoussam</li>
+                  <li>Accès aux Ventes Flash & Promos réservées</li>
+                  <li>Assistance téléphonique VIP 24h/24</li>
+                  <li>Paiement différé par Mobile Money autorisé</li>
+                </ul>
               </div>
             </div>
           </div>
         )}
 
-        {/* ------------------ TAB 10: PARAMÈTRES ------------------ */}
+        {/* ------------------ TAB 10: PROFIL & ADRESSES ------------------ */}
+        {activeTab === 'profile' && (
+          <div className="space-y-6">
+            <div className="flex items-center gap-2 border-b border-slate-200 pb-3">
+              <UserIcon className="w-5 h-5 text-[#16A34A]" />
+              <h2 className="text-lg font-black text-[#0F172A]">Mon Profil Client & Mes Adresses</h2>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Infos Personnelles */}
+              <div className="p-5 bg-white rounded-3xl border border-slate-200 space-y-3">
+                <h3 className="font-black text-sm text-[#0F172A]">Modifier Informations Personnelles</h3>
+                <div>
+                  <label className="text-[10px] font-bold uppercase text-slate-400">Nom Complet</label>
+                  <input
+                    type="text"
+                    value={profileName}
+                    onChange={(e) => setProfileName(e.target.value)}
+                    className="w-full px-3 py-2 border rounded-xl text-xs font-bold"
+                  />
+                </div>
+                <div>
+                  <label className="text-[10px] font-bold uppercase text-slate-400">Téléphone (Mobile Money)</label>
+                  <input
+                    type="text"
+                    value={profilePhone}
+                    onChange={(e) => setProfilePhone(e.target.value)}
+                    className="w-full px-3 py-2 border rounded-xl text-xs font-bold"
+                  />
+                </div>
+                <button
+                  onClick={() => alert('Profil mis à jour avec succès !')}
+                  className="px-4 py-2 bg-[#16A34A] text-white text-xs font-bold rounded-xl cursor-pointer"
+                >
+                  Enregistrer les modifications
+                </button>
+              </div>
+
+              {/* Adresse de Livraison */}
+              <div className="p-5 bg-white rounded-3xl border border-slate-200 space-y-3">
+                <h3 className="font-black text-sm text-[#0F172A]">Adresse de Livraison Bafoussam</h3>
+                <div>
+                  <label className="text-[10px] font-bold uppercase text-slate-400">Quartier Principal</label>
+                  <input
+                    type="text"
+                    value={profileQuarter}
+                    onChange={(e) => setProfileQuarter(e.target.value)}
+                    className="w-full px-3 py-2 border rounded-xl text-xs font-bold"
+                  />
+                </div>
+                <div>
+                  <label className="text-[10px] font-bold uppercase text-slate-400">Point de repère pour le coursier</label>
+                  <input
+                    type="text"
+                    value={profileLandmark}
+                    onChange={(e) => setProfileLandmark(e.target.value)}
+                    className="w-full px-3 py-2 border rounded-xl text-xs font-bold"
+                  />
+                </div>
+                <button
+                  onClick={() => alert('Adresse de livraison mise à jour !')}
+                  className="px-4 py-2 bg-[#0F172A] text-white text-xs font-bold rounded-xl cursor-pointer"
+                >
+                  Mettre à jour l'adresse
+                </button>
+              </div>
+            </div>
+
+            {/* Modifier le Mot de passe */}
+            <div className="p-5 bg-white rounded-3xl border border-slate-200 space-y-3 max-w-md">
+              <h3 className="font-black text-sm text-[#0F172A] flex items-center gap-1.5">
+                <Lock className="w-4 h-4 text-slate-500" />
+                <span>Modifier le Mot de Passe</span>
+              </h3>
+              <div>
+                <label className="text-[10px] font-bold uppercase text-slate-400">Ancien Mot de passe</label>
+                <input
+                  type="password"
+                  value={oldPassword}
+                  onChange={(e) => setOldPassword(e.target.value)}
+                  className="w-full px-3 py-2 border rounded-xl text-xs font-bold"
+                />
+              </div>
+              <div>
+                <label className="text-[10px] font-bold uppercase text-slate-400">Nouveau Mot de passe</label>
+                <input
+                  type="password"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  className="w-full px-3 py-2 border rounded-xl text-xs font-bold"
+                />
+              </div>
+              <button
+                onClick={() => {
+                  if (!oldPassword || !newPassword) return alert('Veuillez remplir tous les champs.');
+                  alert('Mot de passe modifié avec succès !');
+                  setOldPassword('');
+                  setNewPassword('');
+                }}
+                className="px-4 py-2 bg-indigo-600 text-white text-xs font-bold rounded-xl cursor-pointer"
+              >
+                Changer le mot de passe
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* ------------------ TAB 11: PARAMÈTRES ------------------ */}
         {activeTab === 'settings' && (
           <div className="space-y-4">
             <div className="flex items-center gap-2 border-b border-slate-200 pb-3">
@@ -1315,7 +1759,7 @@ export default function ClientHomePage({
           </div>
         )}
 
-        {/* ------------------ TAB 11: SUPPORT ------------------ */}
+        {/* ------------------ TAB 12: SUPPORT ------------------ */}
         {activeTab === 'support' && (
           <div className="space-y-4">
             <div className="flex items-center gap-2 border-b border-slate-200 pb-3">
@@ -1331,7 +1775,7 @@ export default function ClientHomePage({
               </p>
               <a
                 href="tel:+237677894512"
-                className="inline-block px-6 py-3 bg-[#16A34A] text-white font-mono font-black text-sm rounded-2xl shadow-lg"
+                className="inline-block px-6 py-3 bg-[#16A34A] text-white font-mono font-black text-sm rounded-2xl shadow-lg cursor-pointer"
               >
                 📞 Appeler le +237 677 89 45 12
               </a>
@@ -1340,6 +1784,224 @@ export default function ClientHomePage({
         )}
 
       </main>
+
+      {/* ==================== MODALS ==================== */}
+
+      {/* MODAL DETAILS ET RESERVATION SERVICE */}
+      {selectedService && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+          <div className="bg-white p-6 rounded-3xl max-w-md w-full space-y-4 shadow-xl">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <h3 className="font-black text-sm text-[#0F172A]">Détails du Service</h3>
+              <button onClick={() => setSelectedService(null)} className="p-1 text-slate-400 hover:text-slate-600 cursor-pointer">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="space-y-2">
+              <span className="text-[10px] font-black text-[#2563EB] bg-blue-50 px-2 py-0.5 rounded-full">
+                {selectedService.category}
+              </span>
+              <h4 className="font-bold text-base text-[#0F172A]">{selectedService.title}</h4>
+              <p className="text-xs text-slate-600">{selectedService.description}</p>
+              <div className="p-3 bg-slate-50 rounded-2xl space-y-1 text-xs">
+                <p><strong>Prestataire:</strong> {selectedService.providerName}</p>
+                <p><strong>Zone:</strong> {selectedService.location}</p>
+                <p><strong>Contact:</strong> {selectedService.phone}</p>
+                <p className="text-[#16A34A] font-black text-sm pt-1">Tarif: {selectedService.price.toLocaleString()} FCFA</p>
+              </div>
+            </div>
+
+            <div className="flex gap-2 pt-2">
+              <button onClick={() => setSelectedService(null)} className="flex-1 py-2 text-xs font-bold text-slate-500 bg-slate-100 rounded-xl">Fermer</button>
+              <button
+                onClick={() => {
+                  alert(`Demande de réservation envoyée à ${selectedService.providerName} !`);
+                  setSelectedService(null);
+                  setActiveTab('messages');
+                }}
+                className="flex-1 py-2 text-xs font-bold text-white bg-[#16A34A] rounded-xl"
+              >
+                Réserver Maintenant
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL ACHETER IMMÉDIATEMENT */}
+      {instantBuyProduct && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+          <div className="bg-white p-6 rounded-3xl max-w-md w-full space-y-4 shadow-xl">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <h3 className="font-black text-sm text-[#0F172A] flex items-center gap-1.5">
+                <Zap className="w-4 h-4 text-amber-500" />
+                <span>Acheter Immédiatement</span>
+              </h3>
+              <button onClick={() => setInstantBuyProduct(null)} className="p-1 text-slate-400 hover:text-slate-600 cursor-pointer">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-2xl">
+              <img src={instantBuyProduct.images?.[0]} alt="" className="w-12 h-12 rounded-xl object-cover" />
+              <div>
+                <h4 className="font-bold text-xs text-[#0F172A]">{instantBuyProduct.name}</h4>
+                <p className="font-black text-xs text-[#16A34A]">{instantBuyProduct.price?.toLocaleString()} FCFA</p>
+              </div>
+            </div>
+
+            {/* Delivery mode */}
+            <div>
+              <label className="text-[10px] font-bold uppercase text-slate-400">Mode de livraison</label>
+              <div className="grid grid-cols-3 gap-1.5 mt-1">
+                {[
+                  { id: 'express', label: '🛵 Express 20m (+1000 FCFA)' },
+                  { id: 'relais', label: '📦 Point Relais' },
+                  { id: 'magasin', label: '🏪 Retrait Magasin' }
+                ].map(m => (
+                  <button
+                    key={m.id}
+                    onClick={() => setInstantBuyDeliveryMode(m.id as any)}
+                    className={`p-2 rounded-xl text-[10px] font-bold border transition text-center cursor-pointer ${
+                      instantBuyDeliveryMode === m.id ? 'bg-[#16A34A] text-white border-[#16A34A]' : 'bg-slate-50 text-slate-700'
+                    }`}
+                  >
+                    {m.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Payment mode */}
+            <div>
+              <label className="text-[10px] font-bold uppercase text-slate-400">Mode de paiement</label>
+              <div className="grid grid-cols-2 gap-1.5 mt-1">
+                {[
+                  { id: 'momo', label: '💛 MTN Mobile Money' },
+                  { id: 'orange', label: '🧡 Orange Money' },
+                  { id: 'card', label: '💳 Carte Bancaire' },
+                  { id: 'cash', label: '💵 Espèces à la livraison' }
+                ].map(p => (
+                  <button
+                    key={p.id}
+                    onClick={() => setInstantBuyPaymentMode(p.id as any)}
+                    className={`p-2 rounded-xl text-[10px] font-bold border transition text-left cursor-pointer ${
+                      instantBuyPaymentMode === p.id ? 'bg-[#0F172A] text-white border-[#0F172A]' : 'bg-slate-50 text-slate-700'
+                    }`}
+                  >
+                    {p.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="pt-2 border-t flex items-center justify-between">
+              <div>
+                <span className="text-[10px] text-slate-400">Total à payer:</span>
+                <p className="font-black text-sm text-[#16A34A]">
+                  {((instantBuyProduct.price || 0) + (instantBuyDeliveryMode === 'express' ? 1000 : 0)).toLocaleString()} FCFA
+                </p>
+              </div>
+
+              <button
+                onClick={handleInstantBuyConfirm}
+                className="px-5 py-2.5 bg-[#16A34A] text-white font-black text-xs rounded-xl shadow-md cursor-pointer"
+              >
+                Valider ma Commande
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL SIGNALEMENT */}
+      {reportingTarget && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+          <form onSubmit={handleSubmitReport} className="bg-white p-6 rounded-3xl max-w-sm w-full space-y-4 shadow-xl">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <h3 className="font-black text-sm text-[#0F172A] flex items-center gap-1 text-rose-600">
+                <Flag className="w-4 h-4" />
+                <span>Signaler {reportingTarget.type}</span>
+              </h3>
+              <button type="button" onClick={() => setReportingTarget(null)} className="p-1 text-slate-400 hover:text-slate-600">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <p className="text-xs text-slate-600">
+              Signaler <strong>{reportingTarget.name}</strong> pour non-conformité, fausse information ou comportement suspect.
+            </p>
+
+            <div>
+              <label className="text-[10px] font-bold uppercase text-slate-400">Motif du signalement</label>
+              <textarea
+                value={reportReason}
+                onChange={(e) => setReportReason(e.target.value)}
+                placeholder="Précisez la raison de votre signalement..."
+                className="w-full px-3 py-2 bg-slate-50 border rounded-xl text-xs font-bold h-20"
+                required
+              />
+            </div>
+
+            <div className="flex gap-2 pt-2">
+              <button type="button" onClick={() => setReportingTarget(null)} className="flex-1 py-2 text-xs font-bold text-slate-500 bg-slate-100 rounded-xl">Annuler</button>
+              <button type="submit" className="flex-1 py-2 text-xs font-bold text-white bg-rose-600 rounded-xl">Transmettre</button>
+            </div>
+          </form>
+        </div>
+      )}
+
+      {/* MODAL FACTURE PDF / REÇU */}
+      {selectedInvoiceOrder && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+          <div className="bg-white p-6 rounded-3xl max-w-md w-full space-y-4 shadow-xl">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <h3 className="font-black text-sm text-[#0F172A] flex items-center gap-1.5">
+                <FileText className="w-4 h-4 text-[#16A34A]" />
+                <span>Facture Officielle #{selectedInvoiceOrder.id}</span>
+              </h3>
+              <button onClick={() => setSelectedInvoiceOrder(null)} className="p-1 text-slate-400 hover:text-slate-600">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="p-4 bg-slate-50 rounded-2xl space-y-2 text-xs">
+              <p><strong>Plateforme:</strong> AfriNova Global Tech - Bafoussam</p>
+              <p><strong>Client:</strong> {currentUser?.name || 'Paul Kamdem'}</p>
+              <p><strong>Date:</strong> {new Date(selectedInvoiceOrder.createdAt).toLocaleDateString()}</p>
+              <p><strong>Mode de paiement:</strong> {selectedInvoiceOrder.paymentMethod || 'MTN Mobile Money'}</p>
+              <div className="border-t pt-2 space-y-1">
+                {selectedInvoiceOrder.items?.map((item, i) => {
+                  const itemName = item.product?.name || (item as any).name || 'Article';
+                  const itemPrice = item.product?.price || (item as any).price || 0;
+                  return (
+                    <div key={i} className="flex justify-between">
+                      <span>{item.quantity}x {itemName}</span>
+                      <span className="font-bold">{itemPrice.toLocaleString()} FCFA</span>
+                    </div>
+                  );
+                })}
+              </div>
+              <div className="border-t pt-2 flex justify-between font-black text-sm text-[#16A34A]">
+                <span>Total TTC:</span>
+                <span>{selectedInvoiceOrder.total?.toLocaleString()} FCFA</span>
+              </div>
+            </div>
+
+            <button
+              onClick={() => {
+                alert(`Téléchargement de la facture PDF #${selectedInvoiceOrder.id} en cours...`);
+                setSelectedInvoiceOrder(null);
+              }}
+              className="w-full py-2.5 bg-[#16A34A] text-white font-bold text-xs rounded-xl flex items-center justify-center gap-2 cursor-pointer"
+            >
+              <Download className="w-4 h-4" />
+              <span>Télécharger le Fichier PDF</span>
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* ==================== FOOTER ==================== */}
       <footer className="mt-12 pt-6 pb-4 border-t border-slate-200 text-center text-xs text-slate-400">
