@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ShieldCheck, Lock, CheckCircle2, Phone, CreditCard, Wallet, Smartphone, ArrowRight, Check, Sparkles } from 'lucide-react';
+import { ShieldCheck, Lock, CheckCircle2, Phone, CreditCard, Wallet, Smartphone, ArrowRight, Check, Sparkles, Loader2 } from 'lucide-react';
 import PhoneCountryInput from '../PhoneCountryInput';
 
 interface Screen10PaiementProps {
@@ -178,14 +178,17 @@ export default function Screen10Paiement({ onPaymentSuccess }: Screen10PaiementP
       </div>
 
       {/* Pay Now Button */}
-      <div className="bg-white border-t border-slate-200 p-3 z-10">
+      <div className="bg-white border-t border-slate-200 p-3 z-10 space-y-1">
         <button
           onClick={handlePay}
-          disabled={isProcessing}
-          className="w-full py-3.5 px-6 bg-[#16A34A] hover:bg-emerald-700 text-white font-black text-sm rounded-xl shadow-lg shadow-emerald-600/25 flex items-center justify-center gap-2 cursor-pointer transition active:scale-98"
+          disabled={isProcessing || ((selectedMethod === 'momo' || selectedMethod === 'orange') && !phone.trim())}
+          className="w-full py-3.5 px-6 bg-[#16A34A] hover:bg-emerald-700 text-white font-black text-sm rounded-xl shadow-lg shadow-emerald-600/25 flex items-center justify-center gap-2 cursor-pointer transition-all duration-200 active:scale-[0.97] disabled:opacity-50 disabled:cursor-not-allowed disabled:pointer-events-none disabled:shadow-none"
         >
           {isProcessing ? (
-            <span className="inline-block w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+            <>
+              <Loader2 className="w-4 h-4 animate-spin" />
+              <span>Traitement du paiement...</span>
+            </>
           ) : (
             <>
               <span>Payer maintenant ({total.toLocaleString('fr-FR')} FCFA)</span>
@@ -193,6 +196,11 @@ export default function Screen10Paiement({ onPaymentSuccess }: Screen10PaiementP
             </>
           )}
         </button>
+        {(selectedMethod === 'momo' || selectedMethod === 'orange') && !phone.trim() && (
+          <p className="text-[11px] font-semibold text-slate-400 text-center">
+            Saisissez votre numéro de téléphone pour payer
+          </p>
+        )}
       </div>
 
     </div>

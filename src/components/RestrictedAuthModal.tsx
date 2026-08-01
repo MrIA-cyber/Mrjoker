@@ -179,16 +179,16 @@ export default function RestrictedAuthModal({
               <button
                 type="button"
                 onClick={onClose}
-                className="flex-1 py-2.5 px-4 rounded-xl text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition cursor-pointer"
+                className="flex-1 py-2.5 px-4 rounded-xl text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition cursor-pointer active:scale-95"
               >
                 {lang === 'fr' ? 'Annuler' : 'Cancel'}
               </button>
               <button
                 type="submit"
                 disabled={isLocked || !password.trim()}
-                className="flex-1 py-2.5 px-4 rounded-xl text-xs font-bold bg-indigo-600 text-white hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition shadow-md shadow-indigo-600/20 cursor-pointer"
+                className="flex-1 py-2.5 px-4 rounded-xl text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white disabled:opacity-50 disabled:cursor-not-allowed disabled:pointer-events-none disabled:shadow-none transition-all duration-200 shadow-md shadow-indigo-600/20 cursor-pointer active:scale-95 flex items-center justify-center gap-2"
               >
-                {lang === 'fr' ? 'Valider' : 'Submit'}
+                <span>{lang === 'fr' ? 'Valider' : 'Submit'}</span>
               </button>
             </div>
           </form>

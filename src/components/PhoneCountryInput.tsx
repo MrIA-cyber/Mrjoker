@@ -6,7 +6,6 @@ import {
   X, 
   CheckCircle2, 
   AlertCircle, 
-  Phone,
   Globe,
   Sparkles
 } from 'lucide-react';
@@ -14,7 +13,8 @@ import {
   Country, 
   COUNTRIES, 
   DEFAULT_COUNTRY, 
-  detectUserCountry, 
+  detectUserCountryAsync,
+  saveUserSelectedCountry,
   validatePhoneDigits 
 } from '../data/countries';
 
@@ -52,35 +52,43 @@ export const PhoneCountryInput: React.FC<PhoneCountryInputProps> = ({
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [isTouched, setIsTouched] = useState(false);
-  const [wasAutoDetected, setWasAutoDetected] = useState(false);
+  const [isDetectedSuccess, setIsDetectedSuccess] = useState(false);
+  const [detectionSource, setDetectionSource] = useState<string>('');
 
   const searchInputRef = useRef<HTMLInputElement>(null);
 
-  // 1. Initial country auto-detection & value parsing
+  // 1. Asynchronous Country Auto-Detection (SIM -> Geolocation -> IP -> Default)
   useEffect(() => {
-    let initialCountry = DEFAULT_COUNTRY;
-    let initialDigits = '';
+    let isMounted = true;
 
     if (value) {
       // Check if value starts with any known dial code
       const foundByDial = COUNTRIES.find(c => value.startsWith(c.dialCode));
       if (foundByDial) {
-        initialCountry = foundByDial;
-        initialDigits = value.replace(foundByDial.dialCode, '').replace(/\D/g, '');
-      } else {
-        initialDigits = value.replace(/\D/g, '');
-        if (autoDetect) {
-          initialCountry = detectUserCountry();
-          setWasAutoDetected(true);
-        }
+        setSelectedCountry(foundByDial);
+        setNationalDigits(value.replace(foundByDial.dialCode, '').replace(/\D/g, ''));
+        setIsDetectedSuccess(false);
+        return;
       }
-    } else if (autoDetect) {
-      initialCountry = detectUserCountry();
-      setWasAutoDetected(true);
     }
 
-    setSelectedCountry(initialCountry);
-    setNationalDigits(initialDigits);
+    if (autoDetect) {
+      detectUserCountryAsync().then((res) => {
+        if (!isMounted) return;
+        setSelectedCountry(res.country);
+        setIsDetectedSuccess(res.detected); // true ONLY if SIM/Geo/IP was successful
+        if (res.details) setDetectionSource(res.details);
+
+        // Propagate changes if national digits already exist
+        if (nationalDigits) {
+          const valid = validatePhoneDigits(nationalDigits, res.country);
+          const fullNumber = `${res.country.dialCode}${nationalDigits}`;
+          onChange(fullNumber, valid, res.country, nationalDigits);
+        }
+      });
+    }
+
+    return () => { isMounted = false; };
   }, []);
 
   // Sync state if external value changes drastically
@@ -98,6 +106,7 @@ export const PhoneCountryInput: React.FC<PhoneCountryInputProps> = ({
       if (found) {
         setSelectedCountry(found);
         setNationalDigits(value.replace(found.dialCode, '').replace(/\D/g, ''));
+        setIsDetectedSuccess(false);
       }
     }
   }, [value]);
@@ -119,7 +128,6 @@ export const PhoneCountryInput: React.FC<PhoneCountryInputProps> = ({
   // Handle national digit changes
   const handleDigitChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const rawValue = e.target.value;
-    // Extract numbers only
     const cleanDigits = rawValue.replace(/\D/g, '');
     setNationalDigits(cleanDigits);
     setIsTouched(true);
@@ -130,11 +138,12 @@ export const PhoneCountryInput: React.FC<PhoneCountryInputProps> = ({
     onChange(fullNumber, valid, selectedCountry, cleanDigits);
   };
 
-  // Handle country selection
+  // Handle manual country selection
   const handleSelectCountry = (country: Country) => {
     setSelectedCountry(country);
+    saveUserSelectedCountry(country.code); // Persist user's manual selection for next time
+    setIsDetectedSuccess(false); // User selected manually, so "Pays détecté" is hidden
     setIsModalOpen(false);
-    setWasAutoDetected(false);
 
     const valid = validatePhoneDigits(nationalDigits, country);
     const fullNumber = nationalDigits ? `${country.dialCode}${nationalDigits}` : '';
@@ -163,29 +172,40 @@ export const PhoneCountryInput: React.FC<PhoneCountryInputProps> = ({
 
   return (
     <div className={`space-y-1.5 ${className}`}>
-      {/* Optional Label */}
-      {label && (
-        <div className="flex items-center justify-between">
+      {/* Label and Country Indicators */}
+      <div className="flex items-center justify-between">
+        {label ? (
           <label htmlFor={id} className="block text-xs font-extrabold text-slate-700 uppercase tracking-wide">
             {label} {required && <span className="text-red-500">*</span>}
           </label>
+        ) : (
+          <span />
+        )}
 
-          {/* Validation badge */}
+        {/* Validation or Country Badge */}
+        <div className="flex items-center gap-2">
+          {/* Rule 8: Show "Pays détecté" ONLY if detection was genuinely successful */}
+          {isDetectedSuccess ? (
+            <span className="text-[10px] font-extrabold text-emerald-800 flex items-center gap-1 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200 shadow-2xs">
+              <Sparkles className="w-3 h-3 text-[#16A34A]" />
+              <span>{lang === 'fr' ? `Pays détecté (${detectionSource || 'SIM/Geo/IP'})` : 'Country detected'}</span>
+            </span>
+          ) : (
+            /* Rule 9: If default or user chosen, display simply country name without "Pays détecté" */
+            <span className="text-[10px] font-extrabold text-slate-500 flex items-center gap-1 bg-slate-100 px-2 py-0.5 rounded-md">
+              <span>{selectedCountry.flag}</span>
+              <span>{lang === 'fr' ? selectedCountry.nameFr : selectedCountry.nameEn}</span>
+            </span>
+          )}
+
           {isValid && (
             <span className="text-[10px] font-extrabold text-[#16A34A] flex items-center gap-1 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">
               <CheckCircle2 className="w-3.5 h-3.5 text-[#16A34A]" />
-              <span>{lang === 'fr' ? 'Numéro valide' : 'Valid number'}</span>
-            </span>
-          )}
-
-          {wasAutoDetected && !nationalDigits && (
-            <span className="text-[10px] font-bold text-slate-500 flex items-center gap-1">
-              <Sparkles className="w-3 h-3 text-[#16A34A]" />
-              <span>{lang === 'fr' ? 'Pays détecté' : 'Detected country'}</span>
+              <span>{lang === 'fr' ? 'Valide' : 'Valid'}</span>
             </span>
           )}
         </div>
-      )}
+      </div>
 
       {/* Input Group Container */}
       <div 
@@ -378,7 +398,7 @@ export const PhoneCountryInput: React.FC<PhoneCountryInputProps> = ({
 
               {/* Modal Footer */}
               <div className="p-3 border-t border-slate-100 bg-slate-50 text-center text-[10px] font-bold text-slate-400">
-                {lang === 'fr' ? '🇨🇲 Cameroun (+237) sélectionné par défaut' : '🇨🇲 Cameroon (+237) default fallback'}
+                {lang === 'fr' ? '🇨🇲 Cameroun (+237) par défaut' : '🇨🇲 Cameroon (+237) default fallback'}
               </div>
             </motion.div>
           </div>
@@ -389,3 +409,4 @@ export const PhoneCountryInput: React.FC<PhoneCountryInputProps> = ({
 };
 
 export default PhoneCountryInput;
+

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'motion/react';
-import { Mail, Lock, Eye, EyeOff, ArrowRight, ShieldCheck, Sparkles } from 'lucide-react';
+import { Mail, Lock, Eye, EyeOff, ArrowRight, ShieldCheck, Sparkles, Loader2 } from 'lucide-react';
 
 interface Screen3ConnexionProps {
   onLoginSuccess?: () => void;
@@ -105,20 +105,30 @@ export default function Screen3Connexion({ onLoginSuccess, onGoToSignup }: Scree
           </div>
 
           {/* Green Submit Button */}
-          <button
-            type="submit"
-            disabled={isLoading}
-            className="w-full py-3.5 px-6 bg-[#16A34A] hover:bg-emerald-700 text-white font-black text-sm rounded-xl shadow-lg shadow-emerald-600/25 flex items-center justify-center gap-2 cursor-pointer transition active:scale-98"
-          >
-            {isLoading ? (
-              <span className="inline-block w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-            ) : (
-              <>
-                <span>Se connecter</span>
-                <ArrowRight className="w-4 h-4" />
-              </>
+          <div className="space-y-1">
+            <button
+              type="submit"
+              disabled={isLoading || (!email.trim() || !password.trim())}
+              className="w-full py-3.5 px-6 bg-[#16A34A] hover:bg-emerald-700 text-white font-black text-sm rounded-xl shadow-lg shadow-emerald-600/25 flex items-center justify-center gap-2 cursor-pointer transition-all duration-200 active:scale-[0.97] disabled:opacity-50 disabled:cursor-not-allowed disabled:pointer-events-none disabled:shadow-none"
+            >
+              {isLoading ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <span>Connexion en cours...</span>
+                </>
+              ) : (
+                <>
+                  <span>Se connecter</span>
+                  <ArrowRight className="w-4 h-4" />
+                </>
+              )}
+            </button>
+            {(!email.trim() || !password.trim()) && (
+              <p className="text-[11px] font-semibold text-slate-400 text-center">
+                Saisissez votre e-mail/téléphone et mot de passe pour continuer
+              </p>
             )}
-          </button>
+          </div>
         </form>
 
         {/* Divider */}

@@ -6,6 +6,7 @@ import {
 import { motion, AnimatePresence } from 'motion/react';
 import { AfriNovaLogo } from '../AfriNovaLogo';
 import PhoneCountryInput from '../PhoneCountryInput';
+import { Country } from '../../data/countries';
 
 interface Screen4InscriptionProps {
   onSignupSuccess?: (data?: any) => void;
@@ -34,13 +35,13 @@ export const PROFILE_OPTIONS: ProfileOption[] = [
     title: 'Client',
     emoji: '👤',
     icon: UserIcon,
-    description: "J'achète des produits et profite des services locaux à Bafoussam.",
+    description: "J'achète des produits et bénéficie des meilleurs services disponibles dans mon pays grâce à AfriNova.",
     trialDays: 5,
     formattedTrial: "5 jours d'essai gratuit",
     badge: 'Particulier',
     benefits: [
       "5 jours d'essai gratuit offert",
-      'Accès complet au marché local',
+      'Accès complet au marché national & régional',
       'Paiement & livraison sécurisés'
     ]
   },
@@ -121,6 +122,7 @@ export default function Screen4Inscription({ onSignupSuccess, onGoToLogin, lang 
   // Profile selection state (default 'client')
   const [selectedProfile, setSelectedProfile] = useState<ProfileType>('client');
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
+  const [selectedCountry, setSelectedCountry] = useState<Country | null>(null);
 
   // OTP Simulation state
   const [simulatedOtp, setSimulatedOtp] = useState('123456');
@@ -139,6 +141,10 @@ export default function Screen4Inscription({ onSignupSuccess, onGoToLogin, lang 
   const isOtpValid = formData.otpCode.trim().length >= 4;
   const isPasswordValid = formData.password.length >= 8;
   const isConfirmPasswordValid = formData.confirmPassword.length >= 8 && formData.confirmPassword === formData.password;
+
+  // Step 1 and Step 2 Overall Form Validity
+  const isStep1FormValid = isFullNameValid && isPhoneValid;
+  const isStep2FormValid = isOtpValid && isPasswordValid && isConfirmPasswordValid && isEmailValid;
 
   // Password strength calculation
   const passwordStrength = useMemo(() => {
@@ -398,7 +404,10 @@ export default function Screen4Inscription({ onSignupSuccess, onGoToLogin, lang 
                     value={formData.phone}
                     lang={currentLang}
                     onBlur={() => markFieldTouched('phone')}
-                    onChange={(fullNumber) => setFormData({ ...formData, phone: fullNumber })}
+                    onChange={(fullNumber, isValid, country) => {
+                      setFormData({ ...formData, phone: fullNumber });
+                      if (country) setSelectedCountry(country);
+                    }}
                   />
                 </div>
 
@@ -425,7 +434,13 @@ export default function Screen4Inscription({ onSignupSuccess, onGoToLogin, lang 
                             </span>
                           </div>
                           <p className="text-xs text-slate-600 font-medium">
-                            {selectedProfileObj.description}
+                            {selectedProfileObj.id === 'client'
+                              ? (currentLang === 'fr' 
+                                  ? `J'achète des produits et bénéficie des meilleurs services disponibles dans mon pays${selectedCountry ? ` (${selectedCountry.flag} ${selectedCountry.nameFr})` : ''} grâce à AfriNova.`
+                                  : `I buy products and enjoy the best services available in my country${selectedCountry ? ` (${selectedCountry.flag} ${selectedCountry.nameEn})` : ''} thanks to AfriNova.`
+                                )
+                              : selectedProfileObj.description
+                            }
                           </p>
                         </div>
                       </div>
@@ -452,23 +467,30 @@ export default function Screen4Inscription({ onSignupSuccess, onGoToLogin, lang 
                 </div>
 
                 {/* Bouton Principal Step 1: "Continuer" */}
-                <button
-                  type="submit"
-                  disabled={isSubmitting}
-                  className="w-full h-[52px] rounded-2xl text-base font-black bg-gradient-to-r from-[#16A34A] via-[#15803D] to-[#7C3AED] hover:brightness-105 active:scale-[0.98] text-white shadow-[0_8px_24px_rgba(22,163,74,0.25)] flex items-center justify-center gap-2 transition-all cursor-pointer mt-2"
-                >
-                  {isSubmitting ? (
-                    <>
-                      <Loader2 className="w-5 h-5 animate-spin" />
-                      <span>{currentLang === 'fr' ? 'Vérification...' : 'Checking...'}</span>
-                    </>
-                  ) : (
-                    <>
-                      <span>{currentLang === 'fr' ? 'Continuer' : 'Continue'}</span>
-                      <ArrowRight className="w-5 h-5" />
-                    </>
+                <div className="space-y-1.5 mt-2">
+                  <button
+                    type="submit"
+                    disabled={isSubmitting || !isStep1FormValid}
+                    className="w-full h-[52px] rounded-2xl text-base font-black bg-gradient-to-r from-[#16A34A] via-[#15803D] to-[#7C3AED] hover:brightness-105 active:scale-[0.97] text-white shadow-[0_8px_24px_rgba(22,163,74,0.25)] flex items-center justify-center gap-2 transition-all duration-200 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed disabled:pointer-events-none disabled:shadow-none"
+                  >
+                    {isSubmitting ? (
+                      <>
+                        <Loader2 className="w-5 h-5 animate-spin" />
+                        <span>{currentLang === 'fr' ? 'Vérification...' : 'Checking...'}</span>
+                      </>
+                    ) : (
+                      <>
+                        <span>{currentLang === 'fr' ? 'Continuer' : 'Continue'}</span>
+                        <ArrowRight className="w-5 h-5" />
+                      </>
+                    )}
+                  </button>
+                  {!isStep1FormValid && (
+                    <p className="text-[11px] font-semibold text-slate-400 text-center">
+                      {currentLang === 'fr' ? 'Veuillez remplir votre nom et numéro de téléphone pour continuer' : 'Please fill in your name and phone number to continue'}
+                    </p>
                   )}
-                </button>
+                </div>
 
                 {/* 8. BADGES DE CONFIANCE */}
                 <div className="pt-3 border-t border-slate-100 grid grid-cols-2 sm:grid-cols-4 gap-2 text-[10px] font-bold text-slate-600 text-center">
@@ -684,23 +706,30 @@ export default function Screen4Inscription({ onSignupSuccess, onGoToLogin, lang 
                 </div>
 
                 {/* Bouton Principal Step 2: "Créer mon compte" */}
-                <button
-                  type="submit"
-                  disabled={isSubmitting}
-                  className="w-full h-[52px] rounded-2xl text-base font-black bg-gradient-to-r from-[#16A34A] via-[#15803D] to-[#7C3AED] hover:brightness-105 active:scale-[0.98] text-white shadow-[0_8px_24px_rgba(22,163,74,0.25)] flex items-center justify-center gap-2 transition-all cursor-pointer mt-2"
-                >
-                  {isSubmitting ? (
-                    <>
-                      <Loader2 className="w-5 h-5 animate-spin" />
-                      <span>{currentLang === 'fr' ? 'Création de votre compte...' : 'Creating your account...'}</span>
-                    </>
-                  ) : (
-                    <>
-                      <ShieldCheck className="w-5 h-5" />
-                      <span>{currentLang === 'fr' ? 'Créer mon compte' : 'Create my account'}</span>
-                    </>
+                <div className="space-y-1.5 mt-2">
+                  <button
+                    type="submit"
+                    disabled={isSubmitting || !isStep2FormValid}
+                    className="w-full h-[52px] rounded-2xl text-base font-black bg-gradient-to-r from-[#16A34A] via-[#15803D] to-[#7C3AED] hover:brightness-105 active:scale-[0.97] text-white shadow-[0_8px_24px_rgba(22,163,74,0.25)] flex items-center justify-center gap-2 transition-all duration-200 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed disabled:pointer-events-none disabled:shadow-none"
+                  >
+                    {isSubmitting ? (
+                      <>
+                        <Loader2 className="w-5 h-5 animate-spin" />
+                        <span>{currentLang === 'fr' ? 'Création de votre compte...' : 'Creating your account...'}</span>
+                      </>
+                    ) : (
+                      <>
+                        <ShieldCheck className="w-5 h-5" />
+                        <span>{currentLang === 'fr' ? 'Créer mon compte' : 'Create my account'}</span>
+                      </>
+                    )}
+                  </button>
+                  {!isStep2FormValid && (
+                    <p className="text-[11px] font-semibold text-slate-400 text-center">
+                      {currentLang === 'fr' ? 'Veuillez remplir le code SMS et un mot de passe valide (8+ car.)' : 'Please fill the SMS code and a valid password (8+ chars)'}
+                    </p>
                   )}
-                </button>
+                </div>
 
                 {/* 8. BADGES DE CONFIANCE */}
                 <div className="pt-3 border-t border-slate-100 grid grid-cols-2 sm:grid-cols-4 gap-2 text-[10px] font-bold text-slate-600 text-center">
@@ -882,7 +911,13 @@ export default function Screen4Inscription({ onSignupSuccess, onGoToLogin, lang 
                         </div>
 
                         <p className="text-xs text-slate-600 font-medium leading-snug">
-                          {profile.description}
+                          {profile.id === 'client'
+                            ? (currentLang === 'fr' 
+                                ? `J'achète des produits et bénéficie des meilleurs services disponibles dans mon pays${selectedCountry ? ` (${selectedCountry.flag} ${selectedCountry.nameFr})` : ''} grâce à AfriNova.`
+                                : `I buy products and enjoy the best services available in my country${selectedCountry ? ` (${selectedCountry.flag} ${selectedCountry.nameEn})` : ''} thanks to AfriNova.`
+                              )
+                            : profile.description
+                          }
                         </p>
 
                         <div className="pt-1 flex items-center gap-1.5 text-xs text-[#16A34A] font-bold">

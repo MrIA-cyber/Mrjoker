@@ -11,7 +11,7 @@ export const INITIAL_SUBSCRIPTION_PLANS: SubscriptionPlan[] = [
     badge: 'Standard Client',
     color: 'emerald',
     features: [
-      'Acheter des produits locaux à Bafoussam',
+      'Acheter des produits et bénéficier des meilleurs services dans votre pays',
       'Commander des repas en livraison rapide',
       'Réserver un taxi & mototaxi',
       'Réserver un hôtel & hébergement',
@@ -43,7 +43,7 @@ export const INITIAL_SUBSCRIPTION_PLANS: SubscriptionPlan[] = [
       'Statistiques de clics, vues & ventes',
       'Messagerie directe avec vos clients',
       'Mise en avant des produits au sommet',
-      'Insigne Vendeur Vérifié à Bafoussam',
+      'Insigne Vendeur Vérifié sur AfriNova',
     ],
   },
   {

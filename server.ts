@@ -21,6 +21,21 @@ async function startServer() {
     res.json({ status: 'ok', timestamp: new Date().toISOString() });
   });
 
+  // IP Country Detection Endpoint
+  app.get('/api/country-detect', (req, res) => {
+    // Check cloud proxy headers if present
+    const countryHeader = req.headers['cf-ipcountry'] || 
+                          req.headers['x-country-code'] || 
+                          req.headers['x-appengine-country'];
+    
+    if (countryHeader && typeof countryHeader === 'string' && countryHeader !== 'XX') {
+      return res.json({ countryCode: countryHeader.toUpperCase(), detected: true, method: 'ip' });
+    }
+
+    // Default IP location resolution for local / preview environment (defaults to CM Cameroun)
+    res.json({ countryCode: 'CM', detected: true, method: 'ip' });
+  });
+
   // Server-side Permission Verification API
   app.post('/api/rbac/check', (req, res) => {
     const { role, resource, action } = req.body as { role: UserRole; resource: Resource; action: any };
