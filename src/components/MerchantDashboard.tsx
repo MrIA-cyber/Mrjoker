@@ -13,6 +13,7 @@ import {
 import { motion, AnimatePresence } from 'motion/react';
 import VerifiedBadge from './VerifiedBadge';
 import AddProductModal from './AddProductModal';
+import AboutAfriNovaSection from './AboutAfriNovaSection';
 import { Language, translations } from '../translations';
 
 interface MerchantDashboardProps {
@@ -83,8 +84,13 @@ export default function MerchantDashboard({
 }: MerchantDashboardProps) {
   const t = translations[lang];
 
-  // Active Merchant ID State
-  const [activeMerchantId, setActiveMerchantId] = useState<string | null>(null);
+  // Active Merchant ID State (Defaults to first available merchant or m1)
+  const [activeMerchantId, setActiveMerchantId] = useState<string | null>(() => {
+    if (merchants && merchants.length > 0) {
+      return merchants[0].id;
+    }
+    return 'm1';
+  });
 
   // Auto-detect merchant if currentUser owns a store
   useEffect(() => {
@@ -97,7 +103,11 @@ export default function MerchantDashboard({
       );
       if (userMerchant) {
         setActiveMerchantId(userMerchant.id);
+      } else if (merchants && merchants.length > 0) {
+        setActiveMerchantId(merchants[0].id);
       }
+    } else if (!activeMerchantId && merchants && merchants.length > 0) {
+      setActiveMerchantId(merchants[0].id);
     }
   }, [currentUser, merchants]);
 
@@ -251,8 +261,27 @@ export default function MerchantDashboard({
   // Shop Profile Edit State
   const [profileSuccess, setProfileSuccess] = useState(false);
 
-  // Derived Active Merchant
-  const activeMerchant = merchants.find(m => m.id === activeMerchantId);
+  // Derived Active Merchant with Default Fallback
+  const fallbackMerchant: Merchant = {
+    id: 'm1',
+    name: currentUser?.name || 'M. Victor Kengne',
+    shopName: 'Boutique Royale Bafoussam',
+    category: 'Alimentation & Épices Bio',
+    location: 'Marché A, Stand 14, Bafoussam',
+    phone: currentUser?.phone || '+237 677 89 45 12',
+    email: currentUser?.email || 'vendeur.bafoussam@afrinova.cm',
+    rating: 4.9,
+    salesCount: 154,
+    isVerified: true,
+    isPremium: true,
+    createdAt: new Date().toISOString(),
+    logo: 'BR',
+    views: 3840,
+    clicks: 1250,
+    sales: 1450000,
+  };
+
+  const activeMerchant = merchants.find(m => m.id === activeMerchantId) || merchants[0] || fallbackMerchant;
 
   // Merchant Specific Products & Orders
   const merchantProducts = products.filter(p => p.merchantId === activeMerchantId);
@@ -449,124 +478,48 @@ export default function MerchantDashboard({
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 font-sans text-[#0F172A]" id="merchant-portal-container">
       
       {/* ========================================================= */}
-      {/* STATE 1: UNCONNECTED / LOGIN GATEWAY (NO STORE CONNECTED) */}
+      {/* CONNECTED MERCHANT TABLEAU DE BORD PRO                    */}
       {/* ========================================================= */}
-      {!activeMerchantId ? (
-        <div className="space-y-6 max-w-4xl mx-auto">
-          <div className="bg-white/95 backdrop-blur-md text-slate-900 rounded-3xl p-6 sm:p-10 border border-slate-200/90 shadow-xl relative overflow-hidden">
-            <div className="absolute inset-0 bg-gradient-to-br from-emerald-50/60 via-slate-50/50 to-purple-50/40 pointer-events-none"></div>
+      <div className="space-y-6">
 
-            <div className="relative z-10 flex flex-col items-center text-center space-y-6">
-              <span className="bg-emerald-100 text-[#16A34A] border border-emerald-300/80 font-black text-xs uppercase tracking-widest px-4 py-1.5 rounded-full inline-flex items-center gap-2 shadow-2xs">
-                <Store className="w-4 h-4 text-[#16A34A]" /> Espace Vendeur Pro AfriNova
-              </span>
-
-              <div className="space-y-2 max-w-2xl">
-                <h1 className="text-2xl sm:text-4xl font-black tracking-tight text-[#0F172A]">
-                  Connexion au Tableau de Bord Vendeur
-                </h1>
-                <p className="text-slate-600 text-xs sm:text-sm leading-relaxed">
-                  Accédez à la gestion centralisée de votre boutique : commandes en temps réel, stocks, encaissements Mobile Money et statistiques de vente à Bafoussam.
-                </p>
-              </div>
-
-              {/* Action Gateways */}
-              <div className="flex flex-col sm:flex-row items-center justify-center gap-4 w-full pt-2">
-                <button
-                  onClick={() => setShowLoginModal(true)}
-                  className="w-full sm:w-auto bg-gradient-to-r from-[#16A34A] via-[#15803D] to-[#7C3AED] hover:from-[#15803D] hover:to-[#6D28D9] text-white font-black text-xs py-4 px-8 rounded-2xl shadow-[0_4px_20px_rgba(22,163,74,0.35)] transition flex items-center justify-center gap-2.5 cursor-pointer active:scale-98"
-                  id="btn-login-merchant-primary"
-                >
-                  <Store className="w-4 h-4 text-white" />
-                  <span>Accéder à ma boutique</span>
-                </button>
-
-                <button
-                  onClick={() => setShowCreateShopModal(true)}
-                  className="w-full sm:w-auto bg-white hover:bg-emerald-50/80 text-[#16A34A] border border-emerald-300 font-extrabold text-xs py-4 px-8 rounded-2xl shadow-2xs transition flex items-center justify-center gap-2 cursor-pointer active:scale-98"
-                  id="btn-register-merchant-secondary"
-                >
-                  <Plus className="w-4 h-4 stroke-[3]" />
-                  <span>Ouvrir une nouvelle boutique</span>
-                </button>
-              </div>
-
-              {/* Feature Cards Grid */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 w-full pt-6 border-t border-slate-200/80 text-left">
-                <div className="bg-emerald-50/60 p-4 rounded-2xl border border-emerald-200/70 flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-[#16A34A] text-white flex items-center justify-center shrink-0 shadow-xs">
-                    <CreditCard className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <h4 className="font-extrabold text-xs text-[#0F172A]">Encaissement Direct</h4>
-                    <p className="text-[11px] text-slate-600 mt-0.5">MTN MoMo & Orange Money</p>
-                  </div>
-                </div>
-
-                <div className="bg-purple-50/60 p-4 rounded-2xl border border-purple-200/70 flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-[#7C3AED] text-white flex items-center justify-center shrink-0 shadow-xs">
-                    <Truck className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <h4 className="font-extrabold text-xs text-[#0F172A]">Coursiers Express</h4>
-                    <p className="text-[11px] text-slate-600 mt-0.5">Livraison moto à Bafoussam</p>
-                  </div>
-                </div>
-
-                <div className="bg-amber-50/60 p-4 rounded-2xl border border-amber-200/70 flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-amber-500 text-white flex items-center justify-center shrink-0 shadow-xs">
-                    <ShieldCheck className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <h4 className="font-extrabold text-xs text-[#0F172A]">Badge Commerçant</h4>
-                    <p className="text-[11px] text-slate-600 mt-0.5">Commerces certifiés & vérifiés</p>
-                  </div>
-                </div>
-              </div>
-
-            </div>
-          </div>
-        </div>
-      ) : (
-
-        /* ========================================================= */
-        /* STATE 2: CONNECTED MERCHANT TABLEAU DE BORD PRO           */
-        /* ========================================================= */
-        <div className="space-y-6">
-
-          {/* --------------------------------------------------------- */}
-          {/* HEADER: STORE IDENTITY, BADGES, TOP MANAGEMENT ACTIONS    */}
-          {/* --------------------------------------------------------- */}
-          <div className="bg-white/95 backdrop-blur-md text-slate-900 rounded-3xl p-6 sm:p-8 border border-slate-200/90 shadow-md space-y-6 relative overflow-hidden">
-            <div className="absolute top-0 left-0 right-0 h-2 bg-gradient-to-r from-[#16A34A] via-[#15803D] to-[#7C3AED]"></div>
+        {/* --------------------------------------------------------- */}
+        {/* HEADER: STORE IDENTITY, BADGES, TOP MANAGEMENT ACTIONS    */}
+        {/* --------------------------------------------------------- */}
+        <div className="bg-white/95 backdrop-blur-md text-slate-900 rounded-3xl p-6 sm:p-8 border border-slate-200/90 shadow-md space-y-6 relative overflow-hidden">
+          <div className="absolute top-0 left-0 right-0 h-2 bg-gradient-to-r from-[#16A34A] via-[#15803D] to-[#7C3AED]"></div>
+          
+          {/* Top Row: Shop Info & Direct Action Controls */}
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 border-b border-slate-200/80 pb-6">
             
-            {/* Top Row: Shop Info & Direct Action Controls */}
-            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 border-b border-slate-200/80 pb-6">
-              
-              {/* Left: Logo & Store Details */}
-              <div className="flex items-center gap-4">
-                <div className="relative shrink-0">
-                  <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br from-[#16A34A] to-[#7C3AED] text-white rounded-2xl flex items-center justify-center font-black text-2xl sm:text-3xl shadow-md border border-emerald-300/40">
-                    {activeMerchant?.logo}
-                  </div>
-                  {activeMerchant?.shopPhoto && (
-                    <img
-                      src={activeMerchant.shopPhoto}
-                      alt={activeMerchant.shopName}
-                      className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl object-cover absolute inset-0 border-2 border-white shadow-md"
-                    />
-                  )}
-                  <span className={`absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-white ${
-                    shopStatus === 'open' ? 'bg-emerald-500' : shopStatus === 'paused' ? 'bg-amber-500' : 'bg-rose-500'
-                  }`} title={`Statut : ${shopStatus}`} />
+            {/* Left: Logo & Store Details */}
+            <div className="flex items-center gap-4">
+              <div className="relative shrink-0">
+                <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br from-[#16A34A] to-[#7C3AED] text-white rounded-2xl flex items-center justify-center font-black text-2xl sm:text-3xl shadow-md border border-emerald-300/40">
+                  {activeMerchant?.logo || 'MB'}
                 </div>
+                {activeMerchant?.shopPhoto && (
+                  <img
+                    src={activeMerchant.shopPhoto}
+                    alt={activeMerchant.shopName}
+                    className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl object-cover absolute inset-0 border-2 border-white shadow-md"
+                  />
+                )}
+                <span className={`absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-white ${
+                  shopStatus === 'open' ? 'bg-emerald-500' : shopStatus === 'paused' ? 'bg-amber-500' : 'bg-rose-500'
+                }`} title={`Statut : ${shopStatus}`} />
+              </div>
 
-                <div className="space-y-2">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <h1 className="text-xl sm:text-2xl font-black text-[#0F172A] tracking-tight">
-                      {activeMerchant?.shopName}
-                    </h1>
-                    <VerifiedBadge size="sm" />
+              <div className="space-y-2">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="bg-emerald-100 text-[#16A34A] border border-emerald-300 font-extrabold text-[10px] uppercase tracking-wider px-2.5 py-0.5 rounded-full flex items-center gap-1 shadow-3xs">
+                    <Store className="w-3.5 h-3.5 text-[#16A34A]" /> Espace Vendeur Pro
+                  </span>
+                  <h1 className="text-xl sm:text-2xl font-black text-[#0F172A] tracking-tight">
+                    Tableau de bord de la boutique
+                  </h1>
+                  <span className="text-slate-300 font-bold hidden sm:inline">•</span>
+                  <span className="text-sm font-extrabold text-slate-700">{activeMerchant?.shopName || 'Ma Boutique Bafoussam'}</span>
+                  <VerifiedBadge size="sm" />
                     
                     {/* Subscription Tier Badge / Selector */}
                     <button
@@ -2220,7 +2173,6 @@ export default function MerchantDashboard({
           )}
 
         </div>
-      )}
 
       {/* ========================================================= */}
       {/* MODAL 1: CREATION DE BOUTIQUE                              */}
@@ -2801,6 +2753,13 @@ export default function MerchantDashboard({
           </div>
         </div>
       )}
+
+      {/* ========================================================= */}
+      {/* PIED DE PAGE GENERAL - APPARAIT APRES TOUT LE CONTENU     */}
+      {/* ========================================================= */}
+      <div className="pt-10 border-t border-slate-200 mt-12">
+        <AboutAfriNovaSection />
+      </div>
 
     </div>
   );

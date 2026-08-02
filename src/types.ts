@@ -54,14 +54,18 @@ export interface Merchant {
   id: string;
   name: string;
   shopName: string;
+  category?: string;
   location: string; // e.g. "Marché A", "Carrefour Bamiléké", "Marché B", etc.
   phone: string;
   email: string;
   password?: string; // security password to log in and prevent scams
+  rating?: number;
+  salesCount?: number;
   isPremium: boolean; // 100,000 FCFA / year
   premiumStartDate?: string;
   premiumExpiryDate?: string;
   isVerified?: boolean; // verified status badge
+  createdAt?: string;
   logo: string;
   views: number;
   clicks: number;

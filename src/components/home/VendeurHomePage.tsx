@@ -362,8 +362,9 @@ export default function VendeurHomePage({
               </span>
             </div>
 
-            <h1 className="text-xl sm:text-2xl font-black font-display tracking-tight text-white">
-              {shopName}
+            <h1 className="text-xl sm:text-2xl font-black font-display tracking-tight text-white flex items-center gap-2 flex-wrap">
+              <span>Tableau de bord de la boutique</span>
+              <span className="text-xs font-semibold text-emerald-200">({shopName})</span>
             </h1>
             <p className="text-xs text-slate-200 font-medium max-w-xl">
               Gestionnaire officiel de vente en ligne : Produits, Photos, Vidéos, Stocks, Commandes, Retraits Mobile Money & Messagerie.
