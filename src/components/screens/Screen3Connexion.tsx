@@ -23,7 +23,7 @@ export default function Screen3Connexion({ onLoginSuccess, onGoToSignup }: Scree
   };
 
   return (
-    <div className="w-full max-w-md mx-auto bg-white text-slate-900 rounded-3xl overflow-hidden shadow-2xl border border-slate-100 p-6 flex flex-col justify-between min-h-[580px] relative">
+    <div className="w-full max-w-xl mx-auto bg-white text-slate-900 rounded-3xl overflow-hidden shadow-2xl border border-slate-100 p-6 sm:p-8 flex flex-col justify-between min-h-[580px] relative">
       
       {/* Top Bar Header */}
       <div className="flex items-center justify-between pb-2 border-b border-slate-100">

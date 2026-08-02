@@ -68,23 +68,23 @@ export default function Screen10Paiement({ onPaymentSuccess }: Screen10PaiementP
   ];
 
   return (
-    <div className="w-full max-w-md mx-auto bg-slate-50 text-slate-900 rounded-3xl overflow-hidden shadow-2xl border border-slate-200 flex flex-col justify-between min-h-[620px] relative">
+    <div className="w-full max-w-4xl mx-auto bg-slate-50 text-slate-900 rounded-3xl overflow-hidden shadow-2xl border border-slate-200 flex flex-col justify-between min-h-[620px] relative">
       
       {/* Top Bar Header */}
       <div className="bg-gradient-to-r from-indigo-950 via-slate-900 to-blue-950 p-4 text-white flex items-center justify-between">
         <div className="flex items-center gap-2">
           <div className="w-6 h-6 rounded-lg bg-[#16A34A] text-white flex items-center justify-center font-black text-xs">
-            B
+            P
           </div>
-          <span className="text-[11px] font-extrabold text-slate-300 uppercase tracking-wider">ÉCRAN 10 — PAIEMENT SÉCURISÉ</span>
+          <span className="text-xs font-extrabold text-slate-300 uppercase tracking-wider">PAIEMENT SÉCURISÉ — BAFOUSSAM</span>
         </div>
-        <div className="flex items-center gap-1 bg-emerald-500/20 text-emerald-300 text-[10px] font-bold px-2 py-0.5 rounded-full border border-emerald-500/30">
-          <Lock className="w-3 h-3 text-emerald-400" />
+        <div className="flex items-center gap-1 bg-emerald-500/20 text-emerald-300 text-xs font-bold px-3 py-1 rounded-full border border-emerald-500/30">
+          <Lock className="w-3.5 h-3.5 text-emerald-400" />
           <span>Cryptage SSL 256-bit</span>
         </div>
       </div>
 
-      <div className="p-4 space-y-4 overflow-y-auto max-h-[440px]">
+      <div className="p-4 sm:p-6 space-y-4 overflow-y-auto max-h-[580px]">
         
         {/* Title */}
         <div>

@@ -766,7 +766,7 @@ export default function Screen6DashboardClient({
             </button>
           </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+          <div className="grid grid-cols-1 min-[380px]:grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 sm:gap-4">
             {popularProducts.slice(0, 8).map((product) => (
               <motion.div
                 key={`pop-${product.id}`}
@@ -1053,7 +1053,7 @@ export default function Screen6DashboardClient({
             </div>
           </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+          <div className="grid grid-cols-1 min-[380px]:grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 sm:gap-4">
             {newArrivals.slice(0, 4).map((product) => (
               <motion.div
                 key={`new-${product.id}`}

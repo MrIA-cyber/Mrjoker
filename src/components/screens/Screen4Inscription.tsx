@@ -270,7 +270,7 @@ export default function Screen4Inscription({ onSignupSuccess, onGoToLogin, lang 
         initial={{ opacity: 0, y: 15, scale: 0.98 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
         transition={{ duration: 0.35, ease: 'easeOut' }}
-        className="relative z-10 w-full max-w-[480px] bg-white rounded-[20px] shadow-[0_16px_48px_rgba(15,23,42,0.08)] border border-slate-200/80 overflow-hidden flex flex-col"
+        className="relative z-10 w-full max-w-[480px] md:max-w-3xl bg-white rounded-[20px] sm:rounded-[28px] shadow-[0_16px_48px_rgba(15,23,42,0.08)] border border-slate-200/80 overflow-hidden flex flex-col"
       >
 
         {/* 1. EN-TÊTE PREMIUM */}

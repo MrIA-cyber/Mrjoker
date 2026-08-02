@@ -17,30 +17,30 @@ export default function Screen8DetailProduit({ onBack, onAddToCart, onBuyNow }: 
   ];
 
   return (
-    <div className="w-full max-w-md mx-auto bg-slate-50 text-slate-900 rounded-3xl overflow-hidden shadow-2xl border border-slate-200 flex flex-col justify-between min-h-[620px] relative">
+    <div className="w-full max-w-5xl mx-auto bg-slate-50 text-slate-900 rounded-3xl overflow-hidden shadow-2xl border border-slate-200 flex flex-col justify-between min-h-[620px] relative">
       
       {/* Top Header */}
-      <div className="bg-gradient-to-r from-indigo-950 via-slate-900 to-blue-950 p-3 text-white flex items-center justify-between">
+      <div className="bg-gradient-to-r from-indigo-950 via-slate-900 to-blue-950 p-3.5 sm:p-4 text-white flex items-center justify-between">
         <div className="flex items-center gap-2">
           {onBack && (
-            <button onClick={onBack} className="w-7 h-7 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition">
+            <button onClick={onBack} className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition cursor-pointer">
               <ArrowLeft className="w-4 h-4" />
             </button>
           )}
-          <span className="text-[11px] font-extrabold text-slate-300 uppercase tracking-wider">ÉCRAN 8 — DÉTAIL PRODUIT</span>
+          <span className="text-xs font-extrabold text-slate-300 uppercase tracking-wider">DÉTAIL PRODUIT — BAFOUSSAM</span>
         </div>
         <div className="flex items-center gap-2">
-          <button className="w-7 h-7 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition">
-            <Heart className="w-3.5 h-3.5 text-rose-400 fill-rose-400" />
+          <button className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition cursor-pointer">
+            <Heart className="w-4 h-4 text-rose-400 fill-rose-400" />
           </button>
-          <button className="w-7 h-7 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition">
-            <Share2 className="w-3.5 h-3.5" />
+          <button className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition cursor-pointer">
+            <Share2 className="w-4 h-4" />
           </button>
         </div>
       </div>
 
       {/* Main Product Content Scroll */}
-      <div className="p-4 space-y-4 overflow-y-auto max-h-[480px]">
+      <div className="p-4 sm:p-6 grid grid-cols-1 md:grid-cols-2 gap-6 overflow-y-auto max-h-[580px]">
         
         {/* Main HD Image & Gallery */}
         <div className="space-y-2">
