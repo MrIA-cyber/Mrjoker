@@ -48,10 +48,6 @@ export default function AboutAfriNovaSection({ className = '', isCompact = false
             Version 1.0
           </span>
         </div>
-
-        <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 max-w-xl mx-auto leading-relaxed">
-          AfriNova est une plateforme numérique africaine conçue pour connecter les consommateurs, les boutiques, les entreprises et les prestataires de services au sein d'un écosystème moderne, sécurisé et innovant.
-        </p>
       </div>
 
       {/* VISION & MISSION CARDS */}

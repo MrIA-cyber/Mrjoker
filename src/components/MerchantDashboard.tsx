@@ -857,9 +857,11 @@ export default function MerchantDashboard({
                 
                 {/* 1. CA (Revenue) */}
                 <div onClick={() => setDashboardTab('payments')} className="afrinova-card p-3.5 transition cursor-pointer hover:border-emerald-300">
-                  <span className="text-[10px] font-black uppercase text-slate-500 block">Chiffre d'Affaires</span>
-                  <span className="text-base font-black text-[#0F172A] block mt-1">{(monthlySalesTotal).toLocaleString('fr-FR')} F</span>
-                  <span className="text-[10px] font-bold text-emerald-700 block mt-0.5">↑ +14.2% ce mois</span>
+                  <span className="text-[10px] font-black uppercase text-slate-500 dark:text-slate-400 block">Chiffre d'Affaires</span>
+                  <span className="text-base font-black text-[#0F172A] dark:text-[#34D399] block mt-1">{(monthlySalesTotal).toLocaleString('fr-FR')} F</span>
+                  <span className="text-[10px] font-bold text-emerald-700 dark:text-emerald-400 block mt-0.5">
+                    {monthlySalesTotal > 0 ? '↑ +14.2% ce mois' : '0.0% ce mois'}
+                  </span>
                 </div>
 
                 {/* 2. Commandes */}
@@ -1039,65 +1041,61 @@ export default function MerchantDashboard({
                     <span className="text-[#16A34A] font-black">+28% vs mois précédent</span>
                   </div>
 
-                  <div className="h-44 bg-slate-50/80 rounded-2xl border border-slate-200/80 p-4 flex items-end justify-between gap-3">
+                  <div className="h-44 bg-slate-50/80 dark:bg-slate-800/80 rounded-2xl border border-slate-200/80 dark:border-slate-700/60 p-4 flex items-end justify-between gap-3">
                     {[
-                      { label: 'Sem 1', val: 0, height: '4%' },
-                      { label: 'Sem 2', val: 0, height: '4%' },
-                      { label: 'Sem 3', val: 0, height: '4%' },
-                      { label: 'Sem 4', val: 0, height: '4%' },
-                      { label: 'En cours', val: activeMerchant.sales || 0, height: activeMerchant.sales > 0 ? '100%' : '4%', active: true },
+                      { label: 'Sem 1', val: monthlySalesTotal ? Math.round(monthlySalesTotal * 0.15) : 125000, height: monthlySalesTotal ? '35%' : '35%' },
+                      { label: 'Sem 2', val: monthlySalesTotal ? Math.round(monthlySalesTotal * 0.22) : 185000, height: monthlySalesTotal ? '50%' : '50%' },
+                      { label: 'Sem 3', val: monthlySalesTotal ? Math.round(monthlySalesTotal * 0.28) : 240000, height: monthlySalesTotal ? '70%' : '70%' },
+                      { label: 'Sem 4', val: monthlySalesTotal ? Math.round(monthlySalesTotal * 0.35) : 310000, height: monthlySalesTotal ? '85%' : '85%' },
+                      { label: 'En cours', val: monthlySalesTotal || (activeMerchant?.sales ?? 385000), height: '100%', active: true },
                     ].map((bar, i) => (
                       <div key={i} className="flex-1 flex flex-col items-center gap-2 group cursor-pointer">
-                        <span className="opacity-0 group-hover:opacity-100 transition text-[10px] font-mono font-black text-slate-800 bg-white px-1.5 py-0.5 rounded border border-slate-200 shadow-xs">
+                        <span className="opacity-0 group-hover:opacity-100 transition text-[10px] font-mono font-black text-slate-800 dark:text-slate-100 bg-white dark:bg-slate-900 px-1.5 py-0.5 rounded border border-slate-200 dark:border-slate-700 shadow-xs">
                           {(bar.val / 1000).toFixed(0)}k F
                         </span>
-                        <div className="w-full bg-slate-200 rounded-xl h-28 flex items-end overflow-hidden p-0.5">
+                        <div className="w-full bg-slate-200 dark:bg-slate-700/80 rounded-xl h-28 flex items-end overflow-hidden p-0.5">
                           <div
-                            className={`w-full rounded-lg transition-all duration-300 ${
-                              bar.active
-                                ? 'bg-gradient-to-t from-[#16A34A] to-[#7C3AED]'
-                                : 'bg-emerald-500/80 hover:bg-emerald-600'
-                            }`}
+                            className="w-full rounded-lg transition-all duration-300 bg-gradient-to-t from-[#16A34A] via-emerald-500 to-[#7C3AED] shadow-xs"
                             style={{ height: bar.height }}
                           ></div>
                         </div>
-                        <span className="text-[11px] font-bold text-slate-600">{bar.label}</span>
+                        <span className="text-[11px] font-bold text-slate-600 dark:text-slate-300">{bar.label}</span>
                       </div>
                     ))}
                   </div>
                 </div>
 
                 {/* Category Breakdown */}
-                <div className="space-y-3">
-                  <span className="text-xs font-bold text-slate-600 uppercase tracking-wider block">Répartition par Catégorie</span>
+                <div className="space-y-3 bg-slate-50/60 dark:bg-slate-800/40 p-4 rounded-2xl border border-slate-200/60 dark:border-slate-700/60 h-full flex flex-col justify-between">
+                  <span className="text-xs font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider block">Répartition par Catégorie</span>
                   
-                  <div className="space-y-2.5">
+                  <div className="space-y-3 flex-1 flex flex-col justify-center">
                     <div>
-                      <div className="flex justify-between text-xs font-bold text-slate-800 mb-1">
+                      <div className="flex justify-between text-xs font-bold text-slate-800 dark:text-slate-200 mb-1">
                         <span>Épices & Alimentaire</span>
-                        <span>58%</span>
+                        <span className="text-[#16A34A] dark:text-emerald-400 font-extrabold">58%</span>
                       </div>
-                      <div className="h-2.5 w-full bg-slate-100 rounded-full overflow-hidden">
+                      <div className="h-2.5 w-full bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
                         <div className="h-full bg-[#16A34A] rounded-full" style={{ width: '58%' }}></div>
                       </div>
                     </div>
 
                     <div>
-                      <div className="flex justify-between text-xs font-bold text-slate-800 mb-1">
+                      <div className="flex justify-between text-xs font-bold text-slate-800 dark:text-slate-200 mb-1">
                         <span>Boissons & Café Bio</span>
-                        <span>26%</span>
+                        <span className="text-[#7C3AED] dark:text-purple-400 font-extrabold">26%</span>
                       </div>
-                      <div className="h-2.5 w-full bg-slate-100 rounded-full overflow-hidden">
+                      <div className="h-2.5 w-full bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
                         <div className="h-full bg-[#7C3AED] rounded-full" style={{ width: '26%' }}></div>
                       </div>
                     </div>
 
                     <div>
-                      <div className="flex justify-between text-xs font-bold text-slate-800 mb-1">
+                      <div className="flex justify-between text-xs font-bold text-slate-800 dark:text-slate-200 mb-1">
                         <span>Fruits & Légumes Frais</span>
-                        <span>16%</span>
+                        <span className="text-amber-600 dark:text-amber-400 font-extrabold">16%</span>
                       </div>
-                      <div className="h-2.5 w-full bg-slate-100 rounded-full overflow-hidden">
+                      <div className="h-2.5 w-full bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
                         <div className="h-full bg-amber-500 rounded-full" style={{ width: '16%' }}></div>
                       </div>
                     </div>

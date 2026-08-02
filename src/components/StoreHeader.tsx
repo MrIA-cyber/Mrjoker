@@ -137,16 +137,20 @@ export default function StoreHeader({
         <div className="flex flex-wrap items-center gap-1.5 sm:gap-2.5 font-medium">
           <MapPin className="w-3.5 h-3.5 text-indigo-400 animate-pulse" />
           <span className="font-bold text-white">Bafoussam, Cameroun</span>
-          <span className="text-slate-600">•</span>
-          <button
-            onClick={() => onViewChange('merchant')}
-            className="text-amber-300 hover:text-amber-200 font-bold underline text-[11px] transition cursor-pointer flex items-center gap-1"
-            id="link-merchant-portal"
-            title="Accès Espace Commerçant"
-          >
-            <Store className="w-3.5 h-3.5 text-amber-400" />
-            <span>Vous êtes commerçant ?</span>
-          </button>
+          {!Boolean(currentUser && (currentUser.role === 'merchant' || currentUser.accountType === 'merchant' || currentUser.isMerchant || currentUser.activeRole === 'merchant')) && (
+            <>
+              <span className="text-slate-600">•</span>
+              <button
+                onClick={() => onViewChange('merchant')}
+                className="text-amber-300 hover:text-amber-200 font-bold underline text-[11px] transition cursor-pointer flex items-center gap-1"
+                id="link-merchant-portal"
+                title="Accès Espace Commerçant"
+              >
+                <Store className="w-3.5 h-3.5 text-amber-400" />
+                <span>Vous êtes commerçant ?</span>
+              </button>
+            </>
+          )}
           <span className="text-slate-600 hidden sm:inline">•</span>
           <button
             onClick={onOpenSubscriptions}
