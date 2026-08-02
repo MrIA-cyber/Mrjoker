@@ -155,9 +155,9 @@ export default function BafoussamMarketHomePage({
   return (
     <div className="w-full min-h-screen bg-[#F8FAFC] text-[#0F172A] font-sans pb-20 relative selection:bg-emerald-100 selection:text-emerald-900">
       
-      {/* 1. BARRE SUPÉRIEURE FIXE (Fixed Top Header) */}
-      <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-100 shadow-2xs px-4 sm:px-6 py-2.5">
-        <div className="max-w-7xl mx-auto flex items-center justify-between gap-3">
+      {/* 1. BARRE SUPÉRIEURE FIXE (Fixed Top Header - Standardized Height h-16 sm:h-20) */}
+      <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200/80 shadow-2xs px-4 sm:px-6 h-16 sm:h-20 flex items-center">
+        <div className="max-w-7xl mx-auto w-full flex items-center justify-between gap-3">
           
           {/* Gauche: Logo AfriNova & Localisation */}
           <div className="flex items-center gap-3">

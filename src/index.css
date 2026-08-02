@@ -60,6 +60,155 @@ button, input[type="button"], input[type="submit"], a, select {
   scrollbar-width: none;
 }
 
+/* ========================================================= */
+/* AFRI NOVA UNIFIED DESIGN SYSTEM UTILITIES                 */
+/* ========================================================= */
+
+/* Unified Top Header Bar Height (64px mobile / 80px desktop) */
+.afrinova-header {
+  height: 4rem; /* 64px */
+  min-height: 4rem;
+}
+@media (min-width: 640px) {
+  .afrinova-header {
+    height: 5rem; /* 80px */
+    min-height: 5rem;
+  }
+}
+
+/* Unified Card Style */
+.afrinova-card {
+  background-color: rgba(255, 255, 255, 0.98);
+  border: 1px solid rgba(226, 232, 240, 0.9);
+  border-radius: 1rem; /* rounded-2xl */
+  box-shadow: 0 1px 2px 0 rgba(15, 23, 42, 0.04);
+  transition: all 200ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+.afrinova-card:hover {
+  box-shadow: 0 4px 12px -2px rgba(15, 23, 42, 0.08);
+}
+
+/* Unified Buttons */
+.afrinova-btn-primary {
+  height: 2.75rem; /* 44px */
+  padding-left: 1.25rem;
+  padding-right: 1.25rem;
+  border-radius: 0.75rem; /* rounded-xl */
+  font-weight: 800;
+  font-size: 0.875rem;
+  min-height: 44px;
+  background-image: linear-gradient(to right, #16A34A, #15803D);
+  color: #ffffff;
+  box-shadow: 0 1px 3px 0 rgba(22, 163, 74, 0.2);
+  transition: all 200ms cubic-bezier(0.16, 1, 0.3, 1);
+  display: inline-flex;
+  items-center: center;
+  justify-content: center;
+  gap: 0.5rem;
+  cursor: pointer;
+}
+.afrinova-btn-primary:hover {
+  background-image: linear-gradient(to right, #15803D, #166534);
+  box-shadow: 0 4px 12px 0 rgba(22, 163, 74, 0.3);
+}
+.afrinova-btn-primary:active {
+  transform: scale(0.98);
+}
+
+.afrinova-btn-secondary {
+  height: 2.75rem; /* 44px */
+  padding-left: 1.25rem;
+  padding-right: 1.25rem;
+  border-radius: 0.75rem; /* rounded-xl */
+  font-weight: 700;
+  font-size: 0.875rem;
+  min-height: 44px;
+  background-color: #ffffff;
+  border: 1px solid #E2E8F0;
+  color: #0F172A;
+  transition: all 200ms cubic-bezier(0.16, 1, 0.3, 1);
+  display: inline-flex;
+  items-center: center;
+  justify-content: center;
+  gap: 0.5rem;
+  cursor: pointer;
+}
+.afrinova-btn-secondary:hover {
+  border-color: #86EFAC;
+  background-color: #F0FDF4;
+}
+.afrinova-btn-secondary:active {
+  transform: scale(0.98);
+}
+
+.afrinova-btn-accent {
+  height: 2.75rem; /* 44px */
+  padding-left: 1.25rem;
+  padding-right: 1.25rem;
+  border-radius: 0.75rem; /* rounded-xl */
+  font-weight: 800;
+  font-size: 0.875rem;
+  min-height: 44px;
+  background-image: linear-gradient(to right, #7C3AED, #6D28D9);
+  color: #ffffff;
+  box-shadow: 0 1px 3px 0 rgba(124, 58, 237, 0.2);
+  transition: all 200ms cubic-bezier(0.16, 1, 0.3, 1);
+  display: inline-flex;
+  items-center: center;
+  justify-content: center;
+  gap: 0.5rem;
+  cursor: pointer;
+}
+.afrinova-btn-accent:hover {
+  background-image: linear-gradient(to right, #6D28D9, #5B21B6);
+  box-shadow: 0 4px 12px 0 rgba(124, 58, 237, 0.3);
+}
+.afrinova-btn-accent:active {
+  transform: scale(0.98);
+}
+
+.afrinova-btn-sm {
+  height: 2.25rem; /* 36px */
+  padding-left: 0.875rem;
+  padding-right: 0.875rem;
+  border-radius: 0.75rem;
+  font-weight: 700;
+  font-size: 0.75rem;
+  min-height: 36px;
+  transition: all 200ms cubic-bezier(0.16, 1, 0.3, 1);
+  display: inline-flex;
+  items-center: center;
+  justify-content: center;
+  gap: 0.375rem;
+  cursor: pointer;
+}
+
+/* Unified Icon Badge Boxes */
+.afrinova-icon-box {
+  width: 2.5rem; /* 40px */
+  height: 2.5rem;
+  border-radius: 0.75rem; /* rounded-xl */
+  background-color: #F0FDF4;
+  color: #16A34A;
+  border: 1px solid rgba(187, 247, 208, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.afrinova-icon-box-purple {
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 0.75rem;
+  background-color: #F5F3FF;
+  color: #7C3AED;
+  border: 1px solid rgba(221, 214, 254, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
 @keyframes fadeIn {
   from { opacity: 0; }
   to { opacity: 1; }
