@@ -178,6 +178,9 @@ export default function Screen6DashboardClient({
   const [ratingFilter, setRatingFilter] = useState<number>(0);
   const [promoOnly, setPromoOnly] = useState(false);
   const [inStockOnly, setInStockOnly] = useState(false);
+
+  // Live Order Tracking Modal State
+  const [isOrderTrackingOpen, setIsOrderTrackingOpen] = useState(false);
   const [expressDeliveryOnly, setExpressDeliveryOnly] = useState(false);
 
   // Favorites & Likes state
@@ -364,8 +367,18 @@ export default function Screen6DashboardClient({
             </div>
           </div>
 
-          {/* Top Actions: Notifications & Cart */}
+          {/* Top Actions: Notifications, Order Tracking & Cart */}
           <div className="flex items-center gap-2">
+            <button 
+              onClick={() => setIsOrderTrackingOpen(true)}
+              className="relative px-2.5 py-1.5 rounded-2xl bg-emerald-500/20 hover:bg-emerald-500/30 active:scale-95 flex items-center gap-1.5 text-emerald-300 border border-emerald-500/30 text-xs font-bold transition cursor-pointer"
+              title="Suivi de ma commande"
+            >
+              <Truck className="w-4 h-4 text-emerald-400 animate-bounce" />
+              <span className="hidden sm:inline">Suivi commande</span>
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
+            </button>
+
             <button 
               onClick={() => onNavigate && onNavigate('news')}
               className="relative w-9 h-9 rounded-2xl bg-white/10 hover:bg-white/20 active:scale-95 flex items-center justify-center text-white border border-white/15 transition cursor-pointer"
@@ -1160,6 +1173,134 @@ export default function Screen6DashboardClient({
           );
         })}
       </div>
+
+      {/* 7. LIVE ORDER TRACKING MODAL */}
+      <AnimatePresence>
+        {isOrderTrackingOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-slate-950/80 backdrop-blur-xs z-50 flex items-center justify-center p-4 font-sans"
+          >
+            <motion.div
+              initial={{ scale: 0.95, y: 10 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.95, y: 10 }}
+              className="bg-white rounded-3xl p-5 sm:p-6 max-w-lg w-full shadow-2xl border border-slate-200 relative space-y-4 max-h-[90vh] overflow-y-auto"
+            >
+              <button
+                onClick={() => setIsOrderTrackingOpen(false)}
+                className="absolute top-4 right-4 text-slate-400 hover:text-slate-700 p-1.5 rounded-full bg-slate-100 cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+
+              <div className="flex items-center gap-3 border-b border-slate-100 pb-3">
+                <div className="w-10 h-10 rounded-2xl bg-emerald-100 text-[#16A34A] flex items-center justify-center font-black shrink-0">
+                  <Truck className="w-6 h-6" />
+                </div>
+                <div>
+                  <h3 className="text-base font-black text-slate-900 font-display">Suivi de Commande #AFR-88492</h3>
+                  <p className="text-xs text-slate-500">Livraison Bafoussam Express (Marché A ➔ Tamdja)</p>
+                </div>
+              </div>
+
+              {/* Progress Stepper Timeline */}
+              <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200 space-y-4">
+                <div className="relative pl-6 space-y-6 before:absolute before:left-2.5 before:top-2 before:bottom-2 before:w-0.5 before:bg-emerald-500">
+                  
+                  {/* Step 1: Confirmed */}
+                  <div className="relative flex items-start gap-3">
+                    <div className="absolute -left-6 top-0.5 w-5 h-5 rounded-full bg-emerald-500 text-white flex items-center justify-center text-[10px] font-bold shadow-xs">
+                      ✓
+                    </div>
+                    <div>
+                      <div className="text-xs font-black text-slate-900">Commande Confirmée</div>
+                      <div className="text-[11px] text-slate-500">Payée via MTN Mobile Money • 14:15</div>
+                    </div>
+                  </div>
+
+                  {/* Step 2: In Preparation */}
+                  <div className="relative flex items-start gap-3">
+                    <div className="absolute -left-6 top-0.5 w-5 h-5 rounded-full bg-emerald-500 text-white flex items-center justify-center text-[10px] font-bold shadow-xs">
+                      ✓
+                    </div>
+                    <div>
+                      <div className="text-xs font-black text-slate-900">Préparée par le commerçant</div>
+                      <div className="text-[11px] text-slate-500">Bafoussam HighTech (Marché A) • 14:22</div>
+                    </div>
+                  </div>
+
+                  {/* Step 3: Courier En Route */}
+                  <div className="relative flex items-start gap-3">
+                    <div className="absolute -left-6 top-0.5 w-5 h-5 rounded-full bg-emerald-500 text-white flex items-center justify-center text-[10px] font-bold ring-4 ring-emerald-100 animate-pulse">
+                      🚚
+                    </div>
+                    <div>
+                      <div className="text-xs font-black text-emerald-700 flex items-center gap-1">
+                        <span>Livreur en cours de route</span>
+                        <span className="bg-emerald-100 text-emerald-800 text-[9px] font-extrabold px-1.5 py-0.5 rounded-full">EN COURS</span>
+                      </div>
+                      <div className="text-[11px] text-slate-600 font-medium">Arrivée estimée dans 12 minutes (Tamdja)</div>
+                    </div>
+                  </div>
+
+                  {/* Step 4: Delivered */}
+                  <div className="relative flex items-start gap-3 opacity-50">
+                    <div className="absolute -left-6 top-0.5 w-5 h-5 rounded-full bg-slate-300 text-slate-600 flex items-center justify-center text-[10px] font-bold">
+                      4
+                    </div>
+                    <div>
+                      <div className="text-xs font-bold text-slate-700">Livré à domicile</div>
+                      <div className="text-[11px] text-slate-400">Confirmation par code OTP</div>
+                    </div>
+                  </div>
+
+                </div>
+              </div>
+
+              {/* Courier Contact Card */}
+              <div className="bg-emerald-950 text-white p-3.5 rounded-2xl border border-emerald-800 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-emerald-800 text-white font-black text-xs flex items-center justify-center border border-emerald-600 shrink-0">
+                    MOTO
+                  </div>
+                  <div>
+                    <div className="text-xs font-black text-emerald-300">Coursier: Tagne Samuel</div>
+                    <div className="text-[11px] text-slate-300">Moto-Taxi Express Afrinova • LT-892-BA</div>
+                  </div>
+                </div>
+
+                <div className="flex gap-1.5">
+                  <a
+                    href="tel:677123456"
+                    className="p-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold flex items-center gap-1 shadow-xs"
+                  >
+                    <Phone className="w-3.5 h-3.5" />
+                  </a>
+                  <a
+                    href="https://wa.me/237677123456"
+                    target="_blank"
+                    rel="noreferrer"
+                    className="p-2 bg-green-600 hover:bg-green-500 text-white rounded-xl text-xs font-bold flex items-center gap-1 shadow-xs"
+                  >
+                    <MessageSquare className="w-3.5 h-3.5" />
+                  </a>
+                </div>
+              </div>
+
+              <button
+                onClick={() => setIsOrderTrackingOpen(false)}
+                className="w-full py-3 bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-xs rounded-xl cursor-pointer transition"
+              >
+                Fermer la fenêtre de suivi
+              </button>
+
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
     </div>
   );

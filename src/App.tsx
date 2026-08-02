@@ -178,6 +178,16 @@ export default function App() {
     localStorage.setItem('bafoussam_reviews', JSON.stringify(reviews));
   }, [reviews]);
 
+  useEffect(() => {
+    if (theme === 'dark') {
+      document.documentElement.classList.add('dark');
+      document.body.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+      document.body.classList.remove('dark');
+    }
+  }, [theme]);
+
   const handleToggleTheme = () => {
     setTheme((prev) => {
       const next = prev === 'light' ? 'dark' : 'light';
@@ -838,7 +848,7 @@ export default function App() {
 
   return (
     <div className={theme === 'dark' ? 'dark' : ''}>
-      <div className="min-h-screen bg-gradient-to-br from-[#FAFAF9] via-[#F3F0FF]/40 to-[#ECFDF5]/60 text-[#0F172A] flex flex-col justify-between font-sans selection:bg-emerald-100 selection:text-emerald-900 transition-colors duration-200 relative overflow-x-hidden" id="main-applet-wrapper">
+      <div className="min-h-screen bg-gradient-to-br from-[#FAFAF9] via-[#F3F0FF]/40 to-[#ECFDF5]/60 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 text-[#0F172A] dark:text-slate-100 flex flex-col justify-between font-sans selection:bg-emerald-100 selection:text-emerald-900 transition-colors duration-200 relative overflow-x-hidden" id="main-applet-wrapper">
         {/* Soft Ambient Emerald and Violet Glow Backdrops matching Registration theme */}
         <div className="absolute top-0 left-1/4 w-[500px] h-[400px] bg-[#16A34A]/10 rounded-full blur-3xl pointer-events-none -translate-y-1/2" />
         <div className="absolute top-32 right-10 w-[500px] h-[350px] bg-[#7C3AED]/10 rounded-full blur-3xl pointer-events-none" />

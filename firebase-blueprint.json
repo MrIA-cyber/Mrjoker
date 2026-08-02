@@ -50,6 +50,21 @@
         "unreadCountMerchant": { "type": "number" }
       },
       "required": ["id", "clientId", "merchantId"]
+    },
+    "merchant_stats": {
+      "title": "merchant_stats",
+      "description": "Cached dashboard statistics for merchants",
+      "type": "object",
+      "properties": {
+        "merchantId": { "type": "string" },
+        "totalRevenue": { "type": "number" },
+        "todaySales": { "type": "number" },
+        "monthlySales": { "type": "number" },
+        "pendingOrdersCount": { "type": "number" },
+        "totalStockCount": { "type": "number" },
+        "lastUpdated": { "type": "string" }
+      },
+      "required": ["merchantId"]
     }
   },
   "securityRules": {
@@ -66,6 +81,9 @@
       "allow read, write": "true"
     },
     "match /chats/{chatId}/messages/{messageId}": {
+      "allow read, write": "true"
+    },
+    "match /merchant_stats/{merchantId}": {
       "allow read, write": "true"
     }
   }

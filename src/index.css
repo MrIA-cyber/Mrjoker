@@ -1,5 +1,6 @@
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
 @import "tailwindcss";
+@import "./styles/themeVariables.css";
 
 @theme {
   --font-sans: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
@@ -14,6 +15,12 @@ html, body {
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+html.dark, body.dark {
+  background-color: var(--color-bg-main);
+  color: var(--color-text-primary);
+  color-scheme: dark;
 }
 
 :root {
@@ -78,14 +85,25 @@ button, input[type="button"], input[type="submit"], a, select {
 
 /* Unified Card Style */
 .afrinova-card {
-  background-color: rgba(255, 255, 255, 0.98);
-  border: 1px solid rgba(226, 232, 240, 0.9);
+  background-color: var(--color-bg-card);
+  border: 1px solid var(--color-border);
   border-radius: 1rem; /* rounded-2xl */
-  box-shadow: 0 1px 2px 0 rgba(15, 23, 42, 0.04);
+  box-shadow: var(--color-card-shadow);
   transition: all 200ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 .afrinova-card:hover {
-  box-shadow: 0 4px 12px -2px rgba(15, 23, 42, 0.08);
+  background-color: var(--color-bg-card-hover);
+  box-shadow: var(--color-card-shadow-hover);
+}
+
+.dark .afrinova-card {
+  background-color: var(--color-bg-card);
+  border-color: var(--color-border);
+  box-shadow: var(--color-card-shadow);
+}
+.dark .afrinova-card:hover {
+  background-color: var(--color-bg-card-hover);
+  border-color: var(--color-border-hover);
 }
 
 /* Unified Buttons */
@@ -102,7 +120,7 @@ button, input[type="button"], input[type="submit"], a, select {
   box-shadow: 0 1px 3px 0 rgba(22, 163, 74, 0.2);
   transition: all 200ms cubic-bezier(0.16, 1, 0.3, 1);
   display: inline-flex;
-  items-center: center;
+  align-items: center;
   justify-content: center;
   gap: 0.5rem;
   cursor: pointer;
@@ -123,22 +141,32 @@ button, input[type="button"], input[type="submit"], a, select {
   font-weight: 700;
   font-size: 0.875rem;
   min-height: 44px;
-  background-color: #ffffff;
-  border: 1px solid #E2E8F0;
-  color: #0F172A;
+  background-color: var(--color-btn-sec-bg);
+  border: 1px solid var(--color-btn-sec-border);
+  color: var(--color-btn-sec-text);
   transition: all 200ms cubic-bezier(0.16, 1, 0.3, 1);
   display: inline-flex;
-  items-center: center;
+  align-items: center;
   justify-content: center;
   gap: 0.5rem;
   cursor: pointer;
 }
 .afrinova-btn-secondary:hover {
-  border-color: #86EFAC;
-  background-color: #F0FDF4;
+  border-color: var(--color-btn-sec-hover-border);
+  background-color: var(--color-btn-sec-hover-bg);
 }
 .afrinova-btn-secondary:active {
   transform: scale(0.98);
+}
+
+.dark .afrinova-btn-secondary {
+  background-color: var(--color-btn-sec-bg);
+  border-color: var(--color-btn-sec-border);
+  color: var(--color-btn-sec-text);
+}
+.dark .afrinova-btn-secondary:hover {
+  background-color: var(--color-btn-sec-hover-bg);
+  border-color: var(--color-btn-sec-hover-border);
 }
 
 .afrinova-btn-accent {
@@ -154,7 +182,7 @@ button, input[type="button"], input[type="submit"], a, select {
   box-shadow: 0 1px 3px 0 rgba(124, 58, 237, 0.2);
   transition: all 200ms cubic-bezier(0.16, 1, 0.3, 1);
   display: inline-flex;
-  items-center: center;
+  align-items: center;
   justify-content: center;
   gap: 0.5rem;
   cursor: pointer;
@@ -177,7 +205,7 @@ button, input[type="button"], input[type="submit"], a, select {
   min-height: 36px;
   transition: all 200ms cubic-bezier(0.16, 1, 0.3, 1);
   display: inline-flex;
-  items-center: center;
+  align-items: center;
   justify-content: center;
   gap: 0.375rem;
   cursor: pointer;
@@ -188,9 +216,9 @@ button, input[type="button"], input[type="submit"], a, select {
   width: 2.5rem; /* 40px */
   height: 2.5rem;
   border-radius: 0.75rem; /* rounded-xl */
-  background-color: #F0FDF4;
-  color: #16A34A;
-  border: 1px solid rgba(187, 247, 208, 0.8);
+  background-color: var(--color-icon-box-bg);
+  color: var(--color-icon-box-text);
+  border: 1px solid var(--color-icon-box-border);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -207,6 +235,11 @@ button, input[type="button"], input[type="submit"], a, select {
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+}
+.dark .afrinova-icon-box-purple {
+  background-color: rgba(124, 58, 237, 0.15);
+  color: #C084FC;
+  border-color: rgba(168, 85, 247, 0.3);
 }
 
 @keyframes fadeIn {

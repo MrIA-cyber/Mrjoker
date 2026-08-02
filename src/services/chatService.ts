@@ -105,6 +105,11 @@ export async function sendChatMessage(params: {
   text: string;
 }): Promise<void> {
   const { chatId, senderId, senderName, senderRole, text } = params;
+  const trimmedText = (text || '').trim();
+  if (!trimmedText) {
+    throw new Error('Le message ne peut pas être vide.');
+  }
+
   const now = new Date().toISOString();
 
   try {
@@ -114,7 +119,7 @@ export async function sendChatMessage(params: {
       senderId,
       senderName,
       senderRole,
-      text: text.trim(),
+      text: trimmedText,
       createdAt: now,
       read: false
     });
@@ -123,7 +128,7 @@ export async function sendChatMessage(params: {
     const isSenderClient = senderRole === 'client';
 
     await updateDoc(chatRef, {
-      lastMessage: text.trim(),
+      lastMessage: trimmedText,
       lastMessageTime: now,
       lastSenderId: senderId,
       updatedAt: now,
