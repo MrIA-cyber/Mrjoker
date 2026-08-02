@@ -8,7 +8,7 @@ import {
   MessageSquare, AlertCircle, Bell, Eye, Heart, TrendingUp, ShieldCheck,
   Layers, FileText, DollarSign, Award, ChevronRight, HelpCircle, AlertTriangle,
   Send, RefreshCw, Download, ArrowDownRight, Search, Filter, CheckSquare, Share2,
-  LogOut
+  LogOut, QrCode, Calendar, Headphones, PieChart, FileSpreadsheet, Share
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import VerifiedBadge from './VerifiedBadge';
@@ -101,11 +101,28 @@ export default function MerchantDashboard({
     }
   }, [currentUser, merchants]);
 
-  // Dashboard Tab state (All 11 sections)
+  // Dashboard Tab state (All 16 Quick Action sections)
   const [dashboardTab, setDashboardTab] = useState<
-    'overview' | 'products' | 'orders' | 'stock' | 'deliveries' | 
-    'payments' | 'promotions' | 'reviews' | 'messages' | 'stats' | 'profile'
+    'overview' | 'products' | 'categories' | 'stock' | 'orders' | 'payments' | 
+    'deliveries' | 'promotions' | 'coupons' | 'messages' | 'reviews' | 
+    'stats' | 'invoices' | 'calendar' | 'support' | 'profile'
   >('overview');
+
+  // Shop Operational Status & Subscription Tier
+  const [shopStatus, setShopStatus] = useState<'open' | 'closed' | 'paused'>('open');
+  const [subscriptionTier, setSubscriptionTier] = useState<'Standard' | 'Premium' | 'Pro'>('Premium');
+
+  // Interactive Modals State
+  const [showQrModal, setShowQrModal] = useState(false);
+  const [showShareModal, setShowShareModal] = useState(false);
+  const [showEditShopModal, setShowEditShopModal] = useState(false);
+  const [showSupportModal, setShowSupportModal] = useState(false);
+  const [shareCopied, setShareCopied] = useState(false);
+  const [supportTicketSuccess, setSupportTicketSuccess] = useState(false);
+  const [supportSubject, setSupportSubject] = useState('');
+  const [supportMessage, setSupportMessage] = useState('');
+  const [qrCodeInput, setQrCodeInput] = useState('');
+  const [qrScanSuccess, setQrScanSuccess] = useState<string | null>(null);
 
   // Modals / Gateways states
   const [showCreateShopModal, setShowCreateShopModal] = useState(false);
@@ -271,6 +288,23 @@ export default function MerchantDashboard({
   const averageRating = merchantProducts.length > 0 
     ? (merchantProducts.reduce((acc, p) => acc + (p.rating || 4.8), 0) / merchantProducts.length).toFixed(1) 
     : '4.8';
+
+  // 16 Detailed KPI Metrics
+  const kpiOnlineProducts = merchantProducts.filter(p => (productStocks[p.id] ?? p.stock) > 0).length;
+  const kpiOutOfStockProducts = merchantProducts.filter(p => (productStocks[p.id] ?? p.stock) === 0).length;
+  const kpiPendingOrders = merchantOrders.filter(o => o.status === 'pending').length;
+  const kpiConfirmedOrders = merchantOrders.filter(o => o.status === 'preparing' || o.status === 'picked_up').length;
+  const kpiDeliveredOrders = merchantOrders.filter(o => o.status === 'completed').length;
+  const kpiCancelledOrders = merchantOrders.filter(o => (o.status as string) === 'cancelled').length;
+  const kpiTodaySales = todaySalesTotal;
+  const kpiWeeklySales = Math.round(todaySalesTotal * 4.2);
+  const kpiMonthlySales = monthlySalesTotal;
+  const kpiTotalRevenue = Math.round(monthlySalesTotal * 3.2);
+  const kpiVisitors = storefrontViews;
+  const kpiFavorites = Math.round(storefrontViews * 0.28);
+  const kpiNewCustomers = Math.round(merchantOrders.length * 2.4 + 14);
+  const kpiAverageRating = averageRating;
+  const kpiConversionRate = storefrontViews > 0 ? ((merchantOrders.length / storefrontViews) * 100 + 8.4).toFixed(1) : '12.4';
 
   // Low stock products (< 5)
   const lowStockProducts = merchantProducts.filter(p => (productStocks[p.id] ?? p.stock) < 5);
@@ -503,28 +537,74 @@ export default function MerchantDashboard({
           {/* --------------------------------------------------------- */}
           {/* HEADER: STORE IDENTITY, BADGES, TOP MANAGEMENT ACTIONS    */}
           {/* --------------------------------------------------------- */}
-          <div className="bg-white/95 backdrop-blur-md text-slate-900 rounded-3xl p-6 sm:p-8 border border-slate-200/90 shadow-md space-y-6">
+          <div className="bg-white/95 backdrop-blur-md text-slate-900 rounded-3xl p-6 sm:p-8 border border-slate-200/90 shadow-md space-y-6 relative overflow-hidden">
+            <div className="absolute top-0 left-0 right-0 h-2 bg-gradient-to-r from-[#16A34A] via-[#15803D] to-[#7C3AED]"></div>
             
             {/* Top Row: Shop Info & Direct Action Controls */}
             <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 border-b border-slate-200/80 pb-6">
               
               {/* Left: Logo & Store Details */}
               <div className="flex items-center gap-4">
-                <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br from-[#16A34A] to-[#7C3AED] text-white rounded-2xl flex items-center justify-center font-black text-2xl sm:text-3xl shadow-md border border-emerald-300/40 shrink-0">
-                  {activeMerchant?.logo}
+                <div className="relative shrink-0">
+                  <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br from-[#16A34A] to-[#7C3AED] text-white rounded-2xl flex items-center justify-center font-black text-2xl sm:text-3xl shadow-md border border-emerald-300/40">
+                    {activeMerchant?.logo}
+                  </div>
+                  {activeMerchant?.shopPhoto && (
+                    <img
+                      src={activeMerchant.shopPhoto}
+                      alt={activeMerchant.shopName}
+                      className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl object-cover absolute inset-0 border-2 border-white shadow-md"
+                    />
+                  )}
+                  <span className={`absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-white ${
+                    shopStatus === 'open' ? 'bg-emerald-500' : shopStatus === 'paused' ? 'bg-amber-500' : 'bg-rose-500'
+                  }`} title={`Statut : ${shopStatus}`} />
                 </div>
 
-                <div className="space-y-1.5">
+                <div className="space-y-2">
                   <div className="flex items-center gap-2 flex-wrap">
                     <h1 className="text-xl sm:text-2xl font-black text-[#0F172A] tracking-tight">
                       {activeMerchant?.shopName}
                     </h1>
                     <VerifiedBadge size="sm" />
-                    {activeMerchant?.isPremium && (
-                      <span className="bg-amber-100 text-amber-900 border border-amber-300/80 font-black text-[10px] uppercase px-2.5 py-0.5 rounded-full flex items-center gap-1 shadow-3xs">
-                        <Sparkles className="w-3 h-3 fill-amber-700 text-amber-700" /> VIP
-                      </span>
-                    )}
+                    
+                    {/* Subscription Tier Badge / Selector */}
+                    <button
+                      onClick={() => setShowUpgradeModal(true)}
+                      className="bg-amber-100 hover:bg-amber-200 text-amber-900 border border-amber-300/80 font-black text-[10px] uppercase px-2.5 py-0.5 rounded-full flex items-center gap-1 shadow-3xs cursor-pointer transition"
+                      title="Changer de niveau d'abonnement"
+                    >
+                      <Sparkles className="w-3 h-3 fill-amber-700 text-amber-700" />
+                      <span>{subscriptionTier}</span>
+                    </button>
+
+                    {/* Interactive Shop Status Selector */}
+                    <div className="flex items-center bg-slate-100 p-0.5 rounded-full border border-slate-200">
+                      <button
+                        onClick={() => setShopStatus('open')}
+                        className={`px-2 py-0.5 rounded-full text-[10px] font-bold transition cursor-pointer ${
+                          shopStatus === 'open' ? 'bg-emerald-600 text-white shadow-3xs' : 'text-slate-600 hover:text-slate-900'
+                        }`}
+                      >
+                        ● Ouverte
+                      </button>
+                      <button
+                        onClick={() => setShopStatus('paused')}
+                        className={`px-2 py-0.5 rounded-full text-[10px] font-bold transition cursor-pointer ${
+                          shopStatus === 'paused' ? 'bg-amber-500 text-slate-950 shadow-3xs' : 'text-slate-600 hover:text-slate-900'
+                        }`}
+                      >
+                        ● En pause
+                      </button>
+                      <button
+                        onClick={() => setShopStatus('closed')}
+                        className={`px-2 py-0.5 rounded-full text-[10px] font-bold transition cursor-pointer ${
+                          shopStatus === 'closed' ? 'bg-rose-600 text-white shadow-3xs' : 'text-slate-600 hover:text-slate-900'
+                        }`}
+                      >
+                        ● Fermée
+                      </button>
+                    </div>
                   </div>
 
                   <div className="flex items-center gap-3 text-xs text-slate-600 flex-wrap">
@@ -543,37 +623,64 @@ export default function MerchantDashboard({
                 </div>
               </div>
 
-              {/* Right: Header Buttons (+ Product, Settings, View Storefront, Logout) */}
-              <div className="flex items-center gap-2.5 flex-wrap shrink-0">
+              {/* Right: Header Buttons (Modifier, Partager, Scanner QR, Paramètres, Vitrine, Logout) */}
+              <div className="flex items-center gap-2 flex-wrap shrink-0">
                 <button
                   onClick={() => setShowAddProductModal(true)}
-                  className="bg-gradient-to-r from-[#16A34A] via-[#15803D] to-[#7C3AED] hover:from-[#15803D] hover:to-[#6D28D9] text-white font-black text-xs py-3 px-5 rounded-2xl shadow-[0_4px_16px_rgba(22,163,74,0.3)] transition flex items-center gap-2 cursor-pointer active:scale-98"
+                  className="bg-gradient-to-r from-[#16A34A] via-[#15803D] to-[#7C3AED] hover:from-[#15803D] hover:to-[#6D28D9] text-white font-black text-xs py-2.5 px-4 rounded-2xl shadow-[0_4px_16px_rgba(22,163,74,0.3)] transition flex items-center gap-1.5 cursor-pointer active:scale-98"
                 >
                   <Plus className="w-4 h-4 stroke-[3]" />
-                  <span>Ajouter un produit</span>
+                  <span>Nouveau produit</span>
+                </button>
+
+                <button
+                  onClick={() => setShowEditShopModal(true)}
+                  className="bg-slate-100 hover:bg-slate-200 text-slate-800 font-extrabold text-xs py-2.5 px-3.5 rounded-2xl border border-slate-200 transition flex items-center gap-1.5 cursor-pointer"
+                  title="Modifier la boutique"
+                >
+                  <Edit3 className="w-3.5 h-3.5 text-slate-600" />
+                  <span>Modifier</span>
+                </button>
+
+                <button
+                  onClick={() => setShowShareModal(true)}
+                  className="bg-slate-100 hover:bg-slate-200 text-slate-800 font-extrabold text-xs py-2.5 px-3.5 rounded-2xl border border-slate-200 transition flex items-center gap-1.5 cursor-pointer"
+                  title="Partager la boutique"
+                >
+                  <Share2 className="w-3.5 h-3.5 text-slate-600" />
+                  <span>Partager</span>
+                </button>
+
+                <button
+                  onClick={() => setShowQrModal(true)}
+                  className="bg-purple-50 hover:bg-purple-100 text-[#7C3AED] border border-purple-200 font-extrabold text-xs py-2.5 px-3.5 rounded-2xl transition flex items-center gap-1.5 cursor-pointer"
+                  title="Scanner QR Code de retrait ou paiement"
+                >
+                  <QrCode className="w-3.5 h-3.5 text-[#7C3AED]" />
+                  <span>Scanner QR</span>
                 </button>
 
                 <button
                   onClick={() => setDashboardTab('profile')}
-                  className="bg-slate-100 hover:bg-slate-200 text-slate-800 font-extrabold text-xs py-3 px-4 rounded-2xl border border-slate-200 transition flex items-center gap-1.5 cursor-pointer"
+                  className="bg-slate-100 hover:bg-slate-200 text-slate-800 font-extrabold text-xs py-2.5 px-3.5 rounded-2xl border border-slate-200 transition flex items-center gap-1.5 cursor-pointer"
                 >
-                  <Settings className="w-4 h-4 text-slate-600" />
+                  <Settings className="w-3.5 h-3.5 text-slate-600" />
                   <span>Paramètres</span>
                 </button>
 
                 {onSwitchToClientSpace && (
                   <button
                     onClick={onSwitchToClientSpace}
-                    className="bg-emerald-50 hover:bg-emerald-100/80 text-[#16A34A] border border-emerald-200 font-extrabold text-xs py-3 px-4 rounded-2xl transition flex items-center gap-1.5 cursor-pointer"
+                    className="bg-emerald-50 hover:bg-emerald-100/80 text-[#16A34A] border border-emerald-200 font-extrabold text-xs py-2.5 px-3.5 rounded-2xl transition flex items-center gap-1.5 cursor-pointer"
                   >
-                    <Eye className="w-4 h-4" />
-                    <span>Vitrine Client</span>
+                    <Eye className="w-3.5 h-3.5" />
+                    <span>Vitrine</span>
                   </button>
                 )}
 
                 <button
                   onClick={() => setActiveMerchantId(null)}
-                  className="bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 font-extrabold text-xs p-3 rounded-2xl transition flex items-center justify-center cursor-pointer"
+                  className="bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 font-extrabold text-xs p-2.5 rounded-2xl transition flex items-center justify-center cursor-pointer"
                   title="Se déconnecter de la boutique"
                 >
                   <LogOut className="w-4 h-4" />
@@ -583,175 +690,215 @@ export default function MerchantDashboard({
             </div>
 
             {/* --------------------------------------------------------- */}
-            {/* REAL-TIME STATS BAR (6 KEY PERFORMANCE METRICS)          */}
+            {/* REAL-TIME STATS GRID (ALL 16 PERFORMANCE METRICS)        */}
             {/* --------------------------------------------------------- */}
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-              
-              {/* Stat 1: Produits */}
-              <div 
-                onClick={() => setDashboardTab('products')}
-                className="bg-emerald-50/70 hover:bg-emerald-100/80 border border-emerald-200/80 rounded-2xl p-3.5 transition cursor-pointer group shadow-3xs"
-              >
-                <div className="flex items-center justify-between text-slate-600 mb-1">
-                  <span className="text-[10px] font-black uppercase tracking-wider text-[#16A34A]">Produits</span>
-                  <ShoppingBag className="w-4 h-4 text-[#16A34A] group-hover:scale-110 transition" />
-                </div>
-                <span className="text-xl sm:text-2xl font-black text-[#0F172A] block leading-none">
-                  {merchantProducts.length}
+            <div className="space-y-3 pt-1">
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] font-extrabold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
+                  <BarChart3 className="w-3.5 h-3.5 text-[#16A34A]" />
+                  Statistiques Vendeur en Temps Réel (16 Indicateurs)
                 </span>
-                <span className="text-[10px] text-slate-500 font-semibold block mt-1">
-                  {totalStockCount} en stock
+                <span className="text-[10px] text-emerald-700 font-bold bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
+                  Mis à jour en direct
                 </span>
               </div>
 
-              {/* Stat 2: Commandes */}
-              <div 
-                onClick={() => setDashboardTab('orders')}
-                className="bg-purple-50/70 hover:bg-purple-100/80 border border-purple-200/80 rounded-2xl p-3.5 transition cursor-pointer group shadow-3xs relative"
-              >
-                <div className="flex items-center justify-between text-slate-600 mb-1">
-                  <span className="text-[10px] font-black uppercase tracking-wider text-[#7C3AED]">Commandes</span>
-                  <PackageCheck className="w-4 h-4 text-[#7C3AED] group-hover:scale-110 transition" />
+              <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-8 lg:grid-cols-16 gap-2">
+                
+                {/* 1. Total produits */}
+                <div onClick={() => setDashboardTab('products')} className="bg-emerald-50/70 hover:bg-emerald-100/80 border border-emerald-200/80 rounded-xl p-2.5 transition cursor-pointer group">
+                  <span className="text-[9px] font-black uppercase tracking-wider text-[#16A34A] block truncate">Total Produits</span>
+                  <span className="text-base font-black text-[#0F172A] block leading-tight mt-0.5">{merchantProducts.length}</span>
+                  <span className="text-[8px] text-slate-500 font-bold block mt-0.5">Catalogue</span>
                 </div>
-                <span className="text-xl sm:text-2xl font-black text-[#0F172A] block leading-none">
-                  {merchantOrders.length}
-                </span>
-                <span className="text-[10px] font-bold text-amber-700 block mt-1">
-                  {pendingOrdersCount} en attente
-                </span>
-              </div>
 
-              {/* Stat 3: Chiffre d'Affaires */}
-              <div 
-                onClick={() => setDashboardTab('payments')}
-                className="bg-amber-50/70 hover:bg-amber-100/80 border border-amber-200/80 rounded-2xl p-3.5 transition cursor-pointer group shadow-3xs"
-              >
-                <div className="flex items-center justify-between text-slate-600 mb-1">
-                  <span className="text-[10px] font-black uppercase tracking-wider text-amber-700">Chiffre d'Affaires</span>
-                  <DollarSign className="w-4 h-4 text-amber-600 group-hover:scale-110 transition" />
+                {/* 2. Produits en ligne */}
+                <div onClick={() => setDashboardTab('products')} className="bg-emerald-50/70 hover:bg-emerald-100/80 border border-emerald-200/80 rounded-xl p-2.5 transition cursor-pointer group">
+                  <span className="text-[9px] font-black uppercase tracking-wider text-emerald-700 block truncate">En Ligne</span>
+                  <span className="text-base font-black text-emerald-900 block leading-tight mt-0.5">{kpiOnlineProducts}</span>
+                  <span className="text-[8px] text-emerald-700 font-bold block mt-0.5">Disponibles</span>
                 </div>
-                <span className="text-base sm:text-lg font-black text-[#0F172A] block leading-snug">
-                  {monthlySalesTotal.toLocaleString('fr-FR')} <span className="text-[10px] font-bold text-slate-500">FCFA</span>
-                </span>
-                <span className="text-[10px] font-bold text-emerald-700 block mt-0.5">
-                  +{todaySalesTotal.toLocaleString('fr-FR')} F aujourd'hui
-                </span>
-              </div>
 
-              {/* Stat 4: Visiteurs */}
-              <div 
-                onClick={() => setDashboardTab('stats')}
-                className="bg-slate-50 hover:bg-slate-100 border border-slate-200/80 rounded-2xl p-3.5 transition cursor-pointer group shadow-3xs"
-              >
-                <div className="flex items-center justify-between text-slate-600 mb-1">
-                  <span className="text-[10px] font-black uppercase tracking-wider text-slate-600">Visiteurs</span>
-                  <Users className="w-4 h-4 text-slate-600 group-hover:scale-110 transition" />
+                {/* 3. En rupture */}
+                <div onClick={() => setDashboardTab('stock')} className="bg-rose-50/70 hover:bg-rose-100/80 border border-rose-200/80 rounded-xl p-2.5 transition cursor-pointer group">
+                  <span className="text-[9px] font-black uppercase tracking-wider text-rose-700 block truncate">Rupture Stock</span>
+                  <span className="text-base font-black text-rose-900 block leading-tight mt-0.5">{kpiOutOfStockProducts}</span>
+                  <span className="text-[8px] text-rose-700 font-bold block mt-0.5">À réapprov.</span>
                 </div>
-                <span className="text-xl sm:text-2xl font-black text-[#0F172A] block leading-none">
-                  {storefrontViews}
-                </span>
-                <span className="text-[10px] text-slate-500 font-semibold block mt-1">
-                  {storefrontClicks} clics d'intérêt
-                </span>
-              </div>
 
-              {/* Stat 5: Avis Clients */}
-              <div 
-                onClick={() => setDashboardTab('reviews')}
-                className="bg-amber-50/50 hover:bg-amber-100/60 border border-amber-200/60 rounded-2xl p-3.5 transition cursor-pointer group shadow-3xs"
-              >
-                <div className="flex items-center justify-between text-slate-600 mb-1">
-                  <span className="text-[10px] font-black uppercase tracking-wider text-amber-700">Avis Clients</span>
-                  <Star className="w-4 h-4 fill-amber-500 text-amber-500 group-hover:scale-110 transition" />
+                {/* 4. Commandes en attente */}
+                <div onClick={() => setDashboardTab('orders')} className="bg-purple-50/70 hover:bg-purple-100/80 border border-purple-200/80 rounded-xl p-2.5 transition cursor-pointer group">
+                  <span className="text-[9px] font-black uppercase tracking-wider text-[#7C3AED] block truncate">Cmds Attente</span>
+                  <span className="text-base font-black text-purple-900 block leading-tight mt-0.5">{kpiPendingOrders}</span>
+                  <span className="text-[8px] text-purple-700 font-bold block mt-0.5">À traiter</span>
                 </div>
-                <span className="text-xl sm:text-2xl font-black text-[#0F172A] block leading-none">
-                  {averageRating} <span className="text-[10px] font-bold text-slate-500">/ 5.0</span>
-                </span>
-                <span className="text-[10px] text-slate-500 font-semibold block mt-1">
-                  {reviews.length} avis certifiés
-                </span>
-              </div>
 
-              {/* Stat 6: Niveau Stock */}
-              <div 
-                onClick={() => setDashboardTab('stock')}
-                className={`border rounded-2xl p-3.5 transition cursor-pointer group shadow-3xs ${
-                  lowStockProducts.length > 0 
-                    ? 'bg-rose-50/80 border-rose-200 hover:bg-rose-100/80' 
-                    : 'bg-emerald-50/50 border-emerald-200 hover:bg-emerald-100/60'
-                }`}
-              >
-                <div className="flex items-center justify-between mb-1">
-                  <span className={`text-[10px] font-black uppercase tracking-wider ${lowStockProducts.length > 0 ? 'text-rose-700' : 'text-emerald-700'}`}>Stock</span>
-                  <BarChart3 className={`w-4 h-4 group-hover:scale-110 transition ${lowStockProducts.length > 0 ? 'text-rose-600' : 'text-emerald-600'}`} />
+                {/* 5. Commandes confirmées */}
+                <div onClick={() => setDashboardTab('orders')} className="bg-purple-50/70 hover:bg-purple-100/80 border border-purple-200/80 rounded-xl p-2.5 transition cursor-pointer group">
+                  <span className="text-[9px] font-black uppercase tracking-wider text-[#7C3AED] block truncate">Cmds Prep</span>
+                  <span className="text-base font-black text-purple-900 block leading-tight mt-0.5">{kpiConfirmedOrders}</span>
+                  <span className="text-[8px] text-purple-700 font-bold block mt-0.5">En cours</span>
                 </div>
-                <span className="text-xl sm:text-2xl font-black text-[#0F172A] block leading-none">
-                  {totalStockCount} <span className="text-[10px] font-bold text-slate-500">unités</span>
-                </span>
-                <span className={`text-[10px] font-bold block mt-1 ${lowStockProducts.length > 0 ? 'text-rose-700' : 'text-emerald-700'}`}>
-                  {lowStockProducts.length > 0 ? `⚠️ ${lowStockProducts.length} stock faible` : '✓ Réserve optimale'}
-                </span>
-              </div>
 
+                {/* 6. Commandes livrées */}
+                <div onClick={() => setDashboardTab('orders')} className="bg-emerald-50/70 hover:bg-emerald-100/80 border border-emerald-200/80 rounded-xl p-2.5 transition cursor-pointer group">
+                  <span className="text-[9px] font-black uppercase tracking-wider text-emerald-700 block truncate">Cmds Livrées</span>
+                  <span className="text-base font-black text-emerald-900 block leading-tight mt-0.5">{kpiDeliveredOrders}</span>
+                  <span className="text-[8px] text-emerald-700 font-bold block mt-0.5">Finalisées</span>
+                </div>
+
+                {/* 7. Commandes annulées */}
+                <div onClick={() => setDashboardTab('orders')} className="bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-xl p-2.5 transition cursor-pointer group">
+                  <span className="text-[9px] font-black uppercase tracking-wider text-slate-600 block truncate">Annulées</span>
+                  <span className="text-base font-black text-slate-800 block leading-tight mt-0.5">{kpiCancelledOrders}</span>
+                  <span className="text-[8px] text-slate-500 font-bold block mt-0.5">0% perte</span>
+                </div>
+
+                {/* 8. CA du jour */}
+                <div onClick={() => setDashboardTab('payments')} className="bg-amber-50/70 hover:bg-amber-100/80 border border-amber-200/80 rounded-xl p-2.5 transition cursor-pointer group">
+                  <span className="text-[9px] font-black uppercase tracking-wider text-amber-700 block truncate">CA Jour</span>
+                  <span className="text-xs font-black text-amber-950 block leading-tight mt-0.5">{kpiTodaySales.toLocaleString('fr-FR')} F</span>
+                  <span className="text-[8px] text-emerald-700 font-bold block mt-0.5">Aujourd'hui</span>
+                </div>
+
+                {/* 9. CA Semaine */}
+                <div onClick={() => setDashboardTab('payments')} className="bg-amber-50/70 hover:bg-amber-100/80 border border-amber-200/80 rounded-xl p-2.5 transition cursor-pointer group">
+                  <span className="text-[9px] font-black uppercase tracking-wider text-amber-700 block truncate">CA Semaine</span>
+                  <span className="text-xs font-black text-amber-950 block leading-tight mt-0.5">{kpiWeeklySales.toLocaleString('fr-FR')} F</span>
+                  <span className="text-[8px] text-amber-700 font-bold block mt-0.5">7 jours</span>
+                </div>
+
+                {/* 10. CA Mois */}
+                <div onClick={() => setDashboardTab('payments')} className="bg-amber-50/70 hover:bg-amber-100/80 border border-amber-200/80 rounded-xl p-2.5 transition cursor-pointer group">
+                  <span className="text-[9px] font-black uppercase tracking-wider text-amber-700 block truncate">CA Mois</span>
+                  <span className="text-xs font-black text-amber-950 block leading-tight mt-0.5">{kpiMonthlySales.toLocaleString('fr-FR')} F</span>
+                  <span className="text-[8px] text-amber-700 font-bold block mt-0.5">30 jours</span>
+                </div>
+
+                {/* 11. Revenus Totaux */}
+                <div onClick={() => setDashboardTab('payments')} className="bg-emerald-50/80 hover:bg-emerald-100/90 border border-emerald-300 rounded-xl p-2.5 transition cursor-pointer group">
+                  <span className="text-[9px] font-black uppercase tracking-wider text-[#16A34A] block truncate">Revenus Totaux</span>
+                  <span className="text-xs font-black text-emerald-950 block leading-tight mt-0.5">{kpiTotalRevenue.toLocaleString('fr-FR')} F</span>
+                  <span className="text-[8px] text-emerald-700 font-bold block mt-0.5">Cumulé</span>
+                </div>
+
+                {/* 12. Visiteurs */}
+                <div onClick={() => setDashboardTab('stats')} className="bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-xl p-2.5 transition cursor-pointer group">
+                  <span className="text-[9px] font-black uppercase tracking-wider text-slate-600 block truncate">Visiteurs</span>
+                  <span className="text-base font-black text-slate-900 block leading-tight mt-0.5">{kpiVisitors}</span>
+                  <span className="text-[8px] text-slate-500 font-bold block mt-0.5">Vues shop</span>
+                </div>
+
+                {/* 13. Favoris */}
+                <div onClick={() => setDashboardTab('stats')} className="bg-[#7C3AED]/10 hover:bg-[#7C3AED]/20 border border-purple-200 rounded-xl p-2.5 transition cursor-pointer group">
+                  <span className="text-[9px] font-black uppercase tracking-wider text-[#7C3AED] block truncate">Favoris</span>
+                  <span className="text-base font-black text-purple-950 block leading-tight mt-0.5">{kpiFavorites}</span>
+                  <span className="text-[8px] text-purple-700 font-bold block mt-0.5">Acheteurs</span>
+                </div>
+
+                {/* 14. Nouveaux Clients */}
+                <div onClick={() => setDashboardTab('stats')} className="bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-xl p-2.5 transition cursor-pointer group">
+                  <span className="text-[9px] font-black uppercase tracking-wider text-slate-600 block truncate">Nouveaux Clts</span>
+                  <span className="text-base font-black text-slate-900 block leading-tight mt-0.5">{kpiNewCustomers}</span>
+                  <span className="text-[8px] text-slate-500 font-bold block mt-0.5">Nouveaux</span>
+                </div>
+
+                {/* 15. Note moyenne */}
+                <div onClick={() => setDashboardTab('reviews')} className="bg-amber-50 hover:bg-amber-100 border border-amber-200 rounded-xl p-2.5 transition cursor-pointer group">
+                  <span className="text-[9px] font-black uppercase tracking-wider text-amber-700 block truncate">Note Moy.</span>
+                  <span className="text-base font-black text-amber-950 block leading-tight mt-0.5">★ {kpiAverageRating}</span>
+                  <span className="text-[8px] text-amber-700 font-bold block mt-0.5">Avis certifiés</span>
+                </div>
+
+                {/* 16. Taux de conversion */}
+                <div onClick={() => setDashboardTab('stats')} className="bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 rounded-xl p-2.5 transition cursor-pointer group">
+                  <span className="text-[9px] font-black uppercase tracking-wider text-emerald-700 block truncate">Conversion</span>
+                  <span className="text-base font-black text-emerald-950 block leading-tight mt-0.5">{kpiConversionRate}%</span>
+                  <span className="text-[8px] text-emerald-700 font-bold block mt-0.5">Excellente</span>
+                </div>
+
+              </div>
             </div>
           </div>
 
           {/* --------------------------------------------------------- */}
-          {/* QUICK ACTION MENU GRID (ALL 10 QUICK ACTIONS + OVERVIEW)  */}
+          {/* QUICK ACTION MENU GRID (ALL 16 QUICK ACTIONS)             */}
           {/* --------------------------------------------------------- */}
           <div className="bg-white/95 backdrop-blur-md rounded-3xl p-5 border border-slate-200/90 shadow-sm space-y-3">
             <div className="flex items-center justify-between border-b border-slate-200/80 pb-2.5">
               <h3 className="font-extrabold text-slate-900 text-xs uppercase tracking-wider flex items-center gap-2">
                 <Sparkles className="w-4 h-4 text-[#16A34A]" />
-                <span>Menu d'Actions Rapides Vendeur</span>
+                <span>Menu d'Actions Rapides Vendeur (16 Outils)</span>
               </h3>
-              <span className="text-[10px] font-bold text-slate-400">Accès direct 1-clic</span>
+              <span className="text-[10px] font-bold text-slate-400">Accès instantané 1-clic</span>
             </div>
 
-            <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-11 gap-2">
+            <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-8 lg:grid-cols-16 gap-2">
               
-              {/* Overview */}
+              {/* 1. Vue Générale */}
               <button
-                onClick={() => handleQuickAction('overview')}
-                className={`p-3 rounded-2xl border flex flex-col items-center justify-center gap-1.5 transition text-center cursor-pointer group ${
+                onClick={() => setDashboardTab('overview')}
+                className={`p-2.5 rounded-2xl border flex flex-col items-center justify-center gap-1 transition text-center cursor-pointer group ${
                   dashboardTab === 'overview' 
                     ? 'bg-gradient-to-r from-[#16A34A] to-[#15803D] text-white border-emerald-600 shadow-sm font-black' 
                     : 'bg-slate-50 hover:bg-emerald-50/50 text-slate-800 border-slate-200/80 font-bold'
                 }`}
               >
                 <Compass className="w-4 h-4 group-hover:scale-110 transition" />
-                <span className="text-[10px] leading-tight">Vue Générale</span>
+                <span className="text-[9px] leading-tight">Vue Générale</span>
               </button>
 
-              {/* Action 1: Ajouter Produit */}
+              {/* 2. Ajouter Produit */}
               <button
                 onClick={() => setShowAddProductModal(true)}
-                className="p-3 rounded-2xl bg-emerald-100/80 hover:bg-emerald-200/80 text-[#16A34A] border border-emerald-300 flex flex-col items-center justify-center gap-1.5 transition text-center cursor-pointer group shadow-2xs"
+                className="p-2.5 rounded-2xl bg-emerald-100 hover:bg-emerald-200 text-[#16A34A] border border-emerald-300 flex flex-col items-center justify-center gap-1 transition text-center cursor-pointer group shadow-3xs"
               >
                 <Plus className="w-4 h-4 stroke-[3] group-hover:scale-110 transition" />
-                <span className="text-[10px] font-black leading-tight">+ Produit</span>
+                <span className="text-[9px] font-black leading-tight">+ Produit</span>
               </button>
 
-              {/* Action 2: Gérer Produits */}
+              {/* 3. Gérer Produits */}
               <button
-                onClick={() => handleQuickAction('products')}
-                className={`p-3 rounded-2xl border flex flex-col items-center justify-center gap-1.5 transition text-center cursor-pointer group ${
+                onClick={() => setDashboardTab('products')}
+                className={`p-2.5 rounded-2xl border flex flex-col items-center justify-center gap-1 transition text-center cursor-pointer group ${
                   dashboardTab === 'products' ? 'bg-[#16A34A] text-white border-[#16A34A] font-black shadow-sm' : 'bg-slate-50 hover:bg-slate-100 text-slate-800 border-slate-200/80 font-bold'
                 }`}
               >
                 <ShoppingBag className="w-4 h-4 group-hover:scale-110 transition" />
-                <span className="text-[10px] leading-tight">Gérer Produits</span>
+                <span className="text-[9px] leading-tight">Produits</span>
               </button>
 
-              {/* Action 3: Commandes */}
+              {/* 4. Catégories */}
               <button
-                onClick={() => handleQuickAction('orders')}
-                className={`p-3 rounded-2xl border flex flex-col items-center justify-center gap-1.5 transition text-center cursor-pointer relative group ${
+                onClick={() => setDashboardTab('categories')}
+                className={`p-2.5 rounded-2xl border flex flex-col items-center justify-center gap-1 transition text-center cursor-pointer group ${
+                  dashboardTab === 'categories' ? 'bg-[#16A34A] text-white border-[#16A34A] font-black shadow-sm' : 'bg-slate-50 hover:bg-slate-100 text-slate-800 border-slate-200/80 font-bold'
+                }`}
+              >
+                <Layers className="w-4 h-4 group-hover:scale-110 transition" />
+                <span className="text-[9px] leading-tight">Catégories</span>
+              </button>
+
+              {/* 5. Stock */}
+              <button
+                onClick={() => setDashboardTab('stock')}
+                className={`p-2.5 rounded-2xl border flex flex-col items-center justify-center gap-1 transition text-center cursor-pointer group ${
+                  dashboardTab === 'stock' ? 'bg-[#16A34A] text-white border-[#16A34A] font-black shadow-sm' : 'bg-slate-50 hover:bg-slate-100 text-slate-800 border-slate-200/80 font-bold'
+                }`}
+              >
+                <BarChart3 className="w-4 h-4 group-hover:scale-110 transition" />
+                <span className="text-[9px] leading-tight">Stock</span>
+              </button>
+
+              {/* 6. Commandes */}
+              <button
+                onClick={() => setDashboardTab('orders')}
+                className={`p-2.5 rounded-2xl border flex flex-col items-center justify-center gap-1 transition text-center cursor-pointer relative group ${
                   dashboardTab === 'orders' ? 'bg-[#16A34A] text-white border-[#16A34A] font-black shadow-sm' : 'bg-slate-50 hover:bg-slate-100 text-slate-800 border-slate-200/80 font-bold'
                 }`}
               >
                 <PackageCheck className="w-4 h-4 group-hover:scale-110 transition" />
-                <span className="text-[10px] leading-tight">Commandes</span>
+                <span className="text-[9px] leading-tight">Commandes</span>
                 {pendingOrdersCount > 0 && (
                   <span className="absolute -top-1 -right-1 bg-amber-500 text-slate-950 font-black text-[9px] w-4 h-4 rounded-full flex items-center justify-center shadow-xs">
                     {pendingOrdersCount}
@@ -759,70 +906,48 @@ export default function MerchantDashboard({
                 )}
               </button>
 
-              {/* Action 4: Stock */}
+              {/* 7. Paiements */}
               <button
-                onClick={() => handleQuickAction('stock')}
-                className={`p-3 rounded-2xl border flex flex-col items-center justify-center gap-1.5 transition text-center cursor-pointer group ${
-                  dashboardTab === 'stock' ? 'bg-[#16A34A] text-white border-[#16A34A] font-black shadow-sm' : 'bg-slate-50 hover:bg-slate-100 text-slate-800 border-slate-200/80 font-bold'
-                }`}
-              >
-                <BarChart3 className="w-4 h-4 group-hover:scale-110 transition" />
-                <span className="text-[10px] leading-tight">Stock</span>
-              </button>
-
-              {/* Action 5: Paiements */}
-              <button
-                onClick={() => handleQuickAction('payments')}
-                className={`p-3 rounded-2xl border flex flex-col items-center justify-center gap-1.5 transition text-center cursor-pointer group ${
+                onClick={() => setDashboardTab('payments')}
+                className={`p-2.5 rounded-2xl border flex flex-col items-center justify-center gap-1 transition text-center cursor-pointer group ${
                   dashboardTab === 'payments' ? 'bg-[#16A34A] text-white border-[#16A34A] font-black shadow-sm' : 'bg-slate-50 hover:bg-slate-100 text-slate-800 border-slate-200/80 font-bold'
                 }`}
               >
                 <CreditCard className="w-4 h-4 group-hover:scale-110 transition" />
-                <span className="text-[10px] leading-tight">Paiements</span>
+                <span className="text-[9px] leading-tight">Paiements</span>
               </button>
 
-              {/* Action 6: Livraisons */}
+              {/* 8. Livraisons */}
               <button
-                onClick={() => handleQuickAction('deliveries')}
-                className={`p-3 rounded-2xl border flex flex-col items-center justify-center gap-1.5 transition text-center cursor-pointer group ${
+                onClick={() => setDashboardTab('deliveries')}
+                className={`p-2.5 rounded-2xl border flex flex-col items-center justify-center gap-1 transition text-center cursor-pointer group ${
                   dashboardTab === 'deliveries' ? 'bg-[#16A34A] text-white border-[#16A34A] font-black shadow-sm' : 'bg-slate-50 hover:bg-slate-100 text-slate-800 border-slate-200/80 font-bold'
                 }`}
               >
                 <Truck className="w-4 h-4 group-hover:scale-110 transition" />
-                <span className="text-[10px] leading-tight">Livraisons</span>
+                <span className="text-[9px] leading-tight">Livraisons</span>
               </button>
 
-              {/* Action 7: Promotions */}
+              {/* 9. Promotions */}
               <button
-                onClick={() => handleQuickAction('promotions')}
-                className={`p-3 rounded-2xl border flex flex-col items-center justify-center gap-1.5 transition text-center cursor-pointer group ${
+                onClick={() => setDashboardTab('promotions')}
+                className={`p-2.5 rounded-2xl border flex flex-col items-center justify-center gap-1 transition text-center cursor-pointer group ${
                   dashboardTab === 'promotions' ? 'bg-[#16A34A] text-white border-[#16A34A] font-black shadow-sm' : 'bg-slate-50 hover:bg-slate-100 text-slate-800 border-slate-200/80 font-bold'
                 }`}
               >
                 <Tag className="w-4 h-4 group-hover:scale-110 transition" />
-                <span className="text-[10px] leading-tight">Promotions</span>
+                <span className="text-[9px] leading-tight">Promotions</span>
               </button>
 
-              {/* Action 8: Statistiques */}
+              {/* 10. Messages */}
               <button
-                onClick={() => handleQuickAction('stats')}
-                className={`p-3 rounded-2xl border flex flex-col items-center justify-center gap-1.5 transition text-center cursor-pointer group ${
-                  dashboardTab === 'stats' ? 'bg-[#16A34A] text-white border-[#16A34A] font-black shadow-sm' : 'bg-slate-50 hover:bg-slate-100 text-slate-800 border-slate-200/80 font-bold'
-                }`}
-              >
-                <LineChart className="w-4 h-4 group-hover:scale-110 transition" />
-                <span className="text-[10px] leading-tight">Statistiques</span>
-              </button>
-
-              {/* Action 9: Messages */}
-              <button
-                onClick={() => handleQuickAction('messages')}
-                className={`p-3 rounded-2xl border flex flex-col items-center justify-center gap-1.5 transition text-center cursor-pointer relative group ${
+                onClick={() => setDashboardTab('messages')}
+                className={`p-2.5 rounded-2xl border flex flex-col items-center justify-center gap-1 transition text-center cursor-pointer relative group ${
                   dashboardTab === 'messages' ? 'bg-[#16A34A] text-white border-[#16A34A] font-black shadow-sm' : 'bg-slate-50 hover:bg-slate-100 text-slate-800 border-slate-200/80 font-bold'
                 }`}
               >
                 <MessageSquare className="w-4 h-4 group-hover:scale-110 transition" />
-                <span className="text-[10px] leading-tight">Messages</span>
+                <span className="text-[9px] leading-tight">Messages</span>
                 {messages.some(m => m.unread) && (
                   <span className="absolute -top-1 -right-1 bg-purple-600 text-white font-black text-[9px] w-4 h-4 rounded-full flex items-center justify-center shadow-xs">
                     !
@@ -830,15 +955,70 @@ export default function MerchantDashboard({
                 )}
               </button>
 
-              {/* Action 10: Paramètres */}
+              {/* 11. Avis Clients */}
               <button
-                onClick={() => handleQuickAction('profile')}
-                className={`p-3 rounded-2xl border flex flex-col items-center justify-center gap-1.5 transition text-center cursor-pointer group ${
+                onClick={() => setDashboardTab('reviews')}
+                className={`p-2.5 rounded-2xl border flex flex-col items-center justify-center gap-1 transition text-center cursor-pointer group ${
+                  dashboardTab === 'reviews' ? 'bg-[#16A34A] text-white border-[#16A34A] font-black shadow-sm' : 'bg-slate-50 hover:bg-slate-100 text-slate-800 border-slate-200/80 font-bold'
+                }`}
+              >
+                <Star className="w-4 h-4 group-hover:scale-110 transition" />
+                <span className="text-[9px] leading-tight">Avis Clients</span>
+              </button>
+
+              {/* 12. Statistiques */}
+              <button
+                onClick={() => setDashboardTab('stats')}
+                className={`p-2.5 rounded-2xl border flex flex-col items-center justify-center gap-1 transition text-center cursor-pointer group ${
+                  dashboardTab === 'stats' ? 'bg-[#16A34A] text-white border-[#16A34A] font-black shadow-sm' : 'bg-slate-50 hover:bg-slate-100 text-slate-800 border-slate-200/80 font-bold'
+                }`}
+              >
+                <LineChart className="w-4 h-4 group-hover:scale-110 transition" />
+                <span className="text-[9px] leading-tight">Statistiques</span>
+              </button>
+
+              {/* 13. Factures */}
+              <button
+                onClick={() => setDashboardTab('invoices')}
+                className={`p-2.5 rounded-2xl border flex flex-col items-center justify-center gap-1 transition text-center cursor-pointer group ${
+                  dashboardTab === 'invoices' ? 'bg-[#16A34A] text-white border-[#16A34A] font-black shadow-sm' : 'bg-slate-50 hover:bg-slate-100 text-slate-800 border-slate-200/80 font-bold'
+                }`}
+              >
+                <FileSpreadsheet className="w-4 h-4 group-hover:scale-110 transition" />
+                <span className="text-[9px] leading-tight">Factures</span>
+              </button>
+
+              {/* 14. Calendrier */}
+              <button
+                onClick={() => setDashboardTab('calendar')}
+                className={`p-2.5 rounded-2xl border flex flex-col items-center justify-center gap-1 transition text-center cursor-pointer group ${
+                  dashboardTab === 'calendar' ? 'bg-[#16A34A] text-white border-[#16A34A] font-black shadow-sm' : 'bg-slate-50 hover:bg-slate-100 text-slate-800 border-slate-200/80 font-bold'
+                }`}
+              >
+                <Calendar className="w-4 h-4 group-hover:scale-110 transition" />
+                <span className="text-[9px] leading-tight">Calendrier</span>
+              </button>
+
+              {/* 15. Assistance Support */}
+              <button
+                onClick={() => setDashboardTab('support')}
+                className={`p-2.5 rounded-2xl border flex flex-col items-center justify-center gap-1 transition text-center cursor-pointer group ${
+                  dashboardTab === 'support' ? 'bg-[#16A34A] text-white border-[#16A34A] font-black shadow-sm' : 'bg-slate-50 hover:bg-slate-100 text-slate-800 border-slate-200/80 font-bold'
+                }`}
+              >
+                <Headphones className="w-4 h-4 group-hover:scale-110 transition" />
+                <span className="text-[9px] leading-tight">Assistance</span>
+              </button>
+
+              {/* 16. Paramètres */}
+              <button
+                onClick={() => setDashboardTab('profile')}
+                className={`p-2.5 rounded-2xl border flex flex-col items-center justify-center gap-1 transition text-center cursor-pointer group ${
                   dashboardTab === 'profile' ? 'bg-[#16A34A] text-white border-[#16A34A] font-black shadow-sm' : 'bg-slate-50 hover:bg-slate-100 text-slate-800 border-slate-200/80 font-bold'
                 }`}
               >
                 <Settings className="w-4 h-4 group-hover:scale-110 transition" />
-                <span className="text-[10px] leading-tight">Paramètres</span>
+                <span className="text-[9px] leading-tight">Paramètres</span>
               </button>
 
             </div>
@@ -1718,6 +1898,251 @@ export default function MerchantDashboard({
             </div>
           )}
 
+          {/* CATEGORIES TAB */}
+          {dashboardTab === 'categories' && (
+            <div className="bg-white rounded-3xl p-6 border border-slate-200/90 shadow-sm space-y-6">
+              <div className="flex items-center justify-between border-b border-slate-100 pb-4">
+                <div>
+                  <h3 className="font-extrabold text-slate-900 text-lg">Catégories de Produits de la Boutique</h3>
+                  <p className="text-xs text-slate-500">Organisez vos articles par rayons pour faciliter les achats des clients.</p>
+                </div>
+                <button 
+                  onClick={() => setShowAddProductModal(true)}
+                  className="bg-[#16A34A] text-white font-extrabold text-xs py-2.5 px-4 rounded-xl flex items-center gap-1.5 cursor-pointer shadow-3xs"
+                >
+                  <Plus className="w-4 h-4" />
+                  <span>Nouvelle Catégorie</span>
+                </button>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+                {['Alimentation', 'Boissons & Jus', 'Électronique & Mobile', 'Mode & Beauté', 'Maison & Décoration', 'Scolaire & Bureau'].map((cat, idx) => {
+                  const count = merchantProducts.filter(p => p.category === cat || idx % 2 === 0).length;
+                  return (
+                    <div key={cat} className="p-4 bg-slate-50 hover:bg-emerald-50/50 rounded-2xl border border-slate-200/80 transition flex items-center justify-between">
+                      <div>
+                        <h4 className="font-extrabold text-slate-900 text-sm">{cat}</h4>
+                        <p className="text-xs text-slate-500 mt-0.5">{count} articles en vente</p>
+                      </div>
+                      <span className="w-8 h-8 rounded-xl bg-emerald-100 text-[#16A34A] font-black text-xs flex items-center justify-center">
+                        {count}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* COUPONS & PROMOTIONS TAB */}
+          {(dashboardTab === 'promotions' || dashboardTab === 'coupons') && (
+            <div className="bg-white rounded-3xl p-6 border border-slate-200/90 shadow-sm space-y-6">
+              <div className="flex items-center justify-between border-b border-slate-100 pb-4">
+                <div>
+                  <h3 className="font-extrabold text-slate-900 text-lg">Promotions & Codes Promo Vendeur</h3>
+                  <p className="text-xs text-slate-500">Boostez vos ventes avec des remises spéciales et coupons de réduction.</p>
+                </div>
+                <button 
+                  onClick={() => alert('Code promo créé avec succès : "AFRI-BAFOUSSAM-10" (-10% sur toute la boutique !)')}
+                  className="bg-gradient-to-r from-[#16A34A] to-[#7C3AED] text-white font-extrabold text-xs py-2.5 px-4 rounded-xl flex items-center gap-1.5 cursor-pointer shadow-sm"
+                >
+                  <Plus className="w-4 h-4" />
+                  <span>Créer un Code Promo</span>
+                </button>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="p-5 bg-emerald-50 border border-emerald-200 rounded-2xl space-y-2">
+                  <div className="flex justify-between items-center">
+                    <span className="bg-emerald-600 text-white font-black text-[10px] px-2.5 py-0.5 rounded-full uppercase">Actif</span>
+                    <Tag className="w-4 h-4 text-[#16A34A]" />
+                  </div>
+                  <p className="font-extrabold text-slate-900 text-base">BIENVENUE10</p>
+                  <p className="text-xs text-slate-600">-10% sur la première commande dès 5 000 FCFA</p>
+                  <p className="text-[10px] text-slate-400 font-bold">Utilisé 28 fois ce mois</p>
+                </div>
+
+                <div className="p-5 bg-purple-50 border border-purple-200 rounded-2xl space-y-2">
+                  <div className="flex justify-between items-center">
+                    <span className="bg-[#7C3AED] text-white font-black text-[10px] px-2.5 py-0.5 rounded-full uppercase">VIP</span>
+                    <Sparkles className="w-4 h-4 text-[#7C3AED]" />
+                  </div>
+                  <p className="font-extrabold text-slate-900 text-base">BAFOUSSAM-EXPRESS</p>
+                  <p className="text-xs text-slate-600">Livraison gratuite dès 15 000 FCFA d'achat</p>
+                  <p className="text-[10px] text-slate-400 font-bold">Utilisé 14 fois ce mois</p>
+                </div>
+
+                <div className="p-5 bg-amber-50 border border-amber-200 rounded-2xl space-y-2">
+                  <div className="flex justify-between items-center">
+                    <span className="bg-amber-600 text-white font-black text-[10px] px-2.5 py-0.5 rounded-full uppercase">Flash</span>
+                    <Clock className="w-4 h-4 text-amber-600" />
+                  </div>
+                  <p className="font-extrabold text-slate-900 text-base">WEEKEND-SPECIAL</p>
+                  <p className="text-xs text-slate-600">-2000 FCFA sur tous les paniers {'>'} 20 000 FCFA</p>
+                  <p className="text-[10px] text-slate-400 font-bold">Expire dans 2 jours</p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* INVOICES TAB */}
+          {dashboardTab === 'invoices' && (
+            <div className="bg-white rounded-3xl p-6 border border-slate-200/90 shadow-sm space-y-6">
+              <div className="flex items-center justify-between border-b border-slate-100 pb-4">
+                <div>
+                  <h3 className="font-extrabold text-slate-900 text-lg">Factures & Reçus Officiels AfriNova</h3>
+                  <p className="text-xs text-slate-500">Téléchargez les bordereaux de virement et récapitulatifs comptables.</p>
+                </div>
+                <button 
+                  onClick={() => alert('Exportation Excel / PDF des factures générée !')}
+                  className="bg-slate-100 hover:bg-slate-200 text-slate-800 font-extrabold text-xs py-2.5 px-4 rounded-xl border border-slate-200 flex items-center gap-1.5 cursor-pointer"
+                >
+                  <FileSpreadsheet className="w-4 h-4 text-slate-600" />
+                  <span>Exporter PDF/Excel</span>
+                </button>
+              </div>
+
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-xs">
+                  <thead className="bg-slate-50 border-b border-slate-200 text-slate-500 font-bold uppercase text-[10px]">
+                    <tr>
+                      <th className="p-3">N° Facture</th>
+                      <th className="p-3">Période</th>
+                      <th className="p-3">Montant Brut</th>
+                      <th className="p-3">Commission AfriNova (0.5%)</th>
+                      <th className="p-3">Montant Reçu (OM/MOMO)</th>
+                      <th className="p-3">Statut</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100 font-semibold">
+                    {[
+                      { id: 'FACT-2026-08', period: 'Août 2026', brut: 245000, comm: 1225, net: 243775, status: 'Payé' },
+                      { id: 'FACT-2026-07', period: 'Juillet 2026', brut: 310000, comm: 1550, net: 308450, status: 'Payé' },
+                      { id: 'FACT-2026-06', period: 'Juin 2026', brut: 180000, comm: 900, net: 179100, status: 'Payé' },
+                    ].map((f) => (
+                      <tr key={f.id} className="hover:bg-slate-50/50">
+                        <td className="p-3 font-mono font-bold text-slate-900">{f.id}</td>
+                        <td className="p-3 text-slate-600">{f.period}</td>
+                        <td className="p-3 font-bold text-slate-900">{f.brut.toLocaleString('fr-FR')} FCFA</td>
+                        <td className="p-3 text-rose-600">-{f.comm.toLocaleString('fr-FR')} FCFA</td>
+                        <td className="p-3 font-extrabold text-[#16A34A]">{f.net.toLocaleString('fr-FR')} FCFA</td>
+                        <td className="p-3">
+                          <span className="bg-emerald-100 text-emerald-800 text-[10px] font-black px-2.5 py-0.5 rounded-full">
+                            ✓ {f.status}
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
+          {/* CALENDAR TAB */}
+          {dashboardTab === 'calendar' && (
+            <div className="bg-white rounded-3xl p-6 border border-slate-200/90 shadow-sm space-y-6">
+              <div className="flex items-center justify-between border-b border-slate-100 pb-4">
+                <div>
+                  <h3 className="font-extrabold text-slate-900 text-lg">Planning & Retraits Bafoussam</h3>
+                  <p className="text-xs text-slate-500">Gérez les créneaux de livraison et les rendez-vous de retrait en boutique.</p>
+                </div>
+                <span className="bg-purple-100 text-[#7C3AED] font-extrabold text-xs py-1.5 px-3 rounded-full">
+                  Août 2026
+                </span>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200 space-y-3">
+                  <h4 className="font-extrabold text-slate-900 text-xs uppercase tracking-wider flex items-center gap-2">
+                    <Calendar className="w-4 h-4 text-[#16A34A]" />
+                    <span>Créneaux de Retrait Aujourd'hui</span>
+                  </h4>
+                  <div className="space-y-2 text-xs">
+                    <div className="p-3 bg-white rounded-xl border border-slate-200 flex justify-between items-center">
+                      <div>
+                        <p className="font-bold text-slate-900">09h30 - 10h30</p>
+                        <p className="text-[11px] text-slate-500">M. Emmanuel Talla • Sac de Riz Parfumé</p>
+                      </div>
+                      <span className="bg-emerald-100 text-emerald-800 text-[10px] font-bold px-2 py-0.5 rounded-full">Prêt</span>
+                    </div>
+
+                    <div className="p-3 bg-white rounded-xl border border-slate-200 flex justify-between items-center">
+                      <div>
+                        <p className="font-bold text-slate-900">14h00 - 15h00</p>
+                        <p className="text-[11px] text-slate-500">Mme. Claudine • Huile Diamaor 5L</p>
+                      </div>
+                      <span className="bg-amber-100 text-amber-800 text-[10px] font-bold px-2 py-0.5 rounded-full">En prép</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="p-4 bg-emerald-50/60 rounded-2xl border border-emerald-200 space-y-3">
+                  <h4 className="font-extrabold text-slate-900 text-xs uppercase tracking-wider flex items-center gap-2">
+                    <Truck className="w-4 h-4 text-[#16A34A]" />
+                    <span>Livraisons Programmées</span>
+                  </h4>
+                  <p className="text-xs text-slate-600 leading-relaxed">
+                    Les livreurs AfriNova passent chaque jour à <strong>11h00</strong> et <strong>16h30</strong> pour collecter les colis expédiés par coursier à Bafoussam, Mbouda, Dschang et Bandjoun.
+                  </p>
+                  <button 
+                    onClick={() => alert('Demande de passage de coursier confirmée pour 16h30 !')}
+                    className="w-full bg-[#16A34A] text-white font-extrabold text-xs py-2.5 rounded-xl hover:bg-[#15803D] transition cursor-pointer"
+                  >
+                    Demander un passage coursier aujourd'hui
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* SUPPORT TAB */}
+          {dashboardTab === 'support' && (
+            <div className="bg-white rounded-3xl p-6 border border-slate-200/90 shadow-sm space-y-6">
+              <div className="flex items-center justify-between border-b border-slate-100 pb-4">
+                <div>
+                  <h3 className="font-extrabold text-slate-900 text-lg">Assistance & Support Vendeur AfriNova</h3>
+                  <p className="text-xs text-slate-500">Un conseiller dédié vous accompagne 7j/7 pour booster vos ventes à Bafoussam.</p>
+                </div>
+                <span className="bg-emerald-100 text-emerald-800 text-xs font-bold px-3 py-1 rounded-full">
+                  ● Ligne Ouverte
+                </span>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="p-5 bg-emerald-50 border border-emerald-200 rounded-2xl space-y-2 text-center">
+                  <Phone className="w-8 h-8 text-[#16A34A] mx-auto" />
+                  <h4 className="font-extrabold text-slate-900 text-sm">Appel Téléphonique</h4>
+                  <p className="text-xs text-slate-600">+237 677 00 00 00</p>
+                  <a href="tel:+237677000000" className="inline-block mt-2 text-xs font-black text-[#16A34A] hover:underline">
+                    Appeler l'assistance →
+                  </a>
+                </div>
+
+                <div className="p-5 bg-purple-50 border border-purple-200 rounded-2xl space-y-2 text-center">
+                  <MessageSquare className="w-8 h-8 text-[#7C3AED] mx-auto" />
+                  <h4 className="font-extrabold text-slate-900 text-sm">WhatsApp Direct Vendeur</h4>
+                  <p className="text-xs text-slate-600">Réponse en moins de 5 min</p>
+                  <a href="https://wa.me/237677000000" target="_blank" rel="noreferrer" className="inline-block mt-2 text-xs font-black text-[#7C3AED] hover:underline">
+                    Démarrer un chat →
+                  </a>
+                </div>
+
+                <div className="p-5 bg-amber-50 border border-amber-200 rounded-2xl space-y-2 text-center">
+                  <Headphones className="w-8 h-8 text-amber-600 mx-auto" />
+                  <h4 className="font-extrabold text-slate-900 text-sm">Ticket de Réclamation</h4>
+                  <p className="text-xs text-slate-600">Gestion litige & remboursement</p>
+                  <button 
+                    onClick={() => setShowSupportModal(true)}
+                    className="inline-block mt-2 text-xs font-black text-amber-700 hover:underline cursor-pointer"
+                  >
+                    Ouvrir un ticket →
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* STATS TAB */}
           {dashboardTab === 'stats' && (
             <div className="bg-white rounded-3xl p-6 border border-slate-200/90 shadow-sm space-y-6">
@@ -2137,6 +2562,242 @@ export default function MerchantDashboard({
                 Confirmer le Paiement Mobile Money (100 000 FCFA)
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================= */}
+      {/* MODAL 5: SCANNER & CODE QR BOUTIQUE                        */}
+      {/* ========================================================= */}
+      {showQrModal && activeMerchant && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/70 backdrop-blur-xs">
+          <div className="bg-white rounded-3xl w-full max-w-md p-6 shadow-2xl border border-slate-100 relative space-y-5">
+            <button
+              onClick={() => setShowQrModal(false)}
+              className="absolute top-4 right-4 text-slate-400 hover:text-slate-800 p-1 rounded-full cursor-pointer transition"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            <div className="text-center space-y-1">
+              <span className="bg-purple-100 text-[#7C3AED] text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full inline-block">
+                QR Code Vendeur Certifié
+              </span>
+              <h3 className="font-extrabold text-slate-900 text-xl">{activeMerchant.shopName}</h3>
+              <p className="text-xs text-slate-500">Pour paiements rapides et validation de retrait en boutique</p>
+            </div>
+
+            <div className="bg-slate-50 p-6 rounded-2xl border border-slate-200 text-center space-y-3">
+              <div className="w-48 h-48 mx-auto bg-white p-3 rounded-2xl shadow-md border border-slate-200 flex flex-col items-center justify-center relative group">
+                {/* Visual QR Code Representation */}
+                <div className="w-full h-full bg-gradient-to-br from-[#16A34A] to-[#7C3AED] p-3 rounded-xl flex flex-col items-center justify-center text-white font-mono font-black text-center text-xs space-y-1">
+                  <QrCode className="w-20 h-20 text-white animate-pulse" />
+                  <span className="text-[10px] tracking-wider uppercase font-bold bg-black/20 px-2 py-0.5 rounded">AFRINOVA-{activeMerchant.id}</span>
+                </div>
+              </div>
+              <p className="text-[11px] text-slate-600 font-semibold">
+                Présentez ce QR code au client pour recevoir son paiement Mobile Money direct.
+              </p>
+            </div>
+
+            <button
+              onClick={() => {
+                alert('✓ Caméra activée ! QR Code du client scanné avec succès : Commande #CMD-1082 validée !');
+                setShowQrModal(false);
+              }}
+              className="w-full bg-gradient-to-r from-[#16A34A] to-[#15803D] text-white font-black text-xs py-3.5 rounded-2xl transition shadow-md cursor-pointer flex items-center justify-center gap-2"
+            >
+              <QrCode className="w-4 h-4" />
+              <span>Scanner le QR Code d'un Client</span>
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================= */}
+      {/* MODAL 6: PARTAGER LA BOUTIQUE                              */}
+      {/* ========================================================= */}
+      {showShareModal && activeMerchant && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/70 backdrop-blur-xs">
+          <div className="bg-white rounded-3xl w-full max-w-md p-6 shadow-2xl border border-slate-100 relative space-y-5">
+            <button
+              onClick={() => setShowShareModal(false)}
+              className="absolute top-4 right-4 text-slate-400 hover:text-slate-800 p-1 rounded-full cursor-pointer transition"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            <div className="text-center space-y-1">
+              <span className="bg-emerald-100 text-[#16A34A] text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full inline-block">
+                Partager la Vitrine
+              </span>
+              <h3 className="font-extrabold text-slate-900 text-xl">{activeMerchant.shopName}</h3>
+              <p className="text-xs text-slate-500">Diffusez votre lien unique à vos clients sur WhatsApp et réseaux sociaux.</p>
+            </div>
+
+            <div className="space-y-3">
+              <div>
+                <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Lien direct de la boutique</label>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    readOnly
+                    value={`https://afrinova.cm/shop/${activeMerchant.id}`}
+                    className="flex-1 px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono font-bold text-slate-800"
+                  />
+                  <button
+                    onClick={() => {
+                      navigator.clipboard?.writeText(`https://afrinova.cm/shop/${activeMerchant.id}`);
+                      alert('✓ Lien de la boutique copié dans le presse-papier !');
+                    }}
+                    className="bg-[#16A34A] hover:bg-[#15803D] text-white font-bold text-xs px-4 py-2.5 rounded-xl transition cursor-pointer shrink-0"
+                  >
+                    Copier
+                  </button>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-2 pt-2">
+                <a
+                  href={`https://wa.me/?text=${encodeURIComponent(`Découvrez la boutique ${activeMerchant.shopName} sur AfriNova Bafoussam : https://afrinova.cm/shop/${activeMerchant.id}`)}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs py-3 rounded-xl flex items-center justify-center gap-1.5 transition"
+                >
+                  <MessageSquare className="w-4 h-4" />
+                  <span>Partager WhatsApp</span>
+                </a>
+
+                <button
+                  onClick={() => {
+                    alert('Partage Facebook prêt !');
+                  }}
+                  className="bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs py-3 rounded-xl flex items-center justify-center gap-1.5 transition cursor-pointer"
+                >
+                  <Share2 className="w-4 h-4" />
+                  <span>Partager Facebook</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================= */}
+      {/* MODAL 7: MODIFIER LA BOUTIQUE                              */}
+      {/* ========================================================= */}
+      {showEditShopModal && activeMerchant && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/70 backdrop-blur-xs">
+          <div className="bg-white rounded-3xl w-full max-w-lg p-6 shadow-2xl border border-slate-100 relative space-y-4 max-h-[90vh] overflow-y-auto">
+            <button
+              onClick={() => setShowEditShopModal(false)}
+              className="absolute top-4 right-4 text-slate-400 hover:text-slate-800 p-1 rounded-full cursor-pointer transition"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            <div className="border-b border-slate-100 pb-3">
+              <h3 className="font-extrabold text-slate-900 text-lg">Modifier le Profil de la Boutique</h3>
+              <p className="text-xs text-slate-500">Mettez à jour les coordonnées visibles par vos clients.</p>
+            </div>
+
+            <form onSubmit={(e) => {
+              e.preventDefault();
+              alert('✓ Profil de la boutique mis à jour avec succès !');
+              setShowEditShopModal(false);
+            }} className="space-y-3.5 text-xs">
+              <div>
+                <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Nom de la boutique</label>
+                <input type="text" defaultValue={activeMerchant.shopName} className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl font-bold" />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Nom du gérant</label>
+                  <input type="text" defaultValue={activeMerchant.name} className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl font-bold" />
+                </div>
+                <div>
+                  <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Emplacement Bafoussam</label>
+                  <input type="text" defaultValue={activeMerchant.location} className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl font-bold" />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Téléphone Mobile Money</label>
+                <input type="text" defaultValue={activeMerchant.phone} className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl font-mono font-bold" />
+              </div>
+
+              <div className="flex justify-end gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setShowEditShopModal(false)}
+                  className="px-4 py-2.5 border border-slate-200 text-slate-700 font-bold rounded-xl hover:bg-slate-50 cursor-pointer"
+                >
+                  Annuler
+                </button>
+                <button
+                  type="submit"
+                  className="px-5 py-2.5 bg-[#16A34A] hover:bg-[#15803D] text-white font-extrabold rounded-xl shadow-sm cursor-pointer"
+                >
+                  Enregistrer
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================= */}
+      {/* MODAL 8: TICKET ASSISTANCE SUPPORT                         */}
+      {/* ========================================================= */}
+      {showSupportModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/70 backdrop-blur-xs">
+          <div className="bg-white rounded-3xl w-full max-w-md p-6 shadow-2xl border border-slate-100 relative space-y-4">
+            <button
+              onClick={() => setShowSupportModal(false)}
+              className="absolute top-4 right-4 text-slate-400 hover:text-slate-800 p-1 rounded-full cursor-pointer transition"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            <div className="border-b border-slate-100 pb-3">
+              <h3 className="font-extrabold text-slate-900 text-lg">Ouvrir un Ticket Assistance</h3>
+              <p className="text-xs text-slate-500">Exposez votre demande à notre équipe basée à Bafoussam.</p>
+            </div>
+
+            <form onSubmit={(e) => {
+              e.preventDefault();
+              alert('✓ Votre ticket d’assistance a été transmis ! Un conseiller vous recontactera sous 15 minutes.');
+              setShowSupportModal(false);
+            }} className="space-y-3 text-xs">
+              <div>
+                <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Sujet de la demande</label>
+                <select className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl font-bold">
+                  <option>Problème de Paiement Mobile Money</option>
+                  <option>Litige Commande ou Retrait</option>
+                  <option>Questions sur la livraison coursier</option>
+                  <option>Mise à niveau Abonnement VIP</option>
+                  <option>Autre demande</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Description détaillée</label>
+                <textarea
+                  rows={3}
+                  required
+                  placeholder="Décrivez précisément votre problème ou question..."
+                  className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs"
+                />
+              </div>
+
+              <button
+                type="submit"
+                className="w-full bg-[#16A34A] hover:bg-[#15803D] text-white font-extrabold text-xs py-3 rounded-xl transition shadow-sm cursor-pointer"
+              >
+                Envoyer ma demande
+              </button>
+            </form>
           </div>
         </div>
       )}
