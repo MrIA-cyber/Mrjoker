@@ -183,24 +183,25 @@ export const PhoneCountryInput: React.FC<PhoneCountryInputProps> = ({
         )}
 
         {/* Validation or Country Badge */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5 shrink-0">
           {/* Rule 8: Show "Pays détecté" ONLY if detection was genuinely successful */}
           {isDetectedSuccess ? (
-            <span className="text-[10px] font-extrabold text-emerald-800 flex items-center gap-1 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200 shadow-2xs">
-              <Sparkles className="w-3 h-3 text-[#16A34A]" />
-              <span>{lang === 'fr' ? `Pays détecté (${detectionSource || 'SIM/Geo/IP'})` : 'Country detected'}</span>
+            <span className="text-[10px] font-extrabold text-emerald-800 bg-emerald-50/90 border border-emerald-200/90 px-2 py-0.5 rounded-full inline-flex items-center gap-1 shadow-2xs">
+              <Sparkles className="w-3 h-3 text-[#16A34A] shrink-0" />
+              <span>{selectedCountry.flag}</span>
+              <span className="truncate max-w-[110px] sm:max-w-none">{lang === 'fr' ? 'Pays détecté' : 'Detected'}</span>
             </span>
           ) : (
             /* Rule 9: If default or user chosen, display simply country name without "Pays détecté" */
-            <span className="text-[10px] font-extrabold text-slate-500 flex items-center gap-1 bg-slate-100 px-2 py-0.5 rounded-md">
+            <span className="text-[10px] font-bold text-slate-500 bg-slate-100/80 px-2 py-0.5 rounded-full inline-flex items-center gap-1">
               <span>{selectedCountry.flag}</span>
-              <span>{lang === 'fr' ? selectedCountry.nameFr : selectedCountry.nameEn}</span>
+              <span className="truncate max-w-[100px] sm:max-w-none">{lang === 'fr' ? selectedCountry.nameFr : selectedCountry.nameEn}</span>
             </span>
           )}
 
           {isValid && (
-            <span className="text-[10px] font-extrabold text-[#16A34A] flex items-center gap-1 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">
-              <CheckCircle2 className="w-3.5 h-3.5 text-[#16A34A]" />
+            <span className="text-[10px] font-extrabold text-[#16A34A] bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200 inline-flex items-center gap-1">
+              <CheckCircle2 className="w-3 h-3 text-[#16A34A] shrink-0" />
               <span>{lang === 'fr' ? 'Valide' : 'Valid'}</span>
             </span>
           )}
