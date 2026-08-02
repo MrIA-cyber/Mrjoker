@@ -485,7 +485,7 @@ export default function CityNews({ lang }: CityNewsProps) {
               id="news-detail-modal"
             >
               {/* Modal Image Header */}
-              <div className="h-60 sm:h-72 relative shrink-0 bg-slate-100">
+              <div className="w-full aspect-video max-h-72 relative shrink-0 bg-slate-100">
                 <img 
                   src={activeArticle.image} 
                   alt={activeArticle.title}

@@ -784,7 +784,7 @@ export default function ClientHomePage({
                   animate={{ opacity: 1, scale: 1 }}
                   exit={{ opacity: 0, scale: 0.98 }}
                   transition={{ duration: 0.4 }}
-                  className={`relative min-h-[160px] bg-gradient-to-r ${PROMO_SLIDES[currentSlide].bgGradient} p-5 sm:p-6 text-white flex items-center justify-between overflow-hidden`}
+                  className={`relative w-full aspect-[21/9] sm:aspect-[24/9] min-h-[140px] max-h-[220px] bg-gradient-to-r ${PROMO_SLIDES[currentSlide].bgGradient} p-4 sm:p-6 text-white flex items-center justify-between overflow-hidden`}
                 >
                   <div className="absolute right-0 top-0 bottom-0 w-1/2 sm:w-2/5 opacity-25 sm:opacity-35 pointer-events-none overflow-hidden">
                     <img
