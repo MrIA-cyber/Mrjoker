@@ -38,6 +38,10 @@ import Screen8DetailProduit from './components/screens/Screen8DetailProduit';
 import Screen9Panier from './components/screens/Screen9Panier';
 import Screen10Paiement from './components/screens/Screen10Paiement';
 import AfriNovaFooter from './components/AfriNovaFooter';
+import ChatModal from './components/ChatModal';
+import ChatListModal from './components/ChatListModal';
+import RealtimeChatNotificationToast from './components/RealtimeChatNotificationToast';
+import { ChatThread, subscribeToUserChats, createOrGetChat } from './services/chatService';
 import ProtectedRoute from './components/ProtectedRoute';
 import { mapAccountTypeToRole, getDashboardForRole, isViewAllowedForRole } from './lib/rbac';
 import { logAuditEvent } from './lib/auditLogger';
@@ -203,6 +207,61 @@ export default function App() {
 
   // Welcome Notification state
   const [welcomeNotification, setWelcomeNotification] = useState<{ name: string; phone: string } | null>(null);
+
+  // Realtime Chat State
+  const [isChatListOpen, setIsChatListOpen] = useState(false);
+  const [activeChatModal, setActiveChatModal] = useState<{
+    chatId: string;
+    recipientName: string;
+    productName?: string;
+  } | null>(null);
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  // Subscribe to real-time chats unread count
+  useEffect(() => {
+    if (!currentUser?.id) return;
+    const role = currentUser.accountType === 'vendeur' ? 'vendeur' : 'client';
+    const unsubscribe = subscribeToUserChats(currentUser.id, role, (threads) => {
+      const totalUnread = threads.reduce((acc, t) => {
+        return acc + (role === 'vendeur' ? t.unreadCountMerchant : t.unreadCountClient);
+      }, 0);
+      setUnreadCount(totalUnread);
+    });
+    return () => unsubscribe();
+  }, [currentUser?.id, currentUser?.accountType]);
+
+  const handleStartChatWithMerchant = async (
+    merchantId: string, 
+    merchantName: string, 
+    productId?: string, 
+    productName?: string
+  ) => {
+    if (!currentUser) {
+      triggerToast("Veuillez vous connecter pour envoyer un message.", "error");
+      return;
+    }
+
+    try {
+      const chatId = await createOrGetChat({
+        clientId: currentUser.id,
+        clientName: currentUser.name,
+        merchantId,
+        merchantName,
+        productId,
+        productName
+      });
+
+      setActiveChatModal({
+        chatId,
+        recipientName: merchantName,
+        productName
+      });
+      setIsChatListOpen(false);
+    } catch (err) {
+      console.error("Failed to start chat:", err);
+      triggerToast("Erreur lors de l'ouverture du chat.", "error");
+    }
+  };
 
   // Session Expiration states (10 min autologout if no purchase)
   const [sessionStartTime, setSessionStartTime] = useState<number | null>(() => {
@@ -834,6 +893,8 @@ export default function App() {
             lang={lang}
             onLangChange={handleLangChange}
             onOpenSubscriptions={() => setIsSubscriptionModalOpen(true)}
+            onOpenMessages={() => setIsChatListOpen(true)}
+            unreadMessagesCount={unreadCount}
           />
         )}
 
@@ -1404,6 +1465,7 @@ export default function App() {
             merchants={merchants}
             onSelectProduct={handleSelectProduct}
             onAddReview={handleAddReview}
+            onStartChat={handleStartChatWithMerchant}
           />
         )}
 
@@ -1555,6 +1617,57 @@ export default function App() {
             triggerToast(lang === 'fr' ? 'Produit ajouté avec succès !' : 'Product published successfully!', 'success');
           }}
           lang={lang}
+        />
+      )}
+
+      {/* Realtime Chat Toast Notifications */}
+      {currentUser && (
+        <RealtimeChatNotificationToast
+          currentUserId={currentUser.id}
+          currentUserRole={currentUser.accountType === 'vendeur' ? 'vendeur' : 'client'}
+          onOpenChat={(chatId, recipientName, productName) => {
+            setActiveChatModal({ chatId, recipientName, productName });
+          }}
+        />
+      )}
+
+      {/* Realtime Chat List Drawer/Modal */}
+      {currentUser && isChatListOpen && (
+        <ChatListModal
+          isOpen={isChatListOpen}
+          onClose={() => setIsChatListOpen(false)}
+          currentUserId={currentUser.id}
+          currentUserName={currentUser.name}
+          currentUserRole={currentUser.accountType === 'vendeur' ? 'vendeur' : 'client'}
+          onSelectChat={(thread) => {
+            setIsChatListOpen(false);
+            setActiveChatModal({
+              chatId: thread.id,
+              recipientName: currentUser.accountType === 'vendeur' ? thread.clientName : thread.merchantName,
+              productName: thread.productName
+            });
+          }}
+          onStartNewChatWithMerchant={(mId, mName) => handleStartChatWithMerchant(mId, mName)}
+          availableMerchants={merchants.map(m => ({
+            id: m.id,
+            name: m.name,
+            shopName: m.shopName || m.name,
+            location: m.location
+          }))}
+        />
+      )}
+
+      {/* Realtime Active Chat Window */}
+      {currentUser && activeChatModal && (
+        <ChatModal
+          isOpen={Boolean(activeChatModal)}
+          onClose={() => setActiveChatModal(null)}
+          chatId={activeChatModal.chatId}
+          currentUserId={currentUser.id}
+          currentUserName={currentUser.name}
+          currentUserRole={currentUser.accountType === 'vendeur' ? 'vendeur' : 'client'}
+          recipientName={activeChatModal.recipientName}
+          productName={activeChatModal.productName}
         />
       )}
 

@@ -33,6 +33,23 @@
         "status": { "type": "string" }
       },
       "required": ["id"]
+    },
+    "chats": {
+      "title": "chats",
+      "description": "Real-time conversation threads between customers and sellers",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "clientId": { "type": "string" },
+        "clientName": { "type": "string" },
+        "merchantId": { "type": "string" },
+        "merchantName": { "type": "string" },
+        "lastMessage": { "type": "string" },
+        "lastMessageTime": { "type": "string" },
+        "unreadCountClient": { "type": "number" },
+        "unreadCountMerchant": { "type": "number" }
+      },
+      "required": ["id", "clientId", "merchantId"]
     }
   },
   "securityRules": {
@@ -43,6 +60,12 @@
       "allow read, write": "true"
     },
     "match /orders/{orderId}": {
+      "allow read, write": "true"
+    },
+    "match /chats/{chatId}": {
+      "allow read, write": "true"
+    },
+    "match /chats/{chatId}/messages/{messageId}": {
       "allow read, write": "true"
     }
   }

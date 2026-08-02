@@ -25,7 +25,8 @@ import {
   User as UserIcon,
   Volume2,
   Camera,
-  CheckCircle2
+  CheckCircle2,
+  MessageSquare
 } from 'lucide-react';
 import { translations, Language } from '../translations';
 import SupportPhoneNumber from './SupportPhoneNumber';
@@ -50,6 +51,8 @@ interface StoreHeaderProps {
   lang: Language;
   onLangChange: (lang: Language) => void;
   onOpenSubscriptions?: () => void;
+  onOpenMessages?: () => void;
+  unreadMessagesCount?: number;
 }
 
 const CATEGORY_EMOJIS: Record<string, { emoji: string; label: string }> = {
@@ -84,6 +87,8 @@ export default function StoreHeader({
   lang,
   onLangChange,
   onOpenSubscriptions,
+  onOpenMessages,
+  unreadMessagesCount = 0,
 }: StoreHeaderProps) {
   const t = translations[lang];
 
@@ -225,6 +230,23 @@ export default function StoreHeader({
           </div>
 
           <div className="flex items-center gap-2">
+            {onOpenMessages && (
+              <button
+                onClick={onOpenMessages}
+                className="relative p-2 rounded-xl bg-slate-800/80 hover:bg-slate-700/80 text-slate-200 border border-slate-700/60 transition cursor-pointer"
+                title="Messagerie Instantanée Bafoussam"
+              >
+                <MessageSquare className="w-4 h-4 text-emerald-400" />
+                {unreadMessagesCount > 0 ? (
+                  <span className="absolute -top-1 -right-1 px-1.5 py-0.5 rounded-full text-[9px] font-black bg-red-500 text-white animate-pulse">
+                    {unreadMessagesCount}
+                  </span>
+                ) : (
+                  <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-emerald-400" />
+                )}
+              </button>
+            )}
+
             <button
               onClick={() => onViewChange('orders')}
               className="relative p-2 rounded-xl bg-slate-800/80 hover:bg-slate-700/80 text-slate-200 border border-slate-700/60 transition cursor-pointer"

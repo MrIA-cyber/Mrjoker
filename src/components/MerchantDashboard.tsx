@@ -15,6 +15,8 @@ import VerifiedBadge from './VerifiedBadge';
 import AddProductModal from './AddProductModal';
 import AboutAfriNovaSection from './AboutAfriNovaSection';
 import { Language, translations } from '../translations';
+import { ChatThread, subscribeToUserChats, sendChatMessage } from '../services/chatService';
+import ChatModal from './ChatModal';
 
 interface MerchantDashboardProps {
   currentUser?: User | null;
@@ -266,6 +268,10 @@ export default function MerchantDashboard({
   const [profileSuccess, setProfileSuccess] = useState(false);
   const [activeProfileRoleTab, setActiveProfileRoleTab] = useState<AccountType>(() => (currentUser?.accountType || 'vendeur') as AccountType);
 
+  // Realtime Firestore Chats
+  const [realtimeChats, setRealtimeChats] = useState<ChatThread[]>([]);
+  const [activeChatThread, setActiveChatThread] = useState<ChatThread | null>(null);
+
   // Derived Active Merchant with Default Fallback
   const fallbackMerchant: Merchant = {
     id: 'm1',
@@ -287,6 +293,14 @@ export default function MerchantDashboard({
   };
 
   const activeMerchant = merchants.find(m => m.id === activeMerchantId) || merchants[0] || fallbackMerchant;
+
+  useEffect(() => {
+    const merchantIdToQuery = activeMerchant?.id || 'm1';
+    const unsubscribe = subscribeToUserChats(merchantIdToQuery, 'vendeur', (threads) => {
+      setRealtimeChats(threads);
+    });
+    return () => unsubscribe();
+  }, [activeMerchant?.id]);
 
   // Merchant Specific Products & Orders
   const merchantProducts = products.filter(p => p.merchantId === activeMerchantId);
@@ -1584,45 +1598,97 @@ export default function MerchantDashboard({
           {/* MESSAGES TAB */}
           {dashboardTab === 'messages' && (
             <div className="bg-white rounded-3xl p-6 border border-slate-200/90 shadow-sm space-y-6">
-              <div>
-                <h3 className="font-extrabold text-slate-900 text-lg">Messagerie Vendeur Instantanée</h3>
-                <p className="text-xs text-slate-500">Répondez directement aux questions des acheteurs intéressés.</p>
-              </div>
-
-              <div className="space-y-4">
-                {messages.map((m) => (
-                  <div key={m.id} className="bg-slate-50 p-4 rounded-2xl border border-slate-200 space-y-3">
-                    <div className="flex justify-between items-center">
-                      <strong className="text-xs font-bold text-slate-900">{m.senderName} ({m.senderPhone})</strong>
-                      <span className="text-[10px] text-slate-400">{m.time}</span>
-                    </div>
-                    <p className="text-xs text-slate-700 bg-white p-3 rounded-xl border border-slate-200">{m.message}</p>
-
-                    {m.replies.map((r, idx) => (
-                      <div key={idx} className="bg-emerald-50 p-2.5 rounded-xl border border-emerald-200 text-xs text-emerald-900">
-                        <strong className="block text-[10px] uppercase text-[#16A34A]">Votre Réponse :</strong>
-                        <p>{r}</p>
-                      </div>
-                    ))}
-
-                    <div className="flex gap-2">
-                      <input
-                        type="text"
-                        placeholder="Répondre au message..."
-                        className="flex-1 px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs"
-                        value={chatReplyInput[m.id] || ''}
-                        onChange={(e) => setChatReplyInput({ ...chatReplyInput, [m.id]: e.target.value })}
-                      />
-                      <button
-                        onClick={() => handleSendChatReply(m.id)}
-                        className="bg-[#16A34A] text-white px-4 py-2 rounded-xl text-xs font-bold"
-                      >
-                        Envoyer
-                      </button>
-                    </div>
+              <div className="flex items-center justify-between">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h3 className="font-extrabold text-slate-900 text-lg">Messagerie Vendeur en Temps Réel</h3>
+                    <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-emerald-100 text-emerald-800 border border-emerald-300 flex items-center gap-1">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                      Firestore
+                    </span>
                   </div>
-                ))}
+                  <p className="text-xs text-slate-500 mt-0.5">Discutez instantanément avec les acheteurs et négociez en direct.</p>
+                </div>
               </div>
+
+              {realtimeChats.length === 0 ? (
+                <div className="text-center py-12 px-4 bg-slate-50 rounded-2xl border border-dashed border-slate-200 space-y-3">
+                  <div className="w-12 h-12 bg-emerald-100 text-emerald-700 rounded-2xl flex items-center justify-center mx-auto font-black">
+                    <MessageSquare className="w-6 h-6" />
+                  </div>
+                  <h4 className="font-extrabold text-slate-900 text-sm">Aucune discussion en cours</h4>
+                  <p className="text-xs text-slate-500 max-w-sm mx-auto">
+                    Dès qu'un client vous contacte depuis la fiche produit ou la marketplace, sa conversation s'affichera ici en temps réel.
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {realtimeChats.map((chat) => (
+                    <div 
+                      key={chat.id} 
+                      className={`p-4 rounded-2xl border transition flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${
+                        chat.unreadCountMerchant > 0
+                          ? 'bg-emerald-50/90 border-emerald-300 shadow-sm'
+                          : 'bg-slate-50/80 border-slate-200/90 hover:bg-white hover:shadow-sm'
+                      }`}
+                    >
+                      <div className="flex items-start gap-3 min-w-0">
+                        <div className="w-10 h-10 rounded-2xl bg-emerald-100 text-emerald-700 font-black flex items-center justify-center shrink-0">
+                          <Users className="w-5 h-5" />
+                        </div>
+
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-2">
+                            <h4 className="text-xs font-black text-slate-900">{chat.clientName}</h4>
+                            {chat.unreadCountMerchant > 0 && (
+                              <span className="px-2 py-0.5 rounded-full text-[9px] font-black bg-red-500 text-white animate-pulse">
+                                {chat.unreadCountMerchant} nouveau{chat.unreadCountMerchant > 1 ? 'x' : ''}
+                              </span>
+                            )}
+                          </div>
+
+                          {chat.productName && (
+                            <p className="text-[11px] font-bold text-emerald-700 truncate mt-0.5">
+                              🛍️ Produit : {chat.productName}
+                            </p>
+                          )}
+
+                          <p className="text-xs text-slate-600 truncate mt-1">
+                            "{chat.lastMessage}"
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center justify-between sm:justify-end gap-3 shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-slate-200">
+                        <span className="text-[10px] text-slate-400 font-medium">
+                          {new Date(chat.updatedAt || chat.lastMessageTime).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
+                        </span>
+                        <button
+                          onClick={() => setActiveChatThread(chat)}
+                          className="px-4 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white rounded-xl text-xs font-extrabold flex items-center gap-1.5 shadow-sm transition cursor-pointer"
+                        >
+                          <MessageSquare className="w-3.5 h-3.5" />
+                          <span>Ouvrir Chat Direct</span>
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Chat Modal for Merchant */}
+              {activeChatThread && (
+                <ChatModal
+                  isOpen={Boolean(activeChatThread)}
+                  onClose={() => setActiveChatThread(null)}
+                  chatId={activeChatThread.id}
+                  currentUserId={activeMerchant?.id || 'm1'}
+                  currentUserName={activeMerchant?.shopName || activeMerchant?.name || 'Vendeur Bafoussam'}
+                  currentUserRole="vendeur"
+                  recipientName={activeChatThread.clientName}
+                  productName={activeChatThread.productName}
+                />
+              )}
             </div>
           )}
 

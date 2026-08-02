@@ -24,6 +24,7 @@ interface ProductDetailsModalProps {
   merchants?: Merchant[];
   onSelectProduct?: (product: Product) => void;
   onAddReview?: (orderId: string, rating: number, comment: string, clientName: string) => void;
+  onStartChat?: (merchantId: string, merchantName: string, productId?: string, productName?: string) => void;
 }
 
 // Multi-media gallery generator derived strictly from the selected product's actual media
@@ -135,6 +136,7 @@ export default function ProductDetailsModal({
   merchants = [],
   onSelectProduct,
   onAddReview,
+  onStartChat,
 }: ProductDetailsModalProps) {
   const t = translations[lang];
   const isFr = lang === 'fr';
@@ -1273,15 +1275,28 @@ export default function ProductDetailsModal({
               </div>
             </div>
 
-            <div className="space-y-3">
+            <div className="space-y-2.5">
+              <button
+                onClick={() => {
+                  setIsContactModalOpen(false);
+                  if (onStartChat) {
+                    onStartChat(product.merchantId, product.merchantName, product.id, product.name);
+                  }
+                }}
+                className="w-full py-3 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white rounded-xl font-bold text-xs flex items-center justify-center gap-2 cursor-pointer shadow-md transition"
+              >
+                <MessageSquare className="w-4 h-4 fill-white" />
+                <span>Messagerie Instantanée (Firestore En Direct)</span>
+              </button>
+
               <a
                 href={`https://wa.me/237${(merchant?.phone || '677894512').replace(/\s+/g, '')}?text=${encodeURIComponent(`Bonjour, je vous contacte depuis Bafoussam Market concernant le produit "${product.name}" (${product.price} FCFA).`)}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold text-xs flex items-center justify-center gap-2 cursor-pointer shadow-md transition"
+                className="w-full py-2.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl font-bold text-xs flex items-center justify-center gap-2 cursor-pointer shadow-sm transition"
               >
-                <MessageSquare className="w-4 h-4 fill-white" />
-                <span>Discuter sur WhatsApp</span>
+                <MessageSquare className="w-3.5 h-3.5" />
+                <span>Discuter via WhatsApp</span>
               </a>
 
               <a
