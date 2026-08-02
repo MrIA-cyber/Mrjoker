@@ -613,31 +613,31 @@ export interface Merchant {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6" id="admin-panel-container">
       {/* Admin Title Bar */}
-      <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 relative overflow-hidden mb-8 text-white">
-        <div className="absolute inset-0 bg-[radial-gradient(#6366f1_1px,transparent_1px)] [background-size:20px_20px] opacity-15 pointer-events-none"></div>
+      <div className="bg-white/95 backdrop-blur-md border border-slate-200/90 rounded-3xl p-6 relative overflow-hidden mb-8 text-slate-900 shadow-md">
+        <div className="absolute inset-0 bg-gradient-to-br from-emerald-50/50 via-slate-50/50 to-purple-50/30 opacity-60 pointer-events-none"></div>
         <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div className="space-y-2">
             <div className="flex items-center gap-2">
-              <span className="bg-amber-500/20 text-amber-400 border border-amber-500/30 font-extrabold text-[10px] uppercase tracking-widest px-3 py-1 rounded-full">
+              <span className="bg-emerald-100 text-[#16A34A] border border-emerald-300/80 font-black text-[10px] uppercase tracking-widest px-3 py-1 rounded-full shadow-3xs">
                 Espace Super-Administrateur
               </span>
               <span className="flex h-2.5 w-2.5 relative">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-[#16A34A]"></span>
               </span>
             </div>
-            <h1 className="text-2xl sm:text-3xl font-black tracking-tight leading-none text-white font-display flex items-center gap-2">
-              <Terminal className="w-8 h-8 text-indigo-400" />
+            <h1 className="text-2xl sm:text-3xl font-black tracking-tight leading-none text-[#0F172A] font-display flex items-center gap-2">
+              <Terminal className="w-8 h-8 text-[#16A34A]" />
               <span>Console Centrale d'Administration</span>
             </h1>
-            <p className="text-xs text-slate-400 max-w-xl leading-relaxed">
-              Vous êtes connecté sur le serveur d'administration de Bafoussam Direct. Gérez les droits d'accès des abonnés et surveillez le trafic des boutiques de la Mifi en direct.
+            <p className="text-xs text-slate-600 max-w-xl leading-relaxed">
+              Vous êtes connecté sur le serveur d'administration AfriNova. Gérez les droits d'accès des abonnés et surveillez le trafic des boutiques de la Mifi en direct.
             </p>
           </div>
 
           <button
             onClick={onClose}
-            className="bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-xs px-6 py-3 rounded-2xl cursor-pointer transition shadow-lg shadow-indigo-600/15 shrink-0 flex items-center gap-2"
+            className="bg-gradient-to-r from-[#16A34A] via-[#15803D] to-[#7C3AED] hover:from-[#15803D] hover:to-[#6D28D9] text-white font-black text-xs px-6 py-3 rounded-2xl cursor-pointer transition shadow-[0_4px_20px_rgba(22,163,74,0.3)] shrink-0 flex items-center gap-2"
           >
             <span>Retourner aux Achats</span>
             <ArrowRight className="w-4 h-4" />

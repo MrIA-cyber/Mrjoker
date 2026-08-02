@@ -776,11 +776,11 @@ export default function App() {
 
   return (
     <div className={theme === 'dark' ? 'dark' : ''}>
-      <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col justify-between font-sans selection:bg-indigo-100 selection:text-indigo-900 transition-colors duration-200 relative overflow-x-hidden" id="main-applet-wrapper">
-        {/* Continuous 8K Splash Screen Ambient Glow Backdrops */}
-        <div className="absolute top-0 left-1/4 w-[600px] h-[400px] bg-[#4F46E5]/10 dark:bg-[#4F46E5]/15 rounded-full blur-3xl pointer-events-none -translate-y-1/2" />
-        <div className="absolute top-32 right-10 w-[500px] h-[350px] bg-[#2563EB]/10 dark:bg-[#2563EB]/15 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute top-96 left-10 w-[400px] h-[300px] bg-[#10B981]/5 dark:bg-[#10B981]/10 rounded-full blur-3xl pointer-events-none" />
+      <div className="min-h-screen bg-gradient-to-br from-[#FAFAF9] via-[#F3F0FF]/40 to-[#ECFDF5]/60 text-[#0F172A] flex flex-col justify-between font-sans selection:bg-emerald-100 selection:text-emerald-900 transition-colors duration-200 relative overflow-x-hidden" id="main-applet-wrapper">
+        {/* Soft Ambient Emerald and Violet Glow Backdrops matching Registration theme */}
+        <div className="absolute top-0 left-1/4 w-[500px] h-[400px] bg-[#16A34A]/10 rounded-full blur-3xl pointer-events-none -translate-y-1/2" />
+        <div className="absolute top-32 right-10 w-[500px] h-[350px] bg-[#7C3AED]/10 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute top-96 left-10 w-[400px] h-[300px] bg-[#16A34A]/5 rounded-full blur-3xl pointer-events-none" />
         
         {/* Subscription / Trial Expiry Top Banner */}
         <SubscriptionNotificationBanner
@@ -1196,6 +1196,7 @@ export default function App() {
                 exit={{ opacity: 0 }}
               >
                 <MerchantDashboard
+                  currentUser={currentUser}
                   products={products}
                   merchants={merchants}
                   orders={orders}

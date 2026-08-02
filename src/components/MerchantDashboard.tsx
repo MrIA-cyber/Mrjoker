@@ -1,20 +1,21 @@
-import React, { useState } from 'react';
-import { Merchant, Product, MarketingCampaign, Order } from '../types';
-import { INITIAL_MERCHANTS } from '../data/mockData';
+import React, { useState, useEffect } from 'react';
+import { Merchant, Product, MarketingCampaign, Order, User } from '../types';
 import { 
   Store, Sparkles, Plus, Trash2, Edit3, BarChart3, Users, LineChart, 
   MapPin, Phone, ArrowUpRight, Check, ArrowRight, Loader2, Megaphone, 
   Settings, Percent, Star, Tag, Compass, X, ShieldAlert, PackageCheck,
-  ShoppingBag, UserCheck, Lock, Clock, CheckCircle2
+  ShoppingBag, UserCheck, Lock, Clock, CheckCircle2, Truck, CreditCard,
+  MessageSquare, AlertCircle, Bell, Eye, Heart, TrendingUp, ShieldCheck,
+  Layers, FileText, DollarSign, Award, ChevronRight, HelpCircle, AlertTriangle
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import VerifiedBadge from './VerifiedBadge';
 import AddProductModal from './AddProductModal';
 import { Language, translations } from '../translations';
-import PhoneCountryInput from './PhoneCountryInput';
 import AboutAfriNovaSection from './AboutAfriNovaSection';
 
 interface MerchantDashboardProps {
+  currentUser?: User | null;
   products: Product[];
   merchants: Merchant[];
   orders?: Order[];
@@ -22,7 +23,7 @@ interface MerchantDashboardProps {
   onAddProduct: (product: Product) => void;
   onDeleteProduct: (productId: string) => void;
   onUpgradeMerchant: (merchantId: string) => void;
-  onRegisterMerchant?: (merchant: Merchant) => void; // clean React state propagation
+  onRegisterMerchant?: (merchant: Merchant) => void;
   onSimulateMerchantExpiration?: (merchantId: string) => void;
   onBoostProduct?: (productId: string) => void;
   onSwitchToClientSpace?: () => void;
@@ -30,6 +31,7 @@ interface MerchantDashboardProps {
 }
 
 export default function MerchantDashboard({
+  currentUser,
   products,
   merchants,
   orders = [],
@@ -44,42 +46,59 @@ export default function MerchantDashboard({
   lang,
 }: MerchantDashboardProps) {
   const t = translations[lang];
+
+  // Active Merchant ID State
   const [activeMerchantId, setActiveMerchantId] = useState<string | null>(null);
-  const [gatewayChoice, setGatewayChoice] = useState<'login' | 'register'>('login');
-  const [dashboardTab, setDashboardTab] = useState<'products' | 'orders' | 'profile' | 'marketing'>('products');
-  
-  // Password security login state
+
+  // Auto-detect merchant if currentUser owns a store
+  useEffect(() => {
+    if (currentUser) {
+      const userMerchant = merchants.find(m => 
+        m.id === currentUser.id || 
+        (m.email && currentUser.email && m.email.toLowerCase() === currentUser.email.toLowerCase()) ||
+        (m.phone && currentUser.phone && m.phone.replace(/[^0-9]/g, '') === currentUser.phone.replace(/[^0-9]/g, '')) ||
+        (m.name && currentUser.name && m.name.toLowerCase() === currentUser.name.toLowerCase())
+      );
+      if (userMerchant) {
+        setActiveMerchantId(userMerchant.id);
+      }
+    }
+  }, [currentUser, merchants]);
+
+  // Dashboard Tab state
+  const [dashboardTab, setDashboardTab] = useState<
+    'overview' | 'products' | 'orders' | 'stock' | 'deliveries' | 
+    'payments' | 'promotions' | 'reviews' | 'messages' | 'stats' | 'profile'
+  >('overview');
+
+  // Modals / Gateways states
+  const [showCreateShopModal, setShowCreateShopModal] = useState(false);
+  const [showLoginModal, setShowLoginModal] = useState(false);
   const [pendingLoginMerchant, setPendingLoginMerchant] = useState<Merchant | null>(null);
   const [loginPassword, setLoginPassword] = useState('');
   const [loginError, setLoginError] = useState('');
 
-  // Forms & Modals states
+  // Add Product & Upgrade Modals
   const [showAddProductModal, setShowAddProductModal] = useState(false);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [showCampaignModal, setShowCampaignModal] = useState(false);
 
-  // New product inputs
-  const [newProdName, setNewProdName] = useState('');
-  const [newProdPrice, setNewProdPrice] = useState('');
-  const [newProdCategory, setNewProdCategory] = useState('Alimentation & Épicerie');
-  const [newProdImage, setNewProdImage] = useState('');
-  const [newProdStock, setNewProdStock] = useState('10');
-  const [newProdDesc, setNewProdDesc] = useState('');
-  
-  // Upgrade payment states
+  // New Merchant Registration Form State
+  const [regLegalName, setRegLegalName] = useState('');
+  const [regCniPhoto, setRegCniPhoto] = useState<string | null>(null);
+  const [regShopPhoto, setRegShopPhoto] = useState<string | null>(null);
+  const [regRegistryNumber, setRegRegistryNumber] = useState('');
+  const [regCniFileName, setRegCniFileName] = useState('');
+  const [regShopFileName, setRegShopFileName] = useState('');
+
+  // Upgrade / Renewal States
   const [upgradeOperator, setUpgradeOperator] = useState<'momo' | 'orange'>('momo');
   const [upgradePhone, setUpgradePhone] = useState('');
   const [upgradeStep, setUpgradeStep] = useState<'details' | 'processing' | 'ussd' | 'success'>('details');
   const [upgradePin, setUpgradePin] = useState('');
   const [upgradeError, setUpgradeError] = useState('');
 
-  // Merchant renewal states
-  const [merchantRenewalStep, setMerchantRenewalStep] = useState<'idle' | 'phone-input' | 'processing' | 'pin-prompt'>('idle');
-  const [merchantRenewalOperator, setMerchantRenewalOperator] = useState<'momo' | 'orange'>('momo');
-  const [merchantRenewalPhone, setMerchantRenewalPhone] = useState('');
-  const [merchantRenewalPin, setMerchantRenewalPin] = useState('');
-
-  // Product boosting states
+  // Product Boosting States
   const [showBoostModal, setShowBoostModal] = useState(false);
   const [productToBoost, setProductToBoost] = useState<Product | null>(null);
   const [boostOperator, setBoostOperator] = useState<'momo' | 'orange'>('momo');
@@ -87,7 +106,7 @@ export default function MerchantDashboard({
   const [boostStep, setBoostStep] = useState<'details' | 'processing' | 'success'>('details');
   const [boostError, setBoostError] = useState('');
 
-  // New Campaign state
+  // Marketing Campaigns
   const [campaignTitle, setCampaignTitle] = useState('');
   const [campaignType, setCampaignType] = useState<'promo' | 'boost'>('boost');
   const [campaignTarget, setCampaignTarget] = useState<string[]>(['Tamdja']);
@@ -105,35 +124,53 @@ export default function MerchantDashboard({
     }
   ]);
 
-  // Identity Verification and Document Upload state variables
-  const [regLegalName, setRegLegalName] = useState('');
-  const [regCniPhoto, setRegCniPhoto] = useState<string | null>(null);
-  const [regShopPhoto, setRegShopPhoto] = useState<string | null>(null);
-  const [regRegistryNumber, setRegRegistryNumber] = useState('');
-  const [regCniFileName, setRegCniFileName] = useState('');
-  const [regShopFileName, setRegShopFileName] = useState('');
-
+  // Derived Active Merchant
   const activeMerchant = merchants.find(m => m.id === activeMerchantId);
-  const isMerchantExpired = !!(activeMerchant && activeMerchant.isPremium && activeMerchant.premiumExpiryDate && new Date(activeMerchant.premiumExpiryDate) < new Date());
+  const isMerchantExpired = !!(
+    activeMerchant && 
+    activeMerchant.isPremium && 
+    activeMerchant.premiumExpiryDate && 
+    new Date(activeMerchant.premiumExpiryDate) < new Date()
+  );
+
+  // Merchant Specific Products & Orders
   const merchantProducts = products.filter(p => p.merchantId === activeMerchantId);
+  const merchantOrders = orders.filter(o => 
+    o.items.some(i => i.product.merchantId === activeMerchantId)
+  );
 
-  // Quick stats
+  // Statistics Computations
   const totalStock = merchantProducts.reduce((acc, p) => acc + p.stock, 0);
-  const totalSalesVolume = activeMerchant ? activeMerchant.sales : 0;
-  const totalViews = activeMerchant ? activeMerchant.views : 0;
-  const conversionRate = totalViews > 0 ? ((merchantProducts.length * 15) / totalViews * 100).toFixed(1) : '0';
+  const pendingOrdersCount = merchantOrders.filter(o => o.status === 'pending' || o.status === 'preparing').length;
+  
+  // Today's Sales (Simulated or calculated from orders)
+  const todaySalesCount = merchantOrders.length > 0 ? Math.min(merchantOrders.length, 3) : 2;
+  const todaySalesTotal = merchantOrders.reduce((sum, o) => {
+    const itemTotal = o.items
+      .filter(i => i.product.merchantId === activeMerchantId)
+      .reduce((s, i) => s + (i.product.price * i.quantity), 0);
+    return sum + itemTotal;
+  }, 42500);
 
-  const handleMerchantLoginClick = (m: Merchant) => {
-    setPendingLoginMerchant(m);
-    setLoginPassword('');
-    setLoginError('');
-  };
+  // Monthly Revenue
+  const monthlySalesTotal = activeMerchant ? activeMerchant.sales : 245000;
+  const storefrontViews = activeMerchant ? activeMerchant.views : 1240;
+  const storefrontClicks = activeMerchant ? activeMerchant.clicks : 318;
+  const averageRating = merchantProducts.length > 0 
+    ? (merchantProducts.reduce((acc, p) => acc + (p.rating || 4.8), 0) / merchantProducts.length).toFixed(1) 
+    : '4.8';
 
+  // Low stock products (< 5)
+  const lowStockProducts = merchantProducts.filter(p => p.stock < 5);
+
+  // Top Performing Products (Sorted by sales or rating)
+  const topProducts = [...merchantProducts].sort((a, b) => (b.reviewsCount || 0) - (a.reviewsCount || 0));
+
+  // Handle Password Verification & Login
   const handleVerifyPasswordAndLogin = (e: React.FormEvent) => {
     e.preventDefault();
     if (!pendingLoginMerchant) return;
-    
-    // Check if password matches (default to 'bafoussam' for initial merchants if not specified)
+
     const correctPassword = pendingLoginMerchant.password || 'bafoussam';
     if (loginPassword === correctPassword) {
       setActiveMerchantId(pendingLoginMerchant.id);
@@ -141,18 +178,21 @@ export default function MerchantDashboard({
       setPendingLoginMerchant(null);
       setLoginPassword('');
       setLoginError('');
+      setShowLoginModal(false);
     } else {
-      setLoginError('Mot de passe de sécurité incorrect. Accès bloqué pour suspicion d\'arnaque !');
+      setLoginError('Mot de passe incorrect. Veuillez réessayer.');
     }
   };
 
+  // Handle Creating New Merchant Store
   const handleCreateMerchant = (e: React.FormEvent) => {
     e.preventDefault();
-    const name = (e.currentTarget.elements.namedItem('mName') as HTMLInputElement).value;
-    const shopName = (e.currentTarget.elements.namedItem('mShopName') as HTMLInputElement).value;
-    const location = (e.currentTarget.elements.namedItem('mLocation') as HTMLSelectElement).value;
-    const phone = (e.currentTarget.elements.namedItem('mPhone') as HTMLInputElement).value;
-    const password = (e.currentTarget.elements.namedItem('mPassword') as HTMLInputElement).value;
+    const form = e.currentTarget as HTMLFormElement;
+    const name = (form.elements.namedItem('mName') as HTMLInputElement).value;
+    const shopName = (form.elements.namedItem('mShopName') as HTMLInputElement).value;
+    const location = (form.elements.namedItem('mLocation') as HTMLSelectElement).value;
+    const phone = (form.elements.namedItem('mPhone') as HTMLInputElement).value;
+    const password = (form.elements.namedItem('mPassword') as HTMLInputElement).value;
 
     const newM: Merchant = {
       id: `m-${Date.now()}`,
@@ -178,10 +218,10 @@ export default function MerchantDashboard({
     if (onRegisterMerchant) {
       onRegisterMerchant(newM);
     } else {
-      merchants.push(newM); // Simulated addition fallback
+      merchants.push(newM);
     }
 
-    // Reset verification states
+    // Reset verification form
     setRegLegalName('');
     setRegCniPhoto(null);
     setRegShopPhoto(null);
@@ -191,684 +231,191 @@ export default function MerchantDashboard({
 
     setActiveMerchantId(newM.id);
     setUpgradePhone(phone.replace(/[^0-9]/g, '').slice(-9));
+    setShowCreateShopModal(false);
   };
 
-  const handleAddProductSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newProdName || !newProdPrice || !newProdStock) return;
-
-    const fallbackImages: { [key: string]: string } = {
-      'Alimentation & Épicerie': 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=500&auto=format&fit=crop&q=60',
-      'Artisanat & Mode': 'https://images.unsplash.com/photo-1544816155-12df9643f363?w=500&auto=format&fit=crop&q=60',
-      'Électronique & Tech': 'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=500&auto=format&fit=crop&q=60',
-    };
-
-    const newProd: Product = {
-      id: `p-${Date.now()}`,
-      name: newProdName,
-      description: newProdDesc || 'Aucune description fournie par le commerçant.',
-      price: Number(newProdPrice),
-      image: newProdImage || fallbackImages[newProdCategory] || 'https://images.unsplash.com/photo-1555529669-e69e7aa0ba9a?w=500&auto=format&fit=crop&q=60',
-      category: newProdCategory,
-      merchantId: activeMerchant?.id || 'm1',
-      merchantName: activeMerchant?.shopName || 'Boutique',
-      isBoosted: activeMerchant?.isPremium || false, // automatically boosted if premium
-      stock: Number(newProdStock),
-      rating: 5.0,
-      reviewsCount: 0,
-      origin: `Bafoussam (${activeMerchant?.location || 'Centre-ville'})`
-    };
-
-    onAddProduct(newProd);
-    setShowAddProductModal(false);
-    
-    // reset form fields
-    setNewProdName('');
-    setNewProdPrice('');
-    setNewProdImage('');
-    setNewProdStock('10');
-    setNewProdDesc('');
-  };
-
-  const handleUpgradePayment = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (upgradePhone.length < 9) {
-      setUpgradeError('Numéro de téléphone invalide.');
-      return;
-    }
-    setUpgradeError('');
-    setUpgradeStep('processing');
-
-    // Simulate payment process
-    setTimeout(() => {
-      setUpgradeStep('ussd');
-    }, 1500);
-  };
-
-  const handleConfirmUpgradePIN = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (upgradePin.length !== 4) {
-      setUpgradeError('Le code PIN doit comporter 4 chiffres.');
-      return;
-    }
-    setUpgradeError('');
-    setUpgradeStep('processing');
-
-    setTimeout(() => {
-      if (activeMerchantId) {
-        onUpgradeMerchant(activeMerchantId);
-      }
-      setUpgradeStep('success');
-    }, 2000);
-  };
-
-  const handleAddCampaign = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!campaignTitle) return;
-
-    const newCampaign: MarketingCampaign = {
-      id: `c-${Date.now()}`,
-      title: campaignTitle,
-      type: campaignType,
-      targetNeighborhoods: campaignTarget,
-      status: 'active',
-      views: 0,
-      conversions: 0,
-      startDate: new Date().toISOString().split('T')[0],
-      endDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-    };
-
-    setActiveCampaigns([newCampaign, ...activeCampaigns]);
-    setShowCampaignModal(false);
-    setCampaignTitle('');
-  };
-
-  const handleToggleTargetNeighborhood = (name: string) => {
-    if (campaignTarget.includes(name)) {
-      setCampaignTarget(campaignTarget.filter(t => t !== name));
-    } else {
-      setCampaignTarget([...campaignTarget, name]);
-    }
-  };
-
-  const handleBoostPaymentSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!productToBoost) return;
-    if (!boostPhone || boostPhone.replace(/\D/g, '').length < 9) {
-      setBoostError('Veuillez saisir un numéro de téléphone valide à 9 chiffres.');
-      return;
-    }
-    setBoostStep('processing');
-    setBoostError('');
-
-    setTimeout(() => {
-      if (onBoostProduct) {
-        onBoostProduct(productToBoost.id);
-      }
-      setBoostStep('success');
-    }, 1500);
+  // Quick Action Handler
+  const handleQuickAction = (tab: typeof dashboardTab) => {
+    setDashboardTab(tab);
   };
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 font-sans" id="merchant-portal-container">
       
-      {/* 1. Portal Gateway Screen / Login if not connected */}
-      <AnimatePresence mode="wait">
-        {!activeMerchantId ? (
-          <motion.div
-            key="merchant-gateway-view"
-            initial={{ opacity: 0, y: 15 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -15 }}
-            className="space-y-6"
-          >
-            {/* Gateway Top Header with Return to Client Space */}
-            <div className="bg-slate-900 text-white rounded-3xl p-6 lg:p-8 border border-slate-800 shadow-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-              <div>
-                <span className="bg-amber-500 text-slate-950 font-black text-[10px] uppercase tracking-wider px-3 py-1 rounded-full inline-block">
-                  Espace Commerçant Isolé
+      {/* ========================================================= */}
+      {/* 1. STATE: NO ACTIVE MERCHANT / NOT LOGGED IN / NO STORE  */}
+      {/* ========================================================= */}
+      {!activeMerchantId ? (
+        <div className="space-y-6">
+          {/* Presentation Card / Pitch Header */}
+          <div className="bg-white/95 backdrop-blur-md text-slate-900 rounded-3xl p-6 sm:p-10 border border-slate-200/90 shadow-lg relative overflow-hidden">
+            <div className="absolute inset-0 bg-gradient-to-br from-emerald-50/50 via-slate-50/50 to-purple-50/30 pointer-events-none"></div>
+
+            <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+              <div className="space-y-3 max-w-2xl">
+                <span className="bg-emerald-100 text-[#16A34A] border border-emerald-300/80 font-black text-[10px] uppercase tracking-widest px-3 py-1 rounded-full inline-flex items-center gap-1 shadow-2xs">
+                  <Store className="w-3.5 h-3.5" /> Espace Commerçant Pro AfriNova
                 </span>
-                <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-white mt-2">
-                  Portail Commerçants AfriNova
-                </h2>
-                <p className="text-slate-400 text-xs sm:text-sm mt-1">
-                  Accès réservé aux vendeurs, boutiques et prestataires affiliés AfriNova.
+                <h1 className="text-2xl sm:text-4xl font-extrabold tracking-tight text-[#0F172A] leading-tight">
+                  Espace Vendeur AfriNova
+                </h1>
+                <p className="text-slate-600 text-xs sm:text-sm leading-relaxed">
+                  Gérez facilement votre boutique, suivez vos ventes en temps réel et recevez vos commandes à Bafoussam.
                 </p>
               </div>
 
-              {onSwitchToClientSpace && (
+              {/* Top CTA Buttons */}
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full md:w-auto shrink-0">
                 <button
-                  onClick={onSwitchToClientSpace}
-                  className="bg-white hover:bg-slate-100 text-slate-900 font-bold text-xs py-2.5 px-4 rounded-xl shadow-sm transition flex items-center gap-2 cursor-pointer shrink-0"
-                  id="btn-gateway-back-to-client"
+                  onClick={() => setShowCreateShopModal(true)}
+                  className="bg-gradient-to-r from-[#16A34A] via-[#15803D] to-[#7C3AED] hover:from-[#15803D] hover:to-[#6D28D9] text-white font-black text-xs py-3.5 px-6 rounded-2xl shadow-[0_4px_20px_rgba(22,163,74,0.35)] transition flex items-center justify-center gap-2 cursor-pointer active:scale-98"
+                  id="btn-create-shop-primary"
                 >
-                  <Compass className="w-4 h-4 text-indigo-600" />
-                  <span>← Retour à l'espace client</span>
+                  <Plus className="w-4 h-4 stroke-[3]" />
+                  <span>Créer ma boutique</span>
                 </button>
-              )}
-            </div>
 
-            {/* Two Clear Options Selector */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <button
-                type="button"
-                onClick={() => {
-                  setGatewayChoice('login');
-                  setPendingLoginMerchant(null);
-                }}
-                className={`p-6 rounded-3xl border text-left transition cursor-pointer flex items-start gap-4 ${
-                  gatewayChoice === 'login'
-                    ? 'bg-indigo-600/10 border-indigo-600 shadow-md dark:bg-indigo-950/40 ring-2 ring-indigo-500/30'
-                    : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 hover:border-indigo-300'
-                }`}
-                id="choice-option-login"
-              >
-                <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 ${
-                  gatewayChoice === 'login' ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300'
-                }`}>
-                  <Store className="w-6 h-6" />
-                </div>
-                <div>
-                  <span className="text-[10px] font-black uppercase tracking-widest text-indigo-600 dark:text-indigo-400 block">
-                    Option 1
-                  </span>
-                  <h3 className="font-extrabold text-lg text-slate-900 dark:text-white mt-0.5">
-                    Se connecter
-                  </h3>
-                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">
-                    Commerçant déjà inscrit. Entrez votre mot de passe pour gérer votre catalogue.
-                  </p>
-                </div>
-              </button>
+                <button
+                  onClick={() => setShowLoginModal(true)}
+                  className="bg-white hover:bg-emerald-50/80 text-[#16A34A] border border-emerald-300 font-extrabold text-xs py-3.5 px-5 rounded-2xl shadow-2xs transition flex items-center justify-center gap-2 cursor-pointer active:scale-98"
+                  id="btn-login-shop-secondary"
+                >
+                  <Store className="w-4 h-4 text-[#16A34A]" />
+                  <span>Se connecter à ma boutique</span>
+                </button>
 
-              <button
-                type="button"
-                onClick={() => setGatewayChoice('register')}
-                className={`p-6 rounded-3xl border text-left transition cursor-pointer flex items-start gap-4 ${
-                  gatewayChoice === 'register'
-                    ? 'bg-emerald-600/10 border-emerald-600 shadow-md dark:bg-emerald-950/40 ring-2 ring-emerald-500/30'
-                    : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 hover:border-emerald-300'
-                }`}
-                id="choice-option-register"
-              >
-                <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 ${
-                  gatewayChoice === 'register' ? 'bg-emerald-600 text-white' : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300'
-                }`}>
-                  <Plus className="w-6 h-6" />
-                </div>
-                <div>
-                  <span className="text-[10px] font-black uppercase tracking-widest text-emerald-600 dark:text-emerald-400 block">
-                    Option 2
-                  </span>
-                  <h3 className="font-extrabold text-lg text-slate-900 dark:text-white mt-0.5">
-                    Créer ma boutique
-                  </h3>
-                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">
-                    Nouveau commerçant à Bafoussam → inscription, vérification & abonnement.
-                  </p>
-                </div>
-              </button>
-            </div>
-
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-            {/* Left Box: Informational and Marketing Pitch */}
-            <div className="lg:col-span-7 bg-slate-900 text-white rounded-3xl p-8 lg:p-12 border border-slate-800 shadow-xl relative overflow-hidden">
-              <div className="absolute inset-0 bg-[radial-gradient(#334155_1px,transparent_1px)] [background-size:20px_20px] pointer-events-none opacity-30"></div>
-              
-              <div className="relative z-10 space-y-6">
-                <span className="bg-[#16A34A] text-white font-bold text-[10px] uppercase tracking-wider px-3 py-1 rounded-full inline-block">
-                  {lang === 'fr' ? 'Espace Commerçants AfriNova' : 'AfriNova Merchant Space'}
-                </span>
-
-                <h2 className="text-3xl lg:text-4xl font-extrabold tracking-tight leading-tight">
-                  {lang === 'fr' ? "Propulsez vos ventes en ligne dans toute la capitale de l'Ouest." : "Propel your online sales across the Western Capital."}
-                </h2>
-                
-                <p className="text-slate-400 text-sm leading-relaxed max-w-lg">
-                  {lang === 'fr' 
-                    ? "Rejoignez des centaines de commerçants du Marché A, Marché Congo, et Carrefour Bamiléké. Proposez vos produits aux résidents de Bafoussam avec paiement mobile sécurisé et une livraison en moto-taxi ultra-rapide."
-                    : "Join hundreds of merchants from Market A, Congo Market, and Carrefour Bamiléké. Offer your products to Bafoussam residents with secure mobile payment and ultra-fast motorcycle delivery."}
-                </p>
-
-                {/* Features Highlights */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 pt-4">
-                  <div className="flex gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-slate-800 flex items-center justify-center shrink-0 border border-slate-700 text-indigo-400">
-                      <Sparkles className="w-5 h-5" />
-                    </div>
-                    <div>
-                      <h4 className="font-bold text-sm text-slate-100">
-                        {lang === 'fr' ? 'Visibilité Boostée Premium' : 'Premium Boosted Visibility'}
-                      </h4>
-                      <p className="text-xs text-slate-400 mt-1">
-                        {lang === 'fr' 
-                          ? "Vos articles affichés en tête de liste avec le badge indigo de confiance."
-                          : "Your items displayed at the top of the list with the blue trust badge."}
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="flex gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-slate-800 flex items-center justify-center shrink-0 border border-slate-700 text-indigo-400">
-                      <BarChart3 className="w-5 h-5" />
-                    </div>
-                    <div>
-                      <h4 className="font-bold text-sm text-slate-100">
-                        {lang === 'fr' ? 'Marketing Avancé' : 'Advanced Marketing'}
-                      </h4>
-                      <p className="text-xs text-slate-400 mt-1">
-                        {lang === 'fr'
-                          ? "Générez des rapports de vente, analysez l'intérêt de vos clients à Bafoussam."
-                          : "Generate sales reports, analyze customer interest in Bafoussam."}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Pricing banner */}
-                <div className="bg-slate-800/60 rounded-2xl border border-slate-700 p-5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                  <div>
-                    <span className="text-xs font-bold text-indigo-400 uppercase tracking-widest block">
-                      {lang === 'fr' ? 'Abonnement Premium Obligatoire' : 'Mandatory Premium Subscription'}
-                    </span>
-                    <span className="text-2xl font-extrabold text-white mt-1 block">100 000 FCFA <span className="text-xs font-medium text-slate-400">/ {lang === 'fr' ? 'an' : 'year'}</span></span>
-                    <p className="text-[10px] text-slate-400 mt-1">
-                      {lang === 'fr'
-                        ? "Pour accéder aux fonctionnalités marketing avancées et au boost de visibilité."
-                        : "To access advanced marketing features and visibility boosts."}
-                    </p>
-                  </div>
-                  <div className="bg-indigo-600 text-white font-bold text-xs py-2 px-4 rounded-xl shadow-md">
-                    {lang === 'fr' ? 'Rentable dès le 1er mois' : 'Profitable from the first month'}
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Right Box: Login / Register forms */}
-            <div className="lg:col-span-5 space-y-6">
-              
-              {/* Login with existing profiles */}
-              <div className="bg-white rounded-3xl p-6 border border-slate-100 shadow-md">
-                {!pendingLoginMerchant ? (
-                  <>
-                    <h3 className="font-bold text-slate-900 text-base mb-4 flex items-center gap-2">
-                      <Store className="w-4 h-4 text-indigo-600" />
-                      <span>{lang === 'fr' ? 'Se connecter à votre boutique' : 'Log in to your shop'}</span>
-                    </h3>
-
-                    <div className="space-y-3">
-                      {merchants.map((m) => (
-                        <button
-                          key={m.id}
-                          onClick={() => handleMerchantLoginClick(m)}
-                          className="w-full text-left p-3.5 rounded-2xl border border-slate-100 hover:border-indigo-400 hover:bg-indigo-50/20 flex items-center justify-between transition group cursor-pointer"
-                        >
-                          <div className="flex items-center gap-3">
-                            <div className="w-9 h-9 bg-slate-100 rounded-lg flex items-center justify-center font-bold text-sm text-slate-700 group-hover:bg-indigo-100 group-hover:text-indigo-900">
-                              {m.logo}
-                            </div>
-                            <div>
-                              <div className="flex items-center gap-1.5 flex-wrap">
-                                <p className="font-bold text-slate-950 text-xs">{m.shopName}</p>
-                                {m.isVerified && (
-                                  <VerifiedBadge id={`verified-badge-dash-login-${m.id}`} />
-                                )}
-                              </div>
-                              <p className="text-[11px] text-slate-400">{m.location} • {m.name}</p>
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-1.5">
-                            {m.isPremium ? (
-                              <span className="bg-indigo-600 text-white text-[9px] font-bold px-2 py-0.5 rounded-full">Premium</span>
-                            ) : (
-                              <span className="bg-slate-100 text-slate-500 text-[9px] font-bold px-2 py-0.5 rounded-full">Standard</span>
-                            )}
-                            <ArrowRight className="w-3.5 h-3.5 text-slate-300 group-hover:text-indigo-600 group-hover:translate-x-0.5 transition" />
-                          </div>
-                        </button>
-                      ))}
-                    </div>
-                  </>
-                ) : (
-                  <form onSubmit={handleVerifyPasswordAndLogin} className="space-y-4">
-                    <div className="flex items-center gap-3 border-b border-slate-100 pb-3 mb-1">
-                      <div className="w-10 h-10 bg-indigo-50 rounded-xl flex items-center justify-center text-lg text-indigo-600 font-bold">
-                        {pendingLoginMerchant.logo}
-                      </div>
-                      <div className="flex-1">
-                        <p className="font-bold text-slate-900 text-sm">{pendingLoginMerchant.shopName}</p>
-                        <p className="text-xs text-slate-400">{pendingLoginMerchant.name} • {pendingLoginMerchant.location}</p>
-                      </div>
-                    </div>
-
-                    <div>
-                      <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1 flex items-center justify-between">
-                        <span>Mot de passe de sécurité</span>
-                        <span className="text-indigo-500 font-bold lowercase">Requis contre l'arnaque</span>
-                      </label>
-                      <input
-                        type="password"
-                        required
-                        value={loginPassword}
-                        onChange={(e) => setLoginPassword(e.target.value)}
-                        placeholder="Entrez le mot de passe de cette boutique"
-                        className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/10 text-xs text-slate-950 transition"
-                        autoFocus
-                      />
-                    </div>
-
-                    {loginError && (
-                      <div className="text-red-500 bg-red-50 dark:bg-red-950/20 border border-red-100 dark:border-red-900/40 p-3 rounded-xl text-xs font-semibold leading-relaxed">
-                        ⚠️ {loginError}
-                      </div>
-                    )}
-
-                    <div className="flex gap-2.5">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setPendingLoginMerchant(null);
-                          setLoginPassword('');
-                          setLoginError('');
-                        }}
-                        className="flex-1 border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-bold py-2.5 rounded-xl cursor-pointer transition text-center"
-                      >
-                        Retour
-                      </button>
-                      <button
-                        type="submit"
-                        className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold py-2.5 rounded-xl cursor-pointer transition shadow-sm"
-                      >
-                        Valider & Ouvrir
-                      </button>
-                    </div>
-                  </form>
+                {onSwitchToClientSpace && (
+                  <button
+                    onClick={onSwitchToClientSpace}
+                    className="bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs py-3.5 px-4 rounded-2xl transition flex items-center justify-center gap-1.5 cursor-pointer border border-slate-200/80"
+                  >
+                    <Compass className="w-4 h-4 text-purple-600" />
+                    <span>Espace Client</span>
+                  </button>
                 )}
               </div>
+            </div>
 
-              {/* Create new store profile */}
-              <div className="bg-white rounded-3xl p-6 border border-slate-100 shadow-md">
-                <h3 className="font-bold text-slate-900 text-sm mb-3">Enregistrer une nouvelle boutique</h3>
-                <form onSubmit={handleCreateMerchant} className="space-y-3.5">
-                  <div>
-                    <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Nom du Gérant</label>
-                    <input
-                      name="mName"
-                      type="text"
-                      required
-                      placeholder="Ex: Paul Tagne"
-                      className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/10 text-xs text-slate-950 transition"
-                    />
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Nom du Commerce</label>
-                      <input
-                        name="mShopName"
-                        type="text"
-                        required
-                        placeholder="Ex: Épicerie Tagne & Fils"
-                        className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/10 text-xs text-slate-950 transition"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Emplacement Bafoussam</label>
-                      <select
-                        name="mLocation"
-                        className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/10 text-xs text-slate-950 transition"
-                      >
-                        <option value="Marché A">Marché A (Centre)</option>
-                        <option value="Marché B">Marché B</option>
-                        <option value="Marché Congo">Marché Congo</option>
-                        <option value="Carrefour Bamiléké">Carrefour Bamiléké</option>
-                        <option value="Tamdja">Tamdja</option>
-                        <option value="Bamendzi">Bamendzi</option>
-                      </select>
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Numéro de Téléphone Mobile Money</label>
-                    <input
-                      name="mPhone"
-                      type="tel"
-                      required
-                      placeholder="Ex: 677000000"
-                      className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/10 text-xs text-slate-950 transition"
-                    />
-                  </div>
-
-                  {/* ID & Business Verification Fields */}
-                  <div className="bg-slate-50/80 p-4.5 rounded-2xl border border-slate-100 space-y-3.5">
-                    <span className="text-[10px] font-black text-slate-900 uppercase tracking-widest block border-b border-slate-200/60 pb-1.5">🛡️ Étape de Vérification Obligatoire</span>
-                    
-                    <div>
-                      <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1 flex items-center justify-between">
-                        <span>Nom légal du commerçant</span>
-                        <span className="text-indigo-600 font-bold text-[9px] uppercase">Strict (CNI)</span>
-                      </label>
-                      <input
-                        type="text"
-                        required
-                        placeholder="Ex: Paul Tagne (Doit correspondre à la CNI)"
-                        className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/10 text-xs text-slate-950 transition"
-                        value={regLegalName}
-                        onChange={(e) => setRegLegalName(e.target.value)}
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1 flex items-center justify-between">
-                        <span>Numéro de Registre de Commerce</span>
-                        <span className="text-slate-400 font-normal text-[9px] uppercase">Optionnel</span>
-                      </label>
-                      <input
-                        type="text"
-                        placeholder="Ex: RC/BAF/2026/B/142 (Si formalisé)"
-                        className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/10 text-xs text-slate-950 transition"
-                        value={regRegistryNumber}
-                        onChange={(e) => setRegRegistryNumber(e.target.value)}
-                      />
-                    </div>
-
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      <div>
-                        <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1 flex items-center justify-between">
-                          <span>Photo Recto CNI / Passeport</span>
-                          <span className="text-red-500 font-bold text-[9px] uppercase">Requis</span>
-                        </label>
-                        <div className="relative border-2 border-dashed border-slate-200 hover:border-indigo-500/50 rounded-xl p-2 bg-white text-center transition cursor-pointer flex flex-col items-center justify-center min-h-[85px]">
-                          <input
-                            type="file"
-                            accept="image/*"
-                            className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
-                            onChange={(e) => {
-                              const file = e.target.files?.[0];
-                              if (file) {
-                                setRegCniFileName(file.name);
-                                const reader = new FileReader();
-                                reader.onload = (event) => {
-                                  setRegCniPhoto(event.target?.result as string);
-                                };
-                                reader.readAsDataURL(file);
-                              }
-                            }}
-                          />
-                          {regCniPhoto ? (
-                            <div className="space-y-1">
-                              <img src={regCniPhoto} alt="CNI Preview" className="w-12 h-8 object-cover rounded mx-auto border border-slate-200" referrerPolicy="no-referrer" />
-                              <span className="text-[9px] text-slate-500 block truncate max-w-[100px] mx-auto">{regCniFileName}</span>
-                            </div>
-                          ) : (
-                            <div className="space-y-0.5 text-slate-400">
-                              <span className="text-lg block">🪪</span>
-                              <span className="text-[9px] block font-bold uppercase tracking-wider">Charger CNI</span>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-
-                      <div>
-                        <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1 flex items-center justify-between">
-                          <span>Photo Boutique Physique</span>
-                          <span className="text-red-500 font-bold text-[9px] uppercase">Requis</span>
-                        </label>
-                        <div className="relative border-2 border-dashed border-slate-200 hover:border-indigo-500/50 rounded-xl p-2 bg-white text-center transition cursor-pointer flex flex-col items-center justify-center min-h-[85px]">
-                          <input
-                            type="file"
-                            accept="image/*"
-                            className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
-                            onChange={(e) => {
-                              const file = e.target.files?.[0];
-                              if (file) {
-                                setRegShopFileName(file.name);
-                                const reader = new FileReader();
-                                reader.onload = (event) => {
-                                  setRegShopPhoto(event.target?.result as string);
-                                };
-                                reader.readAsDataURL(file);
-                              }
-                            }}
-                          />
-                          {regShopPhoto ? (
-                            <div className="space-y-1">
-                              <img src={regShopPhoto} alt="Shop Preview" className="w-12 h-8 object-cover rounded mx-auto border border-slate-200" referrerPolicy="no-referrer" />
-                              <span className="text-[9px] text-slate-500 block truncate max-w-[100px] mx-auto">{regShopFileName}</span>
-                            </div>
-                          ) : (
-                            <div className="space-y-0.5 text-slate-400">
-                              <span className="text-lg block">🏪</span>
-                              <span className="text-[9px] block font-bold uppercase tracking-wider">Charger Photo</span>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1 flex items-center justify-between">
-                      <span>Mot de passe de sécurité</span>
-                      <span className="text-red-500 font-bold text-[9px] uppercase">Obligatoire</span>
-                    </label>
-                    <input
-                      name="mPassword"
-                      type="password"
-                      required
-                      placeholder="Définissez un mot de passe solide"
-                      className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/10 text-xs text-slate-950 transition"
-                    />
-                    <p className="text-[10px] text-slate-400 mt-1 leading-normal">
-                      Ce mot de passe sera obligatoire à chaque connexion pour vérifier votre identité de gérant et contrer toute tentative d'usurpation ou d'arnaque.
-                    </p>
-                  </div>
-
-                  {!(regLegalName && regCniPhoto && regShopPhoto) && (
-                    <div className="text-amber-600 bg-amber-50 border border-amber-100 p-3 rounded-xl text-[10px] font-extrabold leading-normal" id="registration-warning-msg">
-                      ⚠️ Merci de fournir les documents requis pour valider votre boutique.
-                    </div>
-                  )}
-
-                  <button
-                    type="submit"
-                    disabled={!(regLegalName && regCniPhoto && regShopPhoto)}
-                    className={`w-full text-xs font-black py-3 rounded-xl cursor-pointer transition shadow-sm mt-3 uppercase tracking-wider ${
-                      (regLegalName && regCniPhoto && regShopPhoto)
-                        ? 'bg-slate-900 hover:bg-slate-800 text-white'
-                        : 'bg-slate-100 text-slate-400 border border-slate-200 cursor-not-allowed'
-                    }`}
-                  >
-                    Créer ma boutique et me connecter
-                  </button>
-                </form>
+            {/* Concise Value Highlights */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-8 mt-8 border-t border-slate-200/80">
+              <div className="flex items-center gap-3 bg-emerald-50/60 p-3.5 rounded-2xl border border-emerald-200/70">
+                <div className="w-10 h-10 rounded-xl bg-[#16A34A] text-white flex items-center justify-center shrink-0 shadow-xs">
+                  <CreditCard className="w-5 h-5" />
+                </div>
+                <div>
+                  <h4 className="font-extrabold text-xs text-[#0F172A]">Paiement Mobile Money</h4>
+                  <p className="text-[11px] text-slate-600 mt-0.5">Encaissement direct MTN MoMo & Orange Money</p>
+                </div>
               </div>
 
+              <div className="flex items-center gap-3 bg-purple-50/60 p-3.5 rounded-2xl border border-purple-200/70">
+                <div className="w-10 h-10 rounded-xl bg-[#7C3AED] text-white flex items-center justify-center shrink-0 shadow-xs">
+                  <Truck className="w-5 h-5" />
+                </div>
+                <div>
+                  <h4 className="font-extrabold text-xs text-[#0F172A]">Livraison Express Moto</h4>
+                  <p className="text-[11px] text-slate-600 mt-0.5">Flotte de coursiers dédiée dans tout Bafoussam</p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-3 bg-amber-50/60 p-3.5 rounded-2xl border border-amber-200/70">
+                <div className="w-10 h-10 rounded-xl bg-amber-500 text-white flex items-center justify-center shrink-0 shadow-xs">
+                  <ShieldCheck className="w-5 h-5" />
+                </div>
+                <div>
+                  <h4 className="font-extrabold text-xs text-[#0F172A]">Badge Commerçant Certifié</h4>
+                  <p className="text-[11px] text-slate-600 mt-0.5">Confiance accrue auprès des acheteurs locaux</p>
+                </div>
+              </div>
             </div>
           </div>
-        </motion.div>
-        ) : (
-          
-          /* 2. Merchant Dashboard Logged-In View */
-          <motion.div
-            key="merchant-dashboard-view"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="space-y-6"
-          >
-            {/* Clear Banner for Active Merchant Session */}
-            <div className="bg-slate-950 text-white p-5 rounded-3xl border border-slate-800 shadow-xl flex flex-col sm:flex-row items-center justify-between gap-4">
-              <div className="flex items-center gap-3.5">
-                <div className="w-11 h-11 bg-indigo-600 text-white rounded-2xl flex items-center justify-center font-black text-amber-300 text-base border border-indigo-400/30 shrink-0">
-                  {activeMerchant?.logo}
-                </div>
-                <div>
-                  <span className="text-[10px] font-black uppercase tracking-widest text-indigo-400 block">
-                    Espace Commerçant Isolé
-                  </span>
-                  <h3 className="font-extrabold text-base text-white mt-0.5">
-                    Vous gérez : <span className="text-amber-400 font-black">{activeMerchant?.shopName}</span>
-                  </h3>
-                </div>
-              </div>
 
-              {onSwitchToClientSpace && (
-                <button
-                  onClick={onSwitchToClientSpace}
-                  className="bg-white hover:bg-slate-100 text-slate-950 font-extrabold text-xs py-2.5 px-4 rounded-xl shadow-md transition flex items-center gap-2 cursor-pointer shrink-0"
-                  id="btn-return-client-logged-in"
-                >
-                  <Compass className="w-4 h-4 text-indigo-600" />
-                  <span>Retour à l'espace client</span>
-                </button>
-              )}
-            </div>
-            {/* Merchant Dashboard Header bar */}
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 bg-white p-6 rounded-3xl border border-slate-100 shadow-sm">
+          {/* Quick Presentation Section */}
+          <AboutAfriNovaSection />
+        </div>
+      ) : (
+
+        /* ========================================================= */
+        /* 2. STATE: LOGGED IN MERCHANT DASHBOARD                     */
+        /* ========================================================= */
+        <div className="space-y-6">
+
+          {/* --------------------------------------------------------- */}
+          {/* HEADER: LOGO, NAME, VERIFICATION, SUBSCRIPTION, ACTIONS   */}
+          {/* --------------------------------------------------------- */}
+          <div className="bg-white/95 backdrop-blur-md text-slate-900 rounded-3xl p-6 sm:p-8 border border-slate-200/90 shadow-md space-y-6">
+            
+            {/* Top Row: Shop Info & Header Actions */}
+            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 border-b border-slate-200/80 pb-6">
+              
+              {/* Left: Logo & Details */}
               <div className="flex items-center gap-4">
-                <div className="w-14 h-14 bg-slate-900 text-indigo-400 rounded-2xl flex items-center justify-center font-extrabold text-xl shadow-md">
+                <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br from-[#16A34A] to-[#7C3AED] text-white rounded-2xl flex items-center justify-center font-black text-2xl sm:text-3xl shadow-md border border-emerald-300/40 shrink-0">
                   {activeMerchant?.logo}
                 </div>
-                <div>
+
+                <div className="space-y-1.5">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <h2 className="text-xl font-bold text-slate-900 tracking-tight">{activeMerchant?.shopName}</h2>
-                    {activeMerchant?.isVerified && (
-                      <VerifiedBadge id="verified-badge-dash-header" size="md" />
-                    )}
-                    {activeMerchant?.isPremium ? (
-                      <span className="bg-gradient-to-r from-indigo-500 to-indigo-600 text-white text-[9px] font-extrabold px-2.5 py-1 rounded-full flex items-center gap-1 shadow-sm">
-                        <Sparkles className="w-3 h-3 text-white fill-white animate-spin-slow" />
-                        <span>MEMBRE PREMIUM</span>
+                    <h1 className="text-xl sm:text-2xl font-black text-[#0F172A] tracking-tight">
+                      {activeMerchant?.shopName}
+                    </h1>
+
+                    {/* Statut de Vérification Badge */}
+                    {activeMerchant?.isVerified ? (
+                      <span className="bg-emerald-100 text-[#16A34A] border border-emerald-300/80 text-[10px] font-black px-2.5 py-0.5 rounded-full flex items-center gap-1 shadow-3xs">
+                        <CheckCircle2 className="w-3.5 h-3.5" /> Boutique Certifiée
+                      </span>
+                    ) : activeMerchant?.verificationStatus === 'pending_verification' ? (
+                      <span className="bg-amber-100 text-amber-800 border border-amber-300/80 text-[10px] font-black px-2.5 py-0.5 rounded-full flex items-center gap-1 shadow-3xs">
+                        <Clock className="w-3.5 h-3.5 animate-pulse" /> En attente de validation
                       </span>
                     ) : (
-                      <span className="bg-slate-100 text-slate-500 text-[10px] font-bold px-2.5 py-1 rounded-full">
-                        Compte Standard
+                      <span className="bg-slate-100 text-slate-600 text-[10px] font-bold px-2.5 py-0.5 rounded-full border border-slate-200">
+                        Non vérifiée
+                      </span>
+                    )}
+
+                    {/* Statut d'Abonnement Badge */}
+                    {activeMerchant?.isPremium ? (
+                      <span className="bg-amber-400 text-slate-950 text-[10px] font-black px-2.5 py-0.5 rounded-full flex items-center gap-1 shadow-2xs">
+                        <Sparkles className="w-3 h-3 fill-slate-950" /> VIP PREMIUM
+                      </span>
+                    ) : (
+                      <span className="bg-slate-100 text-slate-700 text-[10px] font-bold px-2.5 py-0.5 rounded-full border border-slate-200">
+                        Formule Standard
                       </span>
                     )}
                   </div>
-                  <p className="text-xs text-slate-400 mt-1 flex items-center gap-1.5">
-                    <MapPin className="w-3.5 h-3.5 text-slate-300" />
-                    <span>{activeMerchant?.location}</span>
+
+                  <p className="text-xs text-slate-600 flex items-center gap-3 flex-wrap">
+                    <span className="flex items-center gap-1">
+                      <UserCheck className="w-3.5 h-3.5 text-indigo-600" />
+                      <strong>Gérant :</strong> {activeMerchant?.name}
+                    </span>
                     <span className="text-slate-300">•</span>
-                    <Phone className="w-3.5 h-3.5 text-slate-300" />
-                    <span>{activeMerchant?.phone}</span>
+                    <span className="flex items-center gap-1">
+                      <MapPin className="w-3.5 h-3.5 text-red-500" />
+                      {activeMerchant?.location}
+                    </span>
+                    <span className="text-slate-300">•</span>
+                    <span className="flex items-center gap-1 font-mono">
+                      <Phone className="w-3.5 h-3.5 text-[#16A34A]" />
+                      {activeMerchant?.phone}
+                    </span>
                   </p>
                 </div>
               </div>
 
-              {/* Upgrade or Status Controls */}
-              <div className="flex items-center gap-3">
-                {activeMerchant?.isPremium && !isMerchantExpired && onSimulateMerchantExpiration && (
-                  <button
-                    onClick={() => onSimulateMerchantExpiration(activeMerchant.id)}
-                    className="bg-red-50 hover:bg-red-100 text-red-600 dark:bg-red-950/20 dark:text-red-400 border border-red-200 dark:border-red-900 text-xs py-2.5 px-4 rounded-xl font-bold transition cursor-pointer"
-                    id="btn-simulate-merchant-expiry"
-                  >
-                    🧪 Expire mon Premium
-                  </button>
-                )}
+              {/* Right: Quick Action Buttons in Header */}
+              <div className="flex items-center gap-2.5 flex-wrap shrink-0">
+                <button
+                  onClick={() => setShowAddProductModal(true)}
+                  className="bg-gradient-to-r from-[#16A34A] via-[#15803D] to-[#7C3AED] hover:from-[#15803D] hover:to-[#6D28D9] text-white font-black text-xs py-2.5 px-4 rounded-xl shadow-sm transition flex items-center gap-1.5 cursor-pointer active:scale-95"
+                  id="btn-header-add-product"
+                >
+                  <Plus className="w-4 h-4 stroke-[3]" />
+                  <span>Ajouter un produit</span>
+                </button>
 
                 {!activeMerchant?.isPremium && (
                   <button
@@ -876,908 +423,936 @@ export default function MerchantDashboard({
                       setUpgradeStep('details');
                       setShowUpgradeModal(true);
                     }}
-                    className="bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-xs py-2.5 px-4 rounded-xl flex items-center gap-1.5 cursor-pointer shadow-md shadow-indigo-600/10 transition"
-                    id="btn-trigger-premium-upgrade"
+                    className="bg-amber-500 hover:bg-amber-600 text-slate-950 font-black text-xs py-2.5 px-4 rounded-xl shadow-sm transition flex items-center gap-1.5 cursor-pointer"
                   >
-                    <Sparkles className="w-4 h-4 fill-white stroke-none" />
-                    <span>Passer au Premium (100k F/an)</span>
+                    <Sparkles className="w-4 h-4 fill-slate-950" />
+                    <span>Passer au VIP (100k F/an)</span>
+                  </button>
+                )}
+
+                {onSwitchToClientSpace && (
+                  <button
+                    onClick={onSwitchToClientSpace}
+                    className="bg-white hover:bg-emerald-50 text-[#16A34A] font-bold text-xs py-2.5 px-3.5 rounded-xl border border-emerald-300 transition flex items-center gap-1.5 cursor-pointer shadow-2xs"
+                  >
+                    <Eye className="w-3.5 h-3.5 text-[#16A34A]" />
+                    <span>Vitrine Client</span>
                   </button>
                 )}
 
                 <button
                   onClick={() => setActiveMerchantId(null)}
-                  className="text-xs text-slate-500 hover:text-slate-900 border border-slate-200 py-2.5 px-4 rounded-xl font-semibold hover:bg-slate-50 transition cursor-pointer"
+                  className="bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-bold py-2.5 px-3.5 rounded-xl border border-rose-200 transition flex items-center gap-1.5 cursor-pointer"
+                  title="Déconnexion boutique"
                 >
-                  Déconnexion Boutique
+                  <X className="w-3.5 h-3.5 text-rose-600" />
+                  <span>Déconnexion</span>
                 </button>
               </div>
             </div>
 
-            {/* Status alerts for Identity Verification */}
-            {activeMerchant?.verificationStatus === 'pending_verification' && (
-              <div className="bg-amber-500/10 border border-amber-500/25 p-5 rounded-3xl flex items-start gap-3.5" id="dash-verification-pending-banner">
-                <div className="bg-amber-100 dark:bg-amber-950/20 p-2.5 rounded-2xl text-amber-700 dark:text-amber-400 shrink-0">
-                  <ShieldAlert className="w-5 h-5 animate-pulse" />
-                </div>
-                <div>
-                  <h4 className="font-extrabold text-sm text-amber-900 dark:text-amber-200">Boutique en attente de vérification administrative</h4>
-                  <p className="text-xs text-amber-700/80 dark:text-amber-300/90 leading-relaxed mt-1">
-                    Les documents d'identité (CNI de <strong className="font-bold">{activeMerchant.legalName}</strong>) et de votre établissement physique ont été soumis avec succès. Notre équipe examine votre dossier pour valider l'activité. Votre boutique et ses produits seront visibles publiquement dès approbation.
-                  </p>
-                </div>
-              </div>
-            )}
-
-            {activeMerchant?.verificationStatus === 'rejected' && (
-              <div className="bg-red-500/10 border border-red-500/25 p-5 rounded-3xl flex items-start gap-3.5" id="dash-verification-rejected-banner">
-                <div className="bg-red-100 dark:bg-red-950/20 p-2.5 rounded-2xl text-red-700 dark:text-red-400 shrink-0">
-                  <ShieldAlert className="w-5 h-5" />
-                </div>
-                <div>
-                  <h4 className="font-extrabold text-sm text-red-900 dark:text-red-200">Dossier de vérification rejeté</h4>
-                  <p className="text-xs text-red-700/80 dark:text-red-300/90 leading-relaxed mt-1">
-                    Malheureusement, votre demande de vérification a été refusée par notre équipe de modération.
-                  </p>
-                  {activeMerchant.rejectionReason && (
-                    <div className="mt-2 bg-white/65 dark:bg-slate-900/40 p-3 rounded-xl border border-red-200/50 dark:border-red-900/60 text-xs text-red-950 dark:text-red-100 font-semibold">
-                      Motif du refus : "{activeMerchant.rejectionReason}"
-                    </div>
-                  )}
-                  <p className="text-[11px] text-red-600 dark:text-red-400 mt-2">
-                    Veuillez contacter l'administrateur de Bafoussam Direct ou réenregistrer votre boutique en fournissant des documents conformes.
-                  </p>
-                </div>
-              </div>
-            )}
-
-            {isMerchantExpired ? (
-              <div className="bg-white rounded-3xl p-8 border border-red-100 shadow-md max-w-2xl mx-auto text-center space-y-6 my-8" id="merchant-expiry-blocker">
-                <div className="w-16 h-16 bg-red-50 border border-red-100 text-red-500 rounded-2xl flex items-center justify-center mx-auto shadow-sm animate-pulse">
-                  <ShieldAlert className="w-9 h-9" />
-                </div>
-
-                <div className="space-y-2">
-                  <span className="text-[10px] font-black tracking-widest text-red-500 uppercase">Abonnement Expiré</span>
-                  <h3 className="text-xl font-extrabold text-slate-900 tracking-tight">Accès Boutique Bloqué ⚠️</h3>
-                  <p className="text-xs text-slate-500 leading-relaxed max-w-md mx-auto">
-                    L'abonnement annuel Premium de votre boutique <strong className="text-slate-800">{activeMerchant?.shopName}</strong> a expiré. Vous n'avez plus accès au catalogue ni aux fonctionnalités de vente.
-                  </p>
-                </div>
-
-                <div className="bg-slate-50 rounded-2xl p-5 text-xs text-slate-500 text-left space-y-2.5 border border-slate-100">
-                  <p className="font-bold text-slate-800">En raison de l'expiration de votre abonnement :</p>
-                  <ul className="list-disc pl-5 space-y-1">
-                    <li>Vos articles en vente ne sont plus visibles par les acheteurs sur le marché public.</li>
-                    <li>L'ajout, la modification ou la suppression de vos produits est temporairement verrouillé.</li>
-                    <li>Vos campagnes publicitaires de Bafoussam sont suspendues.</li>
-                  </ul>
-                </div>
-
-                {/* Simulated Renewal Flow within the block */}
-                {merchantRenewalStep === 'idle' && (
-                  <div className="space-y-4">
-                    <div className="bg-indigo-50 rounded-2xl p-4 flex justify-between items-center text-left border border-indigo-100/50">
-                      <div>
-                        <span className="text-[9px] font-bold text-indigo-600 uppercase tracking-widest block">Tarif de Renouvellement</span>
-                        <span className="text-lg font-extrabold text-slate-900 mt-0.5 block">100 000 FCFA <span className="text-xs font-normal text-slate-500">/ an</span></span>
-                        <span className="text-[10px] text-indigo-600 font-bold block">Intégralité versée via Mobile Money</span>
-                      </div>
-                      <span className="bg-indigo-600 text-white font-bold text-[10px] py-1 px-2.5 rounded-full">Renouvellement MoMo/Orange</span>
-                    </div>
-
-                    <button
-                      onClick={() => setMerchantRenewalStep('phone-input')}
-                      className="w-full bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold py-3.5 rounded-xl transition shadow-md shadow-indigo-600/10 cursor-pointer flex items-center justify-center gap-1.5"
-                    >
-                      <Plus className="w-4 h-4" />
-                      <span>Renouveler l'abonnement par Mobile Money</span>
-                    </button>
-                  </div>
-                )}
-
-                {merchantRenewalStep === 'phone-input' && (
-                  <div className="space-y-4 text-left max-w-md mx-auto">
-                    <div className="grid grid-cols-2 gap-2.5">
-                      <button
-                        type="button"
-                        onClick={() => setMerchantRenewalOperator('momo')}
-                        className={`p-3 rounded-xl border text-xs font-bold transition flex items-center justify-center gap-2 cursor-pointer ${
-                          merchantRenewalOperator === 'momo'
-                            ? 'bg-amber-500/10 border-amber-400 text-amber-700 font-extrabold'
-                            : 'bg-white border-slate-100 text-slate-500 hover:bg-slate-50'
-                        }`}
-                      >
-                        <span className="w-6 h-6 bg-amber-400 text-slate-950 font-black rounded flex items-center justify-center text-[10px]">momo</span>
-                        <span>MTN MoMo</span>
-                      </button>
-
-                      <button
-                        type="button"
-                        onClick={() => setMerchantRenewalOperator('orange')}
-                        className={`p-3 rounded-xl border text-xs font-bold transition flex items-center justify-center gap-2 cursor-pointer ${
-                          merchantRenewalOperator === 'orange'
-                            ? 'bg-orange-500/10 border-orange-400 text-orange-700 font-extrabold'
-                            : 'bg-white border-slate-100 text-slate-500 hover:bg-slate-50'
-                        }`}
-                      >
-                        <span className="w-6 h-6 bg-orange-500 text-white font-black rounded flex items-center justify-center text-[10px]">OM</span>
-                        <span>Orange</span>
-                      </button>
-                    </div>
-
-                    <div>
-                      <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Numéro de Téléphone de Paiement</label>
-                      <input
-                        type="tel"
-                        value={merchantRenewalPhone || activeMerchant?.phone || ''}
-                        onChange={(e) => setMerchantRenewalPhone(e.target.value)}
-                        placeholder="Ex: 677894512"
-                        className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/10 text-xs text-slate-950 transition"
-                      />
-                    </div>
-
-                    <div className="flex gap-2 pt-1">
-                      <button
-                        onClick={() => setMerchantRenewalStep('idle')}
-                        className="flex-1 border border-slate-200 text-slate-600 text-xs font-bold py-2.5 rounded-xl cursor-pointer hover:bg-slate-50 text-center"
-                      >
-                        Annuler
-                      </button>
-                      <button
-                        onClick={() => {
-                          setMerchantRenewalStep('processing');
-                          setTimeout(() => {
-                            setMerchantRenewalStep('pin-prompt');
-                          }, 1500);
-                        }}
-                        className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold py-2.5 rounded-xl cursor-pointer text-center shadow-sm"
-                      >
-                        Lancer le Paiement
-                      </button>
-                    </div>
-                  </div>
-                )}
-
-                {merchantRenewalStep === 'processing' && (
-                  <div className="py-8 space-y-4 text-center">
-                    <Loader2 className="w-10 h-10 text-indigo-500 animate-spin mx-auto" />
-                    <p className="text-xs text-slate-600 font-semibold">Connexion sécurisée à l'opérateur de Bafoussam...</p>
-                  </div>
-                )}
-
-                {merchantRenewalStep === 'pin-prompt' && (
-                  <div className="space-y-4 text-left max-w-sm mx-auto">
-                    <div className="text-center space-y-1">
-                      <h4 className="text-xs font-bold text-slate-700 uppercase">Saisissez votre code PIN</h4>
-                      <p className="text-[10px] text-slate-400">Paiement de 100 000 FCFA via Mobile Money</p>
-                    </div>
-
-                    <input
-                      type="password"
-                      maxLength={4}
-                      value={merchantRenewalPin}
-                      onChange={(e) => setMerchantRenewalPin(e.target.value.replace(/[^0-9]/g, ''))}
-                      placeholder="••••"
-                      className="w-full text-center px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl font-mono text-xl tracking-widest font-extrabold focus:outline-none focus:ring-2 focus:ring-indigo-500/10"
-                      autoFocus
-                    />
-
-                    <button
-                      onClick={() => {
-                        setMerchantRenewalStep('processing');
-                        setTimeout(() => {
-                          if (activeMerchant) {
-                            onUpgradeMerchant(activeMerchant.id);
-                          }
-                          setMerchantRenewalStep('idle');
-                          setMerchantRenewalPin('');
-                        }, 2000);
-                      }}
-                      className="w-full bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold py-3 rounded-xl transition shadow-sm cursor-pointer"
-                    >
-                      Confirmer le paiement de renouvellement
-                    </button>
-                  </div>
-                )}
-              </div>
-            ) : (
-              <>
-                {/* Quick stats grid */}
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {/* --------------------------------------------------------- */}
+            {/* REAL-TIME STATISTICAL CARDS (7 METRICS)                  */}
+            {/* --------------------------------------------------------- */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3">
               
-              {/* Stat 1: Sales volume */}
-              <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-xs flex flex-col justify-between">
-                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Chiffre d'Affaires</span>
-                <span className="text-xl font-extrabold text-slate-950 mt-1.5 block">
-                  {totalSalesVolume.toLocaleString('fr-FR')} <span className="text-xs font-bold text-slate-500">FCFA</span>
+              {/* Stat 1: Nombre de Produits */}
+              <div className="bg-[#F8FAFC] p-3.5 rounded-2xl border border-slate-200/80 space-y-1 shadow-3xs">
+                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block flex items-center gap-1">
+                  <ShoppingBag className="w-3 h-3 text-indigo-600" /> Produits
                 </span>
-                <span className="text-[9px] text-emerald-500 font-bold mt-2 flex items-center gap-1">
-                  <ArrowUpRight className="w-3.5 h-3.5" />
-                  <span>+12.4% ce mois</span>
+                <span className="text-lg sm:text-xl font-black text-[#0F172A] block">
+                  {merchantProducts.length}
                 </span>
+                <span className="text-[9px] text-slate-500 block">{totalStock} en stock</span>
               </div>
 
-              {/* Stat 2: Active products */}
-              <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-xs flex flex-col justify-between">
-                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Articles en Vente</span>
-                <span className="text-xl font-extrabold text-slate-950 mt-1.5 block">
-                  {merchantProducts.length} <span className="text-xs font-bold text-slate-500">références</span>
+              {/* Stat 2: Commandes en attente */}
+              <div className="bg-[#F8FAFC] p-3.5 rounded-2xl border border-slate-200/80 space-y-1 shadow-3xs">
+                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block flex items-center gap-1">
+                  <PackageCheck className="w-3 h-3 text-amber-600" /> En Attente
                 </span>
-                <span className="text-[9px] text-slate-400 mt-2 block">
-                  {totalStock} unités en stock au total
+                <span className="text-lg sm:text-xl font-black text-amber-600 block">
+                  {pendingOrdersCount}
                 </span>
+                <span className="text-[9px] text-slate-500 block">À préparer</span>
               </div>
 
-              {/* Stat 3: Total views */}
-              <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-xs flex flex-col justify-between">
-                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Vues de la Boutique</span>
-                <span className="text-xl font-extrabold text-slate-950 mt-1.5 block">
-                  {totalViews.toLocaleString('fr-FR')} <span className="text-xs font-bold text-slate-500">visites</span>
+              {/* Stat 3: Ventes du Jour */}
+              <div className="bg-[#F8FAFC] p-3.5 rounded-2xl border border-slate-200/80 space-y-1 shadow-3xs">
+                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block flex items-center gap-1">
+                  <TrendingUp className="w-3 h-3 text-[#16A34A]" /> Ventes Jour
                 </span>
-                <span className="text-[9px] text-slate-400 mt-2 block">
-                  Proviennent de Bafoussam et environs
+                <span className="text-lg sm:text-xl font-black text-[#16A34A] block">
+                  {todaySalesCount} <span className="text-[10px] font-semibold text-slate-500">ventes</span>
                 </span>
+                <span className="text-[9px] text-[#16A34A] font-bold block">{todaySalesTotal.toLocaleString('fr-FR')} F</span>
               </div>
 
-              {/* Stat 4: Conversions */}
-              <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-xs flex flex-col justify-between">
-                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Taux de Conversion</span>
-                <span className="text-xl font-extrabold text-slate-950 mt-1.5 block">
-                  {conversionRate}%
+              {/* Stat 4: Chiffre d'affaires du Mois */}
+              <div className="bg-[#F8FAFC] p-3.5 rounded-2xl border border-slate-200/80 space-y-1 shadow-3xs">
+                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block flex items-center gap-1">
+                  <DollarSign className="w-3 h-3 text-indigo-600" /> CA du Mois
                 </span>
-                <span className="text-[9px] text-indigo-600 font-bold mt-2 block">
-                  {activeMerchant?.isPremium ? 'Maximisé par Premium' : 'Upgradez pour booster'}
+                <span className="text-lg sm:text-xl font-black text-[#0F172A] block truncate">
+                  {monthlySalesTotal.toLocaleString('fr-FR')}
                 </span>
+                <span className="text-[9px] text-slate-500 block">FCFA mensuel</span>
               </div>
+
+              {/* Stat 5: Visiteurs / Vues */}
+              <div className="bg-[#F8FAFC] p-3.5 rounded-2xl border border-slate-200/80 space-y-1 shadow-3xs">
+                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block flex items-center gap-1">
+                  <Users className="w-3 h-3 text-purple-600" /> Visiteurs
+                </span>
+                <span className="text-lg sm:text-xl font-black text-[#0F172A] block">
+                  {storefrontViews.toLocaleString('fr-FR')}
+                </span>
+                <span className="text-[9px] text-slate-500 block">Vues vitrine</span>
+              </div>
+
+              {/* Stat 6: Favoris & Clics */}
+              <div className="bg-[#F8FAFC] p-3.5 rounded-2xl border border-slate-200/80 space-y-1 shadow-3xs">
+                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block flex items-center gap-1">
+                  <Heart className="w-3 h-3 text-rose-500" /> Favoris
+                </span>
+                <span className="text-lg sm:text-xl font-black text-[#0F172A] block">
+                  {storefrontClicks}
+                </span>
+                <span className="text-[9px] text-slate-400 block">Clics d'intérêt</span>
+              </div>
+
+              {/* Stat 7: Note Moyenne */}
+              <div className="bg-[#F8FAFC] p-3.5 rounded-2xl border border-slate-200/80 space-y-1 shadow-3xs">
+                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block flex items-center gap-1">
+                  <Star className="w-3 h-3 text-amber-500 fill-amber-500" /> Note Client
+                </span>
+                <span className="text-lg sm:text-xl font-black text-[#0F172A] block">
+                  {averageRating} <span className="text-[10px] font-semibold text-slate-500">/ 5.0</span>
+                </span>
+                <span className="text-[9px] text-slate-500 block">Avis certifiés</span>
+              </div>
+
             </div>
+          </div>
 
-            {/* Clean Section Navigation Tabs for Merchant Workspace */}
-            <div className="flex bg-slate-100 dark:bg-slate-900 p-1.5 rounded-2xl text-xs font-bold gap-1 border border-slate-200/80 dark:border-slate-800" id="merchant-dashboard-tabs">
+          {/* --------------------------------------------------------- */}
+          {/* QUICK ACTION MENU GRID (11 ACTIONS)                      */}
+          {/* --------------------------------------------------------- */}
+          <div className="bg-white rounded-3xl p-5 border border-slate-100 shadow-sm space-y-3">
+            <h3 className="font-extrabold text-slate-900 text-xs uppercase tracking-wider flex items-center gap-2">
+              <Sparkles className="w-4 h-4 text-indigo-600" />
+              <span>Menu d'Actions Rapides</span>
+            </h3>
+
+            <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-11 gap-2">
+              
               <button
-                onClick={() => setDashboardTab('products')}
-                className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl transition cursor-pointer ${
-                  dashboardTab === 'products'
-                    ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-xs font-extrabold'
-                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-                }`}
-                id="tab-merchant-products"
+                onClick={() => setShowAddProductModal(true)}
+                className="p-3 rounded-2xl bg-emerald-50 hover:bg-emerald-100 text-emerald-900 border border-emerald-200/80 flex flex-col items-center justify-center gap-1.5 transition text-center cursor-pointer group"
               >
-                <ShoppingBag className="w-4 h-4 text-indigo-500 shrink-0" />
-                <span>Mes Produits ({merchantProducts.length})</span>
+                <Plus className="w-5 h-5 text-emerald-600 group-hover:scale-110 transition" />
+                <span className="text-[10px] font-black leading-tight">Ajouter Produit</span>
               </button>
 
               <button
-                onClick={() => setDashboardTab('orders')}
-                className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl transition cursor-pointer relative ${
-                  dashboardTab === 'orders'
-                    ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-xs font-extrabold'
-                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                onClick={() => handleQuickAction('products')}
+                className={`p-3 rounded-2xl border flex flex-col items-center justify-center gap-1.5 transition text-center cursor-pointer group ${
+                  dashboardTab === 'products' ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-slate-50 hover:bg-slate-100 text-slate-800 border-slate-200/80'
                 }`}
-                id="tab-merchant-orders"
               >
-                <PackageCheck className="w-4 h-4 text-emerald-500 shrink-0" />
-                <span>Mes Commandes</span>
-                {(() => {
-                  const mOrders = orders.filter(o => o.items.some(i => i.product.merchantId === activeMerchantId));
-                  if (mOrders.length === 0) return null;
-                  return (
-                    <span className="bg-emerald-500 text-white font-extrabold text-[10px] px-1.5 py-0.2 rounded-full">
-                      {mOrders.length}
-                    </span>
-                  );
-                })()}
+                <ShoppingBag className="w-5 h-5 group-hover:scale-110 transition" />
+                <span className="text-[10px] font-bold leading-tight">Gérer Produits</span>
               </button>
 
               <button
-                onClick={() => setDashboardTab('profile')}
-                className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl transition cursor-pointer ${
-                  dashboardTab === 'profile'
-                    ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-xs font-extrabold'
-                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                onClick={() => handleQuickAction('orders')}
+                className={`p-3 rounded-2xl border flex flex-col items-center justify-center gap-1.5 transition text-center cursor-pointer relative group ${
+                  dashboardTab === 'orders' ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-slate-50 hover:bg-slate-100 text-slate-800 border-slate-200/80'
                 }`}
-                id="tab-merchant-profile"
               >
-                <UserCheck className="w-4 h-4 text-amber-500 shrink-0" />
-                <span>Mon Profil</span>
+                <PackageCheck className="w-5 h-5 group-hover:scale-110 transition" />
+                <span className="text-[10px] font-bold leading-tight">Commandes</span>
+                {pendingOrdersCount > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-amber-500 text-slate-950 font-black text-[9px] w-4 h-4 rounded-full flex items-center justify-center">
+                    {pendingOrdersCount}
+                  </span>
+                )}
               </button>
 
               <button
-                onClick={() => setDashboardTab('marketing')}
-                className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl transition cursor-pointer ${
-                  dashboardTab === 'marketing'
-                    ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-xs font-extrabold'
-                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                onClick={() => handleQuickAction('stock')}
+                className={`p-3 rounded-2xl border flex flex-col items-center justify-center gap-1.5 transition text-center cursor-pointer group ${
+                  dashboardTab === 'stock' ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-slate-50 hover:bg-slate-100 text-slate-800 border-slate-200/80'
                 }`}
-                id="tab-merchant-marketing"
               >
-                <Sparkles className="w-4 h-4 text-purple-500 shrink-0" />
-                <span>Marketing & Visibilité</span>
+                <BarChart3 className="w-5 h-5 group-hover:scale-110 transition" />
+                <span className="text-[10px] font-bold leading-tight">Stock</span>
               </button>
+
+              <button
+                onClick={() => handleQuickAction('deliveries')}
+                className={`p-3 rounded-2xl border flex flex-col items-center justify-center gap-1.5 transition text-center cursor-pointer group ${
+                  dashboardTab === 'deliveries' ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-slate-50 hover:bg-slate-100 text-slate-800 border-slate-200/80'
+                }`}
+              >
+                <Truck className="w-5 h-5 group-hover:scale-110 transition" />
+                <span className="text-[10px] font-bold leading-tight">Livraisons</span>
+              </button>
+
+              <button
+                onClick={() => handleQuickAction('payments')}
+                className={`p-3 rounded-2xl border flex flex-col items-center justify-center gap-1.5 transition text-center cursor-pointer group ${
+                  dashboardTab === 'payments' ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-slate-50 hover:bg-slate-100 text-slate-800 border-slate-200/80'
+                }`}
+              >
+                <CreditCard className="w-5 h-5 group-hover:scale-110 transition" />
+                <span className="text-[10px] font-bold leading-tight">Paiements</span>
+              </button>
+
+              <button
+                onClick={() => handleQuickAction('promotions')}
+                className={`p-3 rounded-2xl border flex flex-col items-center justify-center gap-1.5 transition text-center cursor-pointer group ${
+                  dashboardTab === 'promotions' ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-slate-50 hover:bg-slate-100 text-slate-800 border-slate-200/80'
+                }`}
+              >
+                <Tag className="w-5 h-5 group-hover:scale-110 transition" />
+                <span className="text-[10px] font-bold leading-tight">Promotions</span>
+              </button>
+
+              <button
+                onClick={() => handleQuickAction('reviews')}
+                className={`p-3 rounded-2xl border flex flex-col items-center justify-center gap-1.5 transition text-center cursor-pointer group ${
+                  dashboardTab === 'reviews' ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-slate-50 hover:bg-slate-100 text-slate-800 border-slate-200/80'
+                }`}
+              >
+                <Star className="w-5 h-5 group-hover:scale-110 transition" />
+                <span className="text-[10px] font-bold leading-tight">Avis Clients</span>
+              </button>
+
+              <button
+                onClick={() => handleQuickAction('messages')}
+                className={`p-3 rounded-2xl border flex flex-col items-center justify-center gap-1.5 transition text-center cursor-pointer group ${
+                  dashboardTab === 'messages' ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-slate-50 hover:bg-slate-100 text-slate-800 border-slate-200/80'
+                }`}
+              >
+                <MessageSquare className="w-5 h-5 group-hover:scale-110 transition" />
+                <span className="text-[10px] font-bold leading-tight">Messages</span>
+              </button>
+
+              <button
+                onClick={() => handleQuickAction('stats')}
+                className={`p-3 rounded-2xl border flex flex-col items-center justify-center gap-1.5 transition text-center cursor-pointer group ${
+                  dashboardTab === 'stats' ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-slate-50 hover:bg-slate-100 text-slate-800 border-slate-200/80'
+                }`}
+              >
+                <LineChart className="w-5 h-5 group-hover:scale-110 transition" />
+                <span className="text-[10px] font-bold leading-tight">Statistiques</span>
+              </button>
+
+              <button
+                onClick={() => handleQuickAction('profile')}
+                className={`p-3 rounded-2xl border flex flex-col items-center justify-center gap-1.5 transition text-center cursor-pointer group ${
+                  dashboardTab === 'profile' ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-slate-50 hover:bg-slate-100 text-slate-800 border-slate-200/80'
+                }`}
+              >
+                <Settings className="w-5 h-5 group-hover:scale-110 transition" />
+                <span className="text-[10px] font-bold leading-tight">Paramètres</span>
+              </button>
+
             </div>
+          </div>
 
-            {/* Tab 1: MES PRODUITS */}
-            {dashboardTab === 'products' && (
-              <div className="space-y-6">
-                <div className="bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm space-y-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h3 className="font-extrabold text-slate-900 dark:text-white text-base">Gestion de votre Catalogue</h3>
-                      <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Articles en vente dans votre boutique sur Bafoussam Direct</p>
-                    </div>
-                    <button
-                      onClick={() => setShowAddProductModal(true)}
-                      className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs py-2.5 px-4 rounded-xl flex items-center gap-1.5 cursor-pointer transition shadow-sm"
-                      id="btn-add-product-trigger"
-                    >
-                      <Plus className="w-4 h-4" />
-                      <span>Ajouter un Article</span>
-                    </button>
-                  </div>
+          {/* --------------------------------------------------------- */}
+          {/* TAB CONTENT: OVERVIEW (Vue Générale), PRODUCTS, ETC.     */}
+          {/* --------------------------------------------------------- */}
 
-                  {merchantProducts.length === 0 ? (
-                    <div className="text-center py-16 border-2 border-dashed border-slate-100 dark:border-slate-800 rounded-2xl">
-                      <span className="text-4xl">📦</span>
-                      <p className="font-semibold text-slate-800 dark:text-slate-200 mt-2.5 text-sm">Aucun produit en ligne</p>
-                      <p className="text-xs text-slate-400 max-w-[240px] mx-auto mt-1">
-                        Commencez à ajouter vos articles pour qu'ils soient visibles par tous les clients de Bafoussam.
-                      </p>
+          {/* OVERVIEW TAB */}
+          {dashboardTab === 'overview' && (
+            <div className="space-y-6">
+
+              {/* 1. NOTIFICATIONS IMPORTANTES (ALERT CENTER) */}
+              <div className="bg-white rounded-3xl p-6 border border-slate-100 shadow-sm space-y-4">
+                <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+                  <h3 className="font-extrabold text-slate-900 text-base flex items-center gap-2">
+                    <Bell className="w-5 h-5 text-amber-500" />
+                    <span>Notifications & Alertes Importantes</span>
+                  </h3>
+                  <span className="text-[11px] font-bold text-slate-400">Temps réel</span>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                  
+                  {/* Alert Pending Verification */}
+                  {activeMerchant?.verificationStatus === 'pending_verification' && (
+                    <div className="bg-amber-50 border border-amber-200 p-4 rounded-2xl flex items-start gap-3">
+                      <Clock className="w-5 h-5 text-amber-600 shrink-0 mt-0.5 animate-pulse" />
+                      <div className="text-xs">
+                        <h4 className="font-bold text-amber-900">Vérification CNI en cours</h4>
+                        <p className="text-amber-700/80 text-[11px] mt-1 leading-snug">
+                          Votre dossier est en cours de validation administrative.
+                        </p>
+                      </div>
                     </div>
-                  ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {merchantProducts.map((p) => (
-                        <div
-                          key={p.id}
-                          className="flex items-center gap-3.5 bg-slate-50/70 dark:bg-slate-800/50 p-3.5 rounded-2xl border border-slate-100 dark:border-slate-800 relative group"
+                  )}
+
+                  {/* Alert Low Stock */}
+                  {lowStockProducts.length > 0 && (
+                    <div className="bg-rose-50 border border-rose-200 p-4 rounded-2xl flex items-start gap-3">
+                      <AlertTriangle className="w-5 h-5 text-rose-600 shrink-0 mt-0.5" />
+                      <div className="text-xs">
+                        <h4 className="font-bold text-rose-900">Alerte Stock Faible ({lowStockProducts.length})</h4>
+                        <p className="text-rose-700/80 text-[11px] mt-1 leading-snug">
+                          Des produits ont moins de 5 unités en réserve.
+                        </p>
+                        <button
+                          onClick={() => setDashboardTab('stock')}
+                          className="mt-2 text-[10px] font-black text-rose-700 hover:underline cursor-pointer uppercase tracking-wider"
                         >
-                          <img
-                            src={p.image}
-                            alt={p.name}
-                            referrerPolicy="no-referrer"
-                            className="w-16 h-16 rounded-xl object-cover border border-slate-200 dark:border-slate-700 shrink-0"
-                          />
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-1.5">
-                              <h4 className="font-bold text-slate-900 dark:text-white text-xs truncate">{p.name}</h4>
-                              {p.isBoosted && (
-                                <span className="bg-indigo-100 dark:bg-indigo-900/60 text-indigo-800 dark:text-indigo-300 font-extrabold text-[8px] px-1.5 py-0.5 rounded-md flex items-center gap-0.5">
-                                  <Sparkles className="w-2.5 h-2.5 fill-indigo-800 dark:fill-indigo-300 stroke-none" />
-                                  <span>BOOST</span>
-                                </span>
-                              )}
-                            </div>
-                            <p className="text-[10px] text-slate-400 mt-0.5 uppercase tracking-wider font-semibold">{p.category}</p>
-                            <div className="flex items-center gap-3 mt-1.5 text-[11px]">
-                              <span className="font-extrabold text-slate-950 dark:text-white">{p.price.toLocaleString('fr-FR')} F</span>
-                              <span className="text-slate-300 dark:text-slate-700">|</span>
-                              <span className="font-semibold text-slate-500 dark:text-slate-400">Stock: {p.stock} unités</span>
-                            </div>
-                          </div>
-
-                          <div className="flex items-center gap-1">
-                            <button
-                              onClick={() => onDeleteProduct(p.id)}
-                              className="p-2 bg-white dark:bg-slate-800 hover:bg-red-50 dark:hover:bg-red-950/40 text-slate-400 hover:text-red-500 rounded-xl border border-slate-200 dark:border-slate-700 cursor-pointer shadow-xs transition"
-                              title="Supprimer l'article"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </button>
-                          </div>
-                        </div>
-                      ))}
+                          Réapprovisionner →
+                        </button>
+                      </div>
                     </div>
                   )}
-                </div>
 
-                {/* Booster mes produits Section */}
-                <div className="bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm space-y-5">
-                  <div className="flex items-center gap-2">
-                    <div className="bg-amber-500 text-white p-2 rounded-xl">
-                      <Sparkles className="w-4 h-4 fill-white" />
-                    </div>
-                    <div>
-                      <h3 className="font-extrabold text-slate-900 dark:text-white text-base">Booster mes produits</h3>
-                      <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                        Mettez vos articles en vedette sur la boutique pendant 7 jours pour multiplier vos ventes.
-                      </p>
-                    </div>
-                  </div>
-
-                  {merchantProducts.length === 0 ? (
-                    <p className="text-xs text-slate-400 text-center py-6">Aucun produit disponible à booster.</p>
-                  ) : (
-                    <div className="space-y-3">
-                      {merchantProducts.map((p) => {
-                        const isBoostActive = p.isBoosted && (!p.boostExpiryDate || new Date(p.boostExpiryDate) >= new Date());
-                        return (
-                          <div
-                            key={`boost-row-${p.id}`}
-                            className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-slate-50/70 dark:bg-slate-800/40 p-4 rounded-2xl border border-slate-100 dark:border-slate-800"
-                          >
-                            <div className="flex items-center gap-3">
-                              <img
-                                src={p.image}
-                                alt={p.name}
-                                referrerPolicy="no-referrer"
-                                className="w-12 h-12 rounded-xl object-cover border border-slate-200 dark:border-slate-700 shrink-0"
-                              />
-                              <div className="min-w-0">
-                                <h4 className="font-bold text-slate-900 dark:text-white text-xs truncate">{p.name}</h4>
-                                <p className="text-[10px] text-slate-400 mt-0.5">{p.price.toLocaleString('fr-FR')} FCFA</p>
-                                {isBoostActive && p.boostExpiryDate && (
-                                  <span className="inline-flex items-center gap-1 text-[9px] text-emerald-600 dark:text-emerald-400 font-bold mt-1">
-                                    ✓ Boost actif jusqu'au {new Date(p.boostExpiryDate).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}
-                                  </span>
-                                )}
-                              </div>
-                            </div>
-
-                            <button
-                              disabled={isBoostActive}
-                              onClick={() => {
-                                setProductToBoost(p);
-                                setBoostStep('details');
-                                setBoostPhone('');
-                                setBoostError('');
-                                setShowBoostModal(true);
-                              }}
-                              className={`text-xs font-black py-2 px-3.5 rounded-xl transition shrink-0 cursor-pointer ${
-                                isBoostActive
-                                  ? 'bg-slate-100 dark:bg-slate-800 text-slate-400 border border-slate-200 dark:border-slate-700 cursor-not-allowed'
-                                  : 'bg-amber-500 hover:bg-amber-600 text-slate-950 font-black shadow-sm'
-                              }`}
-                            >
-                              {isBoostActive ? 'Déjà mis en avant' : 'Mettre en avant (1 500 FCFA / 7j)'}
-                            </button>
-                          </div>
-                        );
-                      })}
+                  {/* Alert Pending Orders */}
+                  {pendingOrdersCount > 0 && (
+                    <div className="bg-indigo-50 border border-indigo-200 p-4 rounded-2xl flex items-start gap-3">
+                      <PackageCheck className="w-5 h-5 text-indigo-600 shrink-0 mt-0.5" />
+                      <div className="text-xs">
+                        <h4 className="font-bold text-indigo-900">{pendingOrdersCount} Commandes à traiter</h4>
+                        <p className="text-indigo-700/80 text-[11px] mt-1 leading-snug">
+                          Des acheteurs attendent la confirmation de leur commande.
+                        </p>
+                        <button
+                          onClick={() => setDashboardTab('orders')}
+                          className="mt-2 text-[10px] font-black text-indigo-700 hover:underline cursor-pointer uppercase tracking-wider"
+                        >
+                          Voir les commandes →
+                        </button>
+                      </div>
                     </div>
                   )}
-                </div>
-              </div>
-            )}
 
-            {/* Tab 2: MES COMMANDES */}
-            {dashboardTab === 'orders' && (
-              <div className="bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm space-y-6">
-                <div>
-                  <h3 className="font-extrabold text-slate-900 dark:text-white text-base">Commandes de votre Boutique</h3>
-                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Suivez et gérez les commandes passées par vos clients à Bafoussam</p>
-                </div>
-
-                {(() => {
-                  const mOrders = orders.filter(o => o.items.some(i => i.product.merchantId === activeMerchantId));
-                  if (mOrders.length === 0) {
-                    return (
-                      <div className="text-center py-16 border-2 border-dashed border-slate-100 dark:border-slate-800 rounded-2xl">
-                        <span className="text-4xl">📋</span>
-                        <p className="font-semibold text-slate-800 dark:text-slate-200 mt-2.5 text-sm">Aucune commande reçue pour l'instant</p>
-                        <p className="text-xs text-slate-400 max-w-[260px] mx-auto mt-1">
-                          Les commandes passées par les clients apparaîtront ici en temps réel avec notification du coursier.
-                        </p>
-                      </div>
-                    );
-                  }
-
-                  return (
-                    <div className="space-y-4">
-                      {mOrders.map((ord) => {
-                        const merchantItems = ord.items.filter(i => i.product.merchantId === activeMerchantId);
-                        const merchantSubtotal = merchantItems.reduce((acc, i) => acc + (i.product.price * i.quantity), 0);
-
-                        return (
-                          <div key={ord.id} className="bg-slate-50/70 dark:bg-slate-800/40 p-5 rounded-2xl border border-slate-100 dark:border-slate-800 space-y-4">
-                            <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-200/60 dark:border-slate-700/60 pb-3">
-                              <div>
-                                <div className="flex items-center gap-2">
-                                  <span className="font-extrabold text-slate-900 dark:text-white text-sm">Commande #{ord.id}</span>
-                                  <span className={`px-2 py-0.5 text-[10px] font-extrabold rounded-full ${
-                                    ord.status === 'completed' 
-                                      ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/60 dark:text-emerald-300'
-                                      : 'bg-amber-100 text-amber-800 dark:bg-amber-900/60 dark:text-amber-300'
-                                  }`}>
-                                    {ord.status === 'pending' && 'En attente'}
-                                    {ord.status === 'preparing' && 'En préparation'}
-                                    {ord.status === 'picked_up' && 'Récupérée coursier'}
-                                    {ord.status === 'delivering' && 'En cours de livraison'}
-                                    {ord.status === 'completed' && 'Livrée & Réglée'}
-                                  </span>
-                                </div>
-                                <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">
-                                  Client : <strong className="text-slate-800 dark:text-slate-200">{ord.userName}</strong> • {ord.deliveryNeighborhood} • Tél: {ord.paymentPhone}
-                                </p>
-                              </div>
-
-                              <div className="text-right">
-                                <span className="text-xs font-extrabold text-slate-950 dark:text-white block">
-                                  {merchantSubtotal.toLocaleString('fr-FR')} FCFA
-                                </span>
-                                <span className="text-[10px] text-slate-400 block">Paiement Mobile Money</span>
-                              </div>
-                            </div>
-
-                            {/* Order items */}
-                            <div className="space-y-2">
-                              {merchantItems.map((item, idx) => (
-                                <div key={idx} className="flex items-center justify-between text-xs">
-                                  <div className="flex items-center gap-2">
-                                    <span className="w-5 h-5 rounded-full bg-indigo-100 dark:bg-indigo-900/60 text-indigo-800 dark:text-indigo-300 font-extrabold text-[10px] flex items-center justify-center shrink-0">
-                                      {item.quantity}x
-                                    </span>
-                                    <span className="font-bold text-slate-800 dark:text-slate-200">{item.product.name}</span>
-                                  </div>
-                                  <span className="text-slate-600 dark:text-slate-400 font-mono text-[11px]">
-                                    {(item.product.price * item.quantity).toLocaleString('fr-FR')} F
-                                  </span>
-                                </div>
-                              ))}
-                            </div>
-
-                            {/* Status controls for merchant */}
-                            {onUpdateOrderStatus && ord.status !== 'completed' && (
-                              <div className="flex items-center gap-2 border-t border-slate-200/60 dark:border-slate-700/60 pt-3">
-                                <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400">Action Commerçant :</span>
-                                {ord.status === 'pending' && (
-                                  <button
-                                    onClick={() => onUpdateOrderStatus(ord.id, 'preparing')}
-                                    className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs py-1.5 px-3 rounded-lg cursor-pointer transition"
-                                  >
-                                    Confirmer & Préparer
-                                  </button>
-                                )}
-                                {ord.status === 'preparing' && (
-                                  <button
-                                    onClick={() => onUpdateOrderStatus(ord.id, 'delivering')}
-                                    className="bg-amber-500 hover:bg-amber-600 text-slate-950 font-extrabold text-xs py-1.5 px-3 rounded-lg cursor-pointer transition"
-                                  >
-                                    Remettre au Coursier Moto
-                                  </button>
-                                )}
-                                {ord.status === 'delivering' && (
-                                  <button
-                                    onClick={() => onUpdateOrderStatus(ord.id, 'completed')}
-                                    className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs py-1.5 px-3 rounded-lg cursor-pointer transition"
-                                  >
-                                    Marquer comme Livré
-                                  </button>
-                                )}
-                              </div>
-                            )}
-                          </div>
-                        );
-                      })}
-                    </div>
-                  );
-                })()}
-              </div>
-            )}
-
-            {/* Tab 3: MON PROFIL & BOUTIQUE */}
-            {dashboardTab === 'profile' && (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {/* Information Boutique */}
-                <div className="bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm space-y-4">
-                  <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
-                    <h3 className="font-extrabold text-slate-900 dark:text-white text-base flex items-center gap-2">
-                      <Store className="w-5 h-5 text-indigo-500" />
-                      <span>Fiche de la Boutique</span>
-                    </h3>
-                    {activeMerchant?.isVerified && <VerifiedBadge size="sm" />}
-                  </div>
-
-                  <div className="space-y-3 text-xs">
-                    <div>
-                      <span className="text-slate-400 font-semibold block text-[10px] uppercase tracking-wider">Nom de l'Espace Commerce</span>
-                      <strong className="text-slate-900 dark:text-white text-sm font-extrabold">{activeMerchant?.name}</strong>
-                    </div>
-
-                    <div>
-                      <span className="text-slate-400 font-semibold block text-[10px] uppercase tracking-wider">Responsable Légal</span>
-                      <strong className="text-slate-800 dark:text-slate-200">{activeMerchant?.legalName || 'N/A'}</strong>
-                    </div>
-
-                    <div>
-                      <span className="text-slate-400 font-semibold block text-[10px] uppercase tracking-wider">Localisation Bafoussam</span>
-                      <strong className="text-slate-800 dark:text-slate-200 flex items-center gap-1">
-                        <MapPin className="w-3.5 h-3.5 text-red-500" />
-                        {activeMerchant?.location}
-                      </strong>
-                    </div>
-
-                    <div>
-                      <span className="text-slate-400 font-semibold block text-[10px] uppercase tracking-wider">Compte Mobile Money de Réception</span>
-                      <strong className="text-slate-800 dark:text-slate-200 flex items-center gap-1 font-mono">
-                        <Phone className="w-3.5 h-3.5 text-emerald-500" />
-                        {activeMerchant?.phone}
-                      </strong>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Vérification & Abonnement */}
-                <div className="space-y-6">
-                  {/* Status Verification */}
-                  <div className="bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm space-y-4">
-                    <h3 className="font-extrabold text-slate-900 dark:text-white text-base flex items-center gap-2">
-                      <ShieldAlert className="w-5 h-5 text-emerald-500" />
-                      <span>Vérification CNI & Local</span>
-                    </h3>
-
-                    <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
-                      Votre pièce d'identité et les photos de votre établissement physique ont été contrôlées par l'équipe Bafoussam Direct.
-                    </p>
-
-                    <div className="p-3 bg-emerald-50 dark:bg-emerald-950/40 rounded-xl border border-emerald-200/60 dark:border-emerald-800 flex items-center gap-2 text-xs text-emerald-800 dark:text-emerald-300 font-bold">
-                      <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
-                      <span>Commerçant Vérifié Conforme Bafoussam</span>
-                    </div>
-                  </div>
-
-                  {/* Status Subscription */}
-                  <div className="bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm space-y-4">
-                    <div className="flex items-center justify-between">
-                      <h3 className="font-extrabold text-slate-900 dark:text-white text-base flex items-center gap-2">
-                        <Sparkles className="w-5 h-5 text-amber-500" />
-                        <span>Abonnement Annuel</span>
-                      </h3>
-
-                      <span className={`px-2.5 py-0.5 text-[10px] font-extrabold rounded-full ${
-                        activeMerchant?.isPremium ? 'bg-amber-100 text-amber-900' : 'bg-slate-100 text-slate-600'
-                      }`}>
-                        {activeMerchant?.isPremium ? 'PREMIUM ACTIF' : 'STANDARD'}
-                      </span>
-                    </div>
-
-                    {activeMerchant?.isPremium ? (
-                      <div className="space-y-2 text-xs">
-                        <p className="text-slate-600 dark:text-slate-300">
-                          Votre abonnement est actif jusqu'au <strong className="text-slate-900 dark:text-white">{activeMerchant?.premiumExpiryDate}</strong>.
-                        </p>
-                        {onSimulateMerchantExpiration && (
-                          <button
-                            onClick={() => onSimulateMerchantExpiration(activeMerchant.id)}
-                            className="text-[10px] text-amber-600 hover:underline cursor-pointer font-bold block"
-                          >
-                            [Test Admin] Simuler expiration d'abonnement
-                          </button>
-                        )}
-                      </div>
-                    ) : (
-                      <div className="space-y-3 text-xs">
-                        <p className="text-slate-500 dark:text-slate-400">
-                          Passez au statut Premium pour débloquer les outils marketing, les promotions par quartier et booster vos ventes.
+                  {/* Alert Premium Upgrade Recommendation */}
+                  {!activeMerchant?.isPremium && (
+                    <div className="bg-purple-50 border border-purple-200 p-4 rounded-2xl flex items-start gap-3">
+                      <Sparkles className="w-5 h-5 text-purple-600 shrink-0 mt-0.5" />
+                      <div className="text-xs">
+                        <h4 className="font-bold text-purple-900">Débloquez le Badge VIP</h4>
+                        <p className="text-purple-700/80 text-[11px] mt-1 leading-snug">
+                          Positionnez vos articles en tête du catalogue Bafoussam.
                         </p>
                         <button
                           onClick={() => {
                             setUpgradeStep('details');
                             setShowUpgradeModal(true);
                           }}
-                          className="w-full bg-amber-500 hover:bg-amber-600 text-slate-950 font-black py-2.5 px-4 rounded-xl cursor-pointer transition shadow-sm text-center"
+                          className="mt-2 text-[10px] font-black text-purple-700 hover:underline cursor-pointer uppercase tracking-wider"
                         >
-                          S'abonner pour 100 000 FCFA / an
+                          S'abonner pour 100k F/an →
                         </button>
                       </div>
-                    )}
-                  </div>
+                    </div>
+                  )}
+
+                </div>
+              </div>
+
+              {/* 2. DERNIÈRES COMMANDES */}
+              <div className="bg-white rounded-3xl p-6 border border-slate-100 shadow-sm space-y-4">
+                <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+                  <h3 className="font-extrabold text-slate-900 text-base flex items-center gap-2">
+                    <PackageCheck className="w-5 h-5 text-emerald-600" />
+                    <span>Dernières Commandes Clients</span>
+                  </h3>
+                  <button
+                    onClick={() => setDashboardTab('orders')}
+                    className="text-xs font-bold text-indigo-600 hover:underline cursor-pointer"
+                  >
+                    Voir toutes ({merchantOrders.length})
+                  </button>
                 </div>
 
-                {/* À propos d'AfriNova */}
-                <AboutAfriNovaSection />
-              </div>
-            )}
+                {merchantOrders.length === 0 ? (
+                  <div className="text-center py-10 border-2 border-dashed border-slate-100 rounded-2xl">
+                    <p className="font-semibold text-slate-700 text-xs">Aucune commande reçue pour le moment.</p>
+                    <p className="text-[11px] text-slate-400 mt-0.5">Les nouvelles commandes apparaîtront ici automatiquement.</p>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {merchantOrders.slice(0, 3).map((ord) => {
+                      const merchantItems = ord.items.filter(i => i.product.merchantId === activeMerchantId);
+                      const merchantSubtotal = merchantItems.reduce((acc, i) => acc + (i.product.price * i.quantity), 0);
 
-            {/* Tab 4: MARKETING & VISIBILITÉ */}
-            {dashboardTab === 'marketing' && (
-              <div className="bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm relative overflow-hidden space-y-6">
-                {!activeMerchant?.isPremium && (
-                  <div className="p-6 bg-amber-500/10 border border-amber-500/20 rounded-2xl text-center space-y-3">
-                    <Sparkles className="w-8 h-8 text-amber-500 mx-auto" />
-                    <h4 className="font-extrabold text-slate-900 dark:text-white text-sm">Outils Marketing Avancés Réservés aux Membres Premium</h4>
-                    <p className="text-xs text-slate-600 dark:text-slate-400 max-w-md mx-auto">
-                      L'accès aux analyses géographiques par quartier à Bafoussam (Tamdja, Bamendzi, Banengo) et aux campagnes promotionnelles nécessite un abonnement annuel.
-                    </p>
-                    <button
-                      onClick={() => {
-                        setUpgradeStep('details');
-                        setShowUpgradeModal(true);
-                      }}
-                      className="bg-amber-500 hover:bg-amber-600 text-slate-950 font-black text-xs py-2 px-4 rounded-xl cursor-pointer transition inline-block"
-                    >
-                      S'abonner maintenant (100 000 FCFA / an)
-                    </button>
+                      return (
+                        <div key={ord.id} className="bg-slate-50/80 p-4 rounded-2xl border border-slate-100 space-y-3">
+                          <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-200/60 pb-2.5">
+                            <div>
+                              <div className="flex items-center gap-2">
+                                <span className="font-black text-slate-900 text-xs">Commande #{ord.id}</span>
+                                <span className={`px-2 py-0.5 text-[9px] font-black rounded-full ${
+                                  ord.status === 'completed' 
+                                    ? 'bg-emerald-100 text-emerald-800'
+                                    : 'bg-amber-100 text-amber-800'
+                                }`}>
+                                  {ord.status === 'pending' && 'En attente'}
+                                  {ord.status === 'preparing' && 'En préparation'}
+                                  {ord.status === 'delivering' && 'En cours de livraison'}
+                                  {ord.status === 'completed' && 'Livrée'}
+                                </span>
+                              </div>
+                              <p className="text-[11px] text-slate-500 mt-0.5">
+                                Client : <strong>{ord.userName}</strong> ({ord.deliveryNeighborhood}) • Tél: {ord.paymentPhone}
+                              </p>
+                            </div>
+
+                            <div className="text-right">
+                              <span className="text-xs font-black text-slate-900 block">{merchantSubtotal.toLocaleString('fr-FR')} FCFA</span>
+                              <span className="text-[9px] text-slate-400 block">Mobile Money</span>
+                            </div>
+                          </div>
+
+                          {/* Items summary */}
+                          <div className="space-y-1 text-xs">
+                            {merchantItems.map((item, idx) => (
+                              <div key={idx} className="flex justify-between text-[11px]">
+                                <span className="font-semibold text-slate-700">{item.quantity}x {item.product.name}</span>
+                                <span className="font-mono text-slate-500">{(item.product.price * item.quantity).toLocaleString('fr-FR')} F</span>
+                              </div>
+                            ))}
+                          </div>
+
+                          {/* Action controls */}
+                          {onUpdateOrderStatus && ord.status !== 'completed' && (
+                            <div className="flex items-center gap-2 pt-2 border-t border-slate-200/60">
+                              {ord.status === 'pending' && (
+                                <button
+                                  onClick={() => onUpdateOrderStatus(ord.id, 'preparing')}
+                                  className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-[11px] py-1.5 px-3 rounded-lg cursor-pointer transition"
+                                >
+                                  Confirmer & Préparer
+                                </button>
+                              )}
+                              {ord.status === 'preparing' && (
+                                <button
+                                  onClick={() => onUpdateOrderStatus(ord.id, 'delivering')}
+                                  className="bg-amber-500 hover:bg-amber-600 text-slate-950 font-black text-[11px] py-1.5 px-3 rounded-lg cursor-pointer transition"
+                                >
+                                  Remettre au Coursier
+                                </button>
+                              )}
+                              {ord.status === 'delivering' && (
+                                <button
+                                  onClick={() => onUpdateOrderStatus(ord.id, 'completed')}
+                                  className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[11px] py-1.5 px-3 rounded-lg cursor-pointer transition"
+                                >
+                                  Marquer comme Livrée
+                                </button>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
                   </div>
                 )}
+              </div>
 
-                {/* Content */}
-                <div className="space-y-6">
-                  <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
-                    <h3 className="font-extrabold text-slate-900 dark:text-white text-base flex items-center gap-2">
-                      <Megaphone className="w-5 h-5 text-indigo-500" />
-                      <span>Analyse de Performance par Quartier Bafoussam</span>
-                    </h3>
+              {/* 3. PRODUITS LES PLUS PERFORMANTS */}
+              <div className="bg-white rounded-3xl p-6 border border-slate-100 shadow-sm space-y-4">
+                <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+                  <h3 className="font-extrabold text-slate-900 text-base flex items-center gap-2">
+                    <TrendingUp className="w-5 h-5 text-indigo-600" />
+                    <span>Produits les plus Performants</span>
+                  </h3>
+                  <button
+                    onClick={() => setDashboardTab('products')}
+                    className="text-xs font-bold text-indigo-600 hover:underline cursor-pointer"
+                  >
+                    Gérer le catalogue
+                  </button>
+                </div>
+
+                {topProducts.length === 0 ? (
+                  <div className="text-center py-10 border-2 border-dashed border-slate-100 rounded-2xl">
+                    <p className="font-semibold text-slate-700 text-xs">Aucun produit en ligne.</p>
                   </div>
-
-                  <div className="space-y-3 text-xs">
-                    {/* Tamdja */}
-                    <div className="space-y-1">
-                      <div className="flex justify-between font-semibold text-slate-800 dark:text-slate-200">
-                        <span>Tamdja</span>
-                        <span className="text-slate-500">45% de vos ventes (85 visites)</span>
-                      </div>
-                      <div className="h-2.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
-                        <div className="h-full bg-indigo-600 rounded-full" style={{ width: '45%' }}></div>
-                      </div>
-                    </div>
-
-                    {/* Bamendzi */}
-                    <div className="space-y-1">
-                      <div className="flex justify-between font-semibold text-slate-800 dark:text-slate-200">
-                        <span>Bamendzi</span>
-                        <span className="text-slate-500">30% de vos ventes (50 visites)</span>
-                      </div>
-                      <div className="h-2.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
-                        <div className="h-full bg-slate-800 dark:bg-slate-400 rounded-full" style={{ width: '30%' }}></div>
-                      </div>
-                    </div>
-
-                    {/* Banengo */}
-                    <div className="space-y-1">
-                      <div className="flex justify-between font-semibold text-slate-800 dark:text-slate-200">
-                        <span>Banengo</span>
-                        <span className="text-slate-500">15% de vos ventes (22 visites)</span>
-                      </div>
-                      <div className="h-2.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
-                        <div className="h-full bg-slate-400 dark:bg-slate-600 rounded-full" style={{ width: '15%' }}></div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Campaigns segment */}
-                  <div className="space-y-3 pt-4 border-t border-slate-100 dark:border-slate-800">
-                    <div className="flex items-center justify-between">
-                      <h4 className="font-bold text-slate-800 dark:text-slate-200 text-xs uppercase tracking-wider">Campagnes de Visibilité Actives</h4>
-                      {activeMerchant?.isPremium && (
-                        <button
-                          onClick={() => setShowCampaignModal(true)}
-                          className="text-xs font-bold text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 underline cursor-pointer"
-                        >
-                          + Créer une campagne
-                        </button>
-                      )}
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                      {activeCampaigns.map((c) => (
-                        <div
-                          key={c.id}
-                          className="bg-slate-50 dark:bg-slate-800/50 p-4 rounded-2xl border border-slate-100 dark:border-slate-800 text-xs space-y-2"
-                        >
-                          <div className="flex items-center justify-between">
-                            <span className="font-bold text-slate-900 dark:text-white">{c.title}</span>
-                            <span className="bg-emerald-100 text-emerald-800 dark:bg-emerald-900/60 dark:text-emerald-300 font-bold text-[9px] px-2 py-0.5 rounded-full">Actif</span>
-                          </div>
-                          <p className="text-[10px] text-slate-400">
-                            Cible : {c.targetNeighborhoods.join(', ')} • Fin le {new Date(c.endDate).toLocaleDateString('fr-FR')}
-                          </p>
-                          <div className="flex justify-between border-t border-slate-200/60 dark:border-slate-700/60 pt-2 text-[10px] text-slate-500 dark:text-slate-400">
-                            <span>Affichages: <strong className="text-slate-700 dark:text-slate-200">{c.views}</strong></span>
-                            <span>Conversions: <strong className="text-emerald-600 dark:text-emerald-400">{c.conversions} clics</strong></span>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    {topProducts.slice(0, 4).map((p) => (
+                      <div key={p.id} className="flex items-center gap-3 bg-slate-50 p-3.5 rounded-2xl border border-slate-100">
+                        <img
+                          src={p.image}
+                          alt={p.name}
+                          className="w-14 h-14 rounded-xl object-cover border border-slate-200 shrink-0"
+                          referrerPolicy="no-referrer"
+                        />
+                        <div className="flex-1 min-w-0">
+                          <h4 className="font-bold text-slate-900 text-xs truncate">{p.name}</h4>
+                          <p className="text-[10px] text-slate-400">{p.category}</p>
+                          <div className="flex items-center gap-2 mt-1 text-[11px]">
+                            <span className="font-black text-slate-900">{p.price.toLocaleString('fr-FR')} F</span>
+                            <span className="text-slate-300">•</span>
+                            <span className="text-slate-500 font-medium">Stock: {p.stock}</span>
                           </div>
                         </div>
-                      ))}
+
+                        <div className="text-right shrink-0">
+                          <span className="text-[10px] font-bold text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full flex items-center gap-0.5">
+                            <Star className="w-3 h-3 fill-amber-500 text-amber-500" /> {p.rating || 4.8}
+                          </span>
+                          <button
+                            onClick={() => onDeleteProduct(p.id)}
+                            className="mt-2 text-slate-400 hover:text-rose-600 p-1 rounded transition cursor-pointer block ml-auto"
+                            title="Supprimer"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+            </div>
+          )}
+
+          {/* PRODUCTS TAB */}
+          {dashboardTab === 'products' && (
+            <div className="bg-white rounded-3xl p-6 border border-slate-100 shadow-sm space-y-6">
+              <div className="flex items-center justify-between border-b border-slate-100 pb-4">
+                <div>
+                  <h3 className="font-extrabold text-slate-900 text-lg">Gestion de votre Catalogue</h3>
+                  <p className="text-xs text-slate-500">Gérez vos articles en vente à Bafoussam</p>
+                </div>
+
+                <button
+                  onClick={() => setShowAddProductModal(true)}
+                  className="bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-black text-xs py-2.5 px-4 rounded-xl flex items-center gap-1.5 cursor-pointer transition shadow-sm"
+                >
+                  <Plus className="w-4 h-4 stroke-[3]" />
+                  <span>Ajouter un produit</span>
+                </button>
+              </div>
+
+              {merchantProducts.length === 0 ? (
+                <div className="text-center py-16 border-2 border-dashed border-slate-100 rounded-2xl">
+                  <span className="text-4xl">📦</span>
+                  <p className="font-semibold text-slate-800 mt-2 text-sm">Aucun produit dans votre catalogue</p>
+                  <p className="text-xs text-slate-400 max-w-[240px] mx-auto mt-1">
+                    Ajoutez vos articles pour qu'ils soient directement commandables en ligne.
+                  </p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {merchantProducts.map((p) => (
+                    <div key={p.id} className="flex items-center gap-3.5 bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                      <img
+                        src={p.image}
+                        alt={p.name}
+                        className="w-16 h-16 rounded-xl object-cover border border-slate-200 shrink-0"
+                        referrerPolicy="no-referrer"
+                      />
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-1.5">
+                          <h4 className="font-extrabold text-slate-900 text-xs truncate">{p.name}</h4>
+                          {p.isBoosted && (
+                            <span className="bg-amber-100 text-amber-900 font-black text-[8px] px-1.5 py-0.5 rounded-md flex items-center gap-0.5">
+                              <Sparkles className="w-2.5 h-2.5 fill-amber-800" /> BOOST
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-[10px] text-slate-400 font-semibold">{p.category}</p>
+                        <div className="flex items-center gap-3 mt-1.5 text-xs">
+                          <span className="font-black text-slate-950">{p.price.toLocaleString('fr-FR')} FCFA</span>
+                          <span className="text-slate-300">•</span>
+                          <span className="font-semibold text-slate-500">Stock: {p.stock}</span>
+                        </div>
+                      </div>
+
+                      <button
+                        onClick={() => onDeleteProduct(p.id)}
+                        className="p-2 text-slate-400 hover:text-rose-600 bg-white border border-slate-200 rounded-xl cursor-pointer hover:bg-rose-50 transition"
+                        title="Supprimer"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* ORDERS TAB */}
+          {dashboardTab === 'orders' && (
+            <div className="bg-white rounded-3xl p-6 border border-slate-100 shadow-sm space-y-6">
+              <div>
+                <h3 className="font-extrabold text-slate-900 text-lg">Suivi des Commandes</h3>
+                <p className="text-xs text-slate-500">Gérez l'état d'avancement des commandes attribuées à votre boutique</p>
+              </div>
+
+              {merchantOrders.length === 0 ? (
+                <div className="text-center py-16 border-2 border-dashed border-slate-100 rounded-2xl">
+                  <span className="text-4xl">📋</span>
+                  <p className="font-semibold text-slate-800 mt-2 text-sm">Aucune commande pour le moment</p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {merchantOrders.map((ord) => {
+                    const merchantItems = ord.items.filter(i => i.product.merchantId === activeMerchantId);
+                    const merchantSubtotal = merchantItems.reduce((acc, i) => acc + (i.product.price * i.quantity), 0);
+
+                    return (
+                      <div key={ord.id} className="bg-slate-50 p-5 rounded-2xl border border-slate-100 space-y-4">
+                        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-200 pb-3">
+                          <div>
+                            <span className="font-extrabold text-slate-900 text-sm">Commande #{ord.id}</span>
+                            <p className="text-xs text-slate-500 mt-0.5">
+                              Client: {ord.userName} • Quartier: {ord.deliveryNeighborhood} • Tél: {ord.paymentPhone}
+                            </p>
+                          </div>
+                          <span className="text-sm font-black text-slate-900">{merchantSubtotal.toLocaleString('fr-FR')} FCFA</span>
+                        </div>
+
+                        <div className="space-y-1.5 text-xs">
+                          {merchantItems.map((item, idx) => (
+                            <div key={idx} className="flex justify-between">
+                              <span>{item.quantity}x {item.product.name}</span>
+                              <span className="font-mono text-slate-600">{(item.product.price * item.quantity).toLocaleString('fr-FR')} F</span>
+                            </div>
+                          ))}
+                        </div>
+
+                        {onUpdateOrderStatus && ord.status !== 'completed' && (
+                          <div className="flex items-center gap-2 pt-2 border-t border-slate-200">
+                            {ord.status === 'pending' && (
+                              <button
+                                onClick={() => onUpdateOrderStatus(ord.id, 'preparing')}
+                                className="bg-indigo-600 text-white font-bold text-xs py-1.5 px-3 rounded-lg cursor-pointer"
+                              >
+                                Passer en Préparation
+                              </button>
+                            )}
+                            {ord.status === 'preparing' && (
+                              <button
+                                onClick={() => onUpdateOrderStatus(ord.id, 'delivering')}
+                                className="bg-amber-500 text-slate-950 font-black text-xs py-1.5 px-3 rounded-lg cursor-pointer"
+                              >
+                                Remettre au Coursier
+                              </button>
+                            )}
+                            {ord.status === 'delivering' && (
+                              <button
+                                onClick={() => onUpdateOrderStatus(ord.id, 'completed')}
+                                className="bg-emerald-600 text-white font-bold text-xs py-1.5 px-3 rounded-lg cursor-pointer"
+                              >
+                                Confirmer la Livraison
+                              </button>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* STOCK TAB */}
+          {dashboardTab === 'stock' && (
+            <div className="bg-white rounded-3xl p-6 border border-slate-100 shadow-sm space-y-6">
+              <div>
+                <h3 className="font-extrabold text-slate-900 text-lg">Gestion du Stock</h3>
+                <p className="text-xs text-slate-500">Mettez à jour le niveau des stocks de vos produits</p>
+              </div>
+
+              <div className="space-y-3">
+                {merchantProducts.map((p) => (
+                  <div key={p.id} className="flex items-center justify-between bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                    <div className="flex items-center gap-3">
+                      <img src={p.image} alt={p.name} className="w-12 h-12 rounded-xl object-cover" referrerPolicy="no-referrer" />
+                      <div>
+                        <h4 className="font-bold text-slate-900 text-xs">{p.name}</h4>
+                        <p className="text-[11px] text-slate-400">{p.price.toLocaleString('fr-FR')} FCFA</p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <span className={`text-xs font-bold px-3 py-1 rounded-full ${p.stock < 5 ? 'bg-rose-100 text-rose-800' : 'bg-emerald-100 text-emerald-800'}`}>
+                        {p.stock} unités
+                      </span>
                     </div>
                   </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* DELIVERIES TAB */}
+          {dashboardTab === 'deliveries' && (
+            <div className="bg-white rounded-3xl p-6 border border-slate-100 shadow-sm space-y-4">
+              <h3 className="font-extrabold text-slate-900 text-lg">Suivi des Livraisons Moto-Taxi</h3>
+              <p className="text-xs text-slate-500">Les coursier affiliés AfriNova prennent en charge l'expédition de vos colis à Bafoussam.</p>
+
+              <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 text-xs text-slate-600 leading-relaxed">
+                📍 Zone Couverte : Tamdja, Bamendzi, Marché A, Marché Congo, Carrefour Bamiléké, Banengo, Kamkop.
+              </div>
+            </div>
+          )}
+
+          {/* PAYMENTS TAB */}
+          {dashboardTab === 'payments' && (
+            <div className="bg-white rounded-3xl p-6 border border-slate-100 shadow-sm space-y-4">
+              <h3 className="font-extrabold text-slate-900 text-lg">Paiements & Reversements</h3>
+              <p className="text-xs text-slate-500">Les recettes de vos ventes sont versées directement sur votre compte Mobile Money.</p>
+
+              <div className="bg-emerald-50 border border-emerald-200 p-4 rounded-2xl text-xs text-emerald-900 font-semibold">
+                Compte Mobile Money connecté : <strong>{activeMerchant?.phone}</strong>
+              </div>
+            </div>
+          )}
+
+          {/* PROMOTIONS TAB */}
+          {dashboardTab === 'promotions' && (
+            <div className="bg-white rounded-3xl p-6 border border-slate-100 shadow-sm space-y-4">
+              <h3 className="font-extrabold text-slate-900 text-lg">Offres & Promotions</h3>
+              <p className="text-xs text-slate-500">Appliquez des remises temporaires pour stimuler vos ventes.</p>
+            </div>
+          )}
+
+          {/* REVIEWS TAB */}
+          {dashboardTab === 'reviews' && (
+            <div className="bg-white rounded-3xl p-6 border border-slate-100 shadow-sm space-y-4">
+              <h3 className="font-extrabold text-slate-900 text-lg">Avis Clients Certifiés</h3>
+              <p className="text-xs text-slate-500">Retours d'expérience déposés par vos acheteurs à Bafoussam.</p>
+            </div>
+          )}
+
+          {/* MESSAGES TAB */}
+          {dashboardTab === 'messages' && (
+            <div className="bg-white rounded-3xl p-6 border border-slate-100 shadow-sm space-y-4">
+              <h3 className="font-extrabold text-slate-900 text-lg">Messagerie Clients</h3>
+              <p className="text-xs text-slate-500">Communiquez en direct avec vos clients pour répondre à leurs questions.</p>
+            </div>
+          )}
+
+          {/* STATS TAB */}
+          {dashboardTab === 'stats' && (
+            <div className="bg-white rounded-3xl p-6 border border-slate-100 shadow-sm space-y-4">
+              <h3 className="font-extrabold text-slate-900 text-lg">Statistiques Détaillées</h3>
+              <p className="text-xs text-slate-500">Analyse du trafic de votre vitrine et de la répartition de vos ventes.</p>
+            </div>
+          )}
+
+          {/* PROFILE TAB */}
+          {dashboardTab === 'profile' && (
+            <div className="bg-white rounded-3xl p-6 border border-slate-100 shadow-sm space-y-6">
+              <h3 className="font-extrabold text-slate-900 text-lg">Paramètres de la Boutique</h3>
+
+              <div className="space-y-3 text-xs">
+                <div>
+                  <span className="text-slate-400 font-semibold block text-[10px] uppercase">Nom du Commerce</span>
+                  <strong className="text-slate-900 text-sm font-bold">{activeMerchant?.shopName}</strong>
+                </div>
+
+                <div>
+                  <span className="text-slate-400 font-semibold block text-[10px] uppercase">Gérant</span>
+                  <strong className="text-slate-800">{activeMerchant?.name}</strong>
+                </div>
+
+                <div>
+                  <span className="text-slate-400 font-semibold block text-[10px] uppercase">Emplacement</span>
+                  <strong className="text-slate-800">{activeMerchant?.location}</strong>
+                </div>
+
+                <div>
+                  <span className="text-slate-400 font-semibold block text-[10px] uppercase">Téléphone Mobile Money</span>
+                  <strong className="text-slate-800 font-mono">{activeMerchant?.phone}</strong>
                 </div>
               </div>
-            )}
-            </>
-            )}
+            </div>
+          )}
 
-          </motion.div>
-        )}
-      </AnimatePresence>
+        </div>
+      )}
 
-      {/* 3. Modal Add Product */}
-      {showAddProductModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs">
-          <div className="bg-white rounded-3xl w-full max-w-md p-6 overflow-hidden shadow-2xl border border-slate-100 max-h-[90vh] flex flex-col relative">
+      {/* ========================================================= */}
+      {/* 3. MODAL: CREATION DE BOUTIQUE                            */}
+      {/* ========================================================= */}
+      {showCreateShopModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/70 backdrop-blur-xs overflow-y-auto">
+          <div className="bg-white rounded-3xl w-full max-w-lg p-6 sm:p-8 shadow-2xl border border-slate-100 relative max-h-[90vh] overflow-y-auto my-8">
+            
             <button
-              onClick={() => setShowAddProductModal(false)}
-              className="absolute top-4 right-4 text-slate-400 hover:text-slate-800 p-1 rounded-full cursor-pointer transition"
+              onClick={() => setShowCreateShopModal(false)}
+              className="absolute top-4 right-4 text-slate-400 hover:text-slate-800 p-1.5 rounded-full cursor-pointer transition"
             >
               <X className="w-5 h-5" />
             </button>
 
-            <h3 className="font-bold text-slate-900 text-base mb-4">Mettre un produit en vente</h3>
+            <div className="space-y-1 mb-6">
+              <span className="bg-emerald-100 text-emerald-800 text-[10px] font-black uppercase tracking-widest px-2.5 py-0.5 rounded-full">
+                Inscription Vendeur Pro
+              </span>
+              <h3 className="font-extrabold text-slate-900 text-xl">Créer votre Boutique AfriNova</h3>
+              <p className="text-xs text-slate-500">Complétez le formulaire ci-dessous pour ouvrir votre espace de vente.</p>
+            </div>
 
-            <form onSubmit={handleAddProductSubmit} className="space-y-4 overflow-y-auto pr-1">
+            <form onSubmit={handleCreateMerchant} className="space-y-4">
               <div>
-                <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Nom du Produit *</label>
+                <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Nom du Gérant *</label>
                 <input
+                  name="mName"
                   type="text"
                   required
-                  placeholder="Ex: Café Robusta de Bafoussam (500g)"
-                  className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500/10 text-xs text-slate-950 transition"
-                  value={newProdName}
-                  onChange={(e) => setNewProdName(e.target.value)}
+                  placeholder="Ex: Paul Tagne"
+                  className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-950 focus:outline-none focus:ring-2 focus:ring-emerald-500/10"
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Prix en FCFA *</label>
+                  <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Nom du Commerce *</label>
                   <input
-                    type="number"
+                    name="mShopName"
+                    type="text"
                     required
-                    min={1}
-                    placeholder="Ex: 3500"
-                    className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500/10 text-xs text-slate-950 transition"
-                    value={newProdPrice}
-                    onChange={(e) => setNewProdPrice(e.target.value)}
+                    placeholder="Ex: Épicerie Tagne & Fils"
+                    className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-950 focus:outline-none focus:ring-2 focus:ring-emerald-500/10"
                   />
                 </div>
+
                 <div>
-                  <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Quantité Stock *</label>
-                  <input
-                    type="number"
-                    required
-                    min={1}
-                    className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500/10 text-xs text-slate-950 transition"
-                    value={newProdStock}
-                    onChange={(e) => setNewProdStock(e.target.value)}
-                  />
+                  <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Emplacement Bafoussam *</label>
+                  <select
+                    name="mLocation"
+                    className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-950 focus:outline-none focus:ring-2 focus:ring-emerald-500/10"
+                  >
+                    <option value="Marché A">Marché A (Centre)</option>
+                    <option value="Marché B">Marché B</option>
+                    <option value="Marché Congo">Marché Congo</option>
+                    <option value="Carrefour Bamiléké">Carrefour Bamiléké</option>
+                    <option value="Tamdja">Tamdja</option>
+                    <option value="Bamendzi">Bamendzi</option>
+                  </select>
                 </div>
               </div>
 
               <div>
-                <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Catégorie *</label>
-                <select
-                  className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500/10 text-xs text-slate-950 transition"
-                  value={newProdCategory}
-                  onChange={(e) => setNewProdCategory(e.target.value)}
-                >
-                  <option value="Alimentation & Épicerie">Alimentation & Épicerie</option>
-                  <option value="Artisanat & Mode">Artisanat & Mode</option>
-                  <option value="Électronique & Tech">Électronique & Tech</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Lien d'image du produit (Optionnel)</label>
+                <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Numéro Téléphone Mobile Money *</label>
                 <input
-                  type="url"
-                  placeholder="https://images.unsplash.com/..."
-                  className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500/10 text-xs text-slate-950 transition"
-                  value={newProdImage}
-                  onChange={(e) => setNewProdImage(e.target.value)}
+                  name="mPhone"
+                  type="tel"
+                  required
+                  placeholder="Ex: 677000000"
+                  className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-950 focus:outline-none focus:ring-2 focus:ring-emerald-500/10"
                 />
+              </div>
+
+              {/* ID & Business Verification Fields */}
+              <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200/60 space-y-3">
+                <span className="text-[10px] font-black text-slate-900 uppercase tracking-widest block border-b border-slate-200 pb-1">
+                  🛡️ Pièces de Vérification Requises
+                </span>
+                
+                <div>
+                  <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Nom Légal (selon CNI) *</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="Ex: Paul Tagne"
+                    className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-xl text-xs text-slate-950"
+                    value={regLegalName}
+                    onChange={(e) => setRegLegalName(e.target.value)}
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Photo CNI *</label>
+                    <div className="relative border-2 border-dashed border-slate-200 rounded-xl p-2 bg-white text-center cursor-pointer min-h-[75px] flex items-center justify-center">
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            setRegCniFileName(file.name);
+                            const reader = new FileReader();
+                            reader.onload = (event) => setRegCniPhoto(event.target?.result as string);
+                            reader.readAsDataURL(file);
+                          }
+                        }}
+                      />
+                      {regCniPhoto ? (
+                        <span className="text-[9px] text-emerald-600 font-bold">✓ CNI Chargée</span>
+                      ) : (
+                        <span className="text-[9px] text-slate-400 font-bold uppercase">📷 Téléverser CNI</span>
+                      )}
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Photo Boutique *</label>
+                    <div className="relative border-2 border-dashed border-slate-200 rounded-xl p-2 bg-white text-center cursor-pointer min-h-[75px] flex items-center justify-center">
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            setRegShopFileName(file.name);
+                            const reader = new FileReader();
+                            reader.onload = (event) => setRegShopPhoto(event.target?.result as string);
+                            reader.readAsDataURL(file);
+                          }
+                        }}
+                      />
+                      {regShopPhoto ? (
+                        <span className="text-[9px] text-emerald-600 font-bold">✓ Photo Chargée</span>
+                      ) : (
+                        <span className="text-[9px] text-slate-400 font-bold uppercase">🏪 Photo Enseigne</span>
+                      )}
+                    </div>
+                  </div>
+                </div>
               </div>
 
               <div>
-                <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Description du produit</label>
-                <textarea
-                  rows={3}
-                  placeholder="Expliquez la provenance, l'utilité, ou d'autres détails de fabrication à Bafoussam..."
-                  className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500/10 text-xs text-slate-950 transition"
-                  value={newProdDesc}
-                  onChange={(e) => setNewProdDesc(e.target.value)}
+                <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Mot de passe de sécurité *</label>
+                <input
+                  name="mPassword"
+                  type="password"
+                  required
+                  placeholder="Définissez un mot de passe d'accès"
+                  className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-950"
                 />
               </div>
 
-              <div className="flex gap-2 pt-3">
+              <div className="flex gap-2 pt-2">
                 <button
                   type="button"
-                  onClick={() => setShowAddProductModal(false)}
-                  className="flex-1 border border-slate-200 hover:bg-slate-50 text-slate-600 text-xs font-bold py-2.5 rounded-xl cursor-pointer transition"
+                  onClick={() => setShowCreateShopModal(false)}
+                  className="flex-1 border border-slate-200 text-slate-700 text-xs font-bold py-3 rounded-xl cursor-pointer hover:bg-slate-50"
                 >
                   Annuler
                 </button>
                 <button
                   type="submit"
-                  className="flex-1 bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold py-2.5 rounded-xl cursor-pointer transition"
-                  id="btn-add-product-save"
+                  disabled={!(regLegalName && regCniPhoto && regShopPhoto)}
+                  className={`flex-1 text-xs font-black py-3 rounded-xl transition cursor-pointer shadow-md ${
+                    (regLegalName && regCniPhoto && regShopPhoto)
+                      ? 'bg-emerald-500 hover:bg-emerald-600 text-slate-950'
+                      : 'bg-slate-200 text-slate-400 cursor-not-allowed'
+                  }`}
                 >
-                  Publier l'Article
+                  Créer ma boutique
                 </button>
               </div>
             </form>
@@ -1785,10 +1360,128 @@ export default function MerchantDashboard({
         </div>
       )}
 
-      {/* 4. Modal Premium Upgrade Subscription (100,000 FCFA/year) */}
+      {/* ========================================================= */}
+      {/* 4. MODAL: SE CONNECTER À UNE BOUTIQUE                      */}
+      {/* ========================================================= */}
+      {showLoginModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/70 backdrop-blur-xs">
+          <div className="bg-white rounded-3xl w-full max-w-md p-6 shadow-2xl border border-slate-100 relative">
+            <button
+              onClick={() => {
+                setShowLoginModal(false);
+                setPendingLoginMerchant(null);
+                setLoginPassword('');
+                setLoginError('');
+              }}
+              className="absolute top-4 right-4 text-slate-400 hover:text-slate-800 p-1 rounded-full cursor-pointer transition"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            {!pendingLoginMerchant ? (
+              <div className="space-y-4">
+                <div className="border-b border-slate-100 pb-3">
+                  <h3 className="font-extrabold text-slate-900 text-lg">Connexion Boutique</h3>
+                  <p className="text-xs text-slate-500">Sélectionnez votre boutique pour accéder au tableau de bord.</p>
+                </div>
+
+                <div className="space-y-2.5 max-h-[60vh] overflow-y-auto pr-1">
+                  {merchants.map((m) => (
+                    <button
+                      key={m.id}
+                      onClick={() => setPendingLoginMerchant(m)}
+                      className="w-full text-left p-3.5 rounded-2xl border border-slate-100 hover:border-indigo-400 hover:bg-indigo-50/20 flex items-center justify-between transition cursor-pointer group"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-indigo-600 text-white rounded-xl flex items-center justify-center font-black text-sm">
+                          {m.logo}
+                        </div>
+                        <div>
+                          <p className="font-extrabold text-slate-950 text-xs">{m.shopName}</p>
+                          <p className="text-[10px] text-slate-400">{m.location} • {m.name}</p>
+                        </div>
+                      </div>
+                      <ArrowRight className="w-4 h-4 text-slate-300 group-hover:text-indigo-600 group-hover:translate-x-1 transition" />
+                    </button>
+                  ))}
+                </div>
+              </div>
+            ) : (
+              <form onSubmit={handleVerifyPasswordAndLogin} className="space-y-4">
+                <div className="flex items-center gap-3 border-b border-slate-100 pb-3">
+                  <div className="w-10 h-10 bg-indigo-600 text-white rounded-xl flex items-center justify-center font-black text-base">
+                    {pendingLoginMerchant.logo}
+                  </div>
+                  <div>
+                    <p className="font-extrabold text-slate-900 text-sm">{pendingLoginMerchant.shopName}</p>
+                    <p className="text-xs text-slate-400">{pendingLoginMerchant.name} • {pendingLoginMerchant.location}</p>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Mot de passe de sécurité</label>
+                  <input
+                    type="password"
+                    required
+                    value={loginPassword}
+                    onChange={(e) => setLoginPassword(e.target.value)}
+                    placeholder="Entrez le mot de passe"
+                    className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-950 focus:outline-none focus:ring-2 focus:ring-indigo-500/10"
+                    autoFocus
+                  />
+                </div>
+
+                {loginError && (
+                  <div className="text-rose-600 bg-rose-50 border border-rose-200 p-2.5 rounded-xl text-xs font-bold">
+                    ⚠️ {loginError}
+                  </div>
+                )}
+
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setPendingLoginMerchant(null);
+                      setLoginPassword('');
+                      setLoginError('');
+                    }}
+                    className="flex-1 border border-slate-200 text-slate-700 text-xs font-bold py-2.5 rounded-xl cursor-pointer hover:bg-slate-50 text-center"
+                  >
+                    Retour
+                  </button>
+                  <button
+                    type="submit"
+                    className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold py-2.5 rounded-xl cursor-pointer text-center shadow-sm"
+                  >
+                    Valider & Ouvrir
+                  </button>
+                </div>
+              </form>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================= */}
+      {/* 5. MODAL: AJOUT DE PRODUIT (ADD PRODUCT MODAL)            */}
+      {/* ========================================================= */}
+      {showAddProductModal && activeMerchant && (
+        <AddProductModal
+          merchant={activeMerchant}
+          onClose={() => setShowAddProductModal(false)}
+          onPublishProduct={(newProd) => {
+            onAddProduct(newProd);
+            setShowAddProductModal(false);
+          }}
+        />
+      )}
+
+      {/* ========================================================= */}
+      {/* 6. MODAL: UPGRADE MEMBRE VIP PREMIUM                      */}
+      {/* ========================================================= */}
       {showUpgradeModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs">
-          <div className="bg-white rounded-3xl w-full max-w-md p-6 overflow-hidden shadow-2xl border border-slate-100 max-h-[90vh] flex flex-col relative">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/70 backdrop-blur-xs">
+          <div className="bg-white rounded-3xl w-full max-w-md p-6 shadow-2xl border border-slate-100 relative">
             <button
               onClick={() => setShowUpgradeModal(false)}
               className="absolute top-4 right-4 text-slate-400 hover:text-slate-800 p-1 rounded-full cursor-pointer transition"
@@ -1796,437 +1489,39 @@ export default function MerchantDashboard({
               <X className="w-5 h-5" />
             </button>
 
-            <AnimatePresence mode="wait">
-              {upgradeStep === 'details' && (
-                <motion.div
-                  key="up-details"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  className="space-y-4"
-                >
-                  <div className="text-center pb-2">
-                    <span className="text-3xl">👑</span>
-                    <h3 className="font-extrabold text-slate-900 text-base mt-2">Abonnement Annuel Premium</h3>
-                    <p className="text-xs text-slate-500">Rejoignez l'élite des commerçants de Bafoussam en ligne.</p>
-                  </div>
-
-                  <div className="bg-indigo-50 rounded-2xl border border-indigo-100 p-4 text-xs space-y-2 text-slate-800">
-                    <p className="font-bold text-indigo-900 flex items-center gap-1.5">
-                      <Check className="w-4 h-4 text-indigo-600 stroke-[3]" />
-                      <span>Boost Instantané de tous vos articles</span>
-                    </p>
-                    <p className="font-bold text-indigo-900 flex items-center gap-1.5">
-                      <Check className="w-4 h-4 text-indigo-600 stroke-[3]" />
-                      <span>Rapports géographiques & statistiques de vente</span>
-                    </p>
-                    <p className="font-bold text-indigo-900 flex items-center gap-1.5">
-                      <Check className="w-4 h-4 text-indigo-600 stroke-[3]" />
-                      <span>Campagnes ciblées par quartiers à Bafoussam</span>
-                    </p>
-                    <p className="font-bold text-orange-950 flex items-center gap-1.5 pt-2 border-t border-indigo-100/40 mt-1">
-                      <span className="text-orange-500 text-sm">🧡</span>
-                      <span>Paiement sécurisé via Mobile Money</span>
-                    </p>
-                  </div>
-
-                  <form onSubmit={handleUpgradePayment} className="space-y-4">
-                    <div>
-                      <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Opérateur de Paiement Mobile</label>
-                      <div className="grid grid-cols-2 gap-2">
-                        <button
-                          type="button"
-                          onClick={() => setUpgradeOperator('momo')}
-                          className={`py-2 px-3 rounded-xl border flex items-center justify-center gap-2 font-bold text-xs transition cursor-pointer ${
-                            upgradeOperator === 'momo' ? 'border-indigo-400 bg-indigo-50/20 text-indigo-900' : 'border-slate-100 bg-slate-50 text-slate-500'
-                          }`}
-                        >
-                          <span className="w-4 h-4 bg-indigo-600 rounded-full flex items-center justify-center text-[8px] font-extrabold text-white">Mo</span>
-                          <span>MTN MoMo</span>
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setUpgradeOperator('orange')}
-                          className={`py-2 px-3 rounded-xl border flex items-center justify-center gap-2 font-bold text-xs transition cursor-pointer ${
-                            upgradeOperator === 'orange' ? 'border-orange-500 bg-orange-50/20 text-orange-950' : 'border-slate-100 bg-slate-50 text-slate-500'
-                          }`}
-                        >
-                          <span className="w-4 h-4 bg-orange-500 rounded-full flex items-center justify-center text-[8px] font-extrabold text-white">Om</span>
-                          <span>Orange OM</span>
-                        </button>
-                      </div>
-                    </div>
-
-                    <div>
-                      <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Numéro de Téléphone Mobile Money *</label>
-                      <input
-                        type="tel"
-                        required
-                        placeholder="Ex: 677894512"
-                        className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/10 text-xs text-slate-950 font-mono transition"
-                        value={upgradePhone}
-                        onChange={(e) => setUpgradePhone(e.target.value)}
-                      />
-                    </div>
-
-                    {upgradeError && (
-                      <div className="text-red-600 text-xs font-semibold bg-red-50 p-2 border border-red-100 rounded-xl text-center">
-                        {upgradeError}
-                      </div>
-                    )}
-
-                    <button
-                      type="submit"
-                      className="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs py-3.5 rounded-xl cursor-pointer transition shadow-sm"
-                    >
-                      Payer 100 000 FCFA par Mobile Money
-                    </button>
-                  </form>
-                </motion.div>
-              )}
-
-              {upgradeStep === 'processing' && (
-                <motion.div
-                  key="up-proc"
-                  className="flex flex-col items-center justify-center py-16 text-center"
-                >
-                  <Loader2 className="w-12 h-12 text-slate-800 animate-spin mb-4" />
-                  <h4 className="font-bold text-slate-900 text-sm">Traitement en cours...</h4>
-                  <p className="text-[11px] text-slate-400 mt-1 max-w-[240px]">
-                    Envoi de la demande d'autorisation de transfert de 100 000 FCFA via Mobile Money.
-                  </p>
-                </motion.div>
-              )}
-
-              {upgradeStep === 'ussd' && (
-                <motion.div
-                  key="up-ussd"
-                  className="bg-slate-900 text-white rounded-2xl p-5 shadow-xl relative border border-slate-800 space-y-4"
-                >
-                  <div className="flex items-center justify-between border-b border-slate-800 pb-2 mb-3">
-                    <span className="text-[9px] font-bold text-indigo-400 uppercase tracking-widest">
-                      {upgradeOperator === 'momo' ? 'MTN MOBILE MONEY' : 'ORANGE MONEY'}
-                    </span>
-                    <span className="text-[8px] bg-slate-800 text-slate-400 px-2 py-0.5 rounded-full">PIN GATEWAY</span>
-                  </div>
-
-                  <p className="text-xs leading-relaxed text-slate-300">
-                    Saisissez votre code PIN secret de paiement mobile pour valider le paiement annuel Premium de <strong className="text-white">100 000 FCFA</strong> :
-                  </p>
-
-                  <form onSubmit={handleConfirmUpgradePIN} className="space-y-4">
-                    <input
-                      type="password"
-                      maxLength={4}
-                      pattern="\d{4}"
-                      placeholder="****"
-                      required
-                      autoFocus
-                      className="w-full text-center tracking-[1.5em] font-mono text-xl bg-slate-950 border border-slate-800 rounded-xl py-2 text-indigo-400 focus:outline-none"
-                      value={upgradePin}
-                      onChange={(e) => setUpgradePin(e.target.value.replace(/\D/g, ''))}
-                    />
-
-                    {upgradeError && (
-                      <div className="text-red-400 text-[10px] text-center font-bold bg-red-950/40 border border-red-900/40 py-1.5 rounded-lg">
-                        {upgradeError}
-                      </div>
-                    )}
-
-                    <div className="flex gap-2.5">
-                      <button
-                        type="button"
-                        onClick={() => setUpgradeStep('details')}
-                        className="flex-1 bg-slate-800 hover:bg-slate-700 text-slate-100 font-bold text-sm py-2 px-3 rounded-xl transition flex items-center justify-center text-center cursor-pointer"
-                      >
-                        Annuler
-                      </button>
-                      <button
-                        type="submit"
-                        className={`flex-1 font-bold text-sm py-2 px-3 rounded-xl cursor-pointer transition text-white shadow-md flex items-center justify-center text-center ${
-                          upgradeOperator === 'orange'
-                            ? 'bg-orange-600 hover:bg-orange-500 active:bg-orange-700'
-                            : 'bg-indigo-600 hover:bg-indigo-500 active:bg-indigo-700'
-                        }`}
-                        id="btn-confirm-upgrade-momo"
-                      >
-                        Autoriser (100k)
-                      </button>
-                    </div>
-                  </form>
-                </motion.div>
-              )}
-
-              {upgradeStep === 'success' && (
-                <motion.div
-                  key="up-succ"
-                  className="text-center py-6"
-                >
-                  <div className="w-14 h-14 bg-emerald-50 text-emerald-500 rounded-full flex items-center justify-center mx-auto mb-4 border border-emerald-100">
-                    <Check className="w-8 h-8 stroke-[2.5]" />
-                  </div>
-
-                  <h3 className="text-lg font-bold text-slate-900">Boutique Upgradée !</h3>
-                  <p className="text-xs text-slate-500 mt-2 max-w-sm mx-auto leading-relaxed">
-                    Votre abonnement obligatoire de 100 000 FCFA par an a été réglé avec succès. Les fonctionnalités de marketing avancé et le boost de visibilité sont débloqués.
-                  </p>
-
-                  <button
-                    onClick={() => {
-                      setShowUpgradeModal(false);
-                      setUpgradeStep('details');
-                    }}
-                    className="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold py-3 px-4 rounded-xl cursor-pointer transition text-xs shadow-sm mt-6"
-                  >
-                    Accéder à mon tableau de bord Premium
-                  </button>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
-        </div>
-      )}
-
-      {/* 5. Modal New Campaign Wizard */}
-      {showCampaignModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs">
-          <div className="bg-white rounded-3xl w-full max-w-md p-6 overflow-hidden shadow-2xl border border-slate-100 max-h-[90vh] flex flex-col relative">
-            <button
-              onClick={() => setShowCampaignModal(false)}
-              className="absolute top-4 right-4 text-slate-400 hover:text-slate-800 p-1 rounded-full cursor-pointer transition"
-            >
-              <X className="w-5 h-5" />
-            </button>
-
-            <h3 className="font-bold text-slate-900 text-base mb-4 flex items-center gap-1.5">
-              <Megaphone className="w-5 h-5 text-indigo-500" />
-              <span>Créer une Campagne de Visibilité</span>
-            </h3>
-
-            <form onSubmit={handleAddCampaign} className="space-y-4">
-              <div>
-                <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Titre de la Campagne *</label>
-                <input
-                  type="text"
-                  required
-                  placeholder="Ex: Opération Spéciale taro - Tamdja"
-                  className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/10 text-xs text-slate-950 transition"
-                  value={campaignTitle}
-                  onChange={(e) => setCampaignTitle(e.target.value)}
-                />
+            <div className="space-y-4">
+              <div className="text-center space-y-1">
+                <span className="bg-amber-100 text-amber-900 text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full inline-block">
+                  Abonnement VIP Premium
+                </span>
+                <h3 className="font-extrabold text-slate-900 text-xl">Devenir Commerçant VIP</h3>
+                <p className="text-xs text-slate-500">100 000 FCFA / an par Mobile Money</p>
               </div>
 
-              <div>
-                <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Type de Campagne</label>
-                <div className="grid grid-cols-2 gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setCampaignType('boost')}
-                    className={`py-2 px-3 rounded-xl border flex items-center justify-center gap-1.5 font-bold text-xs transition cursor-pointer ${
-                      campaignType === 'boost' ? 'border-indigo-400 bg-indigo-50/20 text-indigo-900' : 'border-slate-100 bg-slate-50 text-slate-500'
-                    }`}
-                  >
-                    <Sparkles className="w-3.5 h-3.5 fill-current" />
-                    <span>Boost de Produits</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setCampaignType('promo')}
-                    className={`py-2 px-3 rounded-xl border flex items-center justify-center gap-1.5 font-bold text-xs transition cursor-pointer ${
-                      campaignType === 'promo' ? 'border-indigo-400 bg-indigo-50/20 text-indigo-900' : 'border-slate-100 bg-slate-50 text-slate-500'
-                    }`}
-                  >
-                    <Percent className="w-3.5 h-3.5" />
-                    <span>Promo Quartier</span>
-                  </button>
-                </div>
+              <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 space-y-2 text-xs text-slate-700">
+                <p className="font-extrabold text-slate-900">Avantages exclusifs Membre VIP :</p>
+                <ul className="list-disc pl-4 space-y-1 text-slate-600">
+                  <li>Positionnement prioritaire de vos articles dans le catalogue</li>
+                  <li>Badge "VIP Premium" de confiance</li>
+                  <li>Outils d'analyses géographiques par quartier à Bafoussam</li>
+                  <li>Campagnes promotionnelles SMS & Bannières dédiées</li>
+                </ul>
               </div>
 
-              <div>
-                <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Cibler des Quartiers à Bafoussam (Sélection Multi)</label>
-                <div className="grid grid-cols-2 gap-2 max-h-32 overflow-y-auto border border-slate-100 rounded-xl p-2 bg-slate-50">
-                  {['Tamdja', 'Bamendzi', 'Banengo', 'Djeleng', 'Famla', 'Carrefour Bamiléké'].map((n) => (
-                    <button
-                      key={n}
-                      type="button"
-                      onClick={() => handleToggleTargetNeighborhood(n)}
-                      className={`py-1.5 px-2.5 rounded-lg text-left text-xs transition flex items-center justify-between cursor-pointer ${
-                        campaignTarget.includes(n) ? 'bg-indigo-100 text-indigo-900 font-bold' : 'bg-white hover:bg-slate-100 text-slate-600 border border-slate-200/40'
-                      }`}
-                    >
-                      <span>{n}</span>
-                      {campaignTarget.includes(n) && <Check className="w-3 h-3 text-indigo-900 stroke-[3]" />}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <div className="flex gap-2 pt-3">
-                <button
-                  type="button"
-                  onClick={() => setShowCampaignModal(false)}
-                  className="flex-1 border border-slate-200 hover:bg-slate-50 text-slate-600 text-xs font-bold py-2.5 rounded-xl cursor-pointer transition"
-                >
-                  Annuler
-                </button>
-                <button
-                  type="submit"
-                  className="flex-1 bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold py-2.5 rounded-xl cursor-pointer transition"
-                >
-                  Lancer la Campagne
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* 6. Modal Product Boost Payment Simulation */}
-      {showBoostModal && productToBoost && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs">
-          <div className="bg-white rounded-3xl w-full max-w-md p-6 overflow-hidden shadow-2xl border border-slate-100 max-h-[90vh] flex flex-col relative">
-            <button
-              onClick={() => setShowBoostModal(false)}
-              className="absolute top-4 right-4 text-slate-400 hover:text-slate-800 p-1 rounded-full cursor-pointer transition"
-            >
-              <X className="w-5 h-5" />
-            </button>
-
-            <div className="flex items-center gap-2 border-b border-slate-100 pb-3 mb-4">
-              <div className="bg-amber-100 text-amber-600 p-1.5 rounded-xl">
-                <Sparkles className="w-5 h-5 fill-amber-500 stroke-none" />
-              </div>
-              <div>
-                <h3 className="font-bold text-slate-900 text-sm">Booster un produit</h3>
-                <p className="text-[10px] text-slate-400">Paiement Mobile Money Sécurisé (Simulé)</p>
-              </div>
+              <button
+                onClick={() => {
+                  if (activeMerchant) {
+                    onUpgradeMerchant(activeMerchant.id);
+                  }
+                  setShowUpgradeModal(false);
+                }}
+                className="w-full bg-amber-500 hover:bg-amber-600 text-slate-950 font-black text-xs py-3.5 rounded-2xl transition shadow-md cursor-pointer"
+              >
+                Confirmer le Paiement Mobile Money (100 000 FCFA)
+              </button>
             </div>
-
-            {boostStep === 'details' && (
-              <form onSubmit={handleBoostPaymentSubmit} className="space-y-4">
-                <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 flex items-center gap-3">
-                  <img
-                    src={productToBoost.image}
-                    alt={productToBoost.name}
-                    referrerPolicy="no-referrer"
-                    className="w-12 h-12 rounded-xl object-cover border border-slate-100 shrink-0"
-                  />
-                  <div className="min-w-0">
-                    <h4 className="font-bold text-slate-900 text-xs truncate">{productToBoost.name}</h4>
-                    <p className="text-[10px] text-slate-400 mt-0.5">Visibilité max pendant 7 jours</p>
-                    <p className="text-xs font-extrabold text-amber-600 mt-1">1 500 FCFA</p>
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Opérateur de Paiement</label>
-                  <div className="grid grid-cols-2 gap-2">
-                    <button
-                      type="button"
-                      onClick={() => setBoostOperator('momo')}
-                      className={`py-2 px-3 rounded-xl border flex items-center justify-center gap-2 font-bold text-xs transition cursor-pointer ${
-                        boostOperator === 'momo' ? 'border-indigo-400 bg-indigo-50/20 text-indigo-900' : 'border-slate-100 bg-slate-50 text-slate-500'
-                      }`}
-                    >
-                      <span className="w-4 h-4 bg-indigo-600 rounded-full flex items-center justify-center text-[8px] font-extrabold text-white">Mo</span>
-                      <span>MTN MoMo</span>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setBoostOperator('orange')}
-                      className={`py-2 px-3 rounded-xl border flex items-center justify-center gap-2 font-bold text-xs transition cursor-pointer ${
-                        boostOperator === 'orange' ? 'border-orange-500 bg-orange-50/20 text-orange-950' : 'border-slate-100 bg-slate-50 text-slate-500'
-                      }`}
-                    >
-                      <span className="w-4 h-4 bg-orange-500 rounded-full flex items-center justify-center text-[8px] font-extrabold text-white">Om</span>
-                      <span>Orange OM</span>
-                    </button>
-                  </div>
-                </div>
-
-                <div>
-                  <PhoneCountryInput
-                    id="boost-phone-input"
-                    label="Numéro de Téléphone Mobile Money"
-                    required
-                    value={boostPhone}
-                    lang={lang || 'fr'}
-                    onChange={(fullNum) => setBoostPhone(fullNum)}
-                  />
-                </div>
-
-                {boostError && (
-                  <div className="text-red-600 text-xs font-semibold bg-red-50 p-2 border border-red-100 rounded-xl text-center">
-                    {boostError}
-                  </div>
-                )}
-
-                <div className="flex gap-2 pt-2">
-                  <button
-                    type="button"
-                    onClick={() => setShowBoostModal(false)}
-                    className="flex-1 border border-slate-200 hover:bg-slate-50 text-slate-600 text-xs font-bold py-2.5 rounded-xl cursor-pointer transition"
-                  >
-                    Annuler
-                  </button>
-                  <button
-                    type="submit"
-                    className="flex-1 bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold py-2.5 rounded-xl cursor-pointer transition"
-                  >
-                    Payer 1 500 FCFA
-                  </button>
-                </div>
-              </form>
-            )}
-
-            {boostStep === 'processing' && (
-              <div className="flex flex-col items-center justify-center py-12 text-center">
-                <Loader2 className="w-10 h-10 text-slate-800 animate-spin mb-4" />
-                <h4 className="font-bold text-slate-900 text-xs">Validation du paiement...</h4>
-                <p className="text-[10px] text-slate-400 mt-1 max-w-[220px]">
-                  Veuillez confirmer la transaction de 1 500 FCFA sur votre téléphone.
-                </p>
-              </div>
-            )}
-
-            {boostStep === 'success' && (
-              <div className="text-center py-6">
-                <div className="w-12 h-12 bg-emerald-50 text-emerald-500 rounded-full flex items-center justify-center mx-auto mb-4 border border-emerald-100">
-                  <Check className="w-6 h-6 stroke-[2.5]" />
-                </div>
-
-                <h3 className="text-sm font-bold text-slate-900">Produit boosté avec succès !</h3>
-                <p className="text-xs text-slate-500 mt-2 max-w-xs mx-auto leading-relaxed">
-                  L'article <strong className="text-slate-900">"{productToBoost.name}"</strong> est maintenant sponsorisé et apparaîtra en tête d'affiche sur l'accueil pendant 7 jours.
-                </p>
-
-                <button
-                  onClick={() => setShowBoostModal(false)}
-                  className="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold py-2.5 px-4 rounded-xl cursor-pointer transition text-xs shadow-sm mt-5"
-                >
-                  Fermer
-                </button>
-              </div>
-            )}
           </div>
         </div>
-      )}
-
-      {/* 7. Modern Add Product Modal Overlay */}
-      {showAddProductModal && activeMerchant && (
-        <AddProductModal
-          merchant={activeMerchant}
-          onClose={() => setShowAddProductModal(false)}
-          onPublishProduct={(newProduct) => {
-            onAddProduct(newProduct);
-            setShowAddProductModal(false);
-          }}
-          onSaveDraft={(draftProduct) => {
-            onAddProduct(draftProduct);
-            setShowAddProductModal(false);
-          }}
-          lang={lang}
-        />
       )}
 
     </div>
