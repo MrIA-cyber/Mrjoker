@@ -8,6 +8,8 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import VerifiedBadge from './VerifiedBadge';
+import SmartProductImage from './SmartProductImage';
+import { getProductVerifiedImage } from '../utils/productImageValidator';
 import { translations, Language } from '../translations';
 
 interface ProductDetailsModalProps {
@@ -28,12 +30,14 @@ interface ProductDetailsModalProps {
 function getProductGallery(product: Product) {
   const media: { id: string; type: 'image' | 'video'; url: string; poster?: string; title: string }[] = [];
 
-  // 1. Primary main image (always present)
-  if (product.image) {
+  const mainVerifiedImg = getProductVerifiedImage(product) || product.image;
+
+  // 1. Primary main image
+  if (mainVerifiedImg) {
     media.push({
       id: `img-main-${product.id}`,
       type: 'image',
-      url: product.image,
+      url: mainVerifiedImg,
       title: 'Image principale',
     });
   }
@@ -1191,7 +1195,7 @@ export default function ProductDetailsModal({
                     className="bg-slate-50 dark:bg-slate-800/40 p-3 rounded-2xl border border-slate-200/80 dark:border-slate-800 hover:border-indigo-400 transition cursor-pointer group"
                   >
                     <div className="aspect-square rounded-xl overflow-hidden mb-2 bg-slate-200">
-                      <img src={simProd.image} alt={simProd.name} referrerPolicy="no-referrer" className="w-full h-full object-cover group-hover:scale-105 transition duration-300" />
+                      <SmartProductImage product={simProd} containerClassName="w-full h-full" aspectRatio="square" />
                     </div>
                     <h4 className="font-bold text-xs text-slate-900 dark:text-white truncate">
                       {simProd.name}

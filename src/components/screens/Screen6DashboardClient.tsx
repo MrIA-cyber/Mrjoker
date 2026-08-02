@@ -39,6 +39,7 @@ import {
 import { AfriNovaLogo } from '../AfriNovaLogo';
 import { Product, Merchant, User as UserType } from '../../types';
 import { INITIAL_PRODUCTS, INITIAL_MERCHANTS } from '../../data/mockData';
+import SmartProductImage from '../SmartProductImage';
 
 interface Screen6DashboardClientProps {
   onNavigate?: (page: string) => void;
@@ -672,10 +673,10 @@ export default function Screen6DashboardClient({
               >
                 {/* Top Badge Overlay */}
                 <div className="relative h-36 sm:h-40 rounded-xl overflow-hidden bg-slate-100 mb-2">
-                  <img 
-                    src={product.image} 
-                    alt={product.name} 
-                    className="w-full h-full object-cover group-hover:scale-105 transition-all duration-300"
+                  <SmartProductImage 
+                    product={product} 
+                    containerClassName="w-full h-full"
+                    aspectRatio="auto"
                   />
                   
                   {/* Badges Top Left & Right */}
@@ -776,10 +777,10 @@ export default function Screen6DashboardClient({
               >
                 {/* Large Product Image Container */}
                 <div className="relative h-36 sm:h-44 rounded-xl overflow-hidden bg-slate-100 mb-2">
-                  <img 
-                    src={product.image} 
-                    alt={product.name} 
-                    className="w-full h-full object-cover group-hover:scale-105 transition-all duration-300" 
+                  <SmartProductImage 
+                    product={product} 
+                    containerClassName="w-full h-full"
+                    aspectRatio="auto"
                   />
                   
                   {/* Dynamic Badges Overlay */}
@@ -1062,8 +1063,8 @@ export default function Screen6DashboardClient({
                 className="bg-white rounded-2xl p-2.5 border border-purple-100 shadow-xs hover:shadow-md transition-all cursor-pointer flex flex-col justify-between group"
               >
                 <div className="relative h-32 rounded-xl overflow-hidden bg-slate-100 mb-2">
-                  <img src={product.image} alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition-all duration-300" />
-                  <span className="absolute top-2 left-2 bg-[#7C3AED] text-white text-[9px] font-black px-2 py-0.5 rounded-full shadow-xs flex items-center gap-1">
+                  <SmartProductImage product={product} containerClassName="w-full h-full" aspectRatio="auto" />
+                  <span className="absolute top-2 left-2 bg-[#7C3AED] text-white text-[9px] font-black px-2 py-0.5 rounded-full shadow-xs flex items-center gap-1 z-10">
                     <Sparkles className="w-2.5 h-2.5" />
                     Nouveau
                   </span>
@@ -1105,7 +1106,7 @@ export default function Screen6DashboardClient({
                 className="w-36 sm:w-44 bg-white rounded-2xl p-2 border border-slate-200/80 shadow-xs hover:shadow-md transition-all cursor-pointer shrink-0"
               >
                 <div className="h-24 rounded-xl overflow-hidden bg-slate-100 mb-1.5">
-                  <img src={product.image} alt={product.name} className="w-full h-full object-cover" />
+                  <SmartProductImage product={product} containerClassName="w-full h-full" aspectRatio="auto" />
                 </div>
                 <h4 className="text-[11px] font-bold text-slate-900 truncate">{product.name}</h4>
                 <div className="text-[11px] font-black text-[#16A34A] mt-0.5">{product.price.toLocaleString('fr-FR')} FCFA</div>

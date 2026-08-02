@@ -5,6 +5,7 @@ import { X, Trash2, Plus, Minus, ArrowRight, ShieldCheck, MapPin, Phone, Loader2
 import { motion, AnimatePresence } from 'motion/react';
 import { translations, Language } from '../translations';
 import PhoneCountryInput from './PhoneCountryInput';
+import SmartProductImage from './SmartProductImage';
 
 interface CartDrawerProps {
   items: CartItem[];
@@ -185,12 +186,7 @@ export default function CartDrawer({
                           key={item.product.id}
                           className="flex items-center gap-3.5 bg-slate-50 dark:bg-slate-800/40 p-3 rounded-2xl border border-slate-100 dark:border-slate-800/80 relative group"
                         >
-                          <img
-                            src={item.product.image}
-                            alt={item.product.name}
-                            referrerPolicy="no-referrer"
-                            className="w-16 h-16 rounded-xl object-cover border border-slate-100 dark:border-slate-800"
-                          />
+                          <SmartProductImage product={item.product} containerClassName="w-16 h-16 rounded-xl shrink-0 border border-slate-100 dark:border-slate-800" aspectRatio="auto" />
                           <div className="flex-1 min-w-0">
                             <h4 className="font-semibold text-slate-900 dark:text-white text-sm truncate leading-snug">
                               {item.product.name}

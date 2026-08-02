@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import SmartProductImage from '../SmartProductImage';
 import { Search, Filter, Star, ShoppingCart, Sparkles, ShieldCheck, Tag, ChevronDown, Check } from 'lucide-react';
 
 interface Screen7MarketplaceProps {
@@ -128,7 +129,7 @@ export default function Screen7Marketplace({ onSelectProduct }: Screen7Marketpla
           >
             {/* Image Box */}
             <div className="relative w-24 sm:w-28 h-24 sm:h-28 rounded-xl overflow-hidden bg-slate-100 shrink-0">
-              <img src={product.image} alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition duration-300" />
+              <SmartProductImage product={product} containerClassName="w-full h-full" aspectRatio="auto" />
               <span className="absolute top-1 left-1 bg-[#16A34A] text-white text-[9px] font-black px-1.5 py-0.5 rounded-full shadow-xs">
                 {product.discount}
               </span>

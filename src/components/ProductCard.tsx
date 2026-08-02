@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { motion } from 'motion/react';
 import { Product, Review } from '../types';
-import { Star, ShoppingCart, Sparkles, MapPin } from 'lucide-react';
+import { Star, ShoppingCart, Sparkles, MapPin, Heart, Flag, Zap, ShieldCheck } from 'lucide-react';
 import VerifiedBadge from './VerifiedBadge';
+import SmartProductImage from './SmartProductImage';
 
 interface ProductCardProps {
   key?: string | number;
@@ -10,6 +11,10 @@ interface ProductCardProps {
   isMerchantVerified?: boolean;
   onAddToCart: (product: Product) => void;
   onSelect: (product: Product) => void;
+  onToggleFavorite?: (e: React.MouseEvent, productId: string) => void;
+  onReport?: (product: Product) => void;
+  onInstantBuy?: (product: Product) => void;
+  isFavorite?: boolean;
   reviews?: Review[];
   lang?: string;
   index?: number;
@@ -20,149 +25,183 @@ export default function ProductCard({
   isMerchantVerified = false, 
   onAddToCart, 
   onSelect,
+  onToggleFavorite,
+  onReport,
+  onInstantBuy,
+  isFavorite = false,
   reviews = [],
   lang = 'fr',
   index = 0,
 }: ProductCardProps) {
+  const [favoriteState, setFavoriteState] = useState(isFavorite);
   const isBoostedActive = product.isBoosted && (!product.boostExpiryDate || new Date(product.boostExpiryDate) >= new Date());
 
   // Compute merchant rating if reviews are provided
   const merchantReviews = reviews.filter(r => r.merchantId === product.merchantId);
   const avgRating = merchantReviews.length > 0
     ? (merchantReviews.reduce((sum, r) => sum + r.rating, 0) / merchantReviews.length).toFixed(1)
-    : null;
+    : product.rating?.toFixed(1) || '4.8';
+
+  const handleFavClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setFavoriteState(!favoriteState);
+    if (onToggleFavorite) {
+      onToggleFavorite(e, product.id);
+    }
+  };
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
+      initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ 
-        duration: 0.35, 
-        delay: Math.min(index * 0.04, 0.4),
+        duration: 0.3, 
+        delay: Math.min(index * 0.03, 0.3),
         ease: [0.25, 1, 0.5, 1] 
       }}
-      whileHover={{ y: -6, scale: 1.01 }}
-      className={`bg-white dark:bg-slate-900 rounded-2xl border transition-all duration-300 flex flex-col overflow-hidden group relative shadow-md hover:shadow-2xl ${
+      whileHover={{ y: -4, scale: 1.01 }}
+      className={`bg-white dark:bg-slate-900 rounded-[20px] border transition-all duration-200 flex flex-col justify-between overflow-hidden group relative shadow-2xs hover:shadow-xl h-full ${
         isBoostedActive
           ? 'border-indigo-200 dark:border-indigo-800/80 shadow-indigo-500/10 hover:shadow-indigo-500/20 bg-gradient-to-b from-indigo-50/20 via-white to-white dark:from-indigo-950/20 dark:via-slate-900 dark:to-slate-900 hover:border-indigo-400 dark:hover:border-indigo-600'
-          : 'border-slate-100 dark:border-slate-800 hover:border-indigo-200 dark:hover:border-indigo-800 hover:shadow-indigo-500/5'
+          : 'border-slate-100 dark:border-slate-800/80 hover:border-emerald-300 dark:hover:border-emerald-700'
       }`}
       id={`product-card-${product.id}`}
     >
       {/* Light Reflection / Shine Effect traversing top strip on hover */}
-      <div className="absolute inset-0 z-20 pointer-events-none overflow-hidden rounded-2xl">
-        <div className="w-1/2 h-full bg-gradient-to-r from-transparent via-white/20 dark:via-white/10 to-transparent -skew-x-12 -translate-x-full group-hover:translate-x-[300%] transition-transform duration-1000 ease-in-out" />
+      <div className="absolute inset-0 z-10 pointer-events-none overflow-hidden rounded-[20px]">
+        <div className="w-1/2 h-full bg-gradient-to-r from-transparent via-white/15 dark:via-white/10 to-transparent -skew-x-12 -translate-x-full group-hover:translate-x-[300%] transition-transform duration-1000 ease-in-out" />
       </div>
 
-      {/* Premium Boost Badge & Sparkles Overlay */}
-      {product.isBoosted && (
-        <div className="absolute top-3 left-3 z-10 flex items-center gap-1.5 bg-gradient-to-r from-[#4F46E5] to-[#2563EB] text-white text-[10px] font-extrabold px-2.5 py-1 rounded-full shadow-md shadow-indigo-600/30">
-          <Sparkles className="w-3 h-3 text-white fill-white animate-pulse" />
-          <span>PREMIUM • Ouest</span>
-        </div>
-      )}
+      <div>
+        {/* Product Image Frame - 4:3 Aspect Ratio reduces card height by ~25% */}
+        <div
+          className="aspect-[4/3] bg-slate-100 dark:bg-slate-950 relative overflow-hidden cursor-pointer rounded-t-[20px]"
+          onClick={() => onSelect(product)}
+        >
+          <SmartProductImage
+            product={product}
+            aspectRatio="4/3"
+            containerClassName="rounded-t-[20px]"
+          />
 
-      {/* Discrete Sponsored Badge */}
-      {isBoostedActive && (
-        <div className="absolute top-3 right-3 z-10 flex items-center gap-0.5 bg-gradient-to-r from-amber-500 to-orange-500 text-white text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md shadow-sm">
-          <span>{lang === 'en' ? 'Sponsored' : 'Sponsorisé'}</span>
-        </div>
-      )}
+          {/* Premium Boost Badge Overlay */}
+          {product.isBoosted && (
+            <div className="absolute top-2 left-2 z-10 flex items-center gap-1 bg-indigo-600/90 backdrop-blur-md text-white text-[9px] font-black px-2 py-0.5 rounded-md shadow-xs">
+              <Sparkles className="w-2.5 h-2.5 text-amber-300 fill-amber-300 animate-pulse" />
+              <span>SPONSORISÉ</span>
+            </div>
+          )}
 
-      {/* Product Image Frame */}
-      <div
-        className="aspect-square bg-slate-50 dark:bg-slate-950 relative overflow-hidden cursor-pointer"
-        onClick={() => onSelect(product)}
-      >
-        <img
-          src={product.image}
-          alt={product.name}
-          referrerPolicy="no-referrer"
-          className="w-full h-full object-cover group-hover:scale-108 transition duration-500 ease-out"
-        />
-        <div className="absolute inset-0 bg-slate-900/10 dark:bg-slate-950/20 opacity-0 group-hover:opacity-100 transition duration-300" />
-      </div>
+          {/* Neighborhood Pill if available */}
+          {!product.isBoosted && product.neighborhood && (
+            <span className="absolute top-2 left-2 z-10 bg-slate-900/80 backdrop-blur-md text-white text-[9px] font-bold px-2 py-0.5 rounded-md flex items-center gap-0.5">
+              <MapPin className="w-2.5 h-2.5 text-emerald-400" />
+              <span className="truncate max-w-[80px]">{product.neighborhood}</span>
+            </span>
+          )}
 
-      {/* Details Box */}
-      <div className="p-4 flex-1 flex flex-col justify-between">
-        <div>
-          {/* Merchant & Market with Shop Rating */}
-          <div className="flex items-center gap-1.5 flex-wrap text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-1.5">
-            <MapPin className="w-3 h-3 text-indigo-500 dark:text-indigo-400 shrink-0" />
-            <span className="truncate max-w-[100px] text-slate-600 dark:text-slate-400">{product.merchantName}</span>
-            {isMerchantVerified && (
-              <VerifiedBadge id={`verified-badge-card-${product.id}`} />
+          {/* Top-Right Discrete 36px Action Buttons (Favorite & Report) - Minimalist overlay */}
+          <div className="absolute top-2 right-2 z-10 flex items-center gap-1">
+            {onReport && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onReport(product);
+                }}
+                className="w-8 h-8 rounded-full bg-black/30 hover:bg-black/50 backdrop-blur-md flex items-center justify-center text-white/80 hover:text-rose-400 transition cursor-pointer shadow-2xs"
+                title="Signaler"
+              >
+                <Flag className="w-3.5 h-3.5" />
+              </button>
             )}
+            <button
+              onClick={handleFavClick}
+              className="w-8 h-8 rounded-full bg-black/30 hover:bg-black/50 backdrop-blur-md flex items-center justify-center text-white transition cursor-pointer shadow-2xs"
+              title="Favoris"
+            >
+              <Heart className={`w-3.5 h-3.5 ${favoriteState ? 'fill-rose-500 text-rose-500' : 'text-white'}`} />
+            </button>
+          </div>
+        </div>
+
+        {/* Details Content Box with Compact Spacing */}
+        <div className="p-2.5 sm:p-3 space-y-1">
+          {/* Merchant & Rating Bar */}
+          <div className="flex items-center justify-between text-[10px] text-slate-500 dark:text-slate-400 font-semibold gap-1">
+            <div className="flex items-center gap-1 truncate">
+              <span className="truncate font-medium text-slate-600 dark:text-slate-300">{product.merchantName || 'Boutique AfriNova'}</span>
+              {(isMerchantVerified || product.merchantVerified) && (
+                <VerifiedBadge id={`verified-badge-card-${product.id}`} />
+              )}
+            </div>
             
-            {/* Live boutique shop rating & total reviews */}
-            {avgRating && (
-              <span className="text-amber-500 flex items-center gap-0.5 ml-1 font-extrabold" title={`${merchantReviews.length} avis sur la boutique`}>
-                ★ {avgRating}
-              </span>
-            )}
-
-            <span className="text-slate-300 dark:text-slate-700 font-normal">({product.origin.includes('Local') ? 'Local' : 'Import'})</span>
+            <div className="flex items-center gap-0.5 text-amber-500 shrink-0 font-extrabold">
+              <Star className="w-3 h-3 fill-amber-400 stroke-amber-400" />
+              <span>{avgRating}</span>
+            </div>
           </div>
 
-          {/* Product Name */}
+          {/* Title clamped to strictly 2 lines */}
           <h4
-            className="font-semibold text-slate-900 dark:text-slate-100 text-sm tracking-tight hover:text-indigo-600 dark:hover:text-indigo-400 cursor-pointer transition line-clamp-2 leading-snug mb-2"
+            className="font-bold text-xs sm:text-sm text-slate-900 dark:text-slate-100 hover:text-emerald-600 dark:hover:text-emerald-400 cursor-pointer transition line-clamp-2 leading-snug min-h-[2.2rem]"
             onClick={() => onSelect(product)}
+            title={product.name}
           >
             {product.name}
           </h4>
 
-          {/* Rating Stars & Stock */}
-          <div className="flex items-center gap-2 mb-3">
-            <div className="flex items-center gap-0.5 text-amber-500">
-              <Star className="w-3.5 h-3.5 fill-amber-500 stroke-amber-500" />
-              <span className="text-xs font-bold text-slate-700 dark:text-slate-300 ml-0.5">{product.rating.toFixed(1)}</span>
-            </div>
-            <span className="text-[10px] text-slate-300 dark:text-slate-700">•</span>
-            <span className="text-[11px] text-slate-400 dark:text-slate-500">{product.reviewsCount} avis</span>
-            <span className="text-[10px] text-slate-300 dark:text-slate-700">•</span>
-            <span className={`text-[11px] font-medium flex items-center gap-1 ${product.stock > 5 ? 'text-slate-400 dark:text-slate-500' : 'text-red-500 font-semibold'}`}>
-              {product.stock > 0 ? (
-                <>
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                  {product.stock} dispo
-                </>
-              ) : (
-                'Rupture'
-              )}
+          {/* Price Tag - Clear & Highlighted without dominating */}
+          <div className="flex items-baseline gap-1 pt-0.5">
+            <span className="text-xs sm:text-sm font-black text-emerald-600 dark:text-emerald-400 tracking-tight">
+              {product.price ? product.price.toLocaleString('fr-FR') : '0'}
             </span>
-          </div>
-        </div>
-
-        <div>
-          {/* Price & Action Button */}
-          <div className="flex items-center justify-between mt-2 pt-3 border-t border-slate-100 dark:border-slate-800">
-            <div className="flex flex-col">
-              <span className="text-[10px] text-slate-400 dark:text-slate-500 uppercase tracking-widest font-semibold leading-none">Prix Cash</span>
-              <span className="text-base font-extrabold text-slate-900 dark:text-slate-100 mt-1">
-                {product.price.toLocaleString('fr-FR')} <span className="text-xs font-bold">FCFA</span>
+            <span className="text-[10px] font-bold text-emerald-700 dark:text-emerald-500">FCFA</span>
+            {product.oldPrice && product.oldPrice > product.price && (
+              <span className="text-[10px] text-slate-400 line-through ml-1">
+                {product.oldPrice.toLocaleString('fr-FR')}
               </span>
-            </div>
-
-            <motion.button
-              whileHover={{ scale: 1.08 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={() => onAddToCart(product)}
-              disabled={product.stock === 0}
-              className={`p-2.5 rounded-xl cursor-pointer transition flex items-center justify-center ${
-                product.stock === 0
-                  ? 'bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-600 cursor-not-allowed'
-                  : 'bg-gradient-to-r from-[#4F46E5] to-[#2563EB] hover:from-indigo-600 hover:to-blue-600 text-white shadow-md shadow-indigo-600/20'
-              }`}
-              title="Ajouter au panier"
-              id={`btn-add-to-cart-${product.id}`}
-            >
-              <ShoppingCart className="w-4 h-4" />
-            </motion.button>
+            )}
           </div>
         </div>
+      </div>
+
+      {/* Action Buttons - Compact 36px height with quick action */}
+      <div className="p-2.5 sm:p-3 pt-0 flex items-center gap-1.5 mt-auto">
+        <motion.button
+          whileTap={{ scale: 0.95 }}
+          onClick={(e) => {
+            e.stopPropagation();
+            onAddToCart(product);
+          }}
+          disabled={product.stock === 0}
+          className={`flex-1 h-8 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer shadow-2xs ${
+            product.stock === 0
+              ? 'bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-600 cursor-not-allowed'
+              : 'bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white'
+          }`}
+          title="Ajouter au panier"
+          id={`btn-add-to-cart-${product.id}`}
+        >
+          <ShoppingCart className="w-3.5 h-3.5" />
+          <span>Au Panier</span>
+        </motion.button>
+
+        {onInstantBuy && (
+          <motion.button
+            whileTap={{ scale: 0.95 }}
+            onClick={(e) => {
+              e.stopPropagation();
+              onInstantBuy(product);
+            }}
+            className="w-8 h-8 rounded-xl bg-slate-900 hover:bg-slate-800 text-white flex items-center justify-center transition shadow-2xs shrink-0 cursor-pointer"
+            title="Achat direct"
+          >
+            <Zap className="w-3.5 h-3.5 text-amber-400 fill-amber-400" />
+          </motion.button>
+        )}
       </div>
     </motion.div>
   );
 }
+
 

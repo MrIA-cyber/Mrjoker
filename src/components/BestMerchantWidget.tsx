@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import { motion } from 'motion/react';
 import VerifiedBadge from './VerifiedBadge';
+import SmartProductImage from './SmartProductImage';
 import { translations, Language } from '../translations';
 
 interface BestMerchantWidgetProps {
@@ -270,12 +271,7 @@ export default function BestMerchantWidget({
                 className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800/70 hover:border-indigo-100 dark:hover:border-indigo-900 rounded-xl p-2.5 flex items-center gap-3 transition cursor-pointer group shadow-2xs"
               >
                 <div className="w-12 h-12 rounded-lg overflow-hidden shrink-0 bg-slate-50 dark:bg-slate-950 relative">
-                  <img 
-                    src={p.image} 
-                    alt={p.name} 
-                    referrerPolicy="no-referrer"
-                    className="w-full h-full object-cover group-hover:scale-105 transition"
-                  />
+                  <SmartProductImage product={p} containerClassName="w-full h-full" aspectRatio="auto" />
                   {p.isBoosted && (
                     <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent flex items-end justify-center pb-0.5">
                       <span className="text-[7px] text-amber-300 font-black uppercase tracking-widest">PROMO</span>

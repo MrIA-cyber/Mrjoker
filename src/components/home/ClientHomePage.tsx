@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
+import SmartProductImage from '../SmartProductImage';
 import { 
   Search, 
   Grid, 
@@ -902,7 +903,7 @@ export default function ClientHomePage({
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 min-[380px]:grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 sm:gap-4">
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 sm:gap-4">
                   {filteredProducts.map((product, idx) => {
                     const merchant = merchants.find(m => m.id === product.merchantId);
                     const merchantName = merchant?.shopName || merchant?.name || 'Marché A Bafoussam';
@@ -914,75 +915,79 @@ export default function ClientHomePage({
                         key={product.id}
                         whileHover={{ y: -3 }}
                         onClick={() => handleProductClick(product)}
-                        className="bg-white rounded-[20px] border border-slate-100 shadow-2xs hover:shadow-md overflow-hidden flex flex-col justify-between cursor-pointer group transition duration-200"
+                        className="bg-white rounded-[20px] border border-slate-100/90 shadow-2xs hover:shadow-lg overflow-hidden flex flex-col justify-between cursor-pointer group transition duration-200 h-full"
                       >
                         <div>
-                          <div className="h-28 sm:h-34 lg:h-36 w-full relative overflow-hidden bg-slate-100 rounded-t-[20px]">
-                            <img
-                              src={product.images?.[0] || 'https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=400&q=80'}
-                              alt={product.name}
-                              className="w-full h-full object-cover group-hover:scale-105 transition duration-300"
+                          {/* Image box with 4:3 Aspect ratio to reduce height by ~25% */}
+                          <div className="aspect-[4/3] w-full relative overflow-hidden bg-slate-100 rounded-t-[20px]">
+                            <SmartProductImage
+                              product={product}
+                              aspectRatio="4/3"
+                              containerClassName="rounded-t-[20px]"
                             />
 
-                            <span className="absolute top-2 left-2 bg-[#0F172A]/85 backdrop-blur-xs text-white text-[9px] font-black px-2 py-0.5 rounded-md flex items-center gap-0.5">
+                            <span className="absolute top-2 left-2 z-10 bg-black/40 backdrop-blur-md text-white text-[9px] font-bold px-2 py-0.5 rounded-md flex items-center gap-0.5">
                               <MapPin className="w-2.5 h-2.5 text-[#16A34A]" />
-                              <span>{product.neighborhood || 'Tamdja'}</span>
+                              <span className="truncate max-w-[70px] sm:max-w-[100px]">{product.neighborhood || 'Bafoussam'}</span>
                             </span>
 
-                            <div className="absolute top-2 right-2 flex gap-1">
+                            {/* Discrete 36px top-right buttons overlay */}
+                            <div className="absolute top-2 right-2 z-10 flex gap-1">
                               <button
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   setReportingTarget({ type: 'product', name: product.name });
                                 }}
-                                className="w-7 h-7 rounded-full bg-white/85 backdrop-blur-xs flex items-center justify-center text-slate-400 hover:text-rose-600 transition shadow-2xs cursor-pointer"
+                                className="w-8 h-8 rounded-full bg-black/30 hover:bg-black/50 backdrop-blur-md flex items-center justify-center text-white/80 hover:text-rose-400 transition shadow-2xs cursor-pointer"
                                 title="Signaler ce produit"
                               >
                                 <Flag className="w-3.5 h-3.5" />
                               </button>
                               <button
                                 onClick={(e) => onToggleFavorite(e, product.id)}
-                                className="w-7 h-7 rounded-full bg-white/85 backdrop-blur-xs flex items-center justify-center text-slate-700 hover:text-rose-500 transition shadow-2xs cursor-pointer"
+                                className="w-8 h-8 rounded-full bg-black/30 hover:bg-black/50 backdrop-blur-md flex items-center justify-center text-white transition shadow-2xs cursor-pointer"
                                 title="Favoris"
                               >
-                                <Heart className={`w-3.5 h-3.5 ${isFavorite ? 'fill-rose-500 text-rose-500' : ''}`} />
+                                <Heart className={`w-3.5 h-3.5 ${isFavorite ? 'fill-rose-500 text-rose-500' : 'text-white'}`} />
                               </button>
                             </div>
                           </div>
 
-                          <div className="p-2.5 space-y-1">
-                            <div className="flex items-center justify-between text-[10px] text-slate-500 font-semibold">
-                              <div className="flex items-center gap-1">
-                                <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400 shrink-0" />
-                                <span className="font-black text-slate-800">{rating}</span>
+                          {/* Content Box */}
+                          <div className="p-2.5 sm:p-3 space-y-1">
+                            <div className="flex items-center justify-between text-[10px] text-slate-500 font-semibold gap-1">
+                              <div className="flex items-center gap-1 truncate">
+                                <Star className="w-3 h-3 fill-amber-400 text-amber-400 shrink-0" />
+                                <span className="font-extrabold text-slate-800">{rating}</span>
                               </div>
-                              <span className="text-[9px] font-bold text-slate-400">⚡ 20 min</span>
+                              <span className="text-[9px] font-bold text-slate-400 truncate max-w-[80px]">
+                                {merchantName}
+                              </span>
                             </div>
 
-                            <h4 className="font-bold text-xs text-[#0F172A] group-hover:text-[#16A34A] transition line-clamp-2 leading-snug min-h-[2rem]">
+                            <h4 className="font-bold text-xs text-[#0F172A] group-hover:text-[#16A34A] transition line-clamp-2 leading-tight min-h-[2.1rem]">
                               {product.name}
                             </h4>
 
-                            <div className="font-black text-xs sm:text-sm text-[#16A34A]">
-                              {product.price ? product.price.toLocaleString() : '0'} FCFA
-                            </div>
-
-                            <div className="flex items-center justify-between text-[10px] text-slate-500 truncate pt-1 border-t border-slate-50 font-medium">
-                              <span className="truncate">{merchantName}</span>
-                              <ShieldCheck className="w-3.5 h-3.5 text-[#16A34A] shrink-0" />
+                            <div className="flex items-baseline gap-1 pt-0.5">
+                              <span className="font-black text-xs sm:text-sm text-[#16A34A]">
+                                {product.price ? product.price.toLocaleString('fr-FR') : '0'}
+                              </span>
+                              <span className="text-[9px] font-bold text-[#16A34A]">FCFA</span>
                             </div>
                           </div>
                         </div>
 
-                        <div className="p-2.5 pt-0 flex gap-1.5">
+                        {/* Bottom Quick Actions - Compact height button with min 44px target */}
+                        <div className="p-2.5 sm:p-3 pt-0 flex gap-1.5 mt-auto">
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
                               onAddToCart(product);
                             }}
-                            className="flex-1 h-8 rounded-xl bg-[#16A34A] hover:bg-[#15803D] active:bg-[#166534] text-white text-[10px] font-black transition flex items-center justify-center gap-1 shadow-2xs cursor-pointer"
+                            className="flex-1 h-8 rounded-xl bg-[#16A34A] hover:bg-[#15803D] active:bg-[#166534] text-white text-[11px] font-black transition flex items-center justify-center gap-1 shadow-2xs cursor-pointer min-h-[36px]"
                           >
-                            <ShoppingBag className="w-3 h-3" />
+                            <ShoppingBag className="w-3.5 h-3.5" />
                             <span>Au Panier</span>
                           </button>
 
@@ -991,11 +996,10 @@ export default function ClientHomePage({
                               e.stopPropagation();
                               setInstantBuyProduct(product);
                             }}
-                            className="h-8 px-2.5 rounded-xl bg-[#0F172A] hover:bg-slate-800 text-white text-[10px] font-black transition flex items-center justify-center gap-1 shadow-2xs cursor-pointer"
+                            className="w-8 h-8 rounded-xl bg-[#0F172A] hover:bg-slate-800 text-white text-[10px] font-black transition flex items-center justify-center shrink-0 shadow-2xs cursor-pointer min-h-[36px]"
                             title="Acheter immédiatement"
                           >
-                            <Zap className="w-3 h-3 text-amber-400" />
-                            <span className="hidden sm:inline">Direct</span>
+                            <Zap className="w-3.5 h-3.5 text-amber-400 fill-amber-400" />
                           </button>
                         </div>
                       </motion.div>
