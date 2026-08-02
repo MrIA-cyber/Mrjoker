@@ -47,11 +47,11 @@ export const PROFILE_OPTIONS: ProfileOption[] = [
     emoji: '👤',
     icon: UserIcon,
     description: "J'achète des produits et bénéficie des meilleurs services disponibles dans mon pays grâce à AfriNova.",
-    trialDays: 5,
-    formattedTrial: "5 jours d'essai gratuit",
+    trialDays: 365,
+    formattedTrial: "Gratuit à vie",
     badge: 'Particulier',
     benefits: [
-      "5 jours d'essai gratuit offert",
+      'Accès 100% GRATUIT & Sans engagement à vie',
       'Accès complet au marché national & régional',
       'Paiement & livraison sécurisés'
     ]
