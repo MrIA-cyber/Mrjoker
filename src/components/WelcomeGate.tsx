@@ -8,6 +8,9 @@ import Screen4Inscription from './screens/Screen4Inscription';
 import { AfriNovaLogo } from './AfriNovaLogo';
 import PhoneCountryInput from './PhoneCountryInput';
 import { normalizePhoneNumber, normalizeEmail, arePhonesEqual } from '../utils/accountValidation';
+import { signInWithEmailAndPassword } from 'firebase/auth';
+import { auth } from '../firebase';
+import { getFrenchAuthErrorMessage } from '../utils/firebaseErrors';
 
 interface WelcomeGateProps {
   onSuccess: (user: User) => void;
@@ -133,64 +136,57 @@ export default function WelcomeGate({ onSuccess, lang, onLangChange }: WelcomeGa
     setValidationError('');
     setStep('searching-subscription');
 
-    setTimeout(() => {
-      try {
-        const savedUsersRaw = localStorage.getItem('bafoussam_all_registered_users');
-        const savedUsers: User[] = savedUsersRaw ? JSON.parse(savedUsersRaw) : [];
+    const formattedEmail = cleanInputPhone.includes('@')
+      ? cleanInputPhone
+      : `${cleanInputPhone.replace(/[^0-9+]/g, '')}@afrinova.cm`;
 
-        const matchedUser = savedUsers.find(u => arePhonesEqual(u.phone, cleanInputPhone));
-
-        if (!matchedUser) {
-          const nextFailedCount = failedLoginCount + 1;
-          setFailedLoginCount(nextFailedCount);
-          setStep('login');
-
-          if (nextFailedCount >= 5) {
-            setLoginLockoutEndTime(Date.now() + 30000);
-            setValidationError(
-              lang === 'fr'
-                ? 'Trop de tentatives, réessayez dans 30 secondes.'
-                : 'Too many attempts, try again in 30 seconds.'
-            );
-          } else {
-            setValidationError(
-              lang === 'fr' ? "Aucun compte n'est associé à ce numéro." : "No account associated with this phone number."
-            );
-          }
-          return;
-        }
-
-        const expectedPassword = matchedUser.password || 'password123';
-        if (loginPassword !== expectedPassword) {
-          const nextFailedCount = failedLoginCount + 1;
-          setFailedLoginCount(nextFailedCount);
-          setStep('login');
-
-          if (nextFailedCount >= 5) {
-            setLoginLockoutEndTime(Date.now() + 30000);
-            setValidationError(
-              lang === 'fr'
-                ? 'Trop de tentatives, réessayez dans 30 secondes.'
-                : 'Too many attempts, try again in 30 seconds.'
-            );
-          } else {
-            setValidationError(
-              lang === 'fr' ? "Numéro ou mot de passe incorrect." : "Incorrect phone number or password."
-            );
-          }
-          return;
-        }
-
+    signInWithEmailAndPassword(auth, formattedEmail, loginPassword)
+      .then((cred) => {
         setFailedLoginCount(0);
         setLoginLockoutEndTime(null);
-        onSuccess(matchedUser);
 
-      } catch (err) {
-        console.error(err);
-        setStep('login');
-        setValidationError(lang === 'fr' ? 'Erreur lors de la vérification du compte.' : 'Error verifying account.');
-      }
-    }, 800);
+        const savedUsersRaw = localStorage.getItem('bafoussam_all_registered_users');
+        const savedUsers: User[] = savedUsersRaw ? JSON.parse(savedUsersRaw) : [];
+        const matchedUser = savedUsers.find(u => u.email === formattedEmail || u.phone === cleanInputPhone) || {
+          id: cred.user.uid,
+          name: cred.user.displayName || cred.user.email?.split('@')[0] || 'Membre AfriNova',
+          email: cred.user.email || formattedEmail,
+          phone: cleanInputPhone,
+          isSubscribed: true,
+          hasPaidFee: true,
+          accountType: 'client'
+        };
+
+        onSuccess(matchedUser);
+      })
+      .catch((fbErr) => {
+        // Fallback to local storage lookup if Firebase user is not created yet or offline
+        try {
+          const savedUsersRaw = localStorage.getItem('bafoussam_all_registered_users');
+          const savedUsers: User[] = savedUsersRaw ? JSON.parse(savedUsersRaw) : [];
+
+          const matchedUser = savedUsers.find(u => u.phone.includes(cleanInputPhone) || u.email === cleanInputPhone);
+
+          if (!matchedUser) {
+            setStep('login');
+            setValidationError(getFrenchAuthErrorMessage(fbErr));
+            return;
+          }
+
+          if (loginPassword !== matchedUser.password) {
+            setStep('login');
+            setValidationError(getFrenchAuthErrorMessage(fbErr));
+            return;
+          }
+
+          setFailedLoginCount(0);
+          setLoginLockoutEndTime(null);
+          onSuccess(matchedUser);
+        } catch (err) {
+          setStep('login');
+          setValidationError(getFrenchAuthErrorMessage(fbErr));
+        }
+      });
   };
 
   // If in register mode, render the 10/10 Refonte Premium Screen4Inscription!

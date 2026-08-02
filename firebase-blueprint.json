@@ -1,0 +1,49 @@
+{
+  "entities": {
+    "users": {
+      "title": "users",
+      "description": "User profiles and settings",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "email": { "type": "string" },
+        "role": { "type": "string" }
+      },
+      "required": ["id"]
+    },
+    "products": {
+      "title": "products",
+      "description": "Product catalog items",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "price": { "type": "number" }
+      },
+      "required": ["id", "name", "price"]
+    },
+    "orders": {
+      "title": "orders",
+      "description": "Customer order records",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "total": { "type": "number" },
+        "status": { "type": "string" }
+      },
+      "required": ["id"]
+    }
+  },
+  "securityRules": {
+    "match /users/{userId}": {
+      "allow read, write": "true"
+    },
+    "match /products/{productId}": {
+      "allow read, write": "true"
+    },
+    "match /orders/{orderId}": {
+      "allow read, write": "true"
+    }
+  }
+}

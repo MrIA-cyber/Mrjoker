@@ -4,6 +4,9 @@ import {
   Store, Building2, Wrench, ChevronRight, X, AlertCircle, Loader2, CheckCircle2, Globe, Eye, EyeOff, ArrowLeft, RefreshCw, Smartphone, Truck, TrendingUp
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
+import { auth } from '../../firebase';
+import { getFrenchAuthErrorMessage } from '../../utils/firebaseErrors';
 import { AfriNovaLogo } from '../AfriNovaLogo';
 import PhoneCountryInput from '../PhoneCountryInput';
 import { Country } from '../../data/countries';
@@ -356,12 +359,30 @@ export default function Screen4Inscription({ onSignupSuccess, onGoToLogin, lang 
       console.warn('Server registration call offline, client check passed:', err);
     }
 
-    setIsSubmitting(false);
-
     const normalizedPhoneVal = normalizePhoneNumber(formData.phone, dialCode);
     const normalizedEmailVal = formData.email.trim() 
       ? normalizeEmail(formData.email) 
       : `${normalizedPhoneVal.replace(/[^0-9]/g, '')}@afrinova.cm`;
+
+    // 3. Firebase Authentication Integration
+    try {
+      const userCredential = await createUserWithEmailAndPassword(auth, normalizedEmailVal, formData.password);
+      if (userCredential.user && formData.fullName.trim()) {
+        await updateProfile(userCredential.user, {
+          displayName: formData.fullName.trim()
+        });
+      }
+    } catch (fbErr: any) {
+      console.warn("Firebase Auth error during signup:", fbErr);
+      // If error is email in use or password invalid, display Firebase error
+      if (fbErr.code) {
+        setIsSubmitting(false);
+        setFormError(getFrenchAuthErrorMessage(fbErr));
+        return;
+      }
+    }
+
+    setIsSubmitting(false);
 
     const createdUserData = {
       name: formData.fullName.trim(),

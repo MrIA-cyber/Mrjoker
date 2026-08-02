@@ -1,6 +1,9 @@
 import React, { useState } from 'react';
 import { motion } from 'motion/react';
-import { Mail, Lock, Eye, EyeOff, ArrowRight, ShieldCheck, Sparkles, Loader2 } from 'lucide-react';
+import { Mail, Lock, Eye, EyeOff, ArrowRight, ShieldCheck, Sparkles, Loader2, AlertCircle } from 'lucide-react';
+import { signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
+import { auth } from '../../firebase';
+import { getFrenchAuthErrorMessage } from '../../utils/firebaseErrors';
 
 interface Screen3ConnexionProps {
   onLoginSuccess?: () => void;
@@ -8,18 +11,44 @@ interface Screen3ConnexionProps {
 }
 
 export default function Screen3Connexion({ onLoginSuccess, onGoToSignup }: Screen3ConnexionProps) {
-  const [email, setEmail] = useState('client@bafoussam-market.cm');
-  const [password, setPassword] = useState('••••••••');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setErrorMessage('');
     setIsLoading(true);
-    setTimeout(() => {
+
+    const formattedEmail = email.includes('@') 
+      ? email.trim() 
+      : `${email.trim().replace(/[^0-9+]/g, '')}@afrinova.cm`;
+
+    try {
+      await signInWithEmailAndPassword(auth, formattedEmail, password);
       setIsLoading(false);
       if (onLoginSuccess) onLoginSuccess();
-    }, 800);
+    } catch (error: any) {
+      setIsLoading(false);
+      setErrorMessage(getFrenchAuthErrorMessage(error));
+    }
+  };
+
+  const handleGoogleLogin = async () => {
+    setErrorMessage('');
+    setIsLoading(true);
+    try {
+      const provider = new GoogleAuthProvider();
+      provider.setCustomParameters({ prompt: 'select_account' });
+      await signInWithPopup(auth, provider);
+      setIsLoading(false);
+      if (onLoginSuccess) onLoginSuccess();
+    } catch (error: any) {
+      setIsLoading(false);
+      setErrorMessage(getFrenchAuthErrorMessage(error));
+    }
   };
 
   return (
@@ -53,6 +82,14 @@ export default function Screen3Connexion({ onLoginSuccess, onGoToSignup }: Scree
             <p className="text-xs text-slate-500">Connectez-vous à votre compte Bafoussam Market</p>
           </div>
         </div>
+
+        {/* Error Alert Message */}
+        {errorMessage && (
+          <div className="bg-red-50 border border-red-200 text-red-700 px-3.5 py-2.5 rounded-xl text-xs font-semibold flex items-center gap-2">
+            <AlertCircle className="w-4 h-4 text-red-500 shrink-0" />
+            <span>{errorMessage}</span>
+          </div>
+        )}
 
         {/* Login Form */}
         <form onSubmit={handleSubmit} className="space-y-3.5">
@@ -141,8 +178,9 @@ export default function Screen3Connexion({ onLoginSuccess, onGoToSignup }: Scree
         <div className="grid grid-cols-2 gap-2.5">
           <button 
             type="button"
-            onClick={onLoginSuccess}
-            className="flex items-center justify-center gap-2 py-2.5 px-3 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-xl text-xs font-bold text-slate-700 transition cursor-pointer"
+            onClick={handleGoogleLogin}
+            disabled={isLoading}
+            className="flex items-center justify-center gap-2 py-2.5 px-3 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-xl text-xs font-bold text-slate-700 transition cursor-pointer disabled:opacity-50"
           >
             <svg className="w-4 h-4" viewBox="0 0 24 24">
               <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>

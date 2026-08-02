@@ -7,6 +7,8 @@ import React, { useState, useEffect } from 'react';
 import { User, Product, Merchant, Order, CartItem, Review } from './types';
 import { INITIAL_PRODUCTS, INITIAL_MERCHANTS, BAFOUSSAM_NEIGHBORHOODS, INITIAL_REVIEWS, INITIAL_ORDERS } from './data/mockData';
 import { Language, translations } from './translations';
+import { signOut } from 'firebase/auth';
+import { auth } from './firebase';
 import WelcomeGate from './components/WelcomeGate';
 import StoreHeader from './components/StoreHeader';
 import ProductCard from './components/ProductCard';
@@ -362,6 +364,7 @@ export default function App() {
   };
 
   const handleLogout = () => {
+    signOut(auth).catch((err) => console.error("Firebase signOut error:", err));
     setCurrentUser(null);
     setWelcomeNotification(null);
     setCart([]);
