@@ -48,7 +48,30 @@ export default function PremiumSubscriptionScreen({
   const [plans, setPlans] = useState<SubscriptionPlan[]>(() => {
     try {
       const saved = localStorage.getItem('bafoussam_custom_subscription_plans');
-      return saved ? JSON.parse(saved) : INITIAL_SUBSCRIPTION_PLANS;
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        return parsed.map((p: SubscriptionPlan) =>
+          p.id === 'client'
+            ? {
+                ...p,
+                monthlyPrice: 0,
+                yearlyPrice: 0,
+                badge: 'Standard Client - Gratuit à Vie',
+                features: [
+                  'Accès 100% GRATUIT et illimité à vie',
+                  'Accès complet au marché national & régional',
+                  'Acheter des produits et réserver des services sans abonnement',
+                  'Livraison rapide en ville (Moto/Taxi)',
+                  'Paiements sécurisés MoMo, Orange Money & CB',
+                  'Historique complet des commandes & factures',
+                  'Suivi de livraison en temps réel sur la carte',
+                  'Avis & notations certifiés sur les vendeurs',
+                ],
+              }
+            : p
+        );
+      }
+      return INITIAL_SUBSCRIPTION_PLANS;
     } catch {
       return INITIAL_SUBSCRIPTION_PLANS;
     }
@@ -387,25 +410,29 @@ export default function PremiumSubscriptionScreen({
                     </div>
                   </div>
 
-                  {/* Free Trial Tag */}
+                  {/* Free Trial / Gratuit Tag */}
                   <div className="bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 rounded-xl p-2.5 text-center text-xs font-bold flex items-center justify-center gap-2">
                     <Clock className="w-3.5 h-3.5 shrink-0" />
-                    <span>Essai Gratuit : {plan.trialDays} Jours Offerts</span>
+                    <span>
+                      {price === 0
+                        ? 'Accès 100% Gratuit & Sans Engagement'
+                        : `Essai Gratuit : ${plan.trialDays} Jours Offerts`}
+                    </span>
                   </div>
 
                   {/* Price */}
                   <div className="space-y-1">
                     <div className="flex items-baseline gap-1">
                       <span className="text-3xl font-black text-white font-mono tracking-tight">
-                        {price.toLocaleString('fr-FR')}
+                        {price === 0 ? '0' : price.toLocaleString('fr-FR')}
                       </span>
                       <span className="text-xs font-extrabold text-slate-400">FCFA</span>
                       <span className="text-xs text-slate-500 font-semibold">
-                        / {billingCycle === 'monthly' ? 'mois' : 'an'}
+                        / {price === 0 ? 'gratuit' : billingCycle === 'monthly' ? 'mois' : 'an'}
                       </span>
                     </div>
 
-                    {billingCycle === 'yearly' && (
+                    {billingCycle === 'yearly' && price > 0 && (
                       <p className="text-[10px] text-amber-400 font-bold">
                         🎉 Économisez {savings.toLocaleString('fr-FR')} FCFA par an !
                       </p>
@@ -439,12 +466,12 @@ export default function PremiumSubscriptionScreen({
                     <button
                       onClick={() => handleStartSubscribe(plan.id)}
                       className={`w-full text-xs font-black py-3.5 px-4 rounded-xl transition shadow-lg flex items-center justify-center gap-2 cursor-pointer ${
-                        plan.recommended
+                        plan.recommended || price === 0
                           ? 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-emerald-600/20'
                           : 'bg-slate-800 hover:bg-slate-700 text-white'
                       }`}
                     >
-                      <span>S'abonner Maintenant</span>
+                      <span>{price === 0 ? 'Activer le Profil Gratuit' : "S'abonner Maintenant"}</span>
                       <ArrowRight className="w-4 h-4" />
                     </button>
                   )}

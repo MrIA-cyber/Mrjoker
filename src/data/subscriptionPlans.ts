@@ -4,16 +4,16 @@ export const INITIAL_SUBSCRIPTION_PLANS: SubscriptionPlan[] = [
   {
     id: 'client',
     name: 'Profil Client (Acheteur)',
-    monthlyPrice: 3000,
-    yearlyPrice: 30000, // Saves 6000 FCFA
-    trialDays: 5,
+    monthlyPrice: 0,
+    yearlyPrice: 0,
+    trialDays: 365,
     recommended: false,
-    badge: 'Standard Client',
+    badge: 'Standard Client - Gratuit à Vie',
     color: 'emerald',
     features: [
-      '5 jours d\'essai gratuit offerts',
+      'Accès 100% GRATUIT et illimité à vie',
       'Accès complet au marché national & régional',
-      'Acheter des produits et réserver des services',
+      'Acheter des produits et réserver des services sans abonnement',
       'Livraison rapide en ville (Moto/Taxi)',
       'Paiements sécurisés MoMo, Orange Money & CB',
       'Historique complet des commandes & factures',

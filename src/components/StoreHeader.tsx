@@ -137,7 +137,7 @@ export default function StoreHeader({
         <div className="flex flex-wrap items-center gap-1.5 sm:gap-2.5 font-medium">
           <MapPin className="w-3.5 h-3.5 text-indigo-400 animate-pulse" />
           <span className="font-bold text-white">Bafoussam, Cameroun</span>
-          {!Boolean(currentUser && (currentUser.role === 'merchant' || currentUser.accountType === 'merchant' || currentUser.isMerchant || currentUser.activeRole === 'merchant')) && (
+          {!Boolean(currentUser && (currentUser.accountType === 'vendeur' || currentUser.accountType === 'entreprise')) && (
             <>
               <span className="text-slate-600">•</span>
               <button
