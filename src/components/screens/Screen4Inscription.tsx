@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { 
   User as UserIcon, Mail, Phone, Lock, Check, ShieldCheck, ArrowRight, Sparkles, 
-  Store, Building2, Wrench, ChevronRight, X, AlertCircle, Loader2, CheckCircle2, Globe, Eye, EyeOff, ArrowLeft, RefreshCw, Smartphone
+  Store, Building2, Wrench, ChevronRight, X, AlertCircle, Loader2, CheckCircle2, Globe, Eye, EyeOff, ArrowLeft, RefreshCw, Smartphone, Truck, TrendingUp
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { AfriNovaLogo } from '../AfriNovaLogo';
@@ -14,6 +14,7 @@ import {
   PHONE_DUPLICATE_ERROR_MSG, 
   EMAIL_DUPLICATE_ERROR_MSG 
 } from '../../utils/accountValidation';
+import { AccountType } from '../../types';
 
 interface Screen4InscriptionProps {
   onSignupSuccess?: (data?: any) => void;
@@ -22,7 +23,7 @@ interface Screen4InscriptionProps {
   onLangChange?: (lang: 'fr' | 'en') => void;
 }
 
-export type ProfileType = 'client' | 'vendeur' | 'entreprise' | 'prestataire';
+export type ProfileType = AccountType;
 
 export interface ProfileOption {
   id: ProfileType;
@@ -57,29 +58,14 @@ export const PROFILE_OPTIONS: ProfileOption[] = [
     title: 'Vendeur',
     emoji: '🛒',
     icon: Store,
-    description: "Je vends mes produits et gère ma boutique en ligne.",
+    description: "Je vends mes produits et gère ma boutique en ligne sur AfriNova.",
     trialDays: 10,
     formattedTrial: "10 jours d'essai gratuit",
     badge: 'Boutique',
     benefits: [
       "10 jours d'essai gratuit offert",
-      'Boutique personnalisée',
-      'Gestion simplifiée des commandes'
-    ]
-  },
-  {
-    id: 'prestataire',
-    title: 'Prestataire',
-    emoji: '🔧',
-    icon: Wrench,
-    description: "Je propose mes services professionnels aux clients de la ville.",
-    trialDays: 10,
-    formattedTrial: "10 jours d'essai gratuit",
-    badge: 'Services',
-    benefits: [
-      "10 jours d'essai gratuit offert",
-      'Mise en relation directe avec les clients',
-      'Paiement garanti après prestation'
+      'Boutique virtuelle personnalisée',
+      'Gestion simplifiée des stocks & commandes'
     ]
   },
   {
@@ -87,14 +73,74 @@ export const PROFILE_OPTIONS: ProfileOption[] = [
     title: 'Entreprise',
     emoji: '🏢',
     icon: Building2,
-    description: "Je représente une entreprise et développe mon réseau B2B.",
+    description: "Je représente une entreprise, PME ou marque et développe mon réseau B2B.",
     trialDays: 10,
     formattedTrial: "10 jours d'essai gratuit",
     badge: 'Pro & B2B',
     benefits: [
       "10 jours d'essai gratuit offert",
-      'Tableau de bord statistique avancé',
-      'Visibilité prioritaire et multi-utilisateurs'
+      'Offres de marché & devis B2B',
+      'Gestion d\'équipe & rapports PDF'
+    ]
+  },
+  {
+    id: 'prestataire',
+    title: 'Prestataire',
+    emoji: '🔧',
+    icon: Wrench,
+    description: "Je propose mes compétences et services professionnels aux clients.",
+    trialDays: 10,
+    formattedTrial: "10 jours d'essai gratuit",
+    badge: 'Services 24/7',
+    benefits: [
+      "10 jours d'essai gratuit offert",
+      'Mise en relation directe avec les clients',
+      'Paiement garanti après réalisation'
+    ]
+  },
+  {
+    id: 'livreur',
+    title: 'Livreur',
+    emoji: '🚚',
+    icon: Truck,
+    description: "Je livre des colis, repas et commandes express en toute rapidité.",
+    trialDays: 10,
+    formattedTrial: "10 jours d'essai gratuit",
+    badge: 'Coursier Express',
+    benefits: [
+      "10 jours d'essai gratuit offert",
+      'Missions de livraison géolocalisées',
+      'Retrait des gains MoMo direct'
+    ]
+  },
+  {
+    id: 'trader',
+    title: 'Trader',
+    emoji: '📈',
+    icon: TrendingUp,
+    description: "Je négocie des actifs, opportunités de marché et produits du terroir.",
+    trialDays: 10,
+    formattedTrial: "10 jours d'essai gratuit",
+    badge: 'Bourse & P2P',
+    benefits: [
+      "10 jours d'essai gratuit offert",
+      'Flux des cours en temps réel',
+      'Transactions P2P sécurisées par séquestre'
+    ]
+  },
+  {
+    id: 'admin',
+    title: 'Administrateur',
+    emoji: '🛡️',
+    icon: ShieldCheck,
+    description: "Je supervise la plateforme, valide les vérifications et gère le système.",
+    trialDays: 3650,
+    formattedTrial: "Accès Illimité",
+    badge: 'Super Admin',
+    benefits: [
+      'Accès total au panneau d\'administration',
+      'Validation des vérifications & boutiques',
+      'Supervision des transactions & sécurité'
     ]
   }
 ];
@@ -966,14 +1012,14 @@ export default function Screen4Inscription({ onSignupSuccess, onGoToLogin, lang 
               animate={{ y: 0 }}
               exit={{ y: '100%' }}
               transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-              className="relative w-full max-w-lg bg-white rounded-t-[28px] sm:rounded-[28px] p-6 shadow-2xl border-t sm:border border-slate-200 max-h-[85vh] overflow-y-auto z-10"
+              className="relative w-full max-w-lg sm:max-w-2xl bg-white rounded-t-[28px] sm:rounded-[28px] p-5 sm:p-6 shadow-2xl border-t sm:border border-slate-200 max-h-[85vh] overflow-y-auto z-10"
             >
               {/* Handle Bar */}
               <div className="w-12 h-1.5 bg-slate-200 rounded-full mx-auto mb-4" />
 
               <div className="flex items-start justify-between pb-3 border-b border-slate-100">
                 <div>
-                  <h3 className="text-base font-black text-[#0F172A]">
+                  <h3 className="text-base sm:text-lg font-black text-[#0F172A]">
                     {currentLang === 'fr' ? 'Choisissez votre profil' : 'Choose your profile'}
                   </h3>
                   <p className="text-xs text-slate-500 font-medium mt-0.5">
@@ -990,7 +1036,7 @@ export default function Screen4Inscription({ onSignupSuccess, onGoToLogin, lang 
               </div>
 
               {/* Profile Grid Options */}
-              <div className="grid grid-cols-1 gap-3 pt-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-4">
                 {PROFILE_OPTIONS.map((profile) => {
                   const isSelected = selectedProfile === profile.id;
 

@@ -101,13 +101,13 @@ export default function EntrepriseHomePage({
 
   // 2. DEPARTMENTS STATE (Créer des départements)
   const [departments, setDepartments] = useState([
-    { id: 'dep-1', name: 'Direction Générale', head: 'Dr. Jean-Baptiste Foka', staffCount: 3, budget: '15 000 000 FCFA' },
-    { id: 'dep-2', name: 'Commercial & Ventes B2B', head: 'Mme Sandrine Nguemo', staffCount: 5, budget: '28 000 000 FCFA' },
-    { id: 'dep-3', name: 'Logistique & Transit', head: 'Alain Fotso', staffCount: 4, budget: '12 000 000 FCFA' },
-    { id: 'dep-4', name: 'Finance & Audit', head: 'Carine Mbassi', staffCount: 2, budget: '8 500 000 FCFA' },
+    { id: 'dep-1', name: 'Direction Générale', head: 'Dr. Jean-Baptiste Foka', staffCount: 3, budget: '0 FCFA' },
+    { id: 'dep-2', name: 'Commercial & Ventes B2B', head: 'Mme Sandrine Nguemo', staffCount: 5, budget: '0 FCFA' },
+    { id: 'dep-3', name: 'Logistique & Transit', head: 'Alain Fotso', staffCount: 4, budget: '0 FCFA' },
+    { id: 'dep-4', name: 'Finance & Audit', head: 'Carine Mbassi', staffCount: 2, budget: '0 FCFA' },
   ]);
   const [isDeptModalOpen, setIsDeptModalOpen] = useState(false);
-  const [deptForm, setDeptForm] = useState({ name: '', head: '', budget: '10000000' });
+  const [deptForm, setDeptForm] = useState({ name: '', head: '', budget: '0' });
 
   // 3. CORPORATE PRODUCTS STATE (Gérer les produits)
   const [corpProducts, setCorpProducts] = useState([
@@ -116,7 +116,7 @@ export default function EntrepriseHomePage({
     { id: 'cp-3', name: 'Transformateur Triphasé 100KVA', price: 4200000, category: 'Industrie', stock: 4, ref: 'IND-TR-100' },
   ]);
   const [isProdModalOpen, setIsProdModalOpen] = useState(false);
-  const [prodForm, setProdForm] = useState({ name: '', category: 'Industrie', price: '1000000', stock: '10', ref: 'PRO-01' });
+  const [prodForm, setProdForm] = useState({ name: '', category: 'Industrie', price: '0', stock: '10', ref: 'PRO-01' });
 
   // 4. CORPORATE SERVICES STATE (Gérer les services)
   const [corpServices, setCorpServices] = useState([
@@ -125,31 +125,19 @@ export default function EntrepriseHomePage({
     { id: 'cs-3', title: 'Transit & Dédouanement Fret Ouest', price: 'Sur Devis', category: 'Logistique', description: 'Transport sécurisé Douala - Bafoussam - Bamenda.' },
   ]);
   const [isServModalOpen, setIsServModalOpen] = useState(false);
-  const [servForm, setServForm] = useState({ title: '', category: 'Ingénierie', price: '150 000 FCFA', description: '' });
+  const [servForm, setServForm] = useState({ title: '', category: 'Ingénierie', price: '0 FCFA', description: '' });
 
   // 5. B2B ORDERS STATE (Recevoir les commandes)
-  const [b2bOrders, setB2bOrders] = useState([
-    { id: 'ORD-B2B-901', clientName: 'Hôtel Bafoussam Palace SA', items: '2x Kit Solaire Autonome 5000W', total: 3700000, date: '01 Août 2026', status: 'En cours' },
-    { id: 'ORD-B2B-902', clientName: 'Coopérative Agricole des Hauts-Plateaux', items: '1x Lot Café Arabica Bio Gros', total: 2400000, date: '29 Juil 2026', status: 'Livrée' },
-    { id: 'ORD-B2B-903', clientName: 'Société BTP Tamdja & Fils', items: '1x Audit Maintenance Solaire', total: 250000, date: '25 Juil 2026', status: 'En attente' },
-  ]);
+  const [b2bOrders, setB2bOrders] = useState<any[]>([]);
 
   // 6. INVOICES STATE (Émettre des factures)
-  const [invoices, setInvoices] = useState([
-    { id: 'FAC-2026-0041', clientName: 'Hôtel Bafoussam Palace SA', clientNiu: 'M0518123984A', amountHT: 3102725, tax: 597275, amountTTC: 3700000, date: '30 Juil 2026', dueDate: '15 Août 2026', status: 'Payé' },
-    { id: 'FAC-2026-0042', clientName: 'Centrale Gros Marché A', clientNiu: 'M0219837482B', amountHT: 2012578, tax: 387422, amountTTC: 2400000, date: '28 Juil 2026', dueDate: '10 Août 2026', status: 'En attente' },
-    { id: 'FAC-2026-0043', clientName: 'Complexe Scolaire Kamkop', clientNiu: 'M0821948271C', amountHT: 1257861, tax: 242139, amountTTC: 1500000, date: '22 Juil 2026', dueDate: '05 Août 2026', status: 'Payé' },
-  ]);
+  const [invoices, setInvoices] = useState<any[]>([]);
   const [isInvoiceModalOpen, setIsInvoiceModalOpen] = useState(false);
-  const [invForm, setInvForm] = useState({ clientName: '', clientNiu: '', amount: '1000000', dueDate: '2026-08-30' });
+  const [invForm, setInvForm] = useState({ clientName: '', clientNiu: '', amount: '0', dueDate: '2026-08-30' });
   const [selectedInvoiceForPDF, setSelectedInvoiceForPDF] = useState<any>(null);
 
   // 7. PAYMENTS STATE (Gérer les paiements)
-  const [payments, setPayments] = useState([
-    { id: 'PAY-8801', ref: 'MOMO-20260730-8812', client: 'Hôtel Bafoussam Palace SA', amount: 3700000, method: 'Virement bancaire / MoMo', date: '30 Juil 2026', status: 'Validé' },
-    { id: 'PAY-8802', ref: 'ORANGE-20260722-1092', client: 'Complexe Scolaire Kamkop', amount: 1500000, method: 'Orange Money B2B', date: '22 Juil 2026', status: 'Validé' },
-    { id: 'PAY-8803', ref: 'CHQ-BICEC-00982', client: 'Centrale Gros Marché A', amount: 1200000, method: 'Chèque BICEC', date: '18 Juil 2026', status: 'En attente de compensation' },
-  ]);
+  const [payments, setPayments] = useState<any[]>([]);
 
   // 8. OFFERS STATE (Publier des offres)
   const [offers, setOffers] = useState([
@@ -383,28 +371,28 @@ export default function EntrepriseHomePage({
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
               <div className="bg-slate-900 p-4 rounded-2xl border border-slate-800 space-y-1">
                 <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Chiffre d'Affaires Mensuel</span>
-                <p className="text-xl font-black text-[#2563EB]">12 850 000 FCFA</p>
+                <p className="text-xl font-black text-[#2563EB]">{b2bOrders.reduce((sum, o) => sum + (o.total || 0), 0).toLocaleString('fr-FR')} FCFA</p>
                 <span className="text-[10px] font-bold text-emerald-400 flex items-center gap-1">
-                  <ArrowUpRight className="w-3 h-3" /> +28.5% vs mois dernier
+                  <ArrowUpRight className="w-3 h-3" /> En direct
                 </span>
               </div>
 
               <div className="bg-slate-900 p-4 rounded-2xl border border-slate-800 space-y-1">
                 <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Masse Salariale</span>
-                <p className="text-xl font-black text-white">{employees.reduce((acc, e) => acc + e.salary, 0).toLocaleString()} FCFA</p>
+                <p className="text-xl font-black text-white">{employees.reduce((acc, e) => acc + (e.salary || 0), 0).toLocaleString('fr-FR')} FCFA</p>
                 <span className="text-[10px] text-blue-400 font-bold">{employees.length} employés actifs</span>
               </div>
 
               <div className="bg-slate-900 p-4 rounded-2xl border border-slate-800 space-y-1">
                 <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Factures à Recouvrer</span>
-                <p className="text-xl font-black text-amber-400">2 400 000 FCFA</p>
-                <span className="text-[10px] text-amber-300 font-bold">1 facture en attente</span>
+                <p className="text-xl font-black text-amber-400">{invoices.filter(i => i.status !== 'Payé').reduce((sum, i) => sum + (i.amountTTC || 0), 0).toLocaleString('fr-FR')} FCFA</p>
+                <span className="text-[10px] text-amber-300 font-bold">{invoices.filter(i => i.status !== 'Payé').length} en attente</span>
               </div>
 
               <div className="bg-slate-900 p-4 rounded-2xl border border-slate-800 space-y-1">
                 <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Bénéfice Net Estimé</span>
-                <p className="text-xl font-black text-emerald-400">5 410 000 FCFA</p>
-                <span className="text-[10px] text-emerald-300 font-bold">Marge brute 42.1%</span>
+                <p className="text-xl font-black text-emerald-400">0 FCFA</p>
+                <span className="text-[10px] text-emerald-300 font-bold">Marge brute 0%</span>
               </div>
             </div>
 
@@ -1138,19 +1126,19 @@ export default function EntrepriseHomePage({
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div>
                   <span className="text-[10px] font-black uppercase text-slate-400">Revenus Bruts Total</span>
-                  <p className="text-2xl font-black text-white">12 850 000 FCFA</p>
+                  <p className="text-2xl font-black text-white">{b2bOrders.reduce((sum, o) => sum + (o.total || 0), 0).toLocaleString('fr-FR')} FCFA</p>
                 </div>
                 <div>
                   <span className="text-[10px] font-black uppercase text-slate-400">Charges & Coûts Opérationnels</span>
-                  <p className="text-2xl font-black text-rose-400">7 440 000 FCFA</p>
+                  <p className="text-2xl font-black text-rose-400">0 FCFA</p>
                 </div>
                 <div>
                   <span className="text-[10px] font-black uppercase text-slate-400">Bénéfice Net Résiduel</span>
-                  <p className="text-2xl font-black text-emerald-400">5 410 000 FCFA</p>
+                  <p className="text-2xl font-black text-emerald-400">{b2bOrders.reduce((sum, o) => sum + (o.total || 0), 0).toLocaleString('fr-FR')} FCFA</p>
                 </div>
               </div>
               <p className="text-xs text-slate-400 border-t border-slate-800 pt-3">
-                Marge nette de <strong>42.1%</strong> sur les contrats B2B exécutés ce mois dans la région de l'Ouest.
+                Calculé automatiquement en fonction des ventes B2B réalisées.
               </p>
             </div>
           </div>

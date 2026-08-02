@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Merchant, Product, MarketingCampaign, Order, User } from '../types';
+import { Merchant, Product, MarketingCampaign, Order, User, AccountType } from '../types';
 import { 
   Store, Sparkles, Plus, Trash2, Edit3, BarChart3, Users, LineChart, 
   MapPin, Phone, ArrowUpRight, Check, ArrowRight, Loader2, Megaphone, 
@@ -264,6 +264,7 @@ export default function MerchantDashboard({
 
   // Shop Profile Edit State
   const [profileSuccess, setProfileSuccess] = useState(false);
+  const [activeProfileRoleTab, setActiveProfileRoleTab] = useState<AccountType>(() => (currentUser?.accountType || 'vendeur') as AccountType);
 
   // Derived Active Merchant with Default Fallback
   const fallbackMerchant: Merchant = {
@@ -282,7 +283,7 @@ export default function MerchantDashboard({
     logo: 'BR',
     views: 3840,
     clicks: 1250,
-    sales: 1450000,
+    sales: 0,
   };
 
   const activeMerchant = merchants.find(m => m.id === activeMerchantId) || merchants[0] || fallbackMerchant;
@@ -948,11 +949,11 @@ export default function MerchantDashboard({
 
                   <div className="h-44 bg-slate-50/80 rounded-2xl border border-slate-200/80 p-4 flex items-end justify-between gap-3">
                     {[
-                      { label: 'Sem 1', val: 320000, height: '45%' },
-                      { label: 'Sem 2', val: 480000, height: '68%' },
-                      { label: 'Sem 3', val: 410000, height: '58%' },
-                      { label: 'Sem 4', val: 620000, height: '88%' },
-                      { label: 'En cours', val: 1450000, height: '100%', active: true },
+                      { label: 'Sem 1', val: 0, height: '4%' },
+                      { label: 'Sem 2', val: 0, height: '4%' },
+                      { label: 'Sem 3', val: 0, height: '4%' },
+                      { label: 'Sem 4', val: 0, height: '4%' },
+                      { label: 'En cours', val: activeMerchant.sales || 0, height: activeMerchant.sales > 0 ? '100%' : '4%', active: true },
                     ].map((bar, i) => (
                       <div key={i} className="flex-1 flex flex-col items-center gap-2 group cursor-pointer">
                         <span className="opacity-0 group-hover:opacity-100 transition text-[10px] font-mono font-black text-slate-800 bg-white px-1.5 py-0.5 rounded border border-slate-200 shadow-xs">
@@ -1782,25 +1783,12 @@ export default function MerchantDashboard({
                       <th className="p-3">Statut</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-slate-100 font-semibold">
-                    {[
-                      { id: 'FACT-2026-08', period: 'Août 2026', brut: 245000, comm: 1225, net: 243775, status: 'Payé' },
-                      { id: 'FACT-2026-07', period: 'Juillet 2026', brut: 310000, comm: 1550, net: 308450, status: 'Payé' },
-                      { id: 'FACT-2026-06', period: 'Juin 2026', brut: 180000, comm: 900, net: 179100, status: 'Payé' },
-                    ].map((f) => (
-                      <tr key={f.id} className="hover:bg-slate-50/50">
-                        <td className="p-3 font-mono font-bold text-slate-900">{f.id}</td>
-                        <td className="p-3 text-slate-600">{f.period}</td>
-                        <td className="p-3 font-bold text-slate-900">{f.brut.toLocaleString('fr-FR')} FCFA</td>
-                        <td className="p-3 text-rose-600">-{f.comm.toLocaleString('fr-FR')} FCFA</td>
-                        <td className="p-3 font-extrabold text-[#16A34A]">{f.net.toLocaleString('fr-FR')} FCFA</td>
-                        <td className="p-3">
-                          <span className="bg-emerald-100 text-emerald-800 text-[10px] font-black px-2.5 py-0.5 rounded-full">
-                            ✓ {f.status}
-                          </span>
-                        </td>
-                      </tr>
-                    ))}
+                  <tbody className="divide-y divide-slate-100 font-semibold text-center">
+                    <tr>
+                      <td colSpan={6} className="p-4 text-xs text-slate-500">
+                        Aucun reçu de facture pour le moment. Vos factures de commission s'afficheront ici lors de vos premières ventes.
+                      </td>
+                    </tr>
                   </tbody>
                 </table>
               </div>
@@ -1940,50 +1928,446 @@ export default function MerchantDashboard({
 
           {/* PROFILE TAB */}
           {dashboardTab === 'profile' && (
-            <div className="bg-white rounded-3xl p-6 border border-slate-200/90 shadow-sm space-y-6">
-              <div>
-                <h3 className="font-extrabold text-slate-900 text-lg">Paramètres de la Boutique</h3>
-                <p className="text-xs text-slate-500">Mettez à jour les coordonnées et informations de votre commerce.</p>
-              </div>
-
-              <div className="space-y-4 max-w-xl text-xs">
-                <div>
-                  <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Nom du Commerce</label>
-                  <input type="text" defaultValue={activeMerchant?.shopName} className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl font-bold" />
-                </div>
-
-                <div>
-                  <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Nom du Gérant</label>
-                  <input type="text" defaultValue={activeMerchant?.name} className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl font-bold" />
-                </div>
-
-                <div>
-                  <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Emplacement Bafoussam</label>
-                  <input type="text" defaultValue={activeMerchant?.location} className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl font-bold" />
-                </div>
-
-                <div>
-                  <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Téléphone Mobile Money</label>
-                  <input type="text" defaultValue={activeMerchant?.phone} className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl font-bold font-mono" />
-                </div>
-
-                <button
-                  type="button"
-                  onClick={() => {
-                    setProfileSuccess(true);
-                    setTimeout(() => setProfileSuccess(false), 3000);
-                  }}
-                  className="bg-[#16A34A] text-white font-bold text-xs py-3 px-6 rounded-xl hover:bg-[#15803D] cursor-pointer"
-                >
-                  Sauvegarder les Modifications
-                </button>
-
-                {profileSuccess && (
-                  <div className="p-3 bg-emerald-100 text-emerald-900 rounded-xl text-xs font-bold">
-                    ✓ Informations sauvegardées avec succès !
+            <div className="space-y-6">
+              {/* Header & Role Inspector Navigation */}
+              <div className="bg-white rounded-3xl p-5 sm:p-6 border border-slate-200/90 shadow-sm space-y-4">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-4">
+                  <div>
+                    <div className="inline-flex items-center gap-2 bg-emerald-50 text-emerald-700 text-[11px] font-black px-3 py-1 rounded-full uppercase tracking-wider mb-1.5 border border-emerald-200">
+                      <Sparkles className="w-3.5 h-3.5 text-emerald-600" />
+                      <span>Espace Profils & Accréditations AfriNova</span>
+                    </div>
+                    <h3 className="font-black text-slate-900 text-lg sm:text-xl font-display">
+                      Audit & Gestion des 7 Profils Utilisateurs
+                    </h3>
+                    <p className="text-xs text-slate-500 font-medium mt-0.5">
+                      Inspectez et configurez les droits, avantages et abonnements pour chaque type de compte.
+                    </p>
                   </div>
-                )}
+
+                  <div className="flex items-center gap-2 shrink-0">
+                    <span className="text-xs font-bold text-slate-600">Rôle Actif :</span>
+                    <span className="px-3 py-1 bg-emerald-100 text-emerald-900 border border-emerald-300 font-black text-xs rounded-full uppercase">
+                      {currentUser?.accountType?.toUpperCase() || 'VENDEUR'}
+                    </span>
+                  </div>
+                </div>
+
+                {/* 7 Profile Selector Tabs */}
+                <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2 pt-1">
+                  {[
+                    { id: 'client' as AccountType, label: 'Client', emoji: '👤', badge: '5j Essai' },
+                    { id: 'vendeur' as AccountType, label: 'Vendeur', emoji: '🛒', badge: 'Boutique' },
+                    { id: 'entreprise' as AccountType, label: 'Entreprise', emoji: '🏢', badge: 'Pro & B2B' },
+                    { id: 'prestataire' as AccountType, label: 'Prestataire', emoji: '🔧', badge: 'Services' },
+                    { id: 'livreur' as AccountType, label: 'Livreur', emoji: '🚚', badge: 'Express' },
+                    { id: 'trader' as AccountType, label: 'Trader', emoji: '📈', badge: 'Bourse' },
+                    { id: 'admin' as AccountType, label: 'Admin', emoji: '🛡️', badge: 'Système' },
+                  ].map((role) => {
+                    const isActive = activeProfileRoleTab === role.id;
+                    return (
+                      <button
+                        key={role.id}
+                        type="button"
+                        onClick={() => setActiveProfileRoleTab(role.id)}
+                        className={`p-2.5 rounded-2xl border transition text-left flex flex-col justify-between cursor-pointer ${
+                          isActive
+                            ? 'bg-[#16A34A] text-white border-[#16A34A] shadow-md shadow-emerald-600/20'
+                            : 'bg-slate-50 hover:bg-slate-100 text-slate-700 border-slate-200'
+                        }`}
+                      >
+                        <div className="flex items-center justify-between gap-1 mb-1">
+                          <span className="text-lg">{role.emoji}</span>
+                          <span className={`text-[9px] font-black px-1.5 py-0.5 rounded-full ${
+                            isActive ? 'bg-white/20 text-white' : 'bg-slate-200 text-slate-700'
+                          }`}>
+                            {role.badge}
+                          </span>
+                        </div>
+                        <span className="text-xs font-black truncate">{role.label}</span>
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
+
+              {/* Dynamic Content for Selected Profile */}
+              {(() => {
+                // Detailed Metadata per Role
+                const profileMeta: Record<AccountType, {
+                  title: string;
+                  badgeTitle: string;
+                  badgeColor: string;
+                  emoji: string;
+                  priceMonthly: string;
+                  priceYearly: string;
+                  trialText: string;
+                  benefits: string[];
+                  actions: { label: string; icon: any; action?: () => void }[];
+                  permissions: string[];
+                }> = {
+                  client: {
+                    title: 'Profil Client / Acheteur',
+                    badgeTitle: 'Acheteur Particulier',
+                    badgeColor: 'bg-emerald-100 text-emerald-800 border-emerald-300',
+                    emoji: '👤',
+                    priceMonthly: '3 000 FCFA / mois',
+                    priceYearly: '30 000 FCFA / an',
+                    trialText: "5 jours d'essai gratuit offert",
+                    benefits: [
+                      'Accès complet au marché national & régional',
+                      'Suivi en direct des livraisons de repas & colis',
+                      'Paiements sécurisés MoMo, Orange Money & CB',
+                      'Historique complet des factures & reçus imprimables',
+                      'Messagerie directe avec les commerçants de la ville',
+                      'Notations & avis certifiés sur les produits'
+                    ],
+                    actions: [
+                      { label: 'Accéder à l\'Espace Client', icon: ShoppingBag, action: onSwitchToClientSpace },
+                      { label: 'Gérer mes Adresses de Livraison', icon: MapPin },
+                      { label: 'Historique des Commandes', icon: FileText }
+                    ],
+                    permissions: ['Achats grand public', 'Réservation de services', 'Messagerie commerçant', 'Factures personnelles']
+                  },
+                  vendeur: {
+                    title: 'Profil Vendeur / Commerçant',
+                    badgeTitle: 'Boutique VIP Premium',
+                    badgeColor: 'bg-indigo-100 text-indigo-800 border-indigo-300',
+                    emoji: '🛒',
+                    priceMonthly: '5 000 FCFA / mois',
+                    priceYearly: '50 000 FCFA / an',
+                    trialText: "10 jours d'essai gratuit offert",
+                    benefits: [
+                      'Boutique virtuelle personnalisée avec vitrine 24h/7j',
+                      'Ajout illimité de produits avec médias & vidéos HD',
+                      'Gestion automatisée des stocks & notifications de commandes',
+                      'Paiements directs sur solde MTN MoMo / Orange Money',
+                      'Création de codes promotionnels & ventes flash',
+                      'Badge Boutique Vérifiée & QR Code de paiement'
+                    ],
+                    actions: [
+                      { label: 'Ajouter un Produit', icon: Plus, action: () => setShowAddProductModal(true) },
+                      { label: 'Gérer les Promotions', icon: Tag, action: () => setDashboardTab('promotions') },
+                      { label: 'Gérer les Commandes', icon: ShoppingBag, action: () => setDashboardTab('orders') }
+                    ],
+                    permissions: ['Publication de produits', 'Gestion de stock', 'Encaissement MoMo/Orange', 'Création de coupons']
+                  },
+                  entreprise: {
+                    title: 'Profil Entreprise / PME & B2B',
+                    badgeTitle: 'Pro & B2B Certifiée',
+                    badgeColor: 'bg-amber-100 text-amber-800 border-amber-300',
+                    emoji: '🏢',
+                    priceMonthly: '15 000 FCFA / mois',
+                    priceYearly: '150 000 FCFA / an',
+                    trialText: "10 jours d'essai gratuit offert",
+                    benefits: [
+                      'Page Entreprise certifiée avec visibilité prioritaire B2B',
+                      'Tableau de bord multi-collaborateurs avec gestion d\'accès',
+                      'Publication d\'offres B2B, demandes de devis & appels d\'offres',
+                      'Génération automatisée de rapports d\'activité PDF',
+                      'Campagnes de promotions multi-canaux',
+                      'Support client & assistance prioritaire 24h/7j'
+                    ],
+                    actions: [
+                      { label: 'Statistiques & Rapport PDF', icon: BarChart3, action: () => setDashboardTab('stats') },
+                      { label: 'Réseau B2B & Partenaires', icon: Users },
+                      { label: 'Gestion d\'Équipe', icon: ShieldCheck }
+                    ],
+                    permissions: ['Publication offres B2B', 'Rapports statistiques PDF', 'Rôles multi-utilisateurs', 'Support prioritaire 24/7']
+                  },
+                  prestataire: {
+                    title: 'Profil Prestataire de Service',
+                    badgeTitle: 'Services 24/7 Agréés',
+                    badgeColor: 'bg-purple-100 text-purple-800 border-purple-300',
+                    emoji: '🔧',
+                    priceMonthly: '7 500 FCFA / mois',
+                    priceYearly: '75 000 FCFA / an',
+                    trialText: "10 jours d'essai gratuit offert",
+                    benefits: [
+                      'Vitrine professionnelle dédiée à vos compétences',
+                      'Mise en relation directe avec les clients de la ville',
+                      'Calendrier de disponibilité interactif & réservations',
+                      'Devis en ligne & messagerie de négociation',
+                      'Paiement garanti après validation de la prestation',
+                      'Badge Prestataire Certifié AfriNova'
+                    ],
+                    actions: [
+                      { label: 'Ajuster le Calendrier', icon: Calendar, action: () => setDashboardTab('calendar') },
+                      { label: 'Messages & Devis', icon: MessageSquare, action: () => setDashboardTab('messages') },
+                      { label: 'Mettre à jour mes Tarifs', icon: Settings }
+                    ],
+                    permissions: ['Vitrine de services', 'Messagerie devis', 'Calendrier réservations', 'Paiement sous séquestre']
+                  },
+                  livreur: {
+                    title: 'Profil Livreur / Coursier Express',
+                    badgeTitle: 'Transporteur Agréé',
+                    badgeColor: 'bg-blue-100 text-blue-800 border-blue-300',
+                    emoji: '🚚',
+                    priceMonthly: '6 000 FCFA / mois',
+                    priceYearly: '60 000 FCFA / an',
+                    trialText: "10 jours d'essai gratuit offert",
+                    benefits: [
+                      'Attribution automatique des courses géolocalisées',
+                      'GPS Bafoussam optimisé par quartier et point de repère',
+                      'Retrait instantané des revenus de livraison sur MoMo',
+                      'Historique détaillé des courses & kilomètres parcourus',
+                      'Badge Coursier Certifié AfriNova Express'
+                    ],
+                    actions: [
+                      { label: 'Accéder aux Livraisons', icon: Truck, action: () => setDashboardTab('deliveries') },
+                      { label: 'Retirer mes Gains MoMo', icon: DollarSign, action: () => setDashboardTab('payments') },
+                      { label: 'Historique des Courses', icon: FileText }
+                    ],
+                    permissions: ['Dispatching de courses GPS', 'Retrait solde instantané', 'Passage En Ligne/Hors Ligne', 'Attestation de transporteur']
+                  },
+                  trader: {
+                    title: 'Profil Trader / Opportunités & Bourse',
+                    badgeTitle: 'Trader Vérifié AfriTrade',
+                    badgeColor: 'bg-cyan-100 text-cyan-800 border-cyan-300',
+                    emoji: '📈',
+                    priceMonthly: '12 000 FCFA / mois',
+                    priceYearly: '120 000 FCFA / an',
+                    trialText: "10 jours d'essai gratuit offert",
+                    benefits: [
+                      'Accès au flux de cotations en temps réel sur les matières premières',
+                      'Tableau de bord d\'opportunités d\'affaires P2P',
+                      'Sécurisation des transactions par compte séquestre AfriNova',
+                      'Signaux de marché & alertes automatiques de prix',
+                      'Statistiques d\'évolution des cours et rapports de rentabilité'
+                    ],
+                    actions: [
+                      { label: 'Consulter les Cotations', icon: TrendingUp },
+                      { label: 'Ordres d\'Achat / Vente P2P', icon: Layers },
+                      { label: 'Rapports Financiers', icon: PieChart }
+                    ],
+                    permissions: ['Flux boursier temps réel', 'Transactions P2P séquestre', 'Publication de signaux', 'Historique financier']
+                  },
+                  admin: {
+                    title: 'Profil Administrateur / Super Admin',
+                    badgeTitle: 'Système & Modération',
+                    badgeColor: 'bg-rose-100 text-rose-800 border-rose-300',
+                    emoji: '🛡️',
+                    priceMonthly: 'Accès Illimité (0 FCFA)',
+                    priceYearly: 'Accès Illimité (0 FCFA)',
+                    trialText: "Compte Administrateur Permanent",
+                    benefits: [
+                      'Panneau de contrôle global et accès aux logs d\'audit de sécurité',
+                      'Validation des identités CNI, attestations et boutiques',
+                      'Gestion des grilles tarifaires et formules d\'abonnement',
+                      'Modération des litiges, remboursements et commissions MoMo',
+                      'Configuration globale des paramètres système AfriNova'
+                    ],
+                    actions: [
+                      { label: 'Ouvrir Panneau d\'Admin', icon: ShieldCheck },
+                      { label: 'Journal des Logs d\'Audit', icon: FileSpreadsheet },
+                      { label: 'Valider les Boutiques', icon: UserCheck }
+                    ],
+                    permissions: ['Accès système total', 'Modération utilisateurs', 'Approbation CNI', 'Gestion abonnements & tarifs']
+                  }
+                };
+
+                const currentMeta = profileMeta[activeProfileRoleTab];
+
+                return (
+                  <div className="space-y-6">
+                    {/* Top Overview Cards Grid */}
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                      
+                      {/* Left Header Card */}
+                      <div className="lg:col-span-2 bg-white rounded-3xl p-6 border border-slate-200/90 shadow-sm space-y-5">
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-4">
+                          <div className="flex items-center gap-3.5">
+                            <div className="w-14 h-14 rounded-2xl bg-slate-900 text-white flex items-center justify-center text-3xl shadow-lg shrink-0">
+                              {currentMeta.emoji}
+                            </div>
+                            <div>
+                              <div className="flex items-center gap-2 flex-wrap mb-1">
+                                <h4 className="font-black text-slate-900 text-base sm:text-lg font-display">{currentMeta.title}</h4>
+                                <span className={`text-[10px] font-black px-2.5 py-0.5 rounded-full border ${currentMeta.badgeColor}`}>
+                                  {currentMeta.badgeTitle}
+                                </span>
+                              </div>
+                              <p className="text-xs text-slate-500 font-medium flex items-center gap-1">
+                                <MapPin className="w-3.5 h-3.5 text-slate-400" />
+                                <span>{activeMerchant?.location || 'Bafoussam, Cameroun'}</span>
+                              </p>
+                            </div>
+                          </div>
+
+                          <VerifiedBadge isVerified={activeMerchant?.isVerified ?? true} role={activeProfileRoleTab} />
+                        </div>
+
+                        {/* Subscription & Trial Box */}
+                        <div className="bg-slate-900 text-white rounded-2xl p-4 sm:p-5 space-y-3 relative overflow-hidden">
+                          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-800 pb-3">
+                            <div>
+                              <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-wider block">Formule d'Abonnement Actuelle</span>
+                              <h5 className="font-black text-white text-sm sm:text-base">{currentMeta.badgeTitle}</h5>
+                            </div>
+                            <div className="text-left sm:text-right">
+                              <span className="text-xs font-black text-emerald-400 block">{currentMeta.priceMonthly}</span>
+                              <span className="text-[10px] text-slate-400">{currentMeta.priceYearly}</span>
+                            </div>
+                          </div>
+
+                          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-1">
+                            <div className="flex items-center gap-2 text-xs text-slate-300">
+                              <Clock className="w-4 h-4 text-emerald-400" />
+                              <span>{currentMeta.trialText}</span>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => setShowUpgradeModal(true)}
+                              className="px-4 py-2 bg-gradient-to-r from-[#16A34A] to-[#15803D] hover:from-[#15803D] hover:to-[#166534] text-white font-black text-xs rounded-xl shadow-md transition cursor-pointer self-start sm:self-auto"
+                            >
+                              Gérer mon Abonnement
+                            </button>
+                          </div>
+                        </div>
+
+                        {/* Role Quick Action Shortcuts */}
+                        <div>
+                          <h5 className="text-xs font-black text-slate-900 uppercase tracking-wider mb-2">Actions Rapides du Profil</h5>
+                          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                            {currentMeta.actions.map((act, i) => {
+                              const ActionIcon = act.icon;
+                              return (
+                                <button
+                                  key={i}
+                                  type="button"
+                                  onClick={act.action}
+                                  className="p-3 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-xl font-bold text-xs text-slate-800 flex items-center justify-between cursor-pointer transition"
+                                >
+                                  <span className="truncate">{act.label}</span>
+                                  <ActionIcon className="w-4 h-4 text-emerald-600 shrink-0 ml-1" />
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </div>
+
+                      </div>
+
+                      {/* Right Column: Benefits & RBAC */}
+                      <div className="bg-white rounded-3xl p-6 border border-slate-200/90 shadow-sm space-y-5">
+                        <div>
+                          <h4 className="font-black text-slate-900 text-xs uppercase tracking-wider mb-3 flex items-center gap-1.5">
+                            <Award className="w-4 h-4 text-emerald-600" />
+                            <span>Avantages du Profil</span>
+                          </h4>
+                          <div className="space-y-2.5 text-xs">
+                            {currentMeta.benefits.map((benefit, idx) => (
+                              <div key={idx} className="flex items-start gap-2 text-slate-700">
+                                <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
+                                <span className="font-medium leading-tight">{benefit}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+
+                        <div className="border-t border-slate-100 pt-4">
+                          <h4 className="font-black text-slate-900 text-xs uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                            <ShieldCheck className="w-4 h-4 text-indigo-600" />
+                            <span>Permissions Accordées (RBAC)</span>
+                          </h4>
+                          <div className="flex flex-wrap gap-1.5">
+                            {currentMeta.permissions.map((perm, pIdx) => (
+                              <span key={pIdx} className="text-[10px] font-bold px-2.5 py-1 bg-slate-100 text-slate-700 rounded-lg border border-slate-200">
+                                ✓ {perm}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+
+                    </div>
+
+                    {/* Editable Information Form */}
+                    <div className="bg-white rounded-3xl p-6 border border-slate-200/90 shadow-sm space-y-6">
+                      <div className="flex items-center justify-between border-b border-slate-100 pb-4">
+                        <div>
+                          <h3 className="font-black text-slate-900 text-base sm:text-lg font-display">
+                            Mise à jour des Coordonnées
+                          </h3>
+                          <p className="text-xs text-slate-500 font-medium">
+                            Ces informations seront affichées publiquement et utilisées pour vos factures d'abonnement.
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+                        <div>
+                          <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">
+                            {activeProfileRoleTab === 'entreprise' ? 'Raison Sociale / Nom Entreprise' : activeProfileRoleTab === 'vendeur' ? 'Nom de la Boutique' : 'Nom Complet'}
+                          </label>
+                          <input
+                            type="text"
+                            defaultValue={activeMerchant?.shopName || currentUser?.name || 'Nom complet'}
+                            className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#16A34A]"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Nom du Responsable / Gérant</label>
+                          <input
+                            type="text"
+                            defaultValue={activeMerchant?.name || currentUser?.name || 'Gérant'}
+                            className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#16A34A]"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Téléphone Mobile Money (MTN / Orange)</label>
+                          <input
+                            type="text"
+                            defaultValue={activeMerchant?.phone || currentUser?.phone || '+237 677 89 45 12'}
+                            className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl font-bold font-mono text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#16A34A]"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Adresse E-mail</label>
+                          <input
+                            type="email"
+                            defaultValue={activeMerchant?.email || currentUser?.email || 'user@afrinova.cm'}
+                            className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#16A34A]"
+                          />
+                        </div>
+
+                        <div className="sm:col-span-2">
+                          <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Emplacement / Quartier</label>
+                          <input
+                            type="text"
+                            defaultValue={activeMerchant?.location || 'Marché A, Stand 14, Bafoussam, Cameroun'}
+                            className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#16A34A]"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-4 border-t border-slate-100">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setProfileSuccess(true);
+                            setTimeout(() => setProfileSuccess(false), 3000);
+                          }}
+                          className="w-full sm:w-auto bg-[#16A34A] hover:bg-[#15803D] text-white font-black text-xs py-3 px-6 rounded-xl shadow-md transition cursor-pointer flex items-center justify-center gap-2"
+                        >
+                          <Check className="w-4 h-4" />
+                          <span>Sauvegarder les Modifications</span>
+                        </button>
+
+                        {profileSuccess && (
+                          <div className="p-3 bg-emerald-100 text-emerald-900 rounded-xl text-xs font-bold animate-fade-in flex items-center gap-2">
+                            <CheckCircle2 className="w-4 h-4 text-emerald-700" />
+                            <span>Informations du profil enregistrées avec succès !</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })()}
             </div>
           )}
 

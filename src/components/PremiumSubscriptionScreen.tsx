@@ -21,6 +21,8 @@ import {
   Store,
   Briefcase,
   User as UserIcon,
+  Truck,
+  TrendingUp,
   Check
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
@@ -281,6 +283,14 @@ export default function PremiumSubscriptionScreen({
         return <Briefcase className="w-6 h-6 text-purple-500" />;
       case 'entreprise':
         return <Building2 className="w-6 h-6 text-amber-500" />;
+      case 'livreur':
+        return <Truck className="w-6 h-6 text-blue-500" />;
+      case 'trader':
+        return <TrendingUp className="w-6 h-6 text-cyan-500" />;
+      case 'admin':
+        return <ShieldCheck className="w-6 h-6 text-rose-500" />;
+      default:
+        return <UserIcon className="w-6 h-6 text-emerald-500" />;
     }
   };
 

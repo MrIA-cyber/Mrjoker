@@ -1,17 +1,18 @@
 import React, { useState } from 'react';
-import { User, Store, Building2, Briefcase, CheckCircle2, ArrowRight, Sparkles, ShieldCheck } from 'lucide-react';
+import { User, Store, Building2, Briefcase, Truck, TrendingUp, ShieldCheck, CheckCircle2, ArrowRight, Sparkles } from 'lucide-react';
+import { AccountType } from '../../types';
 
 interface Screen5TypeCompteProps {
-  onSelectAccountType?: (type: 'client' | 'vendeur' | 'entreprise' | 'prestataire') => void;
+  onSelectAccountType?: (type: AccountType) => void;
   onContinue?: () => void;
 }
 
 export default function Screen5TypeCompte({ onSelectAccountType, onContinue }: Screen5TypeCompteProps) {
-  const [selectedType, setSelectedType] = useState<'client' | 'vendeur' | 'entreprise' | 'prestataire'>('client');
+  const [selectedType, setSelectedType] = useState<AccountType>('client');
 
   const accountTypes = [
     {
-      id: 'client',
+      id: 'client' as AccountType,
       title: 'Client / Acheteur',
       subtitle: 'Achetez, commandez et faites-vous livrer rapidement',
       badge: 'Recommandé',
@@ -21,7 +22,7 @@ export default function Screen5TypeCompte({ onSelectAccountType, onContinue }: S
       description: 'Commandez des produits, réservez des services et bénéficiez de la livraison express dans votre pays grâce à AfriNova.',
     },
     {
-      id: 'vendeur',
+      id: 'vendeur' as AccountType,
       title: 'Vendeur / Commerçant',
       subtitle: 'Boutique physique ou virtuelle',
       badge: 'Pro & Ventes',
@@ -31,24 +32,54 @@ export default function Screen5TypeCompte({ onSelectAccountType, onContinue }: S
       description: 'Vendez vos articles dans votre pays, gérez votre stock, vos commandes et boostez votre visibilité sur AfriNova.',
     },
     {
-      id: 'entreprise',
+      id: 'entreprise' as AccountType,
       title: 'Entreprise & Marque',
       subtitle: 'Société, PME, Marque locale ou Institution',
       badge: 'B2B & PME',
-      badgeColor: 'bg-purple-100 text-purple-800 border-purple-300',
+      badgeColor: 'bg-amber-100 text-amber-800 border-amber-300',
       icon: Building2,
-      iconBg: 'bg-gradient-to-tr from-purple-600 to-indigo-700',
+      iconBg: 'bg-gradient-to-tr from-amber-500 to-orange-600',
       description: 'Publiez des offres institutionnelles, gagnez des marchés et promouvez vos services aux clients et partenaires.',
     },
     {
-      id: 'prestataire',
+      id: 'prestataire' as AccountType,
       title: 'Prestataire de Service',
       subtitle: 'Artisan, Indépendant, Taxi, Pharmacie, Restaurant...',
       badge: 'Services 24/7',
-      badgeColor: 'bg-amber-100 text-amber-800 border-amber-300',
+      badgeColor: 'bg-purple-100 text-purple-800 border-purple-300',
       icon: Briefcase,
-      iconBg: 'bg-gradient-to-tr from-amber-500 to-orange-600',
+      iconBg: 'bg-gradient-to-tr from-purple-600 to-indigo-700',
       description: 'Proposez vos compétences, vos trajets taxi, réservations de chambres ou consultations de santé directement sur la Super App.',
+    },
+    {
+      id: 'livreur' as AccountType,
+      title: 'Livreur / Coursier Express',
+      subtitle: 'Transporteur, Moto Taxi ou Livraison de colis',
+      badge: 'Express & Logistique',
+      badgeColor: 'bg-blue-100 text-blue-800 border-blue-300',
+      icon: Truck,
+      iconBg: 'bg-gradient-to-tr from-blue-500 to-sky-600',
+      description: 'Prenez en charge les livraisons en ville, optimisez vos trajets et recevez vos gains instantanément via Mobile Money.',
+    },
+    {
+      id: 'trader' as AccountType,
+      title: 'Trader & Opportunités',
+      subtitle: 'Négociation d\'actifs, matières premières & P2P',
+      badge: 'Bourse & P2P',
+      badgeColor: 'bg-cyan-100 text-cyan-800 border-cyan-300',
+      icon: TrendingUp,
+      iconBg: 'bg-gradient-to-tr from-cyan-600 to-teal-700',
+      description: 'Accédez au flux des cours en direct, échangez des opportunités commerciales et sécurisez vos transactions P2P.',
+    },
+    {
+      id: 'admin' as AccountType,
+      title: 'Administrateur Système',
+      subtitle: 'Gestion globale, Modération & Validation CNI',
+      badge: 'Super Admin',
+      badgeColor: 'bg-rose-100 text-rose-800 border-rose-300',
+      icon: ShieldCheck,
+      iconBg: 'bg-gradient-to-tr from-rose-600 to-red-700',
+      description: 'Supervisez l\'ensemble du réseau AfriNova, validez les vérifications de boutiques et configurez le système.',
     },
   ];
 

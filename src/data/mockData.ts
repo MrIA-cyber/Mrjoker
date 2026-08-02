@@ -36,7 +36,7 @@ export const INITIAL_MERCHANTS: Merchant[] = [
     logo: '☕',
     views: 1420,
     clicks: 345,
-    sales: 112000,
+    sales: 0,
   },
   {
     id: 'm2',
@@ -53,7 +53,7 @@ export const INITIAL_MERCHANTS: Merchant[] = [
     logo: '👑',
     views: 2150,
     clicks: 512,
-    sales: 385000,
+    sales: 0,
   },
   {
     id: 'm3',
@@ -69,7 +69,7 @@ export const INITIAL_MERCHANTS: Merchant[] = [
     logo: '⚡',
     views: 3100,
     clicks: 680,
-    sales: 750000,
+    sales: 0,
   },
   {
     id: 'm4',
@@ -83,7 +83,7 @@ export const INITIAL_MERCHANTS: Merchant[] = [
     logo: '🌾',
     views: 450,
     clicks: 95,
-    sales: 45000,
+    sales: 0,
   },
   {
     id: 'm5',
@@ -97,7 +97,7 @@ export const INITIAL_MERCHANTS: Merchant[] = [
     logo: '🌶️',
     views: 520,
     clicks: 110,
-    sales: 68000,
+    sales: 0,
   }
 ];
 

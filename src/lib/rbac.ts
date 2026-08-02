@@ -1,6 +1,6 @@
-export type UserRole = 'CLIENT' | 'BOUTIQUE' | 'ENTREPRISE' | 'PRESTATAIRE' | 'ADMIN';
+export type UserRole = 'CLIENT' | 'BOUTIQUE' | 'ENTREPRISE' | 'PRESTATAIRE' | 'LIVREUR' | 'TRADER' | 'ADMIN';
 
-export type AccountType = 'client' | 'vendeur' | 'entreprise' | 'prestataire';
+export type AccountType = 'client' | 'vendeur' | 'entreprise' | 'prestataire' | 'livreur' | 'trader' | 'admin';
 
 export interface RBACUser {
   id: string;
@@ -25,6 +25,10 @@ export function mapAccountTypeToRole(accountType?: string): UserRole {
       return 'ENTREPRISE';
     case 'prestataire':
       return 'PRESTATAIRE';
+    case 'livreur':
+      return 'LIVREUR';
+    case 'trader':
+      return 'TRADER';
     case 'admin':
       return 'ADMIN';
     case 'client':
@@ -134,6 +138,46 @@ const ROLE_PERMISSIONS: Record<UserRole, Record<Resource, Action[]>> = {
     prestataire_interventions: ['access', 'read', 'update'],
     prestataire_calendar: ['access', 'read', 'update'],
     prestataire_services: ['access', 'read', 'create', 'update', 'delete'],
+    admin_panel: [],
+    audit_logs: [],
+  },
+  LIVREUR: {
+    dashboard_client: [],
+    dashboard_boutique: [],
+    dashboard_entreprise: [],
+    dashboard_prestataire: [],
+    catalog_public: ['read'],
+    cart: [],
+    my_client_orders: [],
+    boutique_products: [],
+    boutique_orders: ['access', 'read', 'update'],
+    boutique_stats: [],
+    entreprise_procurement: [],
+    entreprise_team: [],
+    entreprise_quotes: [],
+    prestataire_interventions: [],
+    prestataire_calendar: [],
+    prestataire_services: [],
+    admin_panel: [],
+    audit_logs: [],
+  },
+  TRADER: {
+    dashboard_client: [],
+    dashboard_boutique: [],
+    dashboard_entreprise: [],
+    dashboard_prestataire: [],
+    catalog_public: ['read'],
+    cart: [],
+    my_client_orders: [],
+    boutique_products: [],
+    boutique_orders: [],
+    boutique_stats: ['access', 'read'],
+    entreprise_procurement: ['access', 'read'],
+    entreprise_team: [],
+    entreprise_quotes: [],
+    prestataire_interventions: [],
+    prestataire_calendar: [],
+    prestataire_services: [],
     admin_panel: [],
     audit_logs: [],
   },

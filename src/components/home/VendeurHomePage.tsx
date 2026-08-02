@@ -217,13 +217,10 @@ export default function VendeurHomePage({
   const [reviewReplyInputs, setReviewReplyInputs] = useState<Record<string, string>>({});
 
   // Payout / Retrait state
-  const [payoutAmount, setPayoutAmount] = useState('150000');
+  const [payoutAmount, setPayoutAmount] = useState('0');
   const [payoutPhone, setPayoutPhone] = useState('677894512');
   const [payoutProvider, setPayoutProvider] = useState<'orange' | 'momo'>('orange');
-  const [payoutHistory, setPayoutHistory] = useState([
-    { id: 'RET-992', amount: '250 000 FCFA', date: '28 Juil 2026', status: 'Validé & Libéré', provider: 'MTN Mobile Money', phone: '677894512' },
-    { id: 'RET-981', amount: '180 000 FCFA', date: '20 Juil 2026', status: 'Validé & Libéré', provider: 'Orange Money', phone: '699112233' }
-  ]);
+  const [payoutHistory, setPayoutHistory] = useState<any[]>([]);
 
   // Shop Profile & Schedule State
   const [shopName, setShopName] = useState(myMerchant?.shopName || myMerchant?.name || 'Boutique AfriNova Marché A');
@@ -459,7 +456,9 @@ export default function VendeurHomePage({
                     <DollarSign className="w-4 h-4" />
                   </div>
                 </div>
-                <p className="text-xl font-black text-[#0F172A]">185 400 FCFA</p>
+                <p className="text-xl font-black text-[#0F172A]">
+                  {localOrders.filter(o => o.status === 'completed' || o.status === 'delivered').reduce((sum, o) => sum + (o.total || 0), 0).toLocaleString('fr-FR')} FCFA
+                </p>
                 <span className="text-[10px] font-bold text-[#16A34A] flex items-center gap-0.5">
                   <ArrowUpRight className="w-3 h-3" /> +14.2% / hier
                 </span>
@@ -1338,7 +1337,7 @@ export default function VendeurHomePage({
           <div className="space-y-4">
             <div className="p-6 bg-slate-900 text-white rounded-3xl space-y-3 shadow-md border border-slate-800">
               <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">Compte Financier Vendeur</span>
-              <h3 className="text-3xl font-black text-[#16A34A]">1 420 000 FCFA</h3>
+              <h3 className="text-3xl font-black text-[#16A34A]">{(myMerchant?.sales || 0).toLocaleString('fr-FR')} FCFA</h3>
               <p className="text-xs text-slate-300">Solde disponible pour retrait immédiat via MTN Mobile Money ou Orange Money.</p>
             </div>
           </div>
@@ -1428,18 +1427,19 @@ export default function VendeurHomePage({
             <div className="bg-white p-5 rounded-3xl border border-slate-200 shadow-xs space-y-3">
               <h2 className="text-base font-black text-[#0F172A]">Historique des Paiements Reçus</h2>
               <div className="space-y-2">
-                {[
-                  { id: 'PAY-1001', client: 'Mireille Talla', amount: '24 500 FCFA', method: 'MTN Mobile Money', date: 'Aujourd\'hui 10:42', status: 'Payé' },
-                  { id: 'PAY-1002', client: 'Emmanuel Kamga', amount: '18 000 FCFA', method: 'Orange Money', date: 'Hier 16:20', status: 'Payé' }
-                ].map((p) => (
-                  <div key={p.id} className="p-3 bg-slate-50 rounded-2xl flex items-center justify-between text-xs">
-                    <div>
-                      <p className="font-bold text-slate-900">{p.client} ({p.id})</p>
-                      <p className="text-[10px] text-slate-400">{p.method} • {p.date}</p>
+                {localOrders.filter(o => o.status === 'completed' || o.status === 'delivered').length === 0 ? (
+                  <p className="text-xs text-slate-500 py-4 text-center font-semibold">Aucun paiement enregistré pour le moment. Les paiements apparaîtront automatiquement lors de vos premières ventes.</p>
+                ) : (
+                  localOrders.filter(o => o.status === 'completed' || o.status === 'delivered').map((p) => (
+                    <div key={p.id} className="p-3 bg-slate-50 rounded-2xl flex items-center justify-between text-xs">
+                      <div>
+                        <p className="font-bold text-slate-900">{p.userName} ({p.id})</p>
+                        <p className="text-[10px] text-slate-400">{p.paymentMethod?.toUpperCase() || 'MoMo'} • {p.createdAt ? new Date(p.createdAt).toLocaleDateString('fr-FR') : 'Aujourd\'hui'}</p>
+                      </div>
+                      <span className="font-black text-[#16A34A]">{p.total?.toLocaleString('fr-FR')} FCFA</span>
                     </div>
-                    <span className="font-black text-[#16A34A]">{p.amount}</span>
-                  </div>
-                ))}
+                  ))
+                )}
               </div>
             </div>
           </div>

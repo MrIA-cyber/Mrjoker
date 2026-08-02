@@ -1,12 +1,15 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { AccountType } from '../types';
 
 interface VerifiedBadgeProps {
   id?: string;
   className?: string;
   size?: 'sm' | 'md';
+  isVerified?: boolean;
+  role?: AccountType | string;
 }
 
-export default function VerifiedBadge({ id, className = '', size = 'sm' }: VerifiedBadgeProps) {
+export default function VerifiedBadge({ id, className = '', size = 'sm', isVerified = true, role = 'vendeur' }: VerifiedBadgeProps) {
   const [showTooltip, setShowTooltip] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -28,6 +31,57 @@ export default function VerifiedBadge({ id, className = '', size = 'sm' }: Verif
     ? "w-3 h-3 text-[7px]"
     : "w-3.5 h-3.5 text-[8px]";
 
+  const getRoleLabel = () => {
+    switch (role?.toLowerCase()) {
+      case 'client':
+        return 'Client Vérifié';
+      case 'vendeur':
+      case 'boutique':
+        return 'Boutique Agréée';
+      case 'entreprise':
+        return 'Entreprise B2B';
+      case 'prestataire':
+        return 'Prestataire Certifié';
+      case 'livreur':
+        return 'Livreur Agréé';
+      case 'trader':
+        return 'Trader Vérifié';
+      case 'admin':
+        return 'Super Admin';
+      default:
+        return 'Vérifiée';
+    }
+  };
+
+  const getRoleColor = () => {
+    switch (role?.toLowerCase()) {
+      case 'client':
+        return 'text-emerald-700 bg-emerald-50 border-emerald-200';
+      case 'vendeur':
+        return 'text-blue-700 bg-blue-50 border-blue-200';
+      case 'entreprise':
+        return 'text-amber-700 bg-amber-50 border-amber-200';
+      case 'prestataire':
+        return 'text-purple-700 bg-purple-50 border-purple-200';
+      case 'livreur':
+        return 'text-sky-700 bg-sky-50 border-sky-200';
+      case 'trader':
+        return 'text-teal-700 bg-teal-50 border-teal-200';
+      case 'admin':
+        return 'text-rose-700 bg-rose-50 border-rose-200';
+      default:
+        return 'text-blue-600 bg-blue-50 border-blue-100/40';
+    }
+  };
+
+  if (!isVerified) {
+    return (
+      <span className={`inline-flex items-center gap-1 font-bold text-slate-400 bg-slate-100 rounded-full text-[9px] px-2 py-0.5 border border-slate-200 ${className}`}>
+        En attente CNI
+      </span>
+    );
+  }
+
   return (
     <div 
       ref={containerRef}
@@ -42,23 +96,23 @@ export default function VerifiedBadge({ id, className = '', size = 'sm' }: Verif
           e.stopPropagation();
           setShowTooltip(!showTooltip);
         }}
-        className={`inline-flex items-center gap-0.5 font-extrabold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/20 rounded-full uppercase tracking-wider select-none cursor-help border border-blue-100/40 dark:border-blue-900/40 transition hover:bg-blue-100/60 dark:hover:bg-blue-900/30 ${badgeSizeClasses}`}
+        className={`inline-flex items-center gap-1 font-extrabold rounded-full uppercase tracking-wider select-none cursor-help border transition hover:opacity-90 ${getRoleColor()} ${badgeSizeClasses}`}
       >
-        <span className={`bg-blue-600 dark:bg-blue-500 text-white rounded-full flex items-center justify-center font-black leading-none shrink-0 ${checkSizeClasses}`}>
+        <span className="bg-current text-white rounded-full w-3 h-3 flex items-center justify-center font-black leading-none shrink-0 text-[8px]">
           ✓
         </span>
-        <span>Vérifiée</span>
+        <span>{getRoleLabel()}</span>
       </button>
 
       {/* Tooltip element */}
       {showTooltip && (
         <div 
-          className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-52 p-2.5 bg-slate-900 dark:bg-slate-800 text-white text-[10px] rounded-xl shadow-xl z-50 text-center font-medium normal-case leading-normal border border-slate-800 dark:border-slate-700 pointer-events-none animate-fade-in"
+          className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-56 p-2.5 bg-slate-900 text-white text-[10px] rounded-xl shadow-xl z-50 text-center font-medium normal-case leading-normal border border-slate-800 pointer-events-none animate-fade-in"
           style={{ animationDuration: '150ms' }}
         >
-          Cette boutique a été vérifiée par notre équipe (identité et activité confirmées).
+          Ce compte ({getRoleLabel()}) a été officiellement vérifié par l'équipe AfriNova (CNI, emplacement et activité validés).
           {/* Arrow */}
-          <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-1 border-4 border-transparent border-t-slate-900 dark:border-t-slate-800"></div>
+          <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-1 border-4 border-transparent border-t-slate-900"></div>
         </div>
       )}
     </div>

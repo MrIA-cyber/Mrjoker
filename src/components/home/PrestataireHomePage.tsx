@@ -396,59 +396,18 @@ export default function PrestataireHomePage({
   const [rejectReason, setRejectReason] = useState('Planning complet à cette heure');
 
   // 4. FINANCES & REVENUS COMPARATIFS
-  const [payoutAmount, setPayoutAmount] = useState('150000');
+  const [payoutAmount, setPayoutAmount] = useState('0');
   const [payoutPhone, setPayoutPhone] = useState(currentUser?.phone || '677894512');
   const [payoutProvider, setPayoutProvider] = useState<'momo' | 'orange'>('momo');
 
   const [revenueStats] = useState({
-    today: 35000,
-    week: 185000,
-    month: 640000,
-    year: 4250000
+    today: 0,
+    week: 0,
+    month: 0,
+    year: 0
   });
 
-  const [paymentTransactions, setPaymentTransactions] = useState<PaymentTransaction[]>([
-    {
-      id: 'tx-1',
-      ref: 'MOMO-9831024',
-      date: '31 Juillet 2026',
-      clientName: 'Mme Pougoue Brigitte',
-      serviceName: 'Acompte Solaire 5KVA',
-      amount: 20000,
-      provider: 'momo',
-      status: 'Payé'
-    },
-    {
-      id: 'tx-2',
-      ref: 'OM-7781923',
-      date: '28 Juillet 2026',
-      clientName: 'Jean-Paul K.',
-      serviceName: 'Raccordement Plomberie',
-      amount: 18000,
-      provider: 'orange',
-      status: 'Payé'
-    },
-    {
-      id: 'tx-3',
-      ref: 'MOMO-6625101',
-      date: '25 Juillet 2026',
-      clientName: 'Restaurant Le Plateau',
-      serviceName: 'Réparation Climatiseur',
-      amount: 45000,
-      provider: 'momo',
-      status: 'Payé'
-    },
-    {
-      id: 'tx-4',
-      ref: 'CASH-3310',
-      date: '22 Juillet 2026',
-      clientName: 'M. Kouam Samuel',
-      serviceName: 'Diagnostic Électrique',
-      amount: 15000,
-      provider: 'cash',
-      status: 'Payé'
-    }
-  ]);
+  const [paymentTransactions, setPaymentTransactions] = useState<PaymentTransaction[]>([]);
 
   // 5. MESSAGES CLIENTS
   const [selectedChatIndex, setSelectedChatIndex] = useState(0);
@@ -984,7 +943,7 @@ export default function PrestataireHomePage({
                     <DollarSign className="w-4 h-4" />
                   </div>
                 </div>
-                <p className="text-xl font-black text-[#0F172A]">640 000 FCFA</p>
+                <p className="text-xl font-black text-[#0F172A]">{revenueStats.month.toLocaleString('fr-FR')} FCFA</p>
                 <span className="text-[10px] text-[#16A34A] font-bold">+22% ce mois</span>
               </div>
 
@@ -1565,7 +1524,7 @@ export default function PrestataireHomePage({
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               <div className="bg-[#0F172A] text-white p-6 rounded-3xl space-y-4 shadow-xl">
                 <span className="text-xs text-slate-400 font-bold uppercase block">Solde Disponible</span>
-                <p className="text-3xl font-black text-[#16A34A]">345 000 FCFA</p>
+                <p className="text-3xl font-black text-[#16A34A]">{paymentTransactions.reduce((acc, t) => acc + t.amount, 0).toLocaleString('fr-FR')} FCFA</p>
 
                 <button
                   onClick={handleRequestPayout}
@@ -1577,16 +1536,20 @@ export default function PrestataireHomePage({
 
               <div className="lg:col-span-2 bg-white p-5 rounded-3xl border border-slate-100 shadow-2xs space-y-3">
                 <h3 className="font-black text-sm text-[#0F172A] border-b pb-2">Historique des Transactions Encaissées</h3>
-                {paymentTransactions.map((tx) => (
-                  <div key={tx.id} className="p-3 bg-slate-50 rounded-2xl flex items-center justify-between text-xs">
-                    <div>
-                      <span className="font-mono font-bold text-blue-600 text-[10px]">{tx.ref}</span>
-                      <h4 className="font-bold text-[#0F172A]">{tx.serviceName}</h4>
-                      <p className="text-[10px] text-slate-400">{tx.clientName} • {tx.date}</p>
+                {paymentTransactions.length === 0 ? (
+                  <p className="text-xs text-slate-500 py-4 text-center font-semibold">Aucune transaction enregistrée. Vos revenus s'afficheront ici au fur et à mesure de vos prestations effectuées.</p>
+                ) : (
+                  paymentTransactions.map((tx) => (
+                    <div key={tx.id} className="p-3 bg-slate-50 rounded-2xl flex items-center justify-between text-xs">
+                      <div>
+                        <span className="font-mono font-bold text-blue-600 text-[10px]">{tx.ref}</span>
+                        <h4 className="font-bold text-[#0F172A]">{tx.serviceName}</h4>
+                        <p className="text-[10px] text-slate-400">{tx.clientName} • {tx.date}</p>
+                      </div>
+                      <span className="font-black text-[#16A34A] text-sm">+{tx.amount.toLocaleString('fr-FR')} FCFA</span>
                     </div>
-                    <span className="font-black text-[#16A34A] text-sm">+{tx.amount.toLocaleString()} FCFA</span>
-                  </div>
-                ))}
+                  ))
+                )}
               </div>
             </div>
           </div>
@@ -1622,17 +1585,17 @@ export default function PrestataireHomePage({
               <h3 className="font-extrabold text-slate-900 text-sm">Évolution des Revenus Mensuels (FCFA)</h3>
               <div className="h-40 flex items-end justify-between gap-2 pt-6 px-4 border-b pb-2">
                 {[
-                  { month: 'Mars', val: 420 },
-                  { month: 'Avril', val: 510 },
-                  { month: 'Mai', val: 480 },
-                  { month: 'Juin', val: 590 },
-                  { month: 'Juil', val: 610 },
-                  { month: 'Août', val: 640 }
+                  { month: 'Mars', val: 0 },
+                  { month: 'Avril', val: 0 },
+                  { month: 'Mai', val: 0 },
+                  { month: 'Juin', val: 0 },
+                  { month: 'Juil', val: 0 },
+                  { month: 'Août', val: 0 }
                 ].map((item) => (
                   <div key={item.month} className="flex-1 flex flex-col items-center gap-1">
                     <div
-                      style={{ height: `${(item.val / 700) * 100}%` }}
-                      className="w-full bg-[#2563EB] rounded-t-xl hover:bg-blue-700 transition"
+                      style={{ height: `${item.val > 0 ? (item.val / 700) * 100 : 4}%` }}
+                      className="w-full bg-[#2563EB]/20 rounded-t-xl transition"
                     />
                     <span className="text-[10px] font-bold text-slate-500">{item.month}</span>
                   </div>
@@ -1965,7 +1928,7 @@ export default function PrestataireHomePage({
             <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200 text-xs space-y-2">
               <p className="font-extrabold text-slate-900">Rapport Financier & Prestations Bafoussam</p>
               <p className="text-slate-600">Période : Août 2026</p>
-              <p className="text-slate-600">Revenus cumulés : 640 000 FCFA</p>
+              <p className="text-slate-600">Revenus cumulés : {revenueStats.month.toLocaleString('fr-FR')} FCFA</p>
               <p className="text-slate-600">Missions terminées : 24</p>
             </div>
 
