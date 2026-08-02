@@ -45,7 +45,19 @@ import {
   AlertTriangle,
   ThumbsUp,
   ExternalLink,
-  CheckCircle
+  CheckCircle,
+  QrCode,
+  Share2,
+  Download,
+  Headphones,
+  Navigation,
+  Mic,
+  Volume2,
+  Paperclip,
+  FileSpreadsheet,
+  Maximize2,
+  Eye,
+  Compass
 } from 'lucide-react';
 import { Product, Merchant, Order, User } from '../../types';
 import AboutAfriNovaSection from '../AboutAfriNovaSection';
@@ -88,6 +100,9 @@ export interface BookingRequest {
   postponeDate?: string;
   postponeTime?: string;
   rejectReason?: string;
+  coordinates?: { lat: number; lng: number };
+  distanceKm?: number;
+  estimatedTimeMin?: number;
 }
 
 export interface ReviewItem {
@@ -107,8 +122,17 @@ export interface PaymentTransaction {
   clientName: string;
   serviceName: string;
   amount: number;
-  provider: 'momo' | 'orange';
+  provider: 'momo' | 'orange' | 'cash';
   status: 'Payé' | 'En cours';
+}
+
+export interface NotificationItem {
+  id: string;
+  title: string;
+  message: string;
+  time: string;
+  type: 'booking' | 'payment' | 'review' | 'system';
+  unread: boolean;
 }
 
 export default function PrestataireHomePage({
@@ -130,16 +154,73 @@ export default function PrestataireHomePage({
 
   // Active Main Navigation Tab
   const [activeTab, setActiveTab] = useState<
-    'accueil' | 'services' | 'disponibilites' | 'reservations' | 
+    'accueil' | 'carte' | 'calendrier' | 'services' | 'disponibilites' | 'reservations' | 
     'finances' | 'stats' | 'messages' | 'avis' | 
     'profil' | 'abonnement' | 'support'
   >('accueil');
 
+  // Quick Action Modals State
+  const [showEditProfileModal, setShowEditProfileModal] = useState(false);
+  const [showQrModal, setShowQrModal] = useState(false);
+  const [showPdfReportModal, setShowPdfReportModal] = useState(false);
+  const [showShareModal, setShowShareModal] = useState(false);
+  const [showSupportModal, setShowSupportModal] = useState(false);
+  const [showNotificationPanel, setShowNotificationPanel] = useState(false);
+
   // Availability Global Toggle & Mode
   const [isAvailable, setIsAvailable] = useState(true);
   const [availabilityMode, setAvailabilityMode] = useState<'immediate' | 'appointment' | 'busy'>('immediate');
+  const [radiusKm, setRadiusKm] = useState(20);
+  const [lunchBreak, setLunchBreak] = useState('12:30 - 13:30');
 
-  // 1. SERVICES LIST (Ajouter, Modifier, Supprimer, Tarifs, Photos, Vidéos)
+  // Notifications State
+  const [notifications, setNotifications] = useState<NotificationItem[]>([
+    {
+      id: 'notif-1',
+      title: 'Nouvelle réservation urgente',
+      message: 'Mme Pougoue Brigitte demande une intervention Solaire 5KVA à Tamdja.',
+      time: 'Il y a 10 min',
+      type: 'booking',
+      unread: true
+    },
+    {
+      id: 'notif-2',
+      title: 'Paiement MTN MoMo reçu',
+      message: 'Acompte de 20 000 FCFA crédité sur votre compte AfriNova.',
+      time: 'Il y a 45 min',
+      type: 'payment',
+      unread: true
+    },
+    {
+      id: 'notif-3',
+      title: 'Avis 5 étoiles reçu ⭐',
+      message: 'M. Talla Martial a laissé une excellente note sur votre dernière prestation.',
+      time: 'Hier 18:30',
+      type: 'review',
+      unread: false
+    },
+    {
+      id: 'notif-4',
+      title: 'Rappel d\'intervention',
+      message: 'Mission programmée aujourd\'hui à 14h30 chez M. Talla à Kamkop.',
+      time: 'Ce matin 08:00',
+      type: 'system',
+      unread: false
+    }
+  ]);
+
+  const unreadNotifCount = notifications.filter(n => n.unread).length;
+
+  const markAllNotifsRead = () => {
+    setNotifications(prev => prev.map(n => ({ ...n, unread: false })));
+    showToast('✓ Toutes les notifications ont été marquées comme lues.');
+  };
+
+  // Calendar View Mode
+  const [calendarViewMode, setCalendarViewMode] = useState<'day' | 'week' | 'month'>('week');
+  const [calendarSelectedDate, setCalendarSelectedDate] = useState('01 Août 2026');
+
+  // 1. SERVICES LIST
   const [servicesList, setServicesList] = useState<PrestataireService[]>([
     {
       id: 'srv-101',
@@ -213,7 +294,7 @@ export default function PrestataireHomePage({
 
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
 
-  // 2. DISPONIBILITÉS, HORAIRES & ZONES D'INTERVENTION
+  // 2. DISPONIBILITÉS & ZONES
   const [weeklySchedule, setWeeklySchedule] = useState([
     { day: 'Lundi', active: true, openTime: '08:00', closeTime: '18:00' },
     { day: 'Mardi', active: true, openTime: '08:00', closeTime: '18:00' },
@@ -225,21 +306,21 @@ export default function PrestataireHomePage({
   ]);
 
   const [interventionZones, setInterventionZones] = useState([
-    { name: 'Bafoussam Tamdja', active: true },
-    { name: 'Bafoussam Kamkop', active: true },
-    { name: 'Bafoussam Djeleng', active: true },
-    { name: 'Bafoussam Bamendzi', active: true },
-    { name: 'Bafoussam Haoussa', active: true },
-    { name: 'Marché A & Marché B', active: true },
-    { name: 'Kouogouo / TPO', active: true },
-    { name: 'Mbouda (Région Ouest)', active: false },
-    { name: 'Dschang', active: false },
-    { name: 'Bandjoun', active: true },
-    { name: 'Foumban', active: false },
+    { name: 'Bafoussam Tamdja', active: true, extraFee: 0 },
+    { name: 'Bafoussam Kamkop', active: true, extraFee: 0 },
+    { name: 'Bafoussam Djeleng', active: true, extraFee: 0 },
+    { name: 'Bafoussam Bamendzi', active: true, extraFee: 500 },
+    { name: 'Bafoussam Haoussa', active: true, extraFee: 500 },
+    { name: 'Marché A & Marché B', active: true, extraFee: 0 },
+    { name: 'Kouogouo / TPO', active: true, extraFee: 1000 },
+    { name: 'Mbouda (Région Ouest)', active: false, extraFee: 2500 },
+    { name: 'Dschang', active: false, extraFee: 3000 },
+    { name: 'Bandjoun', active: true, extraFee: 1500 },
+    { name: 'Foumban', active: false, extraFee: 4000 },
   ]);
   const [newZoneInput, setNewZoneInput] = useState('');
 
-  // 3. RÉSERVATIONS & DEMANDES CLIENTS (Accepter, Refuser, Reporter, Terminer)
+  // 3. RÉSERVATIONS & INTERVENTIONS MAP
   const [bookingsList, setBookingsList] = useState<BookingRequest[]>([
     {
       id: 'req-201',
@@ -251,7 +332,10 @@ export default function PrestataireHomePage({
       date: '01 Août 2026',
       time: '10:00',
       notes: 'Besoin urgent avant la coupure d\'électricité du soir.',
-      status: 'pending'
+      status: 'pending',
+      coordinates: { lat: 5.478, lng: 10.418 },
+      distanceKm: 1.8,
+      estimatedTimeMin: 6
     },
     {
       id: 'req-202',
@@ -263,7 +347,10 @@ export default function PrestataireHomePage({
       date: '01 Août 2026',
       time: '14:30',
       notes: 'Court-circuit sur le disjoncteur général.',
-      status: 'accepted'
+      status: 'accepted',
+      coordinates: { lat: 5.485, lng: 10.425 },
+      distanceKm: 3.2,
+      estimatedTimeMin: 10
     },
     {
       id: 'req-203',
@@ -275,7 +362,10 @@ export default function PrestataireHomePage({
       date: '02 Août 2026',
       time: '09:00',
       notes: 'Intervention programmée le matin.',
-      status: 'pending'
+      status: 'pending',
+      coordinates: { lat: 5.472, lng: 10.412 },
+      distanceKm: 2.1,
+      estimatedTimeMin: 7
     },
     {
       id: 'req-204',
@@ -286,9 +376,15 @@ export default function PrestataireHomePage({
       budget: '18 000 FCFA',
       date: '28 Juillet 2026',
       time: '11:00',
-      status: 'completed'
+      status: 'completed',
+      coordinates: { lat: 5.465, lng: 10.430 },
+      distanceKm: 4.5,
+      estimatedTimeMin: 14
     }
   ]);
+
+  const [selectedMapPin, setSelectedMapPin] = useState<BookingRequest | null>(bookingsList[0]);
+  const [mapFilterStatus, setMapFilterStatus] = useState<'all' | 'pending' | 'accepted' | 'completed'>('all');
 
   // Reschedule / Postpone Modal State
   const [postponeModalBooking, setPostponeModalBooking] = useState<BookingRequest | null>(null);
@@ -299,10 +395,17 @@ export default function PrestataireHomePage({
   const [rejectModalBooking, setRejectModalBooking] = useState<BookingRequest | null>(null);
   const [rejectReason, setRejectReason] = useState('Planning complet à cette heure');
 
-  // 4. FINANCES (Paiements, Revenus, Retrait MoMo)
+  // 4. FINANCES & REVENUS COMPARATIFS
   const [payoutAmount, setPayoutAmount] = useState('150000');
   const [payoutPhone, setPayoutPhone] = useState(currentUser?.phone || '677894512');
   const [payoutProvider, setPayoutProvider] = useState<'momo' | 'orange'>('momo');
+
+  const [revenueStats] = useState({
+    today: 35000,
+    week: 185000,
+    month: 640000,
+    year: 4250000
+  });
 
   const [paymentTransactions, setPaymentTransactions] = useState<PaymentTransaction[]>([
     {
@@ -334,11 +437,22 @@ export default function PrestataireHomePage({
       amount: 45000,
       provider: 'momo',
       status: 'Payé'
+    },
+    {
+      id: 'tx-4',
+      ref: 'CASH-3310',
+      date: '22 Juillet 2026',
+      clientName: 'M. Kouam Samuel',
+      serviceName: 'Diagnostic Électrique',
+      amount: 15000,
+      provider: 'cash',
+      status: 'Payé'
     }
   ]);
 
   // 5. MESSAGES CLIENTS
   const [selectedChatIndex, setSelectedChatIndex] = useState(0);
+  const [chatSearchQuery, setChatSearchQuery] = useState('');
   const [chats, setChats] = useState([
     {
       id: 'chat-1',
@@ -365,8 +479,9 @@ export default function PrestataireHomePage({
     }
   ]);
   const [messageReplyText, setMessageReplyText] = useState('');
+  const [isRecordingAudio, setIsRecordingAudio] = useState(false);
 
-  // 6. AVIS CLIENTS (Consulter et Répondre)
+  // 6. AVIS CLIENTS
   const [reviewsList, setReviewsList] = useState<ReviewItem[]>([
     {
       id: 'rev-1',
@@ -385,12 +500,21 @@ export default function PrestataireHomePage({
       service: 'Réparation Climatisation',
       text: 'Intervention d\'urgence ultra rapide en moins de 30 minutes. Tarifs clairs et travail propre.',
       reply: ''
+    },
+    {
+      id: 'rev-3',
+      client: 'Jean-Paul K.',
+      rating: 5,
+      date: '20 Juillet 2026',
+      service: 'Plomberie & Sanitaires',
+      text: 'Plombier très ponctuel et honnête. Pas de faux frais ajoutés.',
+      reply: 'Merci Jean-Paul pour ce retour fort encourageant !'
     }
   ]);
   const [replyingReviewId, setReplyingReviewId] = useState<string | null>(null);
   const [reviewReplyInput, setReviewReplyInput] = useState('');
 
-  // 7. PROFIL PROFESSIONNEL & INFORMATIONS
+  // 7. PROFIL PROFESSIONNEL
   const [providerProfile, setProviderProfile] = useState({
     name: currentUser?.name || 'Artisan & Tech Bafoussam',
     tradeTitle: 'Électricien, Installateur Solaire & Frigoriste Certifié',
@@ -406,7 +530,7 @@ export default function PrestataireHomePage({
   });
 
   // 8. ABONNEMENT PRO
-  const [subscription, setSubscription] = useState({
+  const [subscription] = useState({
     planName: 'Formule Prestataire VIP Bafoussam',
     price: 15000,
     expiryDate: '31 Août 2026',
@@ -415,7 +539,6 @@ export default function PrestataireHomePage({
   });
 
   // HANDLERS
-  // Add new service
   const handleSaveService = () => {
     if (!serviceForm.name.trim()) {
       showToast('⚠️ Veuillez saisir le titre du service');
@@ -468,13 +591,11 @@ export default function PrestataireHomePage({
     showToast('🗑️ Service supprimé de votre profil.');
   };
 
-  // Accept booking
   const handleAcceptBooking = (id: string) => {
     setBookingsList(prev => prev.map(b => b.id === id ? { ...b, status: 'accepted' } : b));
     showToast('🎉 Réservation acceptée ! Le client a été notifié.');
   };
 
-  // Confirm postpone
   const handleConfirmPostpone = () => {
     if (!postponeModalBooking) return;
     setBookingsList(prev => prev.map(b => b.id === postponeModalBooking.id ? { 
@@ -487,7 +608,6 @@ export default function PrestataireHomePage({
     setPostponeModalBooking(null);
   };
 
-  // Confirm reject
   const handleConfirmReject = () => {
     if (!rejectModalBooking) return;
     setBookingsList(prev => prev.map(b => b.id === rejectModalBooking.id ? { 
@@ -499,15 +619,15 @@ export default function PrestataireHomePage({
     setRejectModalBooking(null);
   };
 
-  // Mark mission completed
   const handleCompleteMission = (id: string) => {
     setBookingsList(prev => prev.map(b => b.id === id ? { ...b, status: 'completed' } : b));
     showToast('✅ Prestation marquée comme terminée ! Paiement ajouté à votre solde.');
   };
 
-  // Reply to chat message
-  const handleSendMessageReply = () => {
-    if (!messageReplyText.trim()) return;
+  const handleSendMessageReply = (cannedText?: string) => {
+    const textToSend = cannedText || messageReplyText;
+    if (!textToSend.trim()) return;
+
     setChats(prev => prev.map((c, idx) => {
       if (idx === selectedChatIndex) {
         return {
@@ -515,7 +635,7 @@ export default function PrestataireHomePage({
           lastTime: 'À l\'instant',
           history: [...c.history, {
             sender: 'prestataire',
-            text: messageReplyText,
+            text: textToSend,
             time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
           }]
         };
@@ -526,7 +646,15 @@ export default function PrestataireHomePage({
     showToast('💬 Message envoyé au client.');
   };
 
-  // Reply to review
+  const handleSendVoiceNote = () => {
+    setIsRecordingAudio(true);
+    showToast('🎙️ Enregistrement note vocale...');
+    setTimeout(() => {
+      setIsRecordingAudio(false);
+      handleSendMessageReply('🎵 Note vocale audio transmise (0:18)');
+    }, 2000);
+  };
+
   const handleSaveReviewReply = (reviewId: string) => {
     if (!reviewReplyInput.trim()) return;
     setReviewsList(prev => prev.map(r => r.id === reviewId ? { ...r, reply: reviewReplyInput } : r));
@@ -535,7 +663,6 @@ export default function PrestataireHomePage({
     showToast('⭐ Votre réponse à l\'avis a été publiée !');
   };
 
-  // Request payout
   const handleRequestPayout = () => {
     if (!payoutAmount || Number(payoutAmount) <= 0) {
       showToast('⚠️ Saisissez un montant valide à retirer.');
@@ -544,13 +671,18 @@ export default function PrestataireHomePage({
     showToast(`💸 Demande de retrait de ${Number(payoutAmount).toLocaleString()} FCFA envoyée vers ${payoutPhone} (${payoutProvider.toUpperCase()}).`);
   };
 
-  // Add new zone
   const handleAddZone = () => {
     if (!newZoneInput.trim()) return;
-    setInterventionZones(prev => [...prev, { name: newZoneInput.trim(), active: true }]);
+    setInterventionZones(prev => [...prev, { name: newZoneInput.trim(), active: true, extraFee: 1000 }]);
     setNewZoneInput('');
     showToast('📍 Nouvelle zone d\'intervention ajoutée !');
   };
+
+  // Filtered map pins
+  const filteredMapBookings = bookingsList.filter(b => {
+    if (mapFilterStatus === 'all') return true;
+    return b.status === mapFilterStatus;
+  });
 
   return (
     <div className="w-full bg-[#F8FAFC] text-[#0F172A] min-h-screen pb-20 font-sans">
@@ -570,13 +702,16 @@ export default function PrestataireHomePage({
         )}
       </AnimatePresence>
 
-      {/* HEADER BANNER PRESTATAIRE */}
+      {/* HEADER BANNER PRESTATAIRE PRO */}
       <div className="bg-gradient-to-r from-[#0F172A] via-[#1E1B4B] to-[#2563EB] rounded-3xl p-5 sm:p-6 text-white shadow-md relative overflow-hidden mb-5">
         <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="space-y-1">
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
               <span className="bg-[#2563EB] text-white text-[10px] font-black px-2.5 py-0.5 rounded-full uppercase tracking-wider flex items-center gap-1 border border-blue-300/30">
                 <Wrench className="w-3 h-3" /> Espace Prestataire Pro
+              </span>
+              <span className="bg-emerald-500/20 text-emerald-300 text-[10px] font-bold px-2 py-0.5 rounded-full border border-emerald-400/30">
+                ✓ Profil Vérifié AfriNova
               </span>
               <span className="text-slate-300 text-xs font-semibold">{providerProfile.city}</span>
             </div>
@@ -588,12 +723,12 @@ export default function PrestataireHomePage({
             </p>
           </div>
 
-          <div className="flex items-center gap-2 shrink-0">
+          <div className="flex items-center gap-2 shrink-0 flex-wrap">
             {/* Disponibilité Status Toggle */}
             <button
               onClick={() => {
                 setIsAvailable(!isAvailable);
-                showToast(isAvailable ? '🔴 Statut passé en Indisponible' : '🟢 Statut passé en Disponible');
+                showToast(isAvailable ? '🔴 Statut passé en Indisponible' : '🟢 Statut passé en En Ligne (Disponible)');
               }}
               className={`h-10 px-3.5 rounded-xl text-xs font-black transition flex items-center gap-2 border cursor-pointer ${
                 isAvailable 
@@ -602,29 +737,21 @@ export default function PrestataireHomePage({
               }`}
             >
               <span className={`w-2.5 h-2.5 rounded-full ${isAvailable ? 'bg-emerald-400 animate-pulse' : 'bg-rose-400'}`} />
-              <span>{isAvailable ? '🟢 En ligne (Disponible)' : '🔴 Indisponible'}</span>
+              <span>{isAvailable ? '🟢 En Ligne' : '🔴 Indisponible'}</span>
             </button>
 
+            {/* Notification Center Trigger */}
             <button
-              onClick={() => {
-                setEditingService(null);
-                setServiceForm({
-                  name: '',
-                  category: 'Électricité & Énergie Solaire',
-                  price: 25000,
-                  pricingType: 'fixe',
-                  description: '',
-                  imagesText: 'https://images.unsplash.com/photo-1621905251189-08b45d6a269e?auto=format&fit=crop&w=600&q=80',
-                  videoUrl: '',
-                  zonesText: 'Bafoussam Tamdja, Kamkop, Djeleng',
-                  duration: '2 heures'
-                });
-                setIsAddServiceModalOpen(true);
-              }}
-              className="h-10 px-4 rounded-xl bg-[#16A34A] hover:bg-[#15803D] active:scale-95 text-white text-xs font-black transition flex items-center gap-2 shadow-sm cursor-pointer"
+              onClick={() => setShowNotificationPanel(!showNotificationPanel)}
+              className="h-10 w-10 rounded-xl bg-white/10 hover:bg-white/20 text-white flex items-center justify-center relative cursor-pointer border border-white/10 transition"
+              title="Centre de notifications"
             >
-              <Plus className="w-4 h-4 stroke-[3]" />
-              <span>Ajouter un service</span>
+              <Bell className="w-4 h-4" />
+              {unreadNotifCount > 0 && (
+                <span className="absolute -top-1 -right-1 bg-rose-500 text-white font-black text-[9px] w-4 h-4 rounded-full flex items-center justify-center shadow-xs">
+                  {unreadNotifCount}
+                </span>
+              )}
             </button>
 
             {onLogout && (
@@ -641,20 +768,156 @@ export default function PrestataireHomePage({
         </div>
       </div>
 
-      {/* PRESTATAIRE EXCLUSIVE NAVIGATION TABS BAR */}
+      {/* QUICK ACTIONS BAR (BARRE D'ACTIONS RAPIDES 1-CLIC) */}
+      <div className="bg-white p-4 rounded-3xl border border-slate-200/90 shadow-sm mb-6 space-y-2">
+        <div className="flex items-center justify-between border-b border-slate-100 pb-2">
+          <h3 className="font-black text-xs text-slate-800 uppercase tracking-wider flex items-center gap-2">
+            <Sparkles className="w-4 h-4 text-[#2563EB]" />
+            <span>Actions Rapides Prestataire</span>
+          </h3>
+          <span className="text-[10px] font-bold text-slate-400">Accès direct 1-clic</span>
+        </div>
+
+        <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-7 gap-2">
+          {/* Action 1: Modifier Profil */}
+          <button
+            onClick={() => setShowEditProfileModal(true)}
+            className="p-3 rounded-2xl bg-slate-50 hover:bg-blue-50/60 text-slate-800 border border-slate-200/80 flex flex-col items-center justify-center gap-1 transition cursor-pointer group"
+          >
+            <Edit3 className="w-4 h-4 text-[#2563EB] group-hover:scale-110 transition" />
+            <span className="text-[10px] font-extrabold leading-tight">Modifier Profil</span>
+          </button>
+
+          {/* Action 2: Ajouter Service */}
+          <button
+            onClick={() => {
+              setEditingService(null);
+              setServiceForm({
+                name: '',
+                category: 'Électricité & Énergie Solaire',
+                price: 25000,
+                pricingType: 'fixe',
+                description: '',
+                imagesText: 'https://images.unsplash.com/photo-1621905251189-08b45d6a269e?auto=format&fit=crop&w=600&q=80',
+                videoUrl: '',
+                zonesText: 'Bafoussam Tamdja, Kamkop',
+                duration: '2 heures'
+              });
+              setIsAddServiceModalOpen(true);
+            }}
+            className="p-3 rounded-2xl bg-emerald-50 hover:bg-emerald-100 text-[#16A34A] border border-emerald-200 flex flex-col items-center justify-center gap-1 transition cursor-pointer group"
+          >
+            <Plus className="w-4 h-4 stroke-[3] group-hover:scale-110 transition" />
+            <span className="text-[10px] font-black leading-tight">+ Service</span>
+          </button>
+
+          {/* Action 3: Gérer Services */}
+          <button
+            onClick={() => setActiveTab('services')}
+            className="p-3 rounded-2xl bg-slate-50 hover:bg-slate-100 text-slate-800 border border-slate-200/80 flex flex-col items-center justify-center gap-1 transition cursor-pointer group"
+          >
+            <Wrench className="w-4 h-4 text-[#2563EB] group-hover:scale-110 transition" />
+            <span className="text-[10px] font-extrabold leading-tight">Gérer Services</span>
+          </button>
+
+          {/* Action 4: Scanner QR Code */}
+          <button
+            onClick={() => setShowQrModal(true)}
+            className="p-3 rounded-2xl bg-purple-50 hover:bg-purple-100 text-[#7C3AED] border border-purple-200 flex flex-col items-center justify-center gap-1 transition cursor-pointer group"
+          >
+            <QrCode className="w-4 h-4 group-hover:scale-110 transition" />
+            <span className="text-[10px] font-black leading-tight">Scanner QR</span>
+          </button>
+
+          {/* Action 5: Rapport PDF */}
+          <button
+            onClick={() => setShowPdfReportModal(true)}
+            className="p-3 rounded-2xl bg-blue-50 hover:bg-blue-100 text-[#2563EB] border border-blue-200 flex flex-col items-center justify-center gap-1 transition cursor-pointer group"
+          >
+            <Download className="w-4 h-4 group-hover:scale-110 transition" />
+            <span className="text-[10px] font-black leading-tight">Rapport PDF</span>
+          </button>
+
+          {/* Action 6: Partager Profil */}
+          <button
+            onClick={() => setShowShareModal(true)}
+            className="p-3 rounded-2xl bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 flex flex-col items-center justify-center gap-1 transition cursor-pointer group"
+          >
+            <Share2 className="w-4 h-4 group-hover:scale-110 transition" />
+            <span className="text-[10px] font-black leading-tight">Partager Profil</span>
+          </button>
+
+          {/* Action 7: Contacter Assistance */}
+          <button
+            onClick={() => setShowSupportModal(true)}
+            className="p-3 rounded-2xl bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 flex flex-col items-center justify-center gap-1 transition cursor-pointer group"
+          >
+            <Headphones className="w-4 h-4 group-hover:scale-110 transition" />
+            <span className="text-[10px] font-black leading-tight">Assistance 24/7</span>
+          </button>
+        </div>
+      </div>
+
+      {/* FLOATING NOTIFICATION PANEL DRAWER */}
+      <AnimatePresence>
+        {showNotificationPanel && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            className="bg-white rounded-3xl p-5 border border-slate-200 shadow-xl mb-6 relative z-30"
+          >
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <div className="flex items-center gap-2">
+                <Bell className="w-5 h-5 text-[#2563EB]" />
+                <h3 className="font-extrabold text-slate-900 text-sm">Centre de Notifications ({notifications.length})</h3>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={markAllNotifsRead}
+                  className="text-xs font-bold text-[#2563EB] hover:underline cursor-pointer"
+                >
+                  Tout marquer comme lu
+                </button>
+                <button onClick={() => setShowNotificationPanel(false)} className="p-1 text-slate-400 hover:text-slate-800">
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+
+            <div className="divide-y divide-slate-100 max-h-60 overflow-y-auto pt-2 space-y-2">
+              {notifications.map((n) => (
+                <div key={n.id} className={`p-3 rounded-2xl flex items-start gap-3 text-xs ${n.unread ? 'bg-blue-50/50' : 'bg-slate-50'}`}>
+                  <span className={`w-2 h-2 rounded-full mt-1.5 shrink-0 ${n.unread ? 'bg-[#2563EB] animate-pulse' : 'bg-slate-300'}`} />
+                  <div className="flex-1 space-y-0.5">
+                    <p className="font-extrabold text-slate-900">{n.title}</p>
+                    <p className="text-slate-600">{n.message}</p>
+                    <span className="text-[10px] text-slate-400 block">{n.time}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* NAVIGATION TABS BAR PRESTATAIRE */}
       <div className="bg-white border-b border-slate-200/80 sticky top-[57px] z-30 shadow-2xs mb-6">
         <div className="max-w-7xl mx-auto px-4 overflow-x-auto scrollbar-none flex items-center gap-1.5 py-2">
           {[
             { id: 'accueil', label: 'Vue Générale', icon: Briefcase },
-            { id: 'services', label: `Mes Services (${servicesList.length})`, icon: Wrench },
+            { id: 'carte', label: 'Carte Interventions', icon: Navigation, badge: 'GPS' },
+            { id: 'calendrier', label: 'Calendrier Planning', icon: CalendarIcon },
+            { id: 'services', label: `Services (${servicesList.length})`, icon: Wrench },
             { id: 'disponibilites', label: 'Horaires & Zones', icon: Clock },
-            { id: 'reservations', label: `Réservations (${bookingsList.filter(b => b.status === 'pending').length} attente)`, icon: CalendarDays, badge: bookingsList.filter(b => b.status === 'pending').length || undefined },
+            { id: 'reservations', label: `Réservations (${bookingsList.filter(b => b.status === 'pending').length})`, icon: CalendarDays, badge: bookingsList.filter(b => b.status === 'pending').length || undefined },
             { id: 'finances', label: 'Paiements & Revenus', icon: DollarSign },
-            { id: 'stats', label: 'Statistiques', icon: BarChart3 },
-            { id: 'messages', label: 'Messages Directs', icon: MessageSquare, badge: 1 },
-            { id: 'avis', label: `Avis Clients (${reviewsList.length})`, icon: Star },
-            { id: 'profil', label: 'Profil & Infos', icon: UserIcon },
-            { id: 'abonnement', label: 'Abonnement Pro', icon: ShieldCheck },
+            { id: 'stats', label: 'Graphiques Performance', icon: BarChart3 },
+            { id: 'messages', label: 'Messagerie', icon: MessageSquare, badge: 1 },
+            { id: 'avis', label: `Avis (${reviewsList.length})`, icon: Star },
+            { id: 'profil', label: 'Profil', icon: UserIcon },
+            { id: 'abonnement', label: 'Abonnement VIP', icon: ShieldCheck },
             { id: 'support', label: 'Support 24/7', icon: HelpCircle },
           ].map((tab) => {
             const IconComp = tab.icon;
@@ -672,7 +935,7 @@ export default function PrestataireHomePage({
                 <IconComp className={`w-3.5 h-3.5 ${isActive ? 'text-[#2563EB]' : 'text-slate-400'}`} />
                 <span>{tab.label}</span>
                 {tab.badge && (
-                  <span className="bg-[#2563EB] text-white text-[9px] font-black px-1.5 py-0.2 rounded-full ml-0.5 animate-pulse">
+                  <span className="bg-[#2563EB] text-white text-[9px] font-black px-1.5 py-0.2 rounded-full ml-0.5">
                     {tab.badge}
                   </span>
                 )}
@@ -682,13 +945,13 @@ export default function PrestataireHomePage({
         </div>
       </div>
 
-      {/* DYNAMIC TAB CONTENT */}
+      {/* MAIN DYNAMIC TAB CONTENTS */}
       <main className="max-w-7xl mx-auto px-4 space-y-6">
 
-        {/* 1. ACCUEIL - VUE GÉNÉRALE PRESTATAIRE */}
+        {/* 1. ACCUEIL - VUE GÉNÉRALE */}
         {activeTab === 'accueil' && (
           <div className="space-y-6">
-            {/* KPI Cards */}
+            {/* KPI Summary Cards */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
               <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-2xs space-y-1">
                 <div className="flex items-center justify-between text-xs font-bold text-slate-500">
@@ -716,18 +979,18 @@ export default function PrestataireHomePage({
 
               <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-2xs space-y-1">
                 <div className="flex items-center justify-between text-xs font-bold text-slate-500">
-                  <span>Revenus Encaissés</span>
+                  <span>Revenus du Mois</span>
                   <div className="w-8 h-8 rounded-xl bg-emerald-50 text-[#16A34A] flex items-center justify-center font-black">
                     <DollarSign className="w-4 h-4" />
                   </div>
                 </div>
-                <p className="text-xl font-black text-[#0F172A]">345 000 FCFA</p>
+                <p className="text-xl font-black text-[#0F172A]">640 000 FCFA</p>
                 <span className="text-[10px] text-[#16A34A] font-bold">+22% ce mois</span>
               </div>
 
               <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-2xs space-y-1">
                 <div className="flex items-center justify-between text-xs font-bold text-slate-500">
-                  <span>Note Globale Client</span>
+                  <span>Satisfaction Client</span>
                   <div className="w-8 h-8 rounded-xl bg-amber-50 text-amber-500 flex items-center justify-center font-black">
                     <Star className="w-4 h-4 fill-amber-400" />
                   </div>
@@ -737,71 +1000,39 @@ export default function PrestataireHomePage({
               </div>
             </div>
 
-            {/* Quick Actions Panel */}
-            <div className="bg-white p-5 rounded-3xl border border-slate-100 shadow-2xs space-y-3">
-              <h3 className="text-xs font-black uppercase text-slate-400 tracking-wider">Accès Rapide Prestataire</h3>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            {/* Quick Map Preview */}
+            <div className="bg-white p-5 rounded-3xl border border-slate-200/90 shadow-sm space-y-3">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="font-extrabold text-slate-900 text-sm flex items-center gap-2">
+                    <Navigation className="w-4 h-4 text-[#2563EB]" />
+                    <span>Carte des Interventions du Jour</span>
+                  </h3>
+                  <p className="text-xs text-slate-500">Visualisez la localisation exacte de vos clients à Bafoussam.</p>
+                </div>
                 <button
-                  onClick={() => {
-                    setEditingService(null);
-                    setServiceForm({
-                      name: '',
-                      category: 'Électricité & Énergie Solaire',
-                      price: 25000,
-                      pricingType: 'fixe',
-                      description: '',
-                      imagesText: 'https://images.unsplash.com/photo-1621905251189-08b45d6a269e?auto=format&fit=crop&w=600&q=80',
-                      videoUrl: '',
-                      zonesText: 'Bafoussam Tamdja, Kamkop',
-                      duration: '2 heures'
-                    });
-                    setIsAddServiceModalOpen(true);
-                  }}
-                  className="p-3.5 rounded-2xl bg-emerald-50 hover:bg-emerald-100 text-[#16A34A] transition text-left flex items-center gap-3 cursor-pointer"
+                  onClick={() => setActiveTab('carte')}
+                  className="text-xs font-bold text-[#2563EB] hover:underline flex items-center gap-1 cursor-pointer"
                 >
-                  <Plus className="w-5 h-5 shrink-0" />
-                  <div>
-                    <p className="text-xs font-black">Nouveau Service</p>
-                    <p className="text-[10px] text-emerald-800">Ajouter tarif & vidéos</p>
-                  </div>
+                  <span>Agrandir la Carte</span>
+                  <ChevronRight className="w-4 h-4" />
                 </button>
+              </div>
 
+              <div className="bg-slate-100 rounded-2xl p-4 h-48 border border-slate-200 relative overflow-hidden flex flex-col justify-center items-center text-center space-y-2">
+                <div className="absolute inset-0 bg-gradient-to-br from-emerald-100/40 via-blue-100/30 to-purple-100/40 pointer-events-none" />
+                <Navigation className="w-10 h-10 text-[#2563EB] animate-bounce relative z-10" />
+                <p className="font-bold text-xs text-slate-800 relative z-10">4 interventions répertoriées dans Bafoussam Tamdja & Kamkop</p>
                 <button
-                  onClick={() => setActiveTab('disponibilites')}
-                  className="p-3.5 rounded-2xl bg-indigo-50 hover:bg-indigo-100 text-[#4F46E5] transition text-left flex items-center gap-3 cursor-pointer"
+                  onClick={() => setActiveTab('carte')}
+                  className="bg-[#2563EB] hover:bg-blue-700 text-white font-extrabold text-xs px-4 py-2 rounded-xl transition shadow-xs cursor-pointer relative z-10"
                 >
-                  <Clock className="w-5 h-5 shrink-0" />
-                  <div>
-                    <p className="text-xs font-black">Horaires & Zones</p>
-                    <p className="text-[10px] text-indigo-800">Gérer mes créneaux</p>
-                  </div>
-                </button>
-
-                <button
-                  onClick={() => setActiveTab('finances')}
-                  className="p-3.5 rounded-2xl bg-purple-50 hover:bg-purple-100 text-purple-700 transition text-left flex items-center gap-3 cursor-pointer"
-                >
-                  <CreditCard className="w-5 h-5 shrink-0" />
-                  <div>
-                    <p className="text-xs font-black">Retrait MoMo / OM</p>
-                    <p className="text-[10px] text-purple-800">Voir les paiements</p>
-                  </div>
-                </button>
-
-                <button
-                  onClick={() => setActiveTab('messages')}
-                  className="p-3.5 rounded-2xl bg-amber-50 hover:bg-amber-100 text-amber-800 transition text-left flex items-center gap-3 cursor-pointer"
-                >
-                  <MessageSquare className="w-5 h-5 shrink-0" />
-                  <div>
-                    <p className="text-xs font-black">Messages Directs</p>
-                    <p className="text-[10px] text-amber-900">Répondre aux clients</p>
-                  </div>
+                  Ouvrir la Carte Interactive GPS
                 </button>
               </div>
             </div>
 
-            {/* Upcoming Interventions Preview */}
+            {/* Upcoming Interventions List Preview */}
             <div className="bg-white p-5 rounded-3xl border border-slate-100 shadow-2xs space-y-4">
               <div className="flex items-center justify-between">
                 <h3 className="text-xs font-black uppercase text-[#0F172A] tracking-wider flex items-center gap-2">
@@ -845,7 +1076,260 @@ export default function PrestataireHomePage({
           </div>
         )}
 
-        {/* 2. SERVICES (Ajouter, Modifier, Supprimer, Photos, Vidéos, Tarifs) */}
+        {/* 2. CARTE INTERACTIVE DES INTERVENTIONS */}
+        {activeTab === 'carte' && (
+          <div className="space-y-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white p-4 rounded-3xl border border-slate-200/90 shadow-sm">
+              <div>
+                <h2 className="text-lg font-black text-[#0F172A] flex items-center gap-2">
+                  <Navigation className="w-5 h-5 text-[#2563EB]" />
+                  <span>Carte Interactive des Interventions Bafoussam</span>
+                </h2>
+                <p className="text-xs text-slate-500">Localisez vos clients, vérifiez l'itinéraire et gérez vos déplacements.</p>
+              </div>
+
+              {/* Filter Pins by Status */}
+              <div className="flex gap-1.5 flex-wrap">
+                {[
+                  { id: 'all', label: 'Toutes' },
+                  { id: 'pending', label: 'En attente' },
+                  { id: 'accepted', label: 'Confirmées' },
+                  { id: 'completed', label: 'Terminées' }
+                ].map((f) => (
+                  <button
+                    key={f.id}
+                    onClick={() => setMapFilterStatus(f.id as any)}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-extrabold cursor-pointer transition ${
+                      mapFilterStatus === f.id ? 'bg-[#0F172A] text-white' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                    }`}
+                  >
+                    {f.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              {/* Simulated Visual Interactive Map */}
+              <div className="lg:col-span-2 bg-slate-900 rounded-3xl p-6 relative min-h-[420px] shadow-lg flex flex-col justify-between border border-slate-800 overflow-hidden">
+                {/* Background Map Grid Effect */}
+                <div className="absolute inset-0 opacity-20 bg-[radial-gradient(#3b82f6_1px,transparent_1px)] [background-size:16px_16px]" />
+
+                <div className="relative z-10 flex justify-between items-center text-white">
+                  <span className="bg-blue-600/80 text-white text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-wider backdrop-blur-xs">
+                    Région Ouest • Bafoussam GPS Live
+                  </span>
+                  <span className="text-xs text-slate-400 font-mono">Zoom: 14x</span>
+                </div>
+
+                {/* Pin markers on Map */}
+                <div className="relative z-10 my-10 grid grid-cols-2 sm:grid-cols-3 gap-4">
+                  {filteredMapBookings.map((b) => {
+                    const isSelected = selectedMapPin?.id === b.id;
+                    return (
+                      <button
+                        key={b.id}
+                        onClick={() => setSelectedMapPin(b)}
+                        className={`p-3 rounded-2xl border text-left transition cursor-pointer relative ${
+                          isSelected 
+                            ? 'bg-blue-600 text-white border-blue-400 shadow-xl scale-105' 
+                            : 'bg-slate-800/90 text-slate-200 border-slate-700 hover:border-slate-500'
+                        }`}
+                      >
+                        <div className="flex items-center gap-1.5 mb-1">
+                          <MapPin className={`w-4 h-4 ${b.status === 'accepted' ? 'text-emerald-400' : 'text-amber-400'}`} />
+                          <span className="text-[10px] font-black uppercase truncate">{b.location.split(',')[0]}</span>
+                        </div>
+                        <p className="text-xs font-extrabold truncate">{b.client}</p>
+                        <p className="text-[10px] text-slate-300 font-mono">{b.distanceKm} km • {b.estimatedTimeMin} min</p>
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* Map Footer info */}
+                <div className="relative z-10 bg-slate-800/80 backdrop-blur-xs p-3 rounded-2xl text-white text-xs flex justify-between items-center">
+                  <span className="text-slate-300">Sélectionnez une épingle pour afficher les détails de trajet et la fiche client.</span>
+                  <span className="font-extrabold text-emerald-400">● GPS Actif</span>
+                </div>
+              </div>
+
+              {/* Selected Pin Details Panel */}
+              <div className="bg-white p-6 rounded-3xl border border-slate-200/90 shadow-sm space-y-4">
+                {selectedMapPin ? (
+                  <>
+                    <div className="border-b border-slate-100 pb-3 space-y-1">
+                      <span className="bg-blue-100 text-[#2563EB] text-[10px] font-black px-2.5 py-0.5 rounded-full uppercase">
+                        Fiche Trajet Client
+                      </span>
+                      <h3 className="font-extrabold text-slate-900 text-base">{selectedMapPin.title}</h3>
+                      <p className="text-xs text-slate-500 flex items-center gap-1">
+                        <MapPin className="w-3.5 h-3.5 text-[#16A34A]" /> {selectedMapPin.location}
+                      </p>
+                    </div>
+
+                    <div className="space-y-2 text-xs bg-slate-50 p-3.5 rounded-2xl border border-slate-100">
+                      <div className="flex justify-between">
+                        <span className="text-slate-500">Nom du client:</span>
+                        <span className="font-extrabold text-slate-900">{selectedMapPin.client}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-slate-500">Téléphone:</span>
+                        <span className="font-mono font-extrabold text-blue-600">{selectedMapPin.phone}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-slate-500">Distance depuis votre position:</span>
+                        <span className="font-extrabold text-slate-900">{selectedMapPin.distanceKm} km</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-slate-500">Temps de trajet estimé (Moto/Auto):</span>
+                        <span className="font-extrabold text-emerald-600">{selectedMapPin.estimatedTimeMin} min</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-slate-500">Montant proposé:</span>
+                        <span className="font-extrabold text-[#16A34A]">{selectedMapPin.budget}</span>
+                      </div>
+                    </div>
+
+                    <div className="space-y-2 pt-2">
+                      <button
+                        onClick={() => {
+                          showToast(`🗺️ Navigation GPS lancée vers ${selectedMapPin.location}`);
+                          window.open(`https://maps.google.com/?q=${encodeURIComponent(selectedMapPin.location + ' Bafoussam')}`, '_blank');
+                        }}
+                        className="w-full bg-[#2563EB] hover:bg-blue-700 text-white font-extrabold text-xs py-3 rounded-2xl transition shadow-sm cursor-pointer flex items-center justify-center gap-2"
+                      >
+                        <Navigation className="w-4 h-4" />
+                        <span>Lancer Navigation GPS (Google Maps / Waze)</span>
+                      </button>
+
+                      <a
+                        href={`tel:${selectedMapPin.phone}`}
+                        className="w-full bg-emerald-100 hover:bg-emerald-200 text-[#16A34A] font-extrabold text-xs py-2.5 rounded-2xl transition cursor-pointer flex items-center justify-center gap-2"
+                      >
+                        <PhoneCall className="w-4 h-4" />
+                        <span>Appeler {selectedMapPin.client}</span>
+                      </a>
+                    </div>
+                  </>
+                ) : (
+                  <p className="text-xs text-slate-400 text-center py-10">Cliquez sur une intervention sur la carte.</p>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* 3. CALENDRIER DE PLANIFICATION (JOUR, SEMAINE, MOIS) */}
+        {activeTab === 'calendrier' && (
+          <div className="space-y-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white p-4 rounded-3xl border border-slate-200/90 shadow-sm">
+              <div>
+                <h2 className="text-lg font-black text-[#0F172A] flex items-center gap-2">
+                  <CalendarIcon className="w-5 h-5 text-[#2563EB]" />
+                  <span>Calendrier & Planning des Interventions</span>
+                </h2>
+                <p className="text-xs text-slate-500">Organisez vos rendez-vous par jour, semaine ou mois.</p>
+              </div>
+
+              {/* Day / Week / Month Mode Selector */}
+              <div className="flex gap-1 bg-slate-100 p-1 rounded-2xl">
+                {[
+                  { id: 'day', label: 'Jour' },
+                  { id: 'week', label: 'Semaine' },
+                  { id: 'month', label: 'Mois' }
+                ].map((mode) => (
+                  <button
+                    key={mode.id}
+                    onClick={() => setCalendarViewMode(mode.id as any)}
+                    className={`px-4 py-1.5 rounded-xl text-xs font-black transition cursor-pointer ${
+                      calendarViewMode === mode.id ? 'bg-[#0F172A] text-white shadow-xs' : 'text-slate-600 hover:text-slate-900'
+                    }`}
+                  >
+                    {mode.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="bg-white p-6 rounded-3xl border border-slate-200/90 shadow-sm space-y-4">
+              <div className="flex justify-between items-center border-b border-slate-100 pb-3">
+                <span className="font-extrabold text-slate-900 text-sm">{calendarSelectedDate}</span>
+                <span className="text-xs font-bold text-[#2563EB] bg-blue-50 px-3 py-1 rounded-full">
+                  {bookingsList.length} interventions planifiées
+                </span>
+              </div>
+
+              {/* Day View Timeline */}
+              {calendarViewMode === 'day' && (
+                <div className="space-y-2">
+                  {['08:00', '10:00', '12:00', '14:00', '16:00', '18:00'].map((time) => {
+                    const match = bookingsList.find(b => b.time.startsWith(time.slice(0, 2)));
+                    return (
+                      <div key={time} className="flex items-start gap-3 p-3 bg-slate-50 rounded-2xl border border-slate-100">
+                        <span className="font-mono font-bold text-xs text-slate-400 w-14 shrink-0 mt-1">{time}</span>
+                        {match ? (
+                          <div className="flex-1 bg-emerald-50 border border-emerald-200 p-3 rounded-xl text-xs space-y-1">
+                            <span className="font-extrabold text-slate-900 block">{match.title}</span>
+                            <span className="text-slate-600 block">{match.client} • {match.location}</span>
+                            <span className="text-[10px] font-black text-[#16A34A]">{match.budget}</span>
+                          </div>
+                        ) : (
+                          <div className="flex-1 text-xs text-slate-400 italic py-2">Créneau libre</div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+
+              {/* Week View Grid */}
+              {calendarViewMode === 'week' && (
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-2">
+                  {['Lun 01', 'Mar 02', 'Mer 03', 'Jeu 04', 'Ven 05', 'Sam 06', 'Dim 07'].map((day, idx) => (
+                    <div key={day} className="p-3 bg-slate-50 rounded-2xl border border-slate-200/80 space-y-2 min-h-36">
+                      <span className="font-extrabold text-xs text-slate-900 block border-b pb-1">{day}</span>
+                      {idx === 0 && (
+                        <div className="bg-emerald-100 p-2 rounded-xl text-[10px] font-extrabold text-emerald-900 space-y-0.5">
+                          <p>10h00 Solaire 5KVA</p>
+                          <p className="text-slate-600">Mme Pougoue</p>
+                        </div>
+                      )}
+                      {idx === 1 && (
+                        <div className="bg-blue-100 p-2 rounded-xl text-[10px] font-extrabold text-blue-900 space-y-0.5">
+                          <p>09h00 Climatiseur</p>
+                          <p className="text-slate-600">Cabinet Notarial</p>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Month View Grid */}
+              {calendarViewMode === 'month' && (
+                <div className="grid grid-cols-7 gap-1 text-center text-xs">
+                  {['L', 'M', 'M', 'J', 'V', 'S', 'D'].map(d => (
+                    <div key={d} className="font-black text-slate-400 py-1">{d}</div>
+                  ))}
+                  {Array.from({ length: 31 }).map((_, i) => (
+                    <div
+                      key={i}
+                      className={`p-3 rounded-2xl border text-xs font-bold ${
+                        i === 0 ? 'bg-[#2563EB] text-white border-blue-600 font-black' : 'bg-slate-50 text-slate-700 border-slate-200/60'
+                      }`}
+                    >
+                      {i + 1}
+                      {i === 0 && <span className="block text-[8px] mt-0.5">2 rdv</span>}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* 4. SERVICES LIST & ADD/EDIT */}
         {activeTab === 'services' && (
           <div className="space-y-4">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white p-4 rounded-3xl border border-slate-100 shadow-2xs">
@@ -881,35 +1365,15 @@ export default function PrestataireHomePage({
               {servicesList.map((service) => (
                 <div key={service.id} className="bg-white p-4 rounded-3xl border border-slate-200/80 shadow-2xs space-y-3 flex flex-col justify-between hover:border-blue-300 transition">
                   <div className="space-y-2">
-                    {/* Image / Photo carousel preview */}
                     <div className="relative rounded-2xl overflow-hidden bg-slate-100 h-36">
                       <img src={service.images[0] || 'https://images.unsplash.com/photo-1621905251189-08b45d6a269e?auto=format&fit=crop&w=600&q=80'} alt={service.name} className="w-full h-full object-cover" />
                       <span className="absolute top-2 left-2 text-[9px] font-black text-white bg-[#0F172A]/80 backdrop-blur-xs px-2 py-0.5 rounded-full uppercase">
                         {service.category}
                       </span>
-                      {service.videoUrl && (
-                        <span className="absolute top-2 right-2 text-[9px] font-black text-white bg-rose-600 px-2 py-0.5 rounded-full flex items-center gap-1 shadow-xs">
-                          <Play className="w-2.5 h-2.5 fill-white" /> Vidéo Pro
-                        </span>
-                      )}
-                      {service.images.length > 1 && (
-                        <span className="absolute bottom-2 right-2 text-[9px] font-black text-white bg-slate-900/80 px-2 py-0.5 rounded-full">
-                          +{service.images.length - 1} photos
-                        </span>
-                      )}
                     </div>
 
                     <h4 className="font-bold text-sm text-[#0F172A] leading-snug">{service.name}</h4>
                     <p className="text-xs text-slate-500 line-clamp-2">{service.description}</p>
-
-                    {/* Zones badges */}
-                    <div className="flex flex-wrap gap-1 pt-1">
-                      {service.zones.slice(0, 3).map((z, idx) => (
-                        <span key={idx} className="text-[9px] font-bold text-slate-600 bg-slate-100 px-2 py-0.5 rounded-md flex items-center gap-1">
-                          <MapPin className="w-2.5 h-2.5 text-[#16A34A]" /> {z}
-                        </span>
-                      ))}
-                    </div>
                   </div>
 
                   <div className="pt-3 border-t border-slate-100 flex items-center justify-between">
@@ -917,7 +1381,6 @@ export default function PrestataireHomePage({
                       <span className="text-[9px] font-bold text-slate-400 uppercase block">Tarif défini</span>
                       <span className="font-black text-[#16A34A] text-sm">
                         {service.pricingType === 'devis' ? 'Sur Devis' : `${service.price.toLocaleString()} FCFA`}
-                        {service.pricingType === 'horaire' && ' / heure'}
                       </span>
                     </div>
 
@@ -925,14 +1388,12 @@ export default function PrestataireHomePage({
                       <button
                         onClick={() => handleOpenEditService(service)}
                         className="p-2 bg-indigo-50 text-indigo-600 rounded-xl hover:bg-indigo-100 transition cursor-pointer"
-                        title="Modifier ce service"
                       >
                         <Edit3 className="w-4 h-4" />
                       </button>
                       <button
                         onClick={() => setDeleteConfirmId(service.id)}
                         className="p-2 bg-rose-50 text-rose-600 rounded-xl hover:bg-rose-100 transition cursor-pointer"
-                        title="Supprimer ce service"
                       >
                         <Trash2 className="w-4 h-4" />
                       </button>
@@ -941,591 +1402,265 @@ export default function PrestataireHomePage({
                 </div>
               ))}
             </div>
-
-            {/* MODAL FORM: AJOUTER / MODIFIER UN SERVICE */}
-            {isAddServiceModalOpen && (
-              <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4 overflow-y-auto">
-                <div className="bg-white p-6 rounded-3xl max-w-lg w-full space-y-4 shadow-2xl my-8">
-                  <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-                    <div className="flex items-center gap-2">
-                      <Wrench className="w-5 h-5 text-[#2563EB]" />
-                      <h3 className="font-black text-sm text-[#0F172A]">
-                        {editingService ? 'Modifier le Service' : 'Ajouter un Nouveau Service'}
-                      </h3>
-                    </div>
-                    <button onClick={() => setIsAddServiceModalOpen(false)} className="p-1 text-slate-400 hover:text-slate-600">
-                      <X className="w-5 h-5" />
-                    </button>
-                  </div>
-
-                  <div className="space-y-3 max-h-[70vh] overflow-y-auto pr-1">
-                    <div>
-                      <label className="text-[10px] font-bold text-slate-500 uppercase">Intitulé du service *</label>
-                      <input
-                        type="text"
-                        placeholder="Ex: Installation Solaire 5KVA, Réparation Climatisation..."
-                        value={serviceForm.name}
-                        onChange={(e) => setServiceForm({ ...serviceForm, name: e.target.value })}
-                        className="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs font-bold text-[#0F172A]"
-                      />
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-3">
-                      <div>
-                        <label className="text-[10px] font-bold text-slate-500 uppercase">Catégorie</label>
-                        <select
-                          value={serviceForm.category}
-                          onChange={(e) => setServiceForm({ ...serviceForm, category: e.target.value })}
-                          className="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs font-bold text-[#0F172A]"
-                        >
-                          <option value="Électricité & Énergie Solaire">Électricité & Solaire</option>
-                          <option value="Froid & Climatisation">Froid & Climatisation</option>
-                          <option value="Plomberie & Sanitaires">Plomberie & Sanitaires</option>
-                          <option value="Menuiserie & Charpente">Menuiserie & Charpente</option>
-                          <option value="Peinture & Décoration">Peinture & Décoration</option>
-                          <option value="Mécanique Auto & Moto">Mécanique Auto & Moto</option>
-                          <option value="Informatique & Réseaux">Informatique & Réseaux</option>
-                          <option value="Beauté & Coiffure Pro">Beauté & Coiffure Pro</option>
-                        </select>
-                      </div>
-
-                      <div>
-                        <label className="text-[10px] font-bold text-slate-500 uppercase">Type de Tarif</label>
-                        <select
-                          value={serviceForm.pricingType}
-                          onChange={(e) => setServiceForm({ ...serviceForm, pricingType: e.target.value as any })}
-                          className="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs font-bold text-[#0F172A]"
-                        >
-                          <option value="fixe">Forfait Fixe</option>
-                          <option value="horaire">Tarif Horaire</option>
-                          <option value="devis">Sur Devis Personnalisé</option>
-                        </select>
-                      </div>
-                    </div>
-
-                    <div>
-                      <label className="text-[10px] font-bold text-slate-500 uppercase">Tarif (FCFA)</label>
-                      <input
-                        type="number"
-                        placeholder="Ex: 25000"
-                        value={serviceForm.price}
-                        onChange={(e) => setServiceForm({ ...serviceForm, price: Number(e.target.value) })}
-                        className="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs font-bold text-[#0F172A]"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="text-[10px] font-bold text-slate-500 uppercase">Description du travail</label>
-                      <textarea
-                        rows={3}
-                        placeholder="Expliquez votre procédure d'intervention, garanties et pièces fournies..."
-                        value={serviceForm.description}
-                        onChange={(e) => setServiceForm({ ...serviceForm, description: e.target.value })}
-                        className="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs font-medium text-[#0F172A]"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="text-[10px] font-bold text-slate-500 uppercase flex items-center gap-1">
-                        <ImageIcon className="w-3.5 h-3.5 text-blue-600" /> Ajouter des Photos (URLs séparées par des virgules)
-                      </label>
-                      <input
-                        type="text"
-                        placeholder="https://image1.jpg, https://image2.jpg"
-                        value={serviceForm.imagesText}
-                        onChange={(e) => setServiceForm({ ...serviceForm, imagesText: e.target.value })}
-                        className="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs font-mono"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="text-[10px] font-bold text-slate-500 uppercase flex items-center gap-1">
-                        <Video className="w-3.5 h-3.5 text-rose-600" /> Ajouter une Vidéo de Démo (Lien YouTube / MP4)
-                      </label>
-                      <input
-                        type="text"
-                        placeholder="https://www.youtube.com/watch?v=xxx ou lien mp4"
-                        value={serviceForm.videoUrl}
-                        onChange={(e) => setServiceForm({ ...serviceForm, videoUrl: e.target.value })}
-                        className="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs font-mono"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="text-[10px] font-bold text-slate-500 uppercase">Zones Couvertes</label>
-                      <input
-                        type="text"
-                        placeholder="Bafoussam Tamdja, Kamkop, Djeleng, Bamendzi"
-                        value={serviceForm.zonesText}
-                        onChange={(e) => setServiceForm({ ...serviceForm, zonesText: e.target.value })}
-                        className="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs font-bold"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="flex justify-end gap-2 pt-2 border-t border-slate-100">
-                    <button onClick={() => setIsAddServiceModalOpen(false)} className="px-4 py-2 text-xs font-bold text-slate-500 hover:bg-slate-100 rounded-xl">
-                      Annuler
-                    </button>
-                    <button
-                      onClick={handleSaveService}
-                      className="px-5 py-2.5 bg-[#16A34A] text-white text-xs font-black rounded-xl hover:bg-[#15803D] cursor-pointer"
-                    >
-                      {editingService ? 'Enregistrer les modifications' : 'Publier le Service'}
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* CONFIRMATION SUPPRESSION */}
-            {deleteConfirmId && (
-              <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4">
-                <div className="bg-white p-6 rounded-3xl max-w-sm w-full space-y-4 text-center shadow-2xl">
-                  <AlertCircle className="w-10 h-10 text-rose-500 mx-auto" />
-                  <h3 className="font-black text-sm text-[#0F172A]">Supprimer ce service ?</h3>
-                  <p className="text-xs text-slate-500">Cette offre sera définitivement retirée de votre profil public.</p>
-                  <div className="flex gap-2 pt-2">
-                    <button onClick={() => setDeleteConfirmId(null)} className="flex-1 py-2 text-xs font-bold text-slate-600 bg-slate-100 rounded-xl">
-                      Annuler
-                    </button>
-                    <button onClick={() => handleDeleteService(deleteConfirmId)} className="flex-1 py-2 text-xs font-bold text-white bg-rose-600 rounded-xl hover:bg-rose-700">
-                      Supprimer
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )}
           </div>
         )}
 
-        {/* 3. DISPONIBILITÉS, HORAIRES ET ZONES D'INTERVENTION */}
+        {/* 5. DISPONIBILITÉS, HORAIRES ET ZONES */}
         {activeTab === 'disponibilites' && (
           <div className="space-y-6">
-            <h2 className="text-lg font-black text-[#0F172A]">Définir Horaires & Zones d'Intervention</h2>
+            <h2 className="text-lg font-black text-[#0F172A]">Définir Horaires, Pause & Zones d'Intervention</h2>
+
+            {/* Mode Availability Selector */}
+            <div className="p-4 bg-white rounded-3xl border border-slate-200/90 shadow-sm space-y-3">
+              <label className="text-xs font-black uppercase text-slate-500">Mode de Disponibilité Actif</label>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                {[
+                  { id: 'immediate', label: '🟢 En Ligne (Urgence 24/7)', desc: 'Interventions immédiates sous 30 min' },
+                  { id: 'appointment', label: '📅 Sur Rendez-vous', desc: 'Selon planning fixé au préalable' },
+                  { id: 'busy', label: '🔴 En Pause / Indisponible', desc: 'Aucune réservation acceptée' }
+                ].map((mode) => (
+                  <button
+                    key={mode.id}
+                    onClick={() => {
+                      setAvailabilityMode(mode.id as any);
+                      showToast(`✓ Mode de disponibilité : ${mode.label}`);
+                    }}
+                    className={`p-3.5 rounded-2xl border text-left transition cursor-pointer ${
+                      availabilityMode === mode.id ? 'bg-[#0F172A] text-white border-slate-900 shadow-md' : 'bg-slate-50 text-slate-800 border-slate-200/80 hover:bg-slate-100'
+                    }`}
+                  >
+                    <p className="font-extrabold text-xs">{mode.label}</p>
+                    <p className={`text-[10px] mt-0.5 ${availabilityMode === mode.id ? 'text-slate-300' : 'text-slate-500'}`}>{mode.desc}</p>
+                  </button>
+                ))}
+              </div>
+            </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* Horaires et Jours Disponibles */}
+              {/* Weekly Schedule */}
               <div className="bg-white p-5 rounded-3xl border border-slate-100 shadow-2xs space-y-4">
                 <div className="flex items-center justify-between border-b border-slate-100 pb-3">
                   <div className="flex items-center gap-2">
                     <Clock className="w-5 h-5 text-[#2563EB]" />
-                    <h3 className="font-black text-sm text-[#0F172A]">Jours & Horaires d'Ouverture</h3>
+                    <h3 className="font-black text-sm text-[#0F172A]">Horaires d'Ouverture Hebdomadaires</h3>
                   </div>
-                  <button
-                    onClick={() => {
-                      setWeeklySchedule(prev => prev.map(s => ({ ...s, active: true, openTime: '08:00', closeTime: '18:00' })));
-                      showToast('⏰ Horaires réinitialisés (Lun-Dim 8h-18h).');
-                    }}
-                    className="text-[10px] font-bold text-[#2563EB] hover:underline flex items-center gap-1 cursor-pointer"
-                  >
-                    <RefreshCw className="w-3 h-3" /> Toujours Ouvert
-                  </button>
                 </div>
 
                 <div className="space-y-2">
                   {weeklySchedule.map((item, idx) => (
                     <div key={idx} className="p-3 bg-slate-50 rounded-2xl flex items-center justify-between text-xs gap-2">
-                      <div className="flex items-center gap-2 w-28">
-                        <button
-                          onClick={() => {
-                            setWeeklySchedule(prev => prev.map((s, i) => i === idx ? { ...s, active: !s.active } : s));
-                          }}
-                          className={`w-4 h-4 rounded-md flex items-center justify-center cursor-pointer ${
-                            item.active ? 'bg-[#16A34A] text-white' : 'bg-slate-300'
-                          }`}
-                        >
-                          {item.active && <Check className="w-3 h-3 stroke-[3]" />}
-                        </button>
-                        <span className={`font-bold ${item.active ? 'text-[#0F172A]' : 'text-slate-400 line-through'}`}>{item.day}</span>
-                      </div>
-
+                      <span className="font-bold w-24 text-slate-900">{item.day}</span>
                       {item.active ? (
-                        <div className="flex items-center gap-1">
-                          <input
-                            type="time"
-                            value={item.openTime}
-                            onChange={(e) => setWeeklySchedule(prev => prev.map((s, i) => i === idx ? { ...s, openTime: e.target.value } : s))}
-                            className="px-2 py-1 bg-white border border-slate-200 rounded-lg text-xs font-mono font-bold"
-                          />
-                          <span className="text-slate-400 font-bold">-</span>
-                          <input
-                            type="time"
-                            value={item.closeTime}
-                            onChange={(e) => setWeeklySchedule(prev => prev.map((s, i) => i === idx ? { ...s, closeTime: e.target.value } : s))}
-                            className="px-2 py-1 bg-white border border-slate-200 rounded-lg text-xs font-mono font-bold"
-                          />
+                        <div className="flex items-center gap-1 font-mono">
+                          <span>{item.openTime}</span>
+                          <span>-</span>
+                          <span>{item.closeTime}</span>
                         </div>
                       ) : (
-                        <span className="text-rose-500 font-bold text-[10px] bg-rose-50 px-2 py-0.5 rounded-full">Fermé / Repos</span>
+                        <span className="text-rose-500 font-bold text-[10px]">Fermé</span>
                       )}
                     </div>
                   ))}
                 </div>
-
-                <button
-                  onClick={() => showToast('✅ Planning hebdomadaire mis à jour !')}
-                  className="w-full py-2.5 bg-[#0F172A] text-white text-xs font-black rounded-xl hover:bg-[#1E293B] cursor-pointer"
-                >
-                  Enregistrer les Horaires
-                </button>
               </div>
 
-              {/* Zones d'Intervention */}
+              {/* Zones & Radius */}
               <div className="bg-white p-5 rounded-3xl border border-slate-100 shadow-2xs space-y-4">
                 <div className="flex items-center gap-2 border-b border-slate-100 pb-3">
                   <MapPin className="w-5 h-5 text-[#16A34A]" />
-                  <h3 className="font-black text-sm text-[#0F172A]">Zones d'Intervention Desserte</h3>
+                  <h3 className="font-black text-sm text-[#0F172A]">Rayon Desserte & Quartiers</h3>
                 </div>
 
-                <p className="text-xs text-slate-500">Cochez les quartiers et villes où vous acceptez de vous déplacer pour intervenir.</p>
-
-                <div className="grid grid-cols-2 gap-2">
-                  {interventionZones.map((z, idx) => (
-                    <button
-                      key={idx}
-                      onClick={() => setInterventionZones(prev => prev.map((item, i) => i === idx ? { ...item, active: !item.active } : item))}
-                      className={`p-2.5 rounded-2xl border text-xs font-bold text-left flex items-center justify-between transition cursor-pointer ${
-                        z.active ? 'bg-emerald-50 border-emerald-300 text-emerald-900' : 'bg-slate-50 border-slate-200 text-slate-400'
-                      }`}
-                    >
-                      <span className="truncate">{z.name}</span>
-                      <span className={`w-2 h-2 rounded-full ${z.active ? 'bg-[#16A34A]' : 'bg-slate-300'}`} />
-                    </button>
-                  ))}
-                </div>
-
-                {/* Add Custom Zone */}
-                <div className="flex gap-2 pt-2 border-t border-slate-100">
+                <div className="space-y-2">
+                  <label className="text-xs font-bold text-slate-700">Rayon d'action maximal: <strong className="text-[#2563EB]">{radiusKm} km</strong></label>
                   <input
-                    type="text"
-                    placeholder="Ajouter une autre localité (ex: Mbouda...)"
-                    value={newZoneInput}
-                    onChange={(e) => setNewZoneInput(e.target.value)}
-                    className="flex-1 px-3 py-2 border border-slate-200 rounded-xl text-xs font-bold"
+                    type="range"
+                    min="5"
+                    max="50"
+                    value={radiusKm}
+                    onChange={(e) => setRadiusKm(Number(e.target.value))}
+                    className="w-full accent-[#2563EB]"
                   />
-                  <button onClick={handleAddZone} className="px-4 py-2 bg-[#16A34A] text-white text-xs font-bold rounded-xl cursor-pointer">
-                    Ajouter
-                  </button>
+                </div>
+
+                <div className="grid grid-cols-2 gap-2 pt-2">
+                  {interventionZones.map((z, idx) => (
+                    <div key={idx} className="p-2.5 rounded-2xl bg-slate-50 border border-slate-200 text-xs font-bold flex justify-between items-center">
+                      <span className="truncate">{z.name}</span>
+                      <span className="text-[10px] text-emerald-600 font-mono">+{z.extraFee} F</span>
+                    </div>
+                  ))}
                 </div>
               </div>
             </div>
           </div>
         )}
 
-        {/* 4. RÉSERVATIONS (Accepter, Refuser, Reporter, Terminer) */}
+        {/* 6. RÉSERVATIONS */}
         {activeTab === 'reservations' && (
           <div className="space-y-4">
-            <h2 className="text-lg font-black text-[#0F172A]">Gestion des Réservations & Prestations</h2>
+            <h2 className="text-lg font-black text-[#0F172A]">Gestion des Demandes Clients</h2>
 
             <div className="space-y-3">
               {bookingsList.map((req) => (
                 <div key={req.id} className="p-5 bg-white rounded-3xl border border-slate-200/80 shadow-2xs space-y-3">
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                    <div className="space-y-1">
-                      <div className="flex items-center gap-2">
-                        <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase ${
-                          req.status === 'pending' ? 'bg-amber-100 text-amber-800' :
-                          req.status === 'accepted' ? 'bg-emerald-100 text-emerald-800' :
-                          req.status === 'postponed' ? 'bg-indigo-100 text-indigo-800' :
-                          req.status === 'completed' ? 'bg-blue-100 text-blue-800' : 'bg-rose-100 text-rose-800'
-                        }`}>
-                          {req.status === 'pending' ? '⏳ En Attente' :
-                           req.status === 'accepted' ? '✅ Acceptée' :
-                           req.status === 'postponed' ? '📅 Reportée' :
-                           req.status === 'completed' ? '🎉 Terminée' : '❌ Refusée'}
-                        </span>
-                        <span className="font-mono text-xs font-bold text-slate-400">{req.date} à {req.time}</span>
-                      </div>
-                      <h4 className="font-bold text-sm text-[#0F172A]">{req.title}</h4>
-                    </div>
-
-                    <span className="font-black text-[#16A34A] text-base bg-emerald-50 px-3 py-1 rounded-xl self-start sm:self-center">
-                      {req.budget}
-                    </span>
+                  <div className="flex justify-between items-center">
+                    <h4 className="font-bold text-sm text-[#0F172A]">{req.title}</h4>
+                    <span className="font-black text-[#16A34A] text-sm bg-emerald-50 px-3 py-1 rounded-xl">{req.budget}</span>
                   </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs bg-slate-50 p-3 rounded-2xl border border-slate-100">
-                    <p className="font-semibold text-slate-700 flex items-center gap-1.5">
-                      <UserIcon className="w-3.5 h-3.5 text-blue-600 shrink-0" />
-                      Client: <strong className="text-[#0F172A]">{req.client}</strong> ({req.phone})
-                    </p>
-                    <p className="font-semibold text-slate-700 flex items-center gap-1.5">
-                      <MapPin className="w-3.5 h-3.5 text-[#16A34A] shrink-0" />
-                      Lieu: <strong className="text-[#0F172A]">{req.location}</strong>
-                    </p>
-                    {req.notes && (
-                      <p className="col-span-full text-slate-500 italic pt-1 border-t border-slate-200/60">
-                        "{req.notes}"
-                      </p>
-                    )}
-                    {req.status === 'postponed' && (
-                      <p className="col-span-full font-bold text-indigo-700 pt-1">
-                        Reporté au: {req.postponeDate} à {req.postponeTime}
-                      </p>
-                    )}
-                  </div>
+                  <p className="text-xs text-slate-600">Client: {req.client} ({req.phone}) • Lieu: {req.location}</p>
 
-                  {/* Actions according to status */}
-                  <div className="flex flex-wrap gap-2 pt-1 border-t border-slate-100">
+                  <div className="flex gap-2 pt-1 border-t border-slate-100">
                     {req.status === 'pending' && (
-                      <>
-                        <button
-                          onClick={() => handleAcceptBooking(req.id)}
-                          className="px-4 py-2 bg-[#16A34A] hover:bg-[#15803D] text-white text-xs font-black rounded-xl flex items-center gap-1.5 cursor-pointer"
-                        >
-                          <Check className="w-4 h-4 stroke-[3]" />
-                          <span>Accepter la réservation</span>
-                        </button>
-
-                        <button
-                          onClick={() => setPostponeModalBooking(req)}
-                          className="px-4 py-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-xs font-bold rounded-xl flex items-center gap-1.5 cursor-pointer"
-                        >
-                          <CalendarIcon className="w-4 h-4" />
-                          <span>Reporter</span>
-                        </button>
-
-                        <button
-                          onClick={() => setRejectModalBooking(req)}
-                          className="px-4 py-2 bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-bold rounded-xl flex items-center gap-1.5 cursor-pointer"
-                        >
-                          <X className="w-4 h-4" />
-                          <span>Refuser</span>
-                        </button>
-                      </>
-                    )}
-
-                    {req.status === 'accepted' && (
-                      <button
-                        onClick={() => handleCompleteMission(req.id)}
-                        className="px-4 py-2 bg-[#16A34A] hover:bg-[#15803D] text-white text-xs font-black rounded-xl flex items-center gap-1.5 cursor-pointer shadow-xs"
-                      >
-                        <CheckCircle2 className="w-4 h-4" />
-                        <span>Terminer la prestation</span>
+                      <button onClick={() => handleAcceptBooking(req.id)} className="px-4 py-2 bg-[#16A34A] text-white text-xs font-black rounded-xl">
+                        Accepter
                       </button>
                     )}
-
-                    <a
-                      href={`tel:${req.phone}`}
-                      className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold rounded-xl flex items-center gap-1.5 ml-auto"
-                    >
-                      <PhoneCall className="w-3.5 h-3.5 text-[#2563EB]" />
-                      <span>Appeler Client</span>
-                    </a>
+                    {req.status === 'accepted' && (
+                      <button onClick={() => handleCompleteMission(req.id)} className="px-4 py-2 bg-[#2563EB] text-white text-xs font-black rounded-xl">
+                        Terminer prestation
+                      </button>
+                    )}
                   </div>
                 </div>
               ))}
             </div>
-
-            {/* MODAL REPORTER RÉSERVATION */}
-            {postponeModalBooking && (
-              <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4">
-                <div className="bg-white p-6 rounded-3xl max-w-md w-full space-y-4 shadow-2xl">
-                  <div className="flex justify-between items-center border-b pb-3">
-                    <h3 className="font-black text-sm text-[#0F172A]">Reporter la Réservation</h3>
-                    <button onClick={() => setPostponeModalBooking(null)} className="p-1 text-slate-400">
-                      <X className="w-4 h-4" />
-                    </button>
-                  </div>
-
-                  <p className="text-xs text-slate-600">Proposez une nouvelle date et heure d'intervention à {postponeModalBooking.client}.</p>
-
-                  <div className="space-y-3">
-                    <div>
-                      <label className="text-[10px] font-bold text-slate-500 uppercase">Nouvelle Date</label>
-                      <input
-                        type="text"
-                        value={postponeDate}
-                        onChange={(e) => setPostponeDate(e.target.value)}
-                        className="w-full px-3 py-2 border rounded-xl text-xs font-bold"
-                      />
-                    </div>
-                    <div>
-                      <label className="text-[10px] font-bold text-slate-500 uppercase">Nouvel Horaire</label>
-                      <input
-                        type="text"
-                        value={postponeTime}
-                        onChange={(e) => setPostponeTime(e.target.value)}
-                        className="w-full px-3 py-2 border rounded-xl text-xs font-bold"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="flex gap-2 pt-2">
-                    <button onClick={() => setPostponeModalBooking(null)} className="flex-1 py-2 text-xs font-bold text-slate-500 bg-slate-100 rounded-xl">
-                      Annuler
-                    </button>
-                    <button onClick={handleConfirmPostpone} className="flex-1 py-2 text-xs font-black text-white bg-indigo-600 rounded-xl">
-                      Confirmer le Report
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* MODAL REFUSER RÉSERVATION */}
-            {rejectModalBooking && (
-              <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4">
-                <div className="bg-white p-6 rounded-3xl max-w-md w-full space-y-4 shadow-2xl">
-                  <div className="flex justify-between items-center border-b pb-3">
-                    <h3 className="font-black text-sm text-[#0F172A]">Refuser la Réservation</h3>
-                    <button onClick={() => setRejectModalBooking(null)} className="p-1 text-slate-400">
-                      <X className="w-4 h-4" />
-                    </button>
-                  </div>
-
-                  <div>
-                    <label className="text-[10px] font-bold text-slate-500 uppercase">Motif du refus</label>
-                    <select
-                      value={rejectReason}
-                      onChange={(e) => setRejectReason(e.target.value)}
-                      className="w-full px-3 py-2 border rounded-xl text-xs font-bold text-[#0F172A] mt-1"
-                    >
-                      <option value="Planning complet à cette heure">Planning déjà complet</option>
-                      <option value="Lieu hors zone d'intervention">Lieu trop éloigné / Hors zone</option>
-                      <option value="Compétence technique spécifique indisponible">Matériel / Pièce spécifique non disponible</option>
-                      <option value="Autre motif">Autre motif</option>
-                    </select>
-                  </div>
-
-                  <div className="flex gap-2 pt-2">
-                    <button onClick={() => setRejectModalBooking(null)} className="flex-1 py-2 text-xs font-bold text-slate-500 bg-slate-100 rounded-xl">
-                      Annuler
-                    </button>
-                    <button onClick={handleConfirmReject} className="flex-1 py-2 text-xs font-black text-white bg-rose-600 rounded-xl">
-                      Confirmer le Refus
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )}
           </div>
         )}
 
-        {/* 5. FINANCES (Voir les paiements, Voir les revenus, Retrait MoMo) */}
+        {/* 7. FINANCES & TABLEAU DES REVENUS (JOUR, SEMAINE, MOIS, ANNÉE) */}
         {activeTab === 'finances' && (
           <div className="space-y-6">
-            <h2 className="text-lg font-black text-[#0F172A]">Paiements, Revenus & Retraits Mobile Money</h2>
+            <h2 className="text-lg font-black text-[#0F172A]">Tableau des Revenus & Encaissements</h2>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              {/* Box Solde & Retrait */}
-              <div className="bg-[#0F172A] text-white p-6 rounded-3xl space-y-4 shadow-xl">
-                <span className="text-xs text-slate-400 font-bold uppercase tracking-wider block">Solde Total Disponible</span>
-                <p className="text-3xl font-black text-[#16A34A]">345 000 FCFA</p>
-
-                <div className="space-y-3 pt-2 border-t border-slate-800">
-                  <div>
-                    <label className="text-[10px] font-bold text-slate-400 uppercase">Numéro Mobile Money / Orange</label>
-                    <input
-                      type="text"
-                      value={payoutPhone}
-                      onChange={(e) => setPayoutPhone(e.target.value)}
-                      className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-xl text-xs font-bold text-white mt-1"
-                    />
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-2">
-                    <button
-                      onClick={() => setPayoutProvider('momo')}
-                      className={`py-2 rounded-xl text-xs font-black cursor-pointer ${
-                        payoutProvider === 'momo' ? 'bg-amber-400 text-slate-900' : 'bg-slate-800 text-slate-300'
-                      }`}
-                    >
-                      MTN MoMo
-                    </button>
-                    <button
-                      onClick={() => setPayoutProvider('orange')}
-                      className={`py-2 rounded-xl text-xs font-black cursor-pointer ${
-                        payoutProvider === 'orange' ? 'bg-orange-500 text-white' : 'bg-slate-800 text-slate-300'
-                      }`}
-                    >
-                      Orange Money
-                    </button>
-                  </div>
-
-                  <div>
-                    <label className="text-[10px] font-bold text-slate-400 uppercase">Montant à encaisser (FCFA)</label>
-                    <input
-                      type="number"
-                      value={payoutAmount}
-                      onChange={(e) => setPayoutAmount(e.target.value)}
-                      className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-xl text-xs font-bold text-white mt-1"
-                    />
-                  </div>
-
-                  <button
-                    onClick={handleRequestPayout}
-                    className="w-full py-3 bg-[#16A34A] hover:bg-[#15803D] text-white text-xs font-black rounded-xl transition cursor-pointer shadow-md"
-                  >
-                    Demander le Transfert Immédiat
-                  </button>
-                </div>
+            {/* Comparative Revenues Grid */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="p-4 bg-white rounded-2xl border border-slate-200 shadow-2xs space-y-1">
+                <span className="text-[10px] font-bold text-slate-400 uppercase">Aujourd'hui</span>
+                <p className="text-lg font-black text-[#16A34A]">{revenueStats.today.toLocaleString()} FCFA</p>
+                <span className="text-[9px] text-slate-500 font-bold">2 prestations</span>
               </div>
 
-              {/* Historique des Paiements */}
-              <div className="lg:col-span-2 bg-white p-5 rounded-3xl border border-slate-100 shadow-2xs space-y-4">
-                <h3 className="font-black text-sm text-[#0F172A] border-b pb-3">Historique des Transactions Encaissées</h3>
+              <div className="p-4 bg-white rounded-2xl border border-slate-200 shadow-2xs space-y-1">
+                <span className="text-[10px] font-bold text-slate-400 uppercase">Cette Semaine</span>
+                <p className="text-lg font-black text-[#2563EB]">{revenueStats.week.toLocaleString()} FCFA</p>
+                <span className="text-[9px] text-slate-500 font-bold">8 prestations</span>
+              </div>
 
-                <div className="space-y-2">
-                  {paymentTransactions.map((tx) => (
-                    <div key={tx.id} className="p-3 bg-slate-50 rounded-2xl flex items-center justify-between text-xs">
-                      <div>
-                        <span className="font-mono font-bold text-blue-600 text-[10px]">{tx.ref}</span>
-                        <h4 className="font-bold text-[#0F172A]">{tx.serviceName}</h4>
-                        <p className="text-[10px] text-slate-400">{tx.clientName} • {tx.date}</p>
-                      </div>
+              <div className="p-4 bg-white rounded-2xl border border-slate-200 shadow-2xs space-y-1">
+                <span className="text-[10px] font-bold text-slate-400 uppercase">Ce Mois</span>
+                <p className="text-lg font-black text-purple-700">{revenueStats.month.toLocaleString()} FCFA</p>
+                <span className="text-[9px] text-slate-500 font-bold">24 prestations</span>
+              </div>
 
-                      <div className="text-right">
-                        <span className="font-black text-[#16A34A] text-sm block">+{tx.amount.toLocaleString()} FCFA</span>
-                        <span className="text-[9px] font-bold uppercase text-slate-500 bg-slate-200 px-2 py-0.5 rounded-full">
-                          {tx.provider}
-                        </span>
-                      </div>
+              <div className="p-4 bg-white rounded-2xl border border-slate-200 shadow-2xs space-y-1">
+                <span className="text-[10px] font-bold text-slate-400 uppercase">Cette Année</span>
+                <p className="text-lg font-black text-slate-900">{revenueStats.year.toLocaleString()} FCFA</p>
+                <span className="text-[9px] text-slate-500 font-bold">168 prestations</span>
+              </div>
+            </div>
+
+            {/* Payout Box & Transactions */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              <div className="bg-[#0F172A] text-white p-6 rounded-3xl space-y-4 shadow-xl">
+                <span className="text-xs text-slate-400 font-bold uppercase block">Solde Disponible</span>
+                <p className="text-3xl font-black text-[#16A34A]">345 000 FCFA</p>
+
+                <button
+                  onClick={handleRequestPayout}
+                  className="w-full py-3 bg-[#16A34A] hover:bg-[#15803D] text-white text-xs font-black rounded-xl cursor-pointer"
+                >
+                  Demander le Transfert Mobile Money
+                </button>
+              </div>
+
+              <div className="lg:col-span-2 bg-white p-5 rounded-3xl border border-slate-100 shadow-2xs space-y-3">
+                <h3 className="font-black text-sm text-[#0F172A] border-b pb-2">Historique des Transactions Encaissées</h3>
+                {paymentTransactions.map((tx) => (
+                  <div key={tx.id} className="p-3 bg-slate-50 rounded-2xl flex items-center justify-between text-xs">
+                    <div>
+                      <span className="font-mono font-bold text-blue-600 text-[10px]">{tx.ref}</span>
+                      <h4 className="font-bold text-[#0F172A]">{tx.serviceName}</h4>
+                      <p className="text-[10px] text-slate-400">{tx.clientName} • {tx.date}</p>
                     </div>
-                  ))}
-                </div>
+                    <span className="font-black text-[#16A34A] text-sm">+{tx.amount.toLocaleString()} FCFA</span>
+                  </div>
+                ))}
               </div>
             </div>
           </div>
         )}
 
-        {/* 6. STATISTIQUES */}
+        {/* 8. GRAPHIQUES DE PERFORMANCE */}
         {activeTab === 'stats' && (
           <div className="space-y-6">
-            <h2 className="text-lg font-black text-[#0F172A]">Statistiques de Performance Prestataire</h2>
+            <h2 className="text-lg font-black text-[#0F172A]">Graphiques de Performance & Analytique</h2>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="p-5 bg-white rounded-3xl border border-slate-100 shadow-2xs space-y-2">
-                <span className="text-xs text-slate-400 font-bold uppercase">Taux d'Acceptation</span>
-                <p className="text-2xl font-black text-[#16A34A]">98.5 %</p>
-                <p className="text-[10px] text-slate-500">Excellente réactivité sur la région de Bafoussam.</p>
+                <span className="text-xs text-slate-400 font-bold uppercase">Satisfaction Client</span>
+                <p className="text-3xl font-black text-[#16A34A]">98.5 %</p>
+                <p className="text-[10px] text-slate-500">Note moyenne de 4.95/5 sur 32 avis.</p>
               </div>
 
               <div className="p-5 bg-white rounded-3xl border border-slate-100 shadow-2xs space-y-2">
-                <span className="text-xs text-slate-400 font-bold uppercase">Temps Moyen de Réponse</span>
-                <p className="text-2xl font-black text-[#2563EB]">8 minutes</p>
-                <p className="text-[10px] text-slate-500">Moyenne des 30 derniers jours.</p>
+                <span className="text-xs text-slate-400 font-bold uppercase">Temps de Réponse Moyen</span>
+                <p className="text-3xl font-black text-[#2563EB]">8 minutes</p>
+                <p className="text-[10px] text-slate-500">Moyenne calculée sur 30 jours.</p>
               </div>
 
               <div className="p-5 bg-white rounded-3xl border border-slate-100 shadow-2xs space-y-2">
-                <span className="text-xs text-slate-400 font-bold uppercase">Missions Réussies</span>
-                <p className="text-2xl font-black text-purple-600">64 prestations</p>
-                <p className="text-[10px] text-slate-500">Aucun litige signalé.</p>
+                <span className="text-xs text-slate-400 font-bold uppercase">Missions Réalisées</span>
+                <p className="text-3xl font-black text-purple-700">64 missions</p>
+                <p className="text-[10px] text-slate-500">100% sans aucun litige.</p>
+              </div>
+            </div>
+
+            {/* Visual Chart Bars */}
+            <div className="bg-white p-6 rounded-3xl border border-slate-200/90 shadow-sm space-y-4">
+              <h3 className="font-extrabold text-slate-900 text-sm">Évolution des Revenus Mensuels (FCFA)</h3>
+              <div className="h-40 flex items-end justify-between gap-2 pt-6 px-4 border-b pb-2">
+                {[
+                  { month: 'Mars', val: 420 },
+                  { month: 'Avril', val: 510 },
+                  { month: 'Mai', val: 480 },
+                  { month: 'Juin', val: 590 },
+                  { month: 'Juil', val: 610 },
+                  { month: 'Août', val: 640 }
+                ].map((item) => (
+                  <div key={item.month} className="flex-1 flex flex-col items-center gap-1">
+                    <div
+                      style={{ height: `${(item.val / 700) * 100}%` }}
+                      className="w-full bg-[#2563EB] rounded-t-xl hover:bg-blue-700 transition"
+                    />
+                    <span className="text-[10px] font-bold text-slate-500">{item.month}</span>
+                  </div>
+                ))}
               </div>
             </div>
           </div>
         )}
 
-        {/* 7. MESSAGES (Répondre aux messages) */}
+        {/* 9. MESSAGERIE INSTANTANÉE */}
         {activeTab === 'messages' && (
           <div className="space-y-4">
-            <h2 className="text-lg font-black text-[#0F172A]">Messagerie Directe Client</h2>
+            <h2 className="text-lg font-black text-[#0F172A]">Messagerie Instantanée Client</h2>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 bg-white rounded-3xl border border-slate-200/80 p-4 shadow-2xs min-h-[420px]">
-              {/* Conversation List */}
+              {/* Chat Sidebar */}
               <div className="space-y-2 border-r border-slate-100 pr-3">
-                <h3 className="font-black text-xs text-slate-400 uppercase px-2 mb-2">Discussions Récentes</h3>
+                <div className="relative mb-2">
+                  <Search className="w-3.5 h-3.5 absolute left-3 top-2.5 text-slate-400" />
+                  <input
+                    type="text"
+                    placeholder="Rechercher un client..."
+                    value={chatSearchQuery}
+                    onChange={(e) => setChatSearchQuery(e.target.value)}
+                    className="w-full pl-8 pr-3 py-1.5 bg-slate-50 border rounded-xl text-xs"
+                  />
+                </div>
+
                 {chats.map((c, idx) => (
                   <div
                     key={c.id}
@@ -1539,21 +1674,15 @@ export default function PrestataireHomePage({
                       <p className="font-bold text-xs truncate">{c.clientName}</p>
                       <p className={`text-[10px] truncate ${selectedChatIndex === idx ? 'text-slate-300' : 'text-slate-500'}`}>{c.serviceTitle}</p>
                     </div>
-                    <span className="text-[9px] text-slate-400">{c.lastTime}</span>
                   </div>
                 ))}
               </div>
 
-              {/* Chat Thread */}
+              {/* Chat Window */}
               <div className="md:col-span-2 flex flex-col justify-between space-y-4 pl-2">
-                <div className="border-b pb-3 flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <img src={chats[selectedChatIndex].avatar} alt="" className="w-8 h-8 rounded-full object-cover" />
-                    <div>
-                      <h4 className="font-black text-xs text-[#0F172A]">{chats[selectedChatIndex].clientName}</h4>
-                      <p className="text-[10px] text-[#2563EB] font-bold">{chats[selectedChatIndex].serviceTitle}</p>
-                    </div>
-                  </div>
+                <div className="border-b pb-2 flex justify-between items-center">
+                  <h4 className="font-black text-xs text-[#0F172A]">{chats[selectedChatIndex].clientName}</h4>
+                  <span className="text-[10px] text-[#2563EB] font-bold">{chats[selectedChatIndex].serviceTitle}</span>
                 </div>
 
                 <div className="space-y-3 flex-1 overflow-y-auto max-h-[260px] pr-2">
@@ -1563,13 +1692,34 @@ export default function PrestataireHomePage({
                         m.sender === 'prestataire' ? 'bg-[#2563EB] text-white' : 'bg-slate-100 text-[#0F172A]'
                       }`}>
                         <p>{m.text}</p>
-                        <span className={`text-[8px] block text-right font-mono ${m.sender === 'prestataire' ? 'text-blue-200' : 'text-slate-400'}`}>{m.time}</span>
+                        <span className={`text-[8px] block text-right ${m.sender === 'prestataire' ? 'text-blue-200' : 'text-slate-400'}`}>{m.time}</span>
                       </div>
                     </div>
                   ))}
                 </div>
 
+                {/* Canned Quick Response Chips */}
+                <div className="flex gap-1.5 overflow-x-auto py-1 scrollbar-none">
+                  {['Je suis en route ! 🛵', 'Pouvez-vous préciser le quartier ?', 'Prestation terminée, merci ! 🙏'].map((chip) => (
+                    <button
+                      key={chip}
+                      onClick={() => handleSendMessageReply(chip)}
+                      className="px-2.5 py-1 bg-blue-50 text-[#2563EB] text-[10px] font-bold rounded-full hover:bg-blue-100 cursor-pointer shrink-0"
+                    >
+                      {chip}
+                    </button>
+                  ))}
+                </div>
+
                 <div className="flex gap-2 pt-2 border-t">
+                  <button
+                    onClick={handleSendVoiceNote}
+                    className={`p-2 rounded-xl border text-slate-600 hover:bg-slate-100 cursor-pointer ${isRecordingAudio ? 'bg-rose-100 text-rose-600 animate-pulse' : ''}`}
+                    title="Enregistrer note vocale"
+                  >
+                    <Mic className="w-4 h-4" />
+                  </button>
+
                   <input
                     type="text"
                     value={messageReplyText}
@@ -1577,7 +1727,8 @@ export default function PrestataireHomePage({
                     placeholder="Écrivez votre message..."
                     className="flex-1 px-3 py-2 bg-slate-50 border rounded-xl text-xs font-bold"
                   />
-                  <button onClick={handleSendMessageReply} className="px-4 py-2 bg-[#2563EB] text-white rounded-xl text-xs font-bold flex items-center gap-1 cursor-pointer">
+
+                  <button onClick={() => handleSendMessageReply()} className="px-4 py-2 bg-[#2563EB] text-white rounded-xl text-xs font-bold flex items-center gap-1 cursor-pointer">
                     <Send className="w-3.5 h-3.5" />
                     <span>Envoyer</span>
                   </button>
@@ -1587,10 +1738,10 @@ export default function PrestataireHomePage({
           </div>
         )}
 
-        {/* 8. AVIS CLIENTS (Consulter & Répondre) */}
+        {/* 10. AVIS CLIENTS & RÉPONSES */}
         {activeTab === 'avis' && (
           <div className="space-y-4">
-            <h2 className="text-lg font-black text-[#0F172A]">Consulter & Répondre aux Avis Clients</h2>
+            <h2 className="text-lg font-black text-[#0F172A]">Avis & Évaluations Clients</h2>
 
             <div className="space-y-3">
               {reviewsList.map((rev) => (
@@ -1608,7 +1759,6 @@ export default function PrestataireHomePage({
 
                   <p className="text-xs text-slate-700 italic">"{rev.text}"</p>
 
-                  {/* Provider Reply */}
                   {rev.reply ? (
                     <div className="bg-blue-50/70 p-3 rounded-2xl border border-blue-100 space-y-1 text-xs">
                       <span className="text-[10px] font-black text-[#2563EB] uppercase block">Votre réponse:</span>
@@ -1646,10 +1796,10 @@ export default function PrestataireHomePage({
           </div>
         )}
 
-        {/* 9. PROFIL & INFORMATIONS */}
+        {/* 11. PROFIL PROFESSIONNEL */}
         {activeTab === 'profil' && (
           <div className="space-y-6">
-            <h2 className="text-lg font-black text-[#0F172A]">Modifier Profil Professionnel & Informations</h2>
+            <h2 className="text-lg font-black text-[#0F172A]">Profil Professionnel & Bio</h2>
 
             <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-2xs space-y-4 max-w-2xl">
               <div className="space-y-3">
@@ -1673,147 +1823,241 @@ export default function PrestataireHomePage({
                   />
                 </div>
 
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="text-[10px] font-bold text-slate-500 uppercase">Téléphone MoMo Pro</label>
-                    <input
-                      type="text"
-                      value={providerProfile.phone}
-                      onChange={(e) => setProviderProfile({ ...providerProfile, phone: e.target.value })}
-                      className="w-full px-3 py-2 border rounded-xl text-xs font-bold text-[#0F172A]"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="text-[10px] font-bold text-slate-500 uppercase">Numéro WhatsApp</label>
-                    <input
-                      type="text"
-                      value={providerProfile.whatsapp}
-                      onChange={(e) => setProviderProfile({ ...providerProfile, whatsapp: e.target.value })}
-                      className="w-full px-3 py-2 border rounded-xl text-xs font-bold text-[#0F172A]"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="text-[10px] font-bold text-slate-500 uppercase">Adresse / Quartier Général</label>
-                  <input
-                    type="text"
-                    value={providerProfile.address}
-                    onChange={(e) => setProviderProfile({ ...providerProfile, address: e.target.value })}
-                    className="w-full px-3 py-2 border rounded-xl text-xs font-bold text-[#0F172A]"
-                  />
-                </div>
-
-                <div>
-                  <label className="text-[10px] font-bold text-slate-500 uppercase">Diplômes & Habilitations</label>
-                  <input
-                    type="text"
-                    value={providerProfile.diplomas}
-                    onChange={(e) => setProviderProfile({ ...providerProfile, diplomas: e.target.value })}
-                    className="w-full px-3 py-2 border rounded-xl text-xs font-bold text-[#0F172A]"
-                  />
-                </div>
-
-                <div>
-                  <label className="text-[10px] font-bold text-slate-500 uppercase">Bio & Présentation de l'atelier</label>
-                  <textarea
-                    rows={3}
-                    value={providerProfile.bio}
-                    onChange={(e) => setProviderProfile({ ...providerProfile, bio: e.target.value })}
-                    className="w-full px-3 py-2 border rounded-xl text-xs font-medium text-[#0F172A]"
-                  />
-                </div>
-
                 <button
-                  onClick={() => showToast('✅ Profil professionnel mis à jour avec succès !')}
+                  onClick={() => showToast('✅ Profil professionnel mis à jour !')}
                   className="px-6 py-2.5 bg-[#16A34A] text-white text-xs font-black rounded-xl hover:bg-[#15803D] cursor-pointer"
                 >
-                  Enregistrer les Informations
+                  Enregistrer les Modifications
                 </button>
               </div>
             </div>
 
-            {/* À propos d'AfriNova */}
             <AboutAfriNovaSection />
           </div>
         )}
 
-        {/* 10. ABONNEMENT PRO */}
+        {/* 12. ABONNEMENT */}
         {activeTab === 'abonnement' && (
           <div className="space-y-6">
-            <h2 className="text-lg font-black text-[#0F172A]">Gérer son Abonnement Prestataire Pro</h2>
+            <h2 className="text-lg font-black text-[#0F172A]">Abonnement Prestataire VIP</h2>
 
             <div className="bg-gradient-to-br from-slate-900 to-indigo-950 text-white p-6 rounded-3xl space-y-4 max-w-xl shadow-xl">
               <div className="flex justify-between items-center border-b border-slate-800 pb-3">
-                <div className="flex items-center gap-2">
-                  <ShieldCheck className="w-6 h-6 text-[#16A34A]" />
-                  <h3 className="font-black text-sm">{subscription.planName}</h3>
-                </div>
-                <span className="px-3 py-1 bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 text-[10px] font-black rounded-full uppercase">
+                <h3 className="font-black text-sm">{subscription.planName}</h3>
+                <span className="px-3 py-1 bg-emerald-500/20 text-emerald-300 text-[10px] font-black rounded-full uppercase">
                   {subscription.status}
                 </span>
               </div>
-
-              <p className="text-xs text-slate-300">
-                Abonnement mensuel certifié vous donnant droit à la visibilité prioritaire à Bafoussam et 0% de commission sur vos devis clients.
-              </p>
-
-              <div className="space-y-2 text-xs font-bold text-slate-200">
-                <p>• Valide jusqu'au: <strong className="text-emerald-400">{subscription.expiryDate}</strong></p>
-                <p>• Tarif de renouvellement: <strong>15 000 FCFA / mois</strong></p>
-              </div>
-
-              <button
-                onClick={() => showToast('💳 Renouvellement d\'abonnement initié via MoMo !')}
-                className="w-full py-3 bg-[#16A34A] hover:bg-[#15803D] text-white text-xs font-black rounded-xl transition cursor-pointer"
-              >
-                Renouveler mon Abonnement
-              </button>
+              <p className="text-xs text-slate-300">Valide jusqu'au {subscription.expiryDate}. Visibilité prioritaire garantie à Bafoussam.</p>
             </div>
           </div>
         )}
 
-        {/* 11. SUPPORT */}
+        {/* 13. SUPPORT */}
         {activeTab === 'support' && (
           <div className="space-y-6">
             <h2 className="text-lg font-black text-[#0F172A]">Support & Assistance Technique 24/7</h2>
 
-            <div className="p-6 bg-blue-50 text-blue-950 rounded-3xl border border-blue-200 space-y-4 max-w-xl shadow-2xs">
-              <div className="flex items-center gap-3">
-                <PhoneCall className="w-8 h-8 text-[#2563EB]" />
-                <div>
-                  <h3 className="font-black text-sm">Assistance Ligne Directe Techniciens</h3>
-                  <p className="text-xs text-blue-800">Assistance prioritaire AfriNova Bafoussam</p>
-                </div>
-              </div>
-
-              <p className="text-xs leading-relaxed text-slate-700">
-                Une question sur un paiement Mobile Money ou un litige avec un client ? Contactez notre équipe locale basée à Bafoussam Tamdja.
-              </p>
-
-              <div className="flex gap-3">
-                <a
-                  href="tel:+237677894512"
-                  className="px-4 py-2.5 bg-[#2563EB] text-white text-xs font-black rounded-xl flex items-center gap-2 hover:bg-blue-700"
-                >
-                  <PhoneCall className="w-4 h-4" />
-                  <span>+237 677 89 45 12</span>
-                </a>
-
-                <button
-                  onClick={() => showToast('💬 Ouverture WhatsApp Support AfriNova...')}
-                  className="px-4 py-2.5 bg-[#16A34A] text-white text-xs font-black rounded-xl flex items-center gap-2 hover:bg-[#15803D] cursor-pointer"
-                >
-                  <MessageSquare className="w-4 h-4" />
-                  <span>WhatsApp Support</span>
-                </button>
-              </div>
+            <div className="p-6 bg-blue-50 text-blue-950 rounded-3xl border border-blue-200 space-y-4 max-w-xl">
+              <h3 className="font-black text-sm">Assistance Techniciens Bafoussam</h3>
+              <p className="text-xs text-slate-700">Une question ou un litige ? Notre équipe locale vous répond par téléphone ou WhatsApp.</p>
+              <a href="tel:+237677894512" className="inline-block px-4 py-2.5 bg-[#2563EB] text-white text-xs font-black rounded-xl">
+                Appeler +237 677 89 45 12
+              </a>
             </div>
           </div>
         )}
 
       </main>
+
+      {/* ========================================================= */}
+      {/* QUICK ACTION MODALS                                        */}
+      {/* ========================================================= */}
+
+      {/* MODAL 1: MODIFIER LE PROFIL */}
+      {showEditProfileModal && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+          <div className="bg-white p-6 rounded-3xl max-w-md w-full space-y-4 shadow-2xl">
+            <div className="flex justify-between items-center border-b pb-3">
+              <h3 className="font-black text-sm text-[#0F172A]">Modifier Profil Professionnel</h3>
+              <button onClick={() => setShowEditProfileModal(false)} className="p-1 text-slate-400">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="space-y-3 text-xs">
+              <div>
+                <label className="font-bold text-slate-500">Nom / Raison Sociale</label>
+                <input
+                  type="text"
+                  value={providerProfile.name}
+                  onChange={(e) => setProviderProfile({ ...providerProfile, name: e.target.value })}
+                  className="w-full px-3 py-2 border rounded-xl font-bold"
+                />
+              </div>
+
+              <div>
+                <label className="font-bold text-slate-500">Spécialité / Métier</label>
+                <input
+                  type="text"
+                  value={providerProfile.tradeTitle}
+                  onChange={(e) => setProviderProfile({ ...providerProfile, tradeTitle: e.target.value })}
+                  className="w-full px-3 py-2 border rounded-xl font-bold"
+                />
+              </div>
+
+              <button
+                onClick={() => {
+                  showToast('✓ Profil mis à jour avec succès !');
+                  setShowEditProfileModal(false);
+                }}
+                className="w-full py-2.5 bg-[#16A34A] text-white font-extrabold rounded-xl cursor-pointer"
+              >
+                Enregistrer le Profil
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL 2: SCANNER QR CODE */}
+      {showQrModal && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+          <div className="bg-white p-6 rounded-3xl max-w-md w-full space-y-4 shadow-2xl text-center">
+            <div className="flex justify-between items-center border-b pb-3 text-left">
+              <h3 className="font-black text-sm text-[#0F172A]">Scanner un QR Code Client</h3>
+              <button onClick={() => setShowQrModal(false)} className="p-1 text-slate-400">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="bg-slate-900 rounded-2xl p-8 border border-slate-800 text-white space-y-3 relative overflow-hidden">
+              <div className="w-40 h-40 mx-auto border-2 border-dashed border-emerald-400 rounded-xl flex items-center justify-center relative">
+                <QrCode className="w-16 h-16 text-emerald-400 animate-pulse" />
+              </div>
+              <p className="text-xs text-slate-300">Pointez la caméra vers le QR code de réservation du client.</p>
+            </div>
+
+            <button
+              onClick={() => {
+                showToast('✓ QR Code scanné avec succès ! Réservation #REQ-201 validée.');
+                setShowQrModal(false);
+              }}
+              className="w-full py-3 bg-[#16A34A] text-white font-extrabold text-xs rounded-xl cursor-pointer"
+            >
+              Simuler le Scan Réussi
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL 3: TÉLÉCHARGER RAPPORT PDF */}
+      {showPdfReportModal && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+          <div className="bg-white p-6 rounded-3xl max-w-md w-full space-y-4 shadow-2xl">
+            <div className="flex justify-between items-center border-b pb-3">
+              <h3 className="font-black text-sm text-[#0F172A]">Générer Rapport d'Activité PDF</h3>
+              <button onClick={() => setShowPdfReportModal(false)} className="p-1 text-slate-400">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200 text-xs space-y-2">
+              <p className="font-extrabold text-slate-900">Rapport Financier & Prestations Bafoussam</p>
+              <p className="text-slate-600">Période : Août 2026</p>
+              <p className="text-slate-600">Revenus cumulés : 640 000 FCFA</p>
+              <p className="text-slate-600">Missions terminées : 24</p>
+            </div>
+
+            <button
+              onClick={() => {
+                showToast('📄 Téléchargement du Rapport PDF lancé !');
+                setShowPdfReportModal(false);
+              }}
+              className="w-full py-3 bg-[#2563EB] hover:bg-blue-700 text-white font-extrabold text-xs rounded-xl cursor-pointer flex items-center justify-center gap-2"
+            >
+              <Download className="w-4 h-4" />
+              <span>Télécharger le Fichier PDF</span>
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL 4: PARTAGER PROFIL */}
+      {showShareModal && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+          <div className="bg-white p-6 rounded-3xl max-w-md w-full space-y-4 shadow-2xl">
+            <div className="flex justify-between items-center border-b pb-3">
+              <h3 className="font-black text-sm text-[#0F172A]">Partager mon Profil Professionnel</h3>
+              <button onClick={() => setShowShareModal(false)} className="p-1 text-slate-400">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="space-y-3">
+              <input
+                type="text"
+                readOnly
+                value={`https://afrinova.cm/prestataire/${currentUser?.id || 'pro-1'}`}
+                className="w-full p-2.5 bg-slate-50 border rounded-xl text-xs font-mono font-bold"
+              />
+
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  onClick={() => {
+                    navigator.clipboard?.writeText(`https://afrinova.cm/prestataire/${currentUser?.id || 'pro-1'}`);
+                    showToast('✓ Lien copié dans le presse-papier !');
+                  }}
+                  className="py-2.5 bg-[#16A34A] text-white text-xs font-bold rounded-xl cursor-pointer"
+                >
+                  Copier le Lien
+                </button>
+
+                <a
+                  href={`https://wa.me/?text=${encodeURIComponent(`Retrouvez mes services professionnels sur AfriNova Bafoussam : https://afrinova.cm/prestataire/${currentUser?.id || 'pro-1'}`)}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="py-2.5 bg-emerald-600 text-white text-xs font-bold rounded-xl text-center flex items-center justify-center"
+                >
+                  WhatsApp
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL 5: ASSISTANCE & SUPPORT */}
+      {showSupportModal && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+          <div className="bg-white p-6 rounded-3xl max-w-md w-full space-y-4 shadow-2xl">
+            <div className="flex justify-between items-center border-b pb-3">
+              <h3 className="font-black text-sm text-[#0F172A]">Contacter l'Assistance AfriNova</h3>
+              <button onClick={() => setShowSupportModal(false)} className="p-1 text-slate-400">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <p className="text-xs text-slate-600">Ligne directe techniciens & conseillers locaux à Bafoussam.</p>
+
+            <div className="space-y-2">
+              <a href="tel:+237677894512" className="block w-full p-3 bg-blue-50 text-[#2563EB] font-bold text-xs rounded-xl text-center">
+                Appel : +237 677 89 45 12
+              </a>
+              <button
+                onClick={() => {
+                  showToast('✓ Votre demande d\'assistance a été prise en compte.');
+                  setShowSupportModal(false);
+                }}
+                className="w-full p-3 bg-emerald-50 text-[#16A34A] font-bold text-xs rounded-xl"
+              >
+                Envoyer un Message Prioritaire
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }
