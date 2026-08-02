@@ -33,8 +33,8 @@ import { AfriNovaLogo } from './AfriNovaLogo';
 
 interface StoreHeaderProps {
   currentUser: User;
-  activeView: 'shop' | 'merchant' | 'orders' | 'news' | 'admin';
-  onViewChange: (view: 'shop' | 'merchant' | 'orders' | 'news' | 'admin') => void;
+  activeView: 'shop' | 'merchant' | 'orders' | 'news' | 'admin' | 'dashboard';
+  onViewChange: (view: 'shop' | 'merchant' | 'orders' | 'news' | 'admin' | 'dashboard') => void;
   cartItemsCount: number;
   onOpenCart: () => void;
   searchTerm: string;
@@ -267,6 +267,19 @@ export default function StoreHeader({
               >
                 <Compass className="w-4 h-4" />
                 <span>{lang === 'fr' ? 'Espace Client' : 'Customer Space'}</span>
+              </button>
+
+              <button
+                onClick={() => onViewChange('dashboard')}
+                className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl transition cursor-pointer ${
+                  activeView === 'dashboard'
+                    ? 'bg-gradient-to-r from-[#16A34A] to-emerald-600 text-white shadow-md shadow-emerald-600/20 font-black'
+                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                }`}
+                id="tab-client-dashboard"
+              >
+                <Sparkles className="w-4 h-4 text-emerald-400" />
+                <span>{lang === 'fr' ? 'Tableau de bord' : 'Dashboard'}</span>
               </button>
 
               {activeView === 'merchant' && (

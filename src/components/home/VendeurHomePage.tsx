@@ -48,6 +48,7 @@ import {
   Briefcase
 } from 'lucide-react';
 import { Product, Merchant, Order, User } from '../../types';
+import AboutAfriNovaSection from '../AboutAfriNovaSection';
 
 interface VendeurHomePageProps {
   currentUser: User | null;
@@ -1633,6 +1634,9 @@ export default function VendeurHomePage({
                 <p>✓ Conforme aux régulations du commerce électronique au Cameroun.</p>
               </div>
             </div>
+
+            {/* À propos d'AfriNova */}
+            <AboutAfriNovaSection />
           </div>
         )}
 

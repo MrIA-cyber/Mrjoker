@@ -43,6 +43,7 @@ import {
 } from 'lucide-react';
 import { User, Merchant, Product, Order, Review, SubscriptionPlan, AccountType } from '../types';
 import { INITIAL_SUBSCRIPTION_PLANS } from '../data/subscriptionPlans';
+import AboutAfriNovaSection from './AboutAfriNovaSection';
 import { translations, Language } from '../translations';
 import VerifiedBadge from './VerifiedBadge';
 
@@ -1500,6 +1501,9 @@ export interface Merchant {
                     </div>
                   </div>
                 </div>
+
+                {/* À propos d'AfriNova */}
+                <AboutAfriNovaSection />
               </motion.div>
             )}
 

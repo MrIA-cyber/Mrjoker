@@ -35,6 +35,7 @@ import Screen7Marketplace from './components/screens/Screen7Marketplace';
 import Screen8DetailProduit from './components/screens/Screen8DetailProduit';
 import Screen9Panier from './components/screens/Screen9Panier';
 import Screen10Paiement from './components/screens/Screen10Paiement';
+import AfriNovaFooter from './components/AfriNovaFooter';
 import ProtectedRoute from './components/ProtectedRoute';
 import { mapAccountTypeToRole, getDashboardForRole, isViewAllowedForRole } from './lib/rbac';
 import { logAuditEvent } from './lib/auditLogger';
@@ -110,7 +111,7 @@ export default function App() {
   });
 
   // UI Navigation states
-  const [activeView, setActiveView] = useState<'shop' | 'merchant' | 'orders' | 'news' | 'admin'>(() => {
+  const [activeView, setActiveView] = useState<'shop' | 'merchant' | 'orders' | 'news' | 'admin' | 'dashboard'>(() => {
     return (localStorage.getItem('bafoussam_active_view') as any) || 'shop';
   });
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
@@ -878,6 +879,33 @@ export default function App() {
             </motion.div>
           )}
 
+          {/* Client Dashboard Refonte - Screen6 */}
+          {activeView === 'dashboard' && (
+            <motion.div
+              key="dashboard-view"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="max-w-7xl mx-auto px-2 sm:px-4 py-4"
+            >
+              <Screen6DashboardClient
+                onNavigate={(page) => {
+                  if (page === 'cart') setIsCartOpen(true);
+                  else if (page === 'orders') setActiveView('orders');
+                  else if (page === 'profile' || page === 'merchant') setActiveView('merchant');
+                  else if (page === 'shop' || page === 'home') setActiveView('shop');
+                  else if (page === 'news') setActiveView('news');
+                  else if (page === 'marketplace') setActiveView('shop');
+                }}
+                onSelectProduct={handleSelectProduct}
+                onAddToCart={handleAddToCart}
+                currentUser={currentUser}
+                lang={lang}
+                cartItemsCount={cartItemsCount}
+              />
+            </motion.div>
+          )}
+
           {/* OLD SHOP VIEW REMOVED */}
           {false && activeView === 'shop-old' && (
             <motion.div
@@ -1342,33 +1370,15 @@ export default function App() {
         </AnimatePresence>
       </main>
 
-      {/* 3. Footer Block */}
-      <footer className="bg-white dark:bg-slate-950 border-t border-slate-100 dark:border-slate-900 py-10 transition-colors duration-200" id="bafoussam-footer">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-4">
-          <div className="flex items-center justify-center gap-2">
-            <span className="text-lg">🏔️</span>
-            <span className="font-bold text-slate-800 dark:text-slate-200 text-sm tracking-tight">Bafoussam En Ligne</span>
-          </div>
-          <p className="text-xs text-slate-400 dark:text-slate-500 max-w-md mx-auto leading-relaxed">
-            La plateforme d'échange et de vente connectée des résidents de Bafoussam. Accès sécurisé par inscription, abonnements commerçants, paiements MTN MoMo & Orange Money, et coursiers locaux rapides.
-          </p>
-          <div className="flex justify-center gap-6 text-[10px] font-bold text-slate-400 uppercase tracking-widest pt-2">
-            <span>Marché A</span>
-            <span>•</span>
-            <span>Carrefour Bamiléké</span>
-            <span>•</span>
-            <span>Marché Congo</span>
-            <span>•</span>
-            <span>Tamdja</span>
-          </div>
-          <div className="pt-1">
-            <SupportPhoneNumber prefix="Besoin d'aide ? Support Client Bafoussam :" showIcon className="text-[10px]" />
-          </div>
-          <p className="text-[10px] text-slate-300 pt-3">
-            &copy; 2026 Bafoussam En Ligne. Tous droits réservés. Service assuré par la communauté de l'Ouest.
-          </p>
-        </div>
-      </footer>
+      {/* 3. New AfriNova Premium Footer */}
+      <AfriNovaFooter lang={lang} onNavigate={(page) => {
+        if (page === 'cart') setIsCartOpen(true);
+        else if (page === 'orders') setActiveView('orders');
+        else if (page === 'merchant') setActiveView('merchant');
+        else if (page === 'news') setActiveView('news');
+        else if (page === 'dashboard') setActiveView('dashboard');
+        else setActiveView('shop');
+      }} />
 
       {/* 4. Modals and Overlays Box */}
       <AnimatePresence>

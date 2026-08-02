@@ -48,6 +48,7 @@ import {
   CheckCircle
 } from 'lucide-react';
 import { Product, Merchant, Order, User } from '../../types';
+import AboutAfriNovaSection from '../AboutAfriNovaSection';
 
 interface PrestataireHomePageProps {
   currentUser: User | null;
@@ -1732,6 +1733,9 @@ export default function PrestataireHomePage({
                 </button>
               </div>
             </div>
+
+            {/* À propos d'AfriNova */}
+            <AboutAfriNovaSection />
           </div>
         )}
 

@@ -407,10 +407,18 @@ export default function SplashScreen({
               )}
             </AnimatePresence>
 
-            {/* FOOTER */}
-            <p className="text-[10px] text-slate-500 font-mono tracking-widest uppercase pt-1">
-              AfriNova • v2.0 • Global Tech
-            </p>
+            {/* FOOTER & OFFICIAL FOUNDER SIGNATURE */}
+            <div className="text-center pt-2 space-y-0.5">
+              <p className="text-[11px] text-slate-300 font-bold">
+                © 2026 AfriNova. Version 1.0
+              </p>
+              <p className="text-[10px] text-slate-400 font-medium">
+                Fondé et développé par <span className="text-emerald-400 font-bold">Chris Pokam</span>.
+              </p>
+              <p className="text-[9px] text-slate-500">
+                Tous droits réservés.
+              </p>
+            </div>
 
           </div>
 

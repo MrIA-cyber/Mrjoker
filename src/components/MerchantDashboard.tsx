@@ -12,6 +12,7 @@ import VerifiedBadge from './VerifiedBadge';
 import AddProductModal from './AddProductModal';
 import { Language, translations } from '../translations';
 import PhoneCountryInput from './PhoneCountryInput';
+import AboutAfriNovaSection from './AboutAfriNovaSection';
 
 interface MerchantDashboardProps {
   products: Product[];
@@ -1559,6 +1560,9 @@ export default function MerchantDashboard({
                     )}
                   </div>
                 </div>
+
+                {/* À propos d'AfriNova */}
+                <AboutAfriNovaSection />
               </div>
             )}
 

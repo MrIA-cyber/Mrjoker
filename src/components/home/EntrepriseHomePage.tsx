@@ -48,6 +48,7 @@ import {
   CheckCircle2
 } from 'lucide-react';
 import { Product, Merchant, Order, User } from '../../types';
+import AboutAfriNovaSection from '../AboutAfriNovaSection';
 
 interface EntrepriseHomePageProps {
   currentUser: User | null;
@@ -1278,6 +1279,9 @@ export default function EntrepriseHomePage({
                 Enregistrer le Profil Entreprise
               </button>
             </div>
+
+            {/* À propos d'AfriNova */}
+            <AboutAfriNovaSection />
           </div>
         )}
 

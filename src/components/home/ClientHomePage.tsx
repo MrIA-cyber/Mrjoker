@@ -61,6 +61,8 @@ import {
 } from 'lucide-react';
 import { Product, Merchant, Order, User } from '../../types';
 import { AfriNovaLogo } from '../AfriNovaLogo';
+import AfriNovaFooter from '../AfriNovaFooter';
+import AboutAfriNovaSection from '../AboutAfriNovaSection';
 
 export interface ClientHomePageProps {
   products: Product[];
@@ -1756,6 +1758,9 @@ export default function ClientHomePage({
                 <span className="text-xs font-bold text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-full">Activé</span>
               </div>
             </div>
+
+            {/* À propos d'AfriNova */}
+            <AboutAfriNovaSection />
           </div>
         )}
 
@@ -2004,10 +2009,12 @@ export default function ClientHomePage({
       )}
 
       {/* ==================== FOOTER ==================== */}
-      <footer className="mt-12 pt-6 pb-4 border-t border-slate-200 text-center text-xs text-slate-400">
-        <p className="font-bold text-slate-600">Tableau de bord exclusivement réservé au profil CLIENT</p>
-        <p className="text-[10px] mt-1">© 2026 AfriNova Global Tech • Ville de Bafoussam, Ouest Cameroun</p>
-      </footer>
+      <AfriNovaFooter lang="fr" onNavigate={(page) => {
+        if (page === 'cart' && onOpenCart) onOpenCart();
+        else if (page === 'orders') onNavigateView('orders');
+        else if (page === 'merchant') onNavigateView('merchant');
+        else if (page === 'news') onNavigateView('news');
+      }} />
     </div>
   );
 }
