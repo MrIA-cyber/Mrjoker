@@ -2,6 +2,13 @@ import express from 'express';
 import path from 'path';
 import { createServer as createViteServer } from 'vite';
 import { UserRole, checkPermission, Resource } from './src/lib/rbac';
+import { 
+  checkAccountUniqueness, 
+  normalizePhoneNumber, 
+  normalizeEmail, 
+  PHONE_DUPLICATE_ERROR_MSG, 
+  EMAIL_DUPLICATE_ERROR_MSG 
+} from './src/utils/accountValidation';
 
 async function startServer() {
   const app = express();
@@ -11,6 +18,105 @@ async function startServer() {
 
   // In-memory audit logs store on server
   const serverAuditLogs: any[] = [];
+
+  // In-memory server-side user registry store
+  const serverUsers: Array<{ id: string; name: string; phone: string; email: string; accountType: string }> = [
+    {
+      id: 'u-seed-1',
+      name: 'Jean Kamdem',
+      phone: '+237677894512',
+      email: 'jean.kamdem@mail.com',
+      accountType: 'client'
+    }
+  ];
+
+  // -------------------------------------------------------------
+  // SERVER-SIDE ACCOUNT VALIDATION API ROUTES
+  // -------------------------------------------------------------
+
+  // Check account uniqueness (phone & email)
+  app.post('/api/auth/check-uniqueness', (req, res) => {
+    const { phone, email, dialCode = '+237' } = req.body || {};
+
+    const checkResult = checkAccountUniqueness(phone, email, serverUsers, dialCode);
+
+    if (checkResult.isPhoneDuplicate) {
+      return res.status(400).json({
+        isUnique: false,
+        isPhoneDuplicate: true,
+        isEmailDuplicate: false,
+        message: PHONE_DUPLICATE_ERROR_MSG
+      });
+    }
+
+    if (checkResult.isEmailDuplicate) {
+      return res.status(400).json({
+        isUnique: false,
+        isPhoneDuplicate: false,
+        isEmailDuplicate: true,
+        message: EMAIL_DUPLICATE_ERROR_MSG
+      });
+    }
+
+    res.json({ isUnique: true, message: 'Identifiants disponibles.' });
+  });
+
+  // Server-side user registration route with strict validation
+  app.post('/api/auth/register', (req, res) => {
+    const { fullName, phone, email, profile, accountType, password, dialCode = '+237' } = req.body || {};
+
+    if (!phone || !phone.trim()) {
+      return res.status(400).json({
+        success: false,
+        message: 'Un numéro de téléphone valide est obligatoire.'
+      });
+    }
+
+    const checkResult = checkAccountUniqueness(phone, email, serverUsers, dialCode);
+
+    if (checkResult.isPhoneDuplicate) {
+      return res.status(400).json({
+        success: false,
+        isPhoneDuplicate: true,
+        isEmailDuplicate: false,
+        message: PHONE_DUPLICATE_ERROR_MSG
+      });
+    }
+
+    if (checkResult.isEmailDuplicate) {
+      return res.status(400).json({
+        success: false,
+        isPhoneDuplicate: false,
+        isEmailDuplicate: true,
+        message: EMAIL_DUPLICATE_ERROR_MSG
+      });
+    }
+
+    const normalizedPhone = normalizePhoneNumber(phone, dialCode);
+    const normalizedEmailVal = email && email.trim() ? normalizeEmail(email) : `${normalizedPhone.replace(/[^0-9]/g, '')}@afrinova.cm`;
+
+    const newUser = {
+      id: `u-srv-${Date.now()}`,
+      name: (fullName || 'Utilisateur AfriNova').trim(),
+      phone: normalizedPhone,
+      email: normalizedEmailVal,
+      accountType: profile || accountType || 'client',
+      createdAt: new Date().toISOString()
+    };
+
+    serverUsers.push(newUser);
+
+    res.json({
+      success: true,
+      message: 'Compte créé avec succès.',
+      user: newUser
+    });
+  });
+
+  // Get server registered users (for admin / sync)
+  app.get('/api/auth/users', (req, res) => {
+    res.json(serverUsers);
+  });
 
   // -------------------------------------------------------------
   // SERVER-SIDE RBAC API ROUTES & PERMISSION INTERCEPTORS

@@ -12,6 +12,7 @@ import {
   Sparkles, 
   X, 
   ChevronRight, 
+  ChevronDown,
   Heart,
   FileText,
   Eye,
@@ -28,6 +29,7 @@ interface AfriNovaFooterProps {
 
 export default function AfriNovaFooter({ lang = 'fr', onNavigate }: AfriNovaFooterProps) {
   const [activeModalLink, setActiveModalLink] = useState<string | null>(null);
+  const [openMobileAccordion, setOpenMobileAccordion] = useState<string | null>('presentation');
 
   // 8 Official Links content data
   const officialLinksData: Record<string, { title: string; icon: React.FC<any>; content: React.ReactNode }> = {
@@ -177,53 +179,168 @@ export default function AfriNovaFooter({ lang = 'fr', onNavigate }: AfriNovaFoot
     }
   };
 
+  const toggleAccordion = (section: string) => {
+    setOpenMobileAccordion(prev => prev === section ? null : section);
+  };
+
   return (
     <>
-      <footer className="w-full bg-slate-950 text-slate-300 border-t border-slate-800/80 mt-12 rounded-t-3xl overflow-hidden font-sans transition-all relative">
+      <footer className="w-full bg-slate-950 text-slate-300 border-t border-slate-800/80 mt-12 rounded-t-3xl overflow-hidden font-sans transition-all relative pb-28 sm:pb-12">
         
         {/* Decorative Top Accent Line */}
         <div className="h-1 w-full bg-gradient-to-r from-[#16A34A] via-[#7C3AED] to-[#16A34A]" />
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-10">
 
-          {/* ==================== 1. VERSION MOBILE (Android & iPhone - Very Compact) ==================== */}
-          <div className="block sm:hidden space-y-4 text-center">
+          {/* ==================== 1. VERSION MOBILE (Android & iPhone - Accordion Mode) ==================== */}
+          <div className="block sm:hidden space-y-5">
             
-            {/* Top Row: Logo & Slogan */}
-            <div className="flex flex-col items-center justify-center space-y-1.5">
+            {/* Top Header Logo & Slogan */}
+            <div className="flex flex-col items-center justify-center text-center space-y-2 pb-2 border-b border-slate-900">
               <div className="flex items-center gap-2">
                 <AfriNovaLogo variant="horizontal" size="sm" showText={true} showSlogan={false} />
-                <span className="bg-[#16A34A]/20 text-[#22C55E] text-[9px] font-black px-2 py-0.5 rounded-full border border-[#16A34A]/30">
+                <span className="bg-[#16A34A]/20 text-[#22C55E] text-[10px] font-black px-2.5 py-0.5 rounded-full border border-[#16A34A]/30">
                   Version 1.0
                 </span>
               </div>
-              <p className="text-[11px] font-semibold text-purple-300 italic tracking-wide">
+              <p className="text-xs font-bold text-purple-300 italic">
                 "L'Afrique connectée au monde."
               </p>
             </div>
 
-            {/* Links Horizontal Scroll Pills */}
-            <div className="flex items-center justify-center gap-1.5 flex-wrap text-[10px] font-bold text-slate-300 pt-1">
-              {Object.entries(officialLinksData).map(([key, item]) => (
+            {/* Mobile Accordion Menu */}
+            <div className="space-y-2.5">
+              
+              {/* Accordion 1: Présentation & Vision */}
+              <div className="bg-slate-900/90 rounded-2xl border border-slate-800/80 overflow-hidden">
                 <button
-                  key={key}
-                  onClick={() => setActiveModalLink(key)}
-                  className="px-2.5 py-1 bg-slate-900 hover:bg-slate-800 active:scale-95 text-slate-300 hover:text-white rounded-lg border border-slate-800 transition cursor-pointer"
+                  onClick={() => toggleAccordion('presentation')}
+                  className="w-full px-4 py-3.5 flex items-center justify-between text-left text-xs font-black text-[#16A34A] uppercase tracking-wider cursor-pointer active:bg-slate-800/50"
                 >
-                  {item.title}
+                  <div className="flex items-center gap-2">
+                    <Globe className="w-4 h-4 text-[#16A34A]" />
+                    <span>Présentation & Vision</span>
+                  </div>
+                  <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform duration-200 ${openMobileAccordion === 'presentation' ? 'rotate-180 text-[#16A34A]' : ''}`} />
                 </button>
-              ))}
+
+                <AnimatePresence>
+                  {openMobileAccordion === 'presentation' && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: 'auto' }}
+                      exit={{ opacity: 0, height: 0 }}
+                      className="px-3 pb-3 pt-1 space-y-1.5 border-t border-slate-800/50"
+                    >
+                      {['apropos', 'vision', 'mission', 'valeurs'].map((key) => (
+                        <button
+                          key={key}
+                          onClick={() => setActiveModalLink(key)}
+                          className="w-full min-h-[44px] py-2.5 px-3 rounded-xl bg-slate-950/70 hover:bg-slate-800 text-slate-200 hover:text-white text-xs font-bold flex items-center justify-between border border-slate-800/60 transition active:scale-[0.99] cursor-pointer"
+                        >
+                          <span className="flex items-center gap-2">
+                            <ChevronRight className="w-3.5 h-3.5 text-[#16A34A]" />
+                            <span>{officialLinksData[key].title}</span>
+                          </span>
+                          <span className="text-[10px] text-slate-500 font-normal">Voir</span>
+                        </button>
+                      ))}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+
+              {/* Accordion 2: Aide & Support 24/7 */}
+              <div className="bg-slate-900/90 rounded-2xl border border-slate-800/80 overflow-hidden">
+                <button
+                  onClick={() => toggleAccordion('support')}
+                  className="w-full px-4 py-3.5 flex items-center justify-between text-left text-xs font-black text-[#7C3AED] uppercase tracking-wider cursor-pointer active:bg-slate-800/50"
+                >
+                  <div className="flex items-center gap-2">
+                    <ShieldCheck className="w-4 h-4 text-[#7C3AED]" />
+                    <span>Aide, Support & Légal</span>
+                  </div>
+                  <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform duration-200 ${openMobileAccordion === 'support' ? 'rotate-180 text-[#7C3AED]' : ''}`} />
+                </button>
+
+                <AnimatePresence>
+                  {openMobileAccordion === 'support' && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: 'auto' }}
+                      exit={{ opacity: 0, height: 0 }}
+                      className="px-3 pb-3 pt-1 space-y-1.5 border-t border-slate-800/50"
+                    >
+                      {['support', 'contact', 'confidentialite', 'conditions'].map((key) => (
+                        <button
+                          key={key}
+                          onClick={() => setActiveModalLink(key)}
+                          className="w-full min-h-[44px] py-2.5 px-3 rounded-xl bg-slate-950/70 hover:bg-slate-800 text-slate-200 hover:text-white text-xs font-bold flex items-center justify-between border border-slate-800/60 transition active:scale-[0.99] cursor-pointer"
+                        >
+                          <span className="flex items-center gap-2">
+                            <ChevronRight className="w-3.5 h-3.5 text-[#7C3AED]" />
+                            <span>{officialLinksData[key].title}</span>
+                          </span>
+                          <span className="text-[10px] text-slate-500 font-normal">Voir</span>
+                        </button>
+                      ))}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+
+              {/* Accordion 3: Garanties & Sécurité */}
+              <div className="bg-slate-900/90 rounded-2xl border border-slate-800/80 overflow-hidden">
+                <button
+                  onClick={() => toggleAccordion('security')}
+                  className="w-full px-4 py-3.5 flex items-center justify-between text-left text-xs font-black text-amber-400 uppercase tracking-wider cursor-pointer active:bg-slate-800/50"
+                >
+                  <div className="flex items-center gap-2">
+                    <Lock className="w-4 h-4 text-amber-400" />
+                    <span>Garanties AfriNova</span>
+                  </div>
+                  <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform duration-200 ${openMobileAccordion === 'security' ? 'rotate-180 text-amber-400' : ''}`} />
+                </button>
+
+                <AnimatePresence>
+                  {openMobileAccordion === 'security' && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: 'auto' }}
+                      exit={{ opacity: 0, height: 0 }}
+                      className="px-3 pb-3 pt-2 space-y-2 border-t border-slate-800/50 text-xs text-slate-300"
+                    >
+                      <div className="p-3 bg-slate-950/80 rounded-xl border border-slate-800 flex items-center gap-3">
+                        <Lock className="w-4 h-4 text-emerald-400 shrink-0" />
+                        <div>
+                          <strong className="text-slate-200 block text-xs">Cryptage SSL 256-bit</strong>
+                          <span className="text-[10px] text-slate-400">Paiements Mobile Money sécurisés</span>
+                        </div>
+                      </div>
+
+                      <div className="p-3 bg-slate-950/80 rounded-xl border border-slate-800 flex items-center gap-3">
+                        <ShieldCheck className="w-4 h-4 text-purple-400 shrink-0" />
+                        <div>
+                          <strong className="text-slate-200 block text-xs">Commerçants Vérifiés</strong>
+                          <span className="text-[10px] text-slate-400">Protection totale anti-fraude</span>
+                        </div>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+
             </div>
 
-            {/* Copyright & Signature */}
-            <div className="pt-2 border-t border-slate-900 text-[10px] text-slate-400 space-y-0.5">
+            {/* Mobile Footer Copyright */}
+            <div className="pt-3 border-t border-slate-900 text-center text-xs text-slate-400 space-y-1">
               <p className="font-extrabold text-slate-200">
                 © 2026 AfriNova
               </p>
-              <p className="text-slate-400 font-medium">
+              <p className="text-slate-400 font-medium text-[11px]">
                 Fondé et développé par <strong className="text-emerald-400 font-bold">Chris Pokam</strong>
               </p>
-              <p className="text-[9px] text-slate-500">Tous droits réservés.</p>
+              <p className="text-[10px] text-slate-500">Tous droits réservés.</p>
             </div>
           </div>
 

@@ -7,6 +7,7 @@ import SupportPhoneNumber from './SupportPhoneNumber';
 import Screen4Inscription from './screens/Screen4Inscription';
 import { AfriNovaLogo } from './AfriNovaLogo';
 import PhoneCountryInput from './PhoneCountryInput';
+import { normalizePhoneNumber, normalizeEmail, arePhonesEqual } from '../utils/accountValidation';
 
 interface WelcomeGateProps {
   onSuccess: (user: User) => void;
@@ -93,7 +94,7 @@ export default function WelcomeGate({ onSuccess, lang, onLangChange }: WelcomeGa
     try {
       const savedUsersRaw = localStorage.getItem('bafoussam_all_registered_users');
       const savedUsers: User[] = savedUsersRaw ? JSON.parse(savedUsersRaw) : [];
-      const filtered = savedUsers.filter(u => u.phone.replace(/\s+/g, '') !== newUser.phone.replace(/\s+/g, ''));
+      const filtered = savedUsers.filter(u => !arePhonesEqual(u.phone, newUser.phone));
       filtered.push(newUser);
       localStorage.setItem('bafoussam_all_registered_users', JSON.stringify(filtered));
     } catch (err) {
@@ -117,7 +118,7 @@ export default function WelcomeGate({ onSuccess, lang, onLangChange }: WelcomeGa
       return;
     }
 
-    const cleanInputPhone = loginPhone.replace(/\s+/g, '').replace(/[^0-9+]/g, '');
+    const cleanInputPhone = loginPhone.trim();
 
     if (!cleanInputPhone) {
       setValidationError(lang === 'fr' ? 'Veuillez entrer votre numéro de téléphone.' : 'Please enter your phone number.');
@@ -137,12 +138,7 @@ export default function WelcomeGate({ onSuccess, lang, onLangChange }: WelcomeGa
         const savedUsersRaw = localStorage.getItem('bafoussam_all_registered_users');
         const savedUsers: User[] = savedUsersRaw ? JSON.parse(savedUsersRaw) : [];
 
-        const matchedUser = savedUsers.find(u => {
-          const uClean = u.phone.replace(/\s+/g, '').replace(/[^0-9+]/g, '');
-          return uClean === cleanInputPhone ||
-                 (cleanInputPhone.length >= 8 && uClean.endsWith(cleanInputPhone)) ||
-                 (uClean.length >= 8 && cleanInputPhone.endsWith(uClean));
-        });
+        const matchedUser = savedUsers.find(u => arePhonesEqual(u.phone, cleanInputPhone));
 
         if (!matchedUser) {
           const nextFailedCount = failedLoginCount + 1;

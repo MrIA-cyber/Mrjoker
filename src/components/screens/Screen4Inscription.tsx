@@ -7,6 +7,13 @@ import { motion, AnimatePresence } from 'motion/react';
 import { AfriNovaLogo } from '../AfriNovaLogo';
 import PhoneCountryInput from '../PhoneCountryInput';
 import { Country } from '../../data/countries';
+import { 
+  checkAccountUniqueness, 
+  normalizePhoneNumber, 
+  normalizeEmail, 
+  PHONE_DUPLICATE_ERROR_MSG, 
+  EMAIL_DUPLICATE_ERROR_MSG 
+} from '../../utils/accountValidation';
 
 interface Screen4InscriptionProps {
   onSignupSuccess?: (data?: any) => void;
@@ -165,7 +172,7 @@ export default function Screen4Inscription({ onSignupSuccess, onGoToLogin, lang 
   };
 
   // Step 1 -> Step 2 Handler
-  const handleProceedToStep2 = (e: React.FormEvent) => {
+  const handleProceedToStep2 = async (e: React.FormEvent) => {
     e.preventDefault();
     setTouchedFields({ fullName: true, phone: true });
 
@@ -182,14 +189,45 @@ export default function Screen4Inscription({ onSignupSuccess, onGoToLogin, lang 
     setFormError('');
     setIsSubmitting(true);
 
-    // Simulate smart phone check & SMS OTP dispatch
-    setTimeout(() => {
-      setIsSubmitting(false);
-      setCurrentStep('step2');
-      // Auto-prefill OTP code for ultra-seamless testing experience
-      setFormData(prev => ({ ...prev, otpCode: '123456' }));
-      try { window.scrollTo({ top: 0, behavior: 'smooth' }); } catch (err) {}
-    }, 300);
+    const dialCode = selectedCountry?.dialCode || '+237';
+
+    // 1. Client-Side Phone Uniqueness Check
+    try {
+      const savedUsersRaw = localStorage.getItem('bafoussam_all_registered_users');
+      const savedUsers: Array<{ phone?: string; email?: string }> = savedUsersRaw ? JSON.parse(savedUsersRaw) : [];
+
+      const clientCheck = checkAccountUniqueness(formData.phone, undefined, savedUsers, dialCode);
+      if (clientCheck.isPhoneDuplicate) {
+        setIsSubmitting(false);
+        setFormError(PHONE_DUPLICATE_ERROR_MSG);
+        return;
+      }
+    } catch (err) {
+      console.error('Error in client uniqueness check:', err);
+    }
+
+    // 2. Server-Side Phone Uniqueness Check
+    try {
+      const res = await fetch('/api/auth/check-uniqueness', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone: formData.phone, dialCode })
+      });
+
+      if (!res.ok) {
+        const data = await res.json();
+        setIsSubmitting(false);
+        setFormError(data.message || PHONE_DUPLICATE_ERROR_MSG);
+        return;
+      }
+    } catch (err) {
+      console.warn('Server check offline or unavailable, client validation passed:', err);
+    }
+
+    setIsSubmitting(false);
+    setCurrentStep('step2');
+    setFormData(prev => ({ ...prev, otpCode: '123456' }));
+    try { window.scrollTo({ top: 0, behavior: 'smooth' }); } catch (err) {}
   };
 
   // Resend OTP
@@ -202,7 +240,7 @@ export default function Screen4Inscription({ onSignupSuccess, onGoToLogin, lang 
   };
 
   // Final Signup Submission
-  const handleFinalSignup = (e: React.FormEvent) => {
+  const handleFinalSignup = async (e: React.FormEvent) => {
     e.preventDefault();
     setTouchedFields({ otpCode: true, password: true, confirmPassword: true, email: true });
 
@@ -229,24 +267,72 @@ export default function Screen4Inscription({ onSignupSuccess, onGoToLogin, lang 
     setFormError('');
     setIsSubmitting(true);
 
-    setTimeout(() => {
-      setIsSubmitting(false);
-      const createdUserData = {
-        name: formData.fullName.trim(),
-        phone: formData.phone.trim(),
-        email: formData.email.trim() || `${formData.phone.replace(/[^0-9]/g, '')}@afrinova.cm`,
-        profile: selectedProfile,
-        accountType: selectedProfile,
-        isSubscribed: true,
-        trialStartDate: new Date().toISOString(),
-      };
+    const dialCode = selectedCountry?.dialCode || '+237';
 
-      if (onSignupSuccess) {
-        onSignupSuccess(createdUserData);
-      } else {
-        setCurrentStep('success');
+    // 1. Client-Side Check for BOTH Phone and Email Uniqueness
+    try {
+      const savedUsersRaw = localStorage.getItem('bafoussam_all_registered_users');
+      const savedUsers: Array<{ phone?: string; email?: string }> = savedUsersRaw ? JSON.parse(savedUsersRaw) : [];
+
+      const clientCheck = checkAccountUniqueness(formData.phone, formData.email, savedUsers, dialCode);
+      if (clientCheck.isPhoneDuplicate || clientCheck.isEmailDuplicate) {
+        setIsSubmitting(false);
+        setFormError(clientCheck.errorMessage || PHONE_DUPLICATE_ERROR_MSG);
+        return;
       }
-    }, 600);
+    } catch (err) {
+      console.error('Error in final client uniqueness check:', err);
+    }
+
+    // 2. Server-Side Registration with Strict Server Uniqueness Check
+    try {
+      const res = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          fullName: formData.fullName,
+          phone: formData.phone,
+          email: formData.email,
+          profile: selectedProfile,
+          accountType: selectedProfile,
+          password: formData.password,
+          dialCode
+        })
+      });
+
+      if (!res.ok) {
+        const data = await res.json();
+        setIsSubmitting(false);
+        setFormError(data.message || (data.isEmailDuplicate ? EMAIL_DUPLICATE_ERROR_MSG : PHONE_DUPLICATE_ERROR_MSG));
+        return;
+      }
+    } catch (err) {
+      console.warn('Server registration call offline, client check passed:', err);
+    }
+
+    setIsSubmitting(false);
+
+    const normalizedPhoneVal = normalizePhoneNumber(formData.phone, dialCode);
+    const normalizedEmailVal = formData.email.trim() 
+      ? normalizeEmail(formData.email) 
+      : `${normalizedPhoneVal.replace(/[^0-9]/g, '')}@afrinova.cm`;
+
+    const createdUserData = {
+      name: formData.fullName.trim(),
+      phone: normalizedPhoneVal,
+      email: normalizedEmailVal,
+      password: formData.password,
+      profile: selectedProfile,
+      accountType: selectedProfile,
+      isSubscribed: true,
+      trialStartDate: new Date().toISOString(),
+    };
+
+    if (onSignupSuccess) {
+      onSignupSuccess(createdUserData);
+    } else {
+      setCurrentStep('success');
+    }
   };
 
   const progressPercent = currentStep === 'step1' ? 50 : 100;
@@ -342,10 +428,21 @@ export default function Screen4Inscription({ onSignupSuccess, onGoToLogin, lang 
             <motion.div 
               initial={{ opacity: 0, y: -8 }}
               animate={{ opacity: 1, y: 0 }}
-              className="bg-red-50 border border-red-200 text-red-700 p-3 rounded-xl text-xs font-extrabold flex items-center gap-2 shadow-2xs"
+              className="bg-red-50/95 border border-red-300 text-red-800 p-3.5 rounded-xl text-xs font-bold flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2.5 shadow-2xs"
             >
-              <AlertCircle className="w-4 h-4 text-red-600 shrink-0" />
-              <span>{formError}</span>
+              <div className="flex items-start gap-2.5 min-w-0">
+                <AlertCircle className="w-4 h-4 text-red-600 shrink-0 mt-0.5 sm:mt-0" />
+                <span className="leading-snug">{formError}</span>
+              </div>
+              {onGoToLogin && (formError.includes('connecter') || formError.includes('déjà utilisé')) && (
+                <button
+                  type="button"
+                  onClick={onGoToLogin}
+                  className="px-3 py-1.5 rounded-lg bg-red-600 hover:bg-red-700 text-white text-[11px] font-black transition shrink-0 cursor-pointer shadow-2xs active:scale-95"
+                >
+                  {currentLang === 'fr' ? 'Se connecter' : 'Log In'}
+                </button>
+              )}
             </motion.div>
           )}
 

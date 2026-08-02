@@ -62,7 +62,6 @@ import {
 } from 'lucide-react';
 import { Product, Merchant, Order, User } from '../../types';
 import { AfriNovaLogo } from '../AfriNovaLogo';
-import AfriNovaFooter from '../AfriNovaFooter';
 import AboutAfriNovaSection from '../AboutAfriNovaSection';
 
 export interface ClientHomePageProps {
@@ -1011,32 +1010,32 @@ export default function ClientHomePage({
 
             {/* 5. SERVICES RECOMMANDÉS */}
             {(searchFilterType === 'all' || searchFilterType === 'services') && (
-              <div className="space-y-3 pt-2">
+              <div className="space-y-3 pt-3">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <div className="w-7 h-7 rounded-xl bg-blue-50 text-[#2563EB] flex items-center justify-center font-black">
-                      <Wrench className="w-4 h-4" />
+                    <div className="w-8 h-8 rounded-xl bg-blue-50 text-[#2563EB] flex items-center justify-center font-black shrink-0">
+                      <Wrench className="w-4.5 h-4.5" />
                     </div>
                     <div>
                       <h3 className="text-sm sm:text-base font-black text-[#0F172A] font-display leading-tight">
                         Services & Prestataires Recommandés ({filteredServices.length})
                       </h3>
-                      <p className="text-[10px] text-slate-400 font-medium hidden sm:block">
+                      <p className="text-[11px] text-slate-500 font-medium hidden sm:block">
                         Plomberie, électricité, traiteur, beauté & maintenance à Bafoussam
                       </p>
                     </div>
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3.5">
                   {filteredServices.map((srv) => (
                     <div
                       key={srv.id}
-                      className="p-3.5 rounded-2xl bg-white border border-slate-100 shadow-2xs hover:shadow-md transition cursor-pointer flex flex-col justify-between space-y-3"
+                      className="p-4 rounded-2xl bg-white border border-slate-100/90 shadow-xs hover:shadow-md transition cursor-pointer flex flex-col justify-between space-y-3 min-h-[120px]"
                     >
                       <div className="space-y-2">
                         <div className="flex items-center justify-between">
-                          <span className="text-[9px] font-black text-[#2563EB] bg-blue-50 px-2 py-0.5 rounded-full">
+                          <span className="text-[10px] font-black text-[#2563EB] bg-blue-50 px-2.5 py-0.5 rounded-full border border-blue-100/60">
                             {srv.category}
                           </span>
                           <button
@@ -1044,31 +1043,31 @@ export default function ClientHomePage({
                             className="p-1 text-slate-400 hover:text-rose-600 cursor-pointer"
                             title="Signaler ce prestataire"
                           >
-                            <Flag className="w-3 h-3" />
+                            <Flag className="w-3.5 h-3.5" />
                           </button>
                         </div>
 
-                        <h4 className="font-extrabold text-xs text-[#0F172A] line-clamp-2">
+                        <h4 className="font-extrabold text-xs sm:text-sm text-[#0F172A] line-clamp-2 leading-snug">
                           {srv.title}
                         </h4>
 
-                        <div className="flex items-center gap-2">
-                          <img src={srv.avatar} alt={srv.providerName} className="w-7 h-7 rounded-full object-cover" />
+                        <div className="flex items-center gap-2.5 pt-1">
+                          <img src={srv.avatar} alt={srv.providerName} className="w-8 h-8 rounded-full object-cover shrink-0 border border-slate-100" />
                           <div className="truncate">
-                            <p className="text-[11px] font-bold text-slate-800 truncate">{srv.providerName}</p>
-                            <div className="flex items-center gap-1 text-[10px] text-slate-400">
-                              <Star className="w-3 h-3 fill-amber-400 text-amber-400" />
+                            <p className="text-xs font-bold text-slate-800 truncate">{srv.providerName}</p>
+                            <div className="flex items-center gap-1 text-[11px] text-slate-500">
+                              <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
                               <span className="font-bold text-slate-700">{srv.rating}</span>
                             </div>
                           </div>
                         </div>
                       </div>
 
-                      <div className="pt-2 border-t border-slate-100 flex items-center justify-between">
-                        <span className="text-xs font-black text-[#16A34A]">{srv.price.toLocaleString()} FCFA</span>
+                      <div className="pt-2.5 border-t border-slate-100 flex items-center justify-between">
+                        <span className="text-xs sm:text-sm font-black text-[#16A34A]">{srv.price.toLocaleString()} FCFA</span>
                         <button
                           onClick={() => setSelectedService(srv)}
-                          className="px-2.5 py-1 rounded-lg bg-blue-50 text-[#2563EB] hover:bg-blue-100 text-[10px] font-bold transition cursor-pointer"
+                          className="px-3 py-1.5 rounded-xl bg-blue-50 hover:bg-blue-100 text-[#2563EB] text-xs font-bold transition cursor-pointer"
                         >
                           Détails & Réserver
                         </button>
@@ -1081,11 +1080,11 @@ export default function ClientHomePage({
 
             {/* 6. BOUTIQUES ET PRESTATAIRES POPULAIRES */}
             {(searchFilterType === 'all' || searchFilterType === 'merchants') && (
-              <div className="space-y-3 pt-2">
+              <div className="space-y-3 pt-3">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <div className="w-7 h-7 rounded-xl bg-indigo-50 text-[#4F46E5] flex items-center justify-center font-black">
-                      <Building2 className="w-4 h-4" />
+                    <div className="w-8 h-8 rounded-xl bg-indigo-50 text-[#4F46E5] flex items-center justify-center font-black shrink-0">
+                      <Building2 className="w-4.5 h-4.5" />
                     </div>
                     <h3 className="text-sm sm:text-base font-black text-[#0F172A]">
                       Boutiques Partenaires ({filteredMerchants.length})
@@ -1093,23 +1092,23 @@ export default function ClientHomePage({
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3.5">
                   {filteredMerchants.slice(0, 6).map((merchant) => (
                     <div
                       key={merchant.id}
-                      className="p-4 rounded-2xl bg-white border border-slate-100 shadow-2xs hover:shadow-md transition space-y-2 cursor-pointer relative"
+                      className="p-4 rounded-2xl bg-white border border-slate-100/90 shadow-xs hover:shadow-md transition space-y-2.5 cursor-pointer relative min-h-[110px] flex flex-col justify-between"
                     >
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-xl bg-[#0F172A] text-white flex items-center justify-center font-black text-xs shrink-0 overflow-hidden">
+                          <div className="w-11 h-11 rounded-2xl bg-[#0F172A] text-white flex items-center justify-center font-black text-xs shrink-0 overflow-hidden shadow-xs">
                             {merchant.logo ? <img src={merchant.logo} alt={merchant.name} className="w-full h-full object-cover" /> : 'BM'}
                           </div>
                           <div className="truncate">
                             <div className="flex items-center gap-1">
-                              <h4 className="font-extrabold text-xs text-[#0F172A] truncate">{merchant.shopName || merchant.name}</h4>
-                              <ShieldCheck className="w-3.5 h-3.5 text-[#16A34A] shrink-0" />
+                              <h4 className="font-extrabold text-xs sm:text-sm text-[#0F172A] truncate">{merchant.shopName || merchant.name}</h4>
+                              <ShieldCheck className="w-4 h-4 text-[#16A34A] shrink-0" />
                             </div>
-                            <p className="text-[10px] text-slate-500">{merchant.location || 'Bafoussam Centre'}</p>
+                            <p className="text-[11px] text-slate-500 font-medium">{merchant.location || 'Bafoussam Centre'}</p>
                           </div>
                         </div>
 
@@ -1121,7 +1120,10 @@ export default function ClientHomePage({
                           <Flag className="w-3.5 h-3.5" />
                         </button>
                       </div>
-                      <p className="text-[11px] text-slate-600 line-clamp-1">Commerçant vérifié AfriNova</p>
+                      <div className="pt-2 border-t border-slate-50 flex items-center justify-between text-[11px]">
+                        <span className="font-bold text-[#16A34A] bg-emerald-50 px-2 py-0.5 rounded-md">Commerçant vérifié</span>
+                        <span className="text-slate-400 font-semibold">Voir la boutique →</span>
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -1130,22 +1132,25 @@ export default function ClientHomePage({
 
             {/* 7. ENTREPRISES POPULAIRES */}
             {(searchFilterType === 'all' || searchFilterType === 'companies') && (
-              <div className="space-y-3 pt-2">
+              <div className="space-y-3 pt-3">
                 <div className="flex items-center gap-2">
-                  <Building2 className="w-4 h-4 text-[#0F172A]" />
-                  <h3 className="text-sm font-black text-[#0F172A]">Entreprises Agréées ({filteredCompanies.length})</h3>
+                  <div className="w-8 h-8 rounded-xl bg-slate-100 text-[#0F172A] flex items-center justify-center font-black shrink-0">
+                    <Building2 className="w-4.5 h-4.5" />
+                  </div>
+                  <h3 className="text-sm sm:text-base font-black text-[#0F172A]">Entreprises Agréées ({filteredCompanies.length})</h3>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3.5">
                   {filteredCompanies.map((corp) => (
-                    <div key={corp.id} className="p-3.5 rounded-2xl bg-white border border-slate-100 shadow-2xs space-y-2">
-                      <div className="flex items-center gap-2.5">
-                        <img src={corp.logo} alt={corp.name} className="w-9 h-9 rounded-lg object-cover" />
+                    <div key={corp.id} className="p-4 rounded-2xl bg-white border border-slate-100/90 shadow-xs space-y-2.5 min-h-[105px] flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <img src={corp.logo} alt={corp.name} className="w-11 h-11 rounded-xl object-cover shrink-0 border border-slate-100" />
                         <div className="truncate">
-                          <h4 className="font-bold text-xs text-[#0F172A] truncate">{corp.name}</h4>
-                          <p className="text-[9px] text-slate-500">{corp.industry}</p>
+                          <h4 className="font-extrabold text-xs sm:text-sm text-[#0F172A] truncate">{corp.name}</h4>
+                          <p className="text-[11px] text-slate-500 font-medium">{corp.industry}</p>
                         </div>
                       </div>
+                      <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-1 rounded-lg shrink-0">Agréée</span>
                     </div>
                   ))}
                 </div>
@@ -2011,14 +2016,6 @@ export default function ClientHomePage({
           </div>
         </div>
       )}
-
-      {/* ==================== FOOTER ==================== */}
-      <AfriNovaFooter lang="fr" onNavigate={(page) => {
-        if (page === 'cart' && onOpenCart) onOpenCart();
-        else if (page === 'orders') onNavigateView('orders');
-        else if (page === 'merchant') onNavigateView('merchant');
-        else if (page === 'news') onNavigateView('news');
-      }} />
     </div>
   );
 }
