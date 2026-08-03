@@ -60,7 +60,7 @@ import {
   SlidersHorizontal,
   Crown
 } from 'lucide-react';
-import { Product, Merchant, Order, User } from '../../types';
+import { Product, Merchant, Order, User, AccountType } from '../../types';
 import { AfriNovaLogo } from '../AfriNovaLogo';
 import AboutAfriNovaSection from '../AboutAfriNovaSection';
 
@@ -80,6 +80,7 @@ export interface ClientHomePageProps {
   onLogout?: () => void;
   cartCount?: number;
   onOpenCart?: () => void;
+  onSwitchRole?: (role: AccountType) => void;
 }
 
 // 1. PROMO SLIDES
@@ -317,7 +318,8 @@ export default function ClientHomePage({
   onOpenScanner,
   onLogout,
   cartCount = 0,
-  onOpenCart
+  onOpenCart,
+  onSwitchRole
 }: ClientHomePageProps) {
   // Navigation Tabs for Client Dashboard
   const [activeTab, setActiveTab] = useState<
@@ -1606,8 +1608,63 @@ export default function ClientHomePage({
           <div className="space-y-6">
             <div className="flex items-center gap-2 border-b border-slate-200 pb-3">
               <UserIcon className="w-5 h-5 text-[#16A34A]" />
-              <h2 className="text-lg font-black text-[#0F172A]">Mon Profil Client & Mes Adresses</h2>
+              <h2 className="text-lg font-black text-[#0F172A]">Mon Profil & Bascule de Rôle</h2>
             </div>
+
+            {/* Quick Role Switcher Banner */}
+            {onSwitchRole && (
+              <div className="p-5 bg-gradient-to-br from-slate-900 to-emerald-950 text-white rounded-3xl space-y-3 shadow-md border border-emerald-900/50">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Sparkles className="w-5 h-5 text-emerald-400" />
+                    <h3 className="font-black text-sm">Bascule Rapide d'Espace / Rôle</h3>
+                  </div>
+                  <span className="text-[10px] font-bold bg-emerald-500/20 text-emerald-300 px-2.5 py-0.5 rounded-full border border-emerald-500/30">
+                    Actuel : {currentUser?.accountType?.toUpperCase() || 'CLIENT'}
+                  </span>
+                </div>
+                <p className="text-xs text-slate-300">
+                  Passez instantanément du profil Client vers vos espaces Vendeur, Entreprise, Prestataire ou Livreur :
+                </p>
+                <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 pt-1">
+                  <button
+                    onClick={() => onSwitchRole('client')}
+                    className="p-2.5 rounded-xl bg-emerald-600 text-white font-bold text-xs flex items-center justify-center gap-1.5 cursor-pointer hover:bg-emerald-500 transition shadow-xs"
+                  >
+                    <UserIcon className="w-3.5 h-3.5" />
+                    <span>Client</span>
+                  </button>
+                  <button
+                    onClick={() => onSwitchRole('vendeur')}
+                    className="p-2.5 rounded-xl bg-blue-600 text-white font-bold text-xs flex items-center justify-center gap-1.5 cursor-pointer hover:bg-blue-500 transition shadow-xs"
+                  >
+                    <Building2 className="w-3.5 h-3.5" />
+                    <span>Vendeur</span>
+                  </button>
+                  <button
+                    onClick={() => onSwitchRole('entreprise')}
+                    className="p-2.5 rounded-xl bg-purple-600 text-white font-bold text-xs flex items-center justify-center gap-1.5 cursor-pointer hover:bg-purple-500 transition shadow-xs"
+                  >
+                    <Building2 className="w-3.5 h-3.5" />
+                    <span>Entreprise</span>
+                  </button>
+                  <button
+                    onClick={() => onSwitchRole('prestataire')}
+                    className="p-2.5 rounded-xl bg-amber-600 text-white font-bold text-xs flex items-center justify-center gap-1.5 cursor-pointer hover:bg-amber-500 transition shadow-xs"
+                  >
+                    <Wrench className="w-3.5 h-3.5" />
+                    <span>Prestataire</span>
+                  </button>
+                  <button
+                    onClick={() => onSwitchRole('livreur')}
+                    className="p-2.5 rounded-xl bg-teal-600 text-white font-bold text-xs flex items-center justify-center gap-1.5 cursor-pointer hover:bg-teal-500 transition shadow-xs col-span-2 sm:col-span-1"
+                  >
+                    <Truck className="w-3.5 h-3.5" />
+                    <span>Livreur</span>
+                  </button>
+                </div>
+              </div>
+            )}
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {/* Infos Personnelles */}

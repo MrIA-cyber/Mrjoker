@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
   Building2, 
@@ -49,6 +49,7 @@ import {
 } from 'lucide-react';
 import { Product, Merchant, Order, User } from '../../types';
 import AboutAfriNovaSection from '../AboutAfriNovaSection';
+import { AfriNovaLogo } from '../AfriNovaLogo';
 
 interface EntrepriseHomePageProps {
   currentUser: User | null;

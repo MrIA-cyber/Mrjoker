@@ -383,16 +383,22 @@ export default function MerchantDashboard({
   const activeMerchant = merchants.find(m => m.id === activeMerchantId) || (currentUser ? {
     id: currentUser.id,
     name: currentUser.name ? `Boutique ${currentUser.name}` : 'Ma Boutique',
+    shopName: currentUser.name ? `Boutique ${currentUser.name}` : 'Ma Boutique',
     ownerName: currentUser.name || 'Vendeur',
     email: currentUser.email || '',
     phone: currentUser.phone || '',
     category: 'Commerce Général',
+    location: currentUser.neighborhood || 'Bafoussam, Centre Ville',
     rating: 5.0,
     reviewCount: 0,
     description: 'Boutique en cours de configuration. Modifiez la description et ajoutez vos produits !',
     neighborhood: currentUser.neighborhood || 'Bafoussam',
     logo: currentUser.avatar || 'https://images.unsplash.com/photo-1534452203293-494d7ddbf7e0?auto=format&fit=crop&w=300&q=80',
-    isVerified: true
+    isVerified: true,
+    isPremium: true,
+    views: 120,
+    clicks: 45,
+    sales: 12
   } as Merchant : merchants[0] || fallbackMerchant);
 
   useEffect(() => {

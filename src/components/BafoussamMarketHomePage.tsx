@@ -24,7 +24,8 @@ import {
   FileText,
   Building2,
   Briefcase,
-  Wrench
+  Wrench,
+  Truck
 } from 'lucide-react';
 import { Product, Merchant, User, Order, AccountType } from '../types';
 import { Language } from '../translations';
@@ -44,6 +45,7 @@ interface BafoussamMarketHomePageProps {
   products: Product[];
   merchants: Merchant[];
   currentUser: User | null;
+  onUpdateCurrentUser?: (user: User) => void;
   cartItemsCount: number;
   onOpenCart: () => void;
   onSelectProduct: (product: Product) => void;
@@ -66,6 +68,7 @@ export default function BafoussamMarketHomePage({
   products,
   merchants,
   currentUser,
+  onUpdateCurrentUser,
   cartItemsCount,
   onOpenCart,
   onSelectProduct,
@@ -92,13 +95,40 @@ export default function BafoussamMarketHomePage({
   const [favorites, setFavorites] = useState<Record<string, boolean>>({});
   const [showSearchSuggestions, setShowSearchSuggestions] = useState(false);
 
+  // Active Role Switcher state
+  const [selectedRoleState, setSelectedRoleState] = useState<AccountType>(() => currentUser?.accountType || 'client');
+
+  useEffect(() => {
+    if (currentUser?.accountType) {
+      setSelectedRoleState(currentUser.accountType);
+    }
+  }, [currentUser?.accountType]);
+
   // Security RBAC states
   const [isAuditModalOpen, setIsAuditModalOpen] = useState(false);
   const [deniedAttemptInfo, setDeniedAttemptInfo] = useState<{ isOpen: boolean; resource: string } | null>(null);
 
-  // Strictly identify user's unique role
-  const userRole: UserRole = mapAccountTypeToRole(currentUser?.accountType);
-  const activeRole: AccountType = currentUser?.accountType || 'client';
+  const activeRole: AccountType = selectedRoleState || currentUser?.accountType || 'client';
+  const userRole: UserRole = mapAccountTypeToRole(activeRole);
+
+  const handleSwitchRole = (newRole: AccountType) => {
+    setSelectedRoleState(newRole);
+    if (currentUser) {
+      const updatedUser: User = {
+        ...currentUser,
+        accountType: newRole
+      };
+      try {
+        localStorage.setItem('bafoussam_user', JSON.stringify(updatedUser));
+      } catch (e) {
+        console.error("Error saving updated user role to localStorage:", e);
+      }
+      if (onUpdateCurrentUser) {
+        onUpdateCurrentUser(updatedUser);
+      }
+    }
+    setIsProfileMenuOpen(false);
+  };
 
   // Apply strict role-based data filtering
   const roleProducts = filterProductsByRole(products, currentUser);
@@ -270,30 +300,85 @@ export default function BafoussamMarketHomePage({
                     exit={{ opacity: 0, scale: 0.95, y: 5 }}
                     className="absolute right-0 top-10 w-64 bg-white rounded-2xl shadow-xl border border-slate-100 py-2 z-50 text-xs font-medium space-y-1"
                   >
-                    <div className="px-3.5 py-2 border-b border-slate-100 bg-slate-50">
+                    <div className="px-3.5 py-2 border-b border-slate-100 bg-slate-50 space-y-1">
                       <p className="font-black text-[#0F172A] truncate">{currentUser?.name || 'Membre AfriNova'}</p>
                       <p className="text-[10px] text-slate-400 truncate">{currentUser?.phone || '+237 Bafoussam'}</p>
-                      <div className="flex items-center gap-1 mt-1">
-                        <span className="bg-emerald-100 text-[#16A34A] text-[9px] font-black px-2 py-0.5 rounded-full uppercase border border-emerald-200">
-                          Rôle unique: {userRole}
+                      <div className="flex items-center gap-1 pt-0.5">
+                        <span className="bg-emerald-100 text-[#16A34A] text-[9px] font-black px-2 py-0.5 rounded-full uppercase border border-emerald-200 flex items-center gap-1">
+                          <span>Profil Actif :</span>
+                          <strong className="text-emerald-800">{activeRole.toUpperCase()}</strong>
                         </span>
                       </div>
                     </div>
 
-                    {/* Role-Specific Menu Options */}
-                    {userRole === 'CLIENT' && (
-                      <>
+                    {/* Quick Role / Profile Selector */}
+                    <div className="px-3 py-1.5 bg-slate-50/70 border-b border-slate-100 space-y-1">
+                      <p className="text-[10px] font-black uppercase text-slate-400 px-1">Changer de Profil / Espace :</p>
+                      <div className="grid grid-cols-2 gap-1 text-[11px]">
                         <button
-                          onClick={() => {
-                            setIsProfileMenuOpen(false);
-                            onNavigateView('orders');
-                          }}
-                          className="w-full text-left px-3.5 py-2 hover:bg-slate-50 text-slate-700 font-bold flex items-center gap-2"
+                          onClick={() => handleSwitchRole('client')}
+                          className={`px-2 py-1.5 rounded-lg text-left font-bold flex items-center gap-1.5 transition cursor-pointer ${
+                            activeRole === 'client' ? 'bg-[#16A34A] text-white' : 'hover:bg-slate-200/70 text-slate-700'
+                          }`}
                         >
-                          <ShoppingBag className="w-4 h-4 text-[#16A34A]" />
-                          <span>Mes Commandes Client</span>
+                          <UserIcon className="w-3.5 h-3.5 shrink-0" />
+                          <span className="truncate">Client</span>
                         </button>
-                      </>
+
+                        <button
+                          onClick={() => handleSwitchRole('vendeur')}
+                          className={`px-2 py-1.5 rounded-lg text-left font-bold flex items-center gap-1.5 transition cursor-pointer ${
+                            activeRole === 'vendeur' ? 'bg-[#2563EB] text-white' : 'hover:bg-slate-200/70 text-slate-700'
+                          }`}
+                        >
+                          <Store className="w-3.5 h-3.5 shrink-0" />
+                          <span className="truncate">Vendeur</span>
+                        </button>
+
+                        <button
+                          onClick={() => handleSwitchRole('entreprise')}
+                          className={`px-2 py-1.5 rounded-lg text-left font-bold flex items-center gap-1.5 transition cursor-pointer ${
+                            activeRole === 'entreprise' ? 'bg-purple-600 text-white' : 'hover:bg-slate-200/70 text-slate-700'
+                          }`}
+                        >
+                          <Building2 className="w-3.5 h-3.5 shrink-0" />
+                          <span className="truncate">Entreprise</span>
+                        </button>
+
+                        <button
+                          onClick={() => handleSwitchRole('prestataire')}
+                          className={`px-2 py-1.5 rounded-lg text-left font-bold flex items-center gap-1.5 transition cursor-pointer ${
+                            activeRole === 'prestataire' ? 'bg-amber-600 text-white' : 'hover:bg-slate-200/70 text-slate-700'
+                          }`}
+                        >
+                          <Briefcase className="w-3.5 h-3.5 shrink-0" />
+                          <span className="truncate">Prestataire</span>
+                        </button>
+
+                        <button
+                          onClick={() => handleSwitchRole('livreur')}
+                          className={`px-2 py-1.5 rounded-lg text-left font-bold flex items-center gap-1.5 transition cursor-pointer col-span-2 ${
+                            activeRole === 'livreur' ? 'bg-emerald-700 text-white' : 'hover:bg-slate-200/70 text-slate-700'
+                          }`}
+                        >
+                          <Truck className="w-3.5 h-3.5 shrink-0" />
+                          <span className="truncate">Livreur Bafoussam</span>
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Role-Specific Actions */}
+                    {userRole === 'CLIENT' && (
+                      <button
+                        onClick={() => {
+                          setIsProfileMenuOpen(false);
+                          onNavigateView('orders');
+                        }}
+                        className="w-full text-left px-3.5 py-2 hover:bg-slate-50 text-slate-700 font-bold flex items-center gap-2"
+                      >
+                        <ShoppingBag className="w-4 h-4 text-[#16A34A]" />
+                        <span>Mes Commandes Client</span>
+                      </button>
                     )}
 
                     {userRole === 'BOUTIQUE' && (
@@ -534,6 +619,7 @@ export default function BafoussamMarketHomePage({
                 onLogout={onLogout}
                 cartCount={cartItemsCount}
                 onOpenCart={onOpenCart}
+                onSwitchRole={handleSwitchRole}
               />
             )}
           </motion.div>

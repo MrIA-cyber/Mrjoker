@@ -47,6 +47,8 @@ export interface User {
   isSubscribed: boolean;
   hasPaidFee: boolean;
   neighborhoodId?: string;
+  neighborhood?: string;
+  avatar?: string;
   paymentHistory?: SubscriptionInvoice[];
 }
 
@@ -54,12 +56,16 @@ export interface Merchant {
   id: string;
   name: string;
   shopName: string;
+  ownerName?: string;
   category?: string;
   location: string; // e.g. "Marché A", "Carrefour Bamiléké", "Marché B", etc.
   phone: string;
   email: string;
   password?: string; // security password to log in and prevent scams
   rating?: number;
+  reviewCount?: number;
+  description?: string;
+  neighborhood?: string;
   salesCount?: number;
   isPremium: boolean; // 100,000 FCFA / year
   premiumStartDate?: string;

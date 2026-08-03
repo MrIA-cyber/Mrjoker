@@ -927,6 +927,14 @@ export default function App() {
                 products={sortedAndFilteredProducts}
                 merchants={merchants}
                 currentUser={currentUser}
+                onUpdateCurrentUser={(updatedUser) => {
+                  setCurrentUser(updatedUser);
+                  try {
+                    localStorage.setItem('bafoussam_user', JSON.stringify(updatedUser));
+                  } catch (e) {
+                    console.error("Error updating user in localStorage:", e);
+                  }
+                }}
                 cartItemsCount={cartItemsCount}
                 onOpenCart={() => setIsCartOpen(true)}
                 onSelectProduct={handleSelectProduct}
