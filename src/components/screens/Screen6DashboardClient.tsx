@@ -39,6 +39,7 @@ import {
 import { AfriNovaLogo } from '../AfriNovaLogo';
 import { Product, Merchant, User as UserType } from '../../types';
 import { INITIAL_PRODUCTS, INITIAL_MERCHANTS } from '../../data/mockData';
+import { getMerchantCoverPhoto, getMerchantLogoUrl } from '../../utils/merchantImage';
 import SmartProductImage from '../SmartProductImage';
 
 interface Screen6DashboardClientProps {
@@ -295,7 +296,7 @@ export default function Screen6DashboardClient({
       ...m,
       rating: 4.9,
       reviewsCount: Math.floor(m.views / 10),
-      coverPhoto: 'https://images.unsplash.com/photo-1534723452862-4c874018d66d?w=400&auto=format&fit=crop&q=80',
+      coverPhoto: getMerchantCoverPhoto(m),
       productCount: Math.floor(m.sales / 10000) + 12
     }));
   }, []);
@@ -458,7 +459,11 @@ export default function Screen6DashboardClient({
                 <X className="w-3.5 h-3.5" />
               </button>
             ) : (
-              <button className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-200">
+              <button 
+                onClick={() => setSearchTerm('Poivre blanc Penja')}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-200 cursor-pointer"
+                title="Recherche vocale"
+              >
                 <Mic className="w-3.5 h-3.5" />
               </button>
             )}
@@ -888,8 +893,12 @@ export default function Screen6DashboardClient({
                   <div className="absolute inset-0 bg-gradient-to-t from-slate-950/70 via-transparent to-transparent" />
                   
                   <div className="absolute bottom-2 left-2 flex items-center gap-1.5 text-white">
-                    <div className="w-7 h-7 rounded-lg bg-white/20 backdrop-blur-md flex items-center justify-center text-sm font-black border border-white/30">
-                      {shop.logo}
+                    <div className="w-7 h-7 rounded-lg bg-white/20 backdrop-blur-md flex items-center justify-center text-sm font-black border border-white/30 overflow-hidden shrink-0">
+                      {shop.logo && shop.logo.length <= 4 ? (
+                        <span>{shop.logo}</span>
+                      ) : (
+                        <img src={getMerchantLogoUrl(shop)} alt={shop.shopName} className="w-full h-full object-cover" />
+                      )}
                     </div>
                     <div className="text-[10px] font-bold truncate">
                       <span>{shop.location}</span>
@@ -987,7 +996,11 @@ export default function Screen6DashboardClient({
                       <Phone className="w-3 h-3" />
                       <span>Contacter</span>
                     </button>
-                    <button className="p-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl transition cursor-pointer">
+                    <button 
+                      onClick={() => onNavigate && onNavigate('orders')}
+                      className="p-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl transition cursor-pointer"
+                      title="Envoyer un message"
+                    >
                       <MessageSquare className="w-3.5 h-3.5" />
                     </button>
                   </div>

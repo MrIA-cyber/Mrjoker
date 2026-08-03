@@ -73,6 +73,7 @@ export interface Merchant {
   isVerified?: boolean; // verified status badge
   createdAt?: string;
   logo: string;
+  avatar?: string;
   views: number;
   clicks: number;
   sales: number;

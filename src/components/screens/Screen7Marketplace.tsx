@@ -8,6 +8,7 @@ interface Screen7MarketplaceProps {
 
 export default function Screen7Marketplace({ onSelectProduct }: Screen7MarketplaceProps) {
   const [activeCategory, setActiveCategory] = useState('Tous');
+  const [showFilters, setShowFilters] = useState(false);
 
   const products = [
     {
@@ -95,7 +96,12 @@ export default function Screen7Marketplace({ onSelectProduct }: Screen7Marketpla
               className="w-full pl-9 pr-3 py-2.5 bg-white/10 border border-white/20 rounded-xl text-xs text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500"
             />
           </div>
-          <button className="px-3.5 py-2.5 bg-white/10 hover:bg-white/20 border border-white/20 rounded-xl text-white flex items-center gap-1.5 text-xs font-bold transition cursor-pointer">
+          <button 
+            onClick={() => setShowFilters(!showFilters)}
+            className={`px-3.5 py-2.5 border rounded-xl text-white flex items-center gap-1.5 text-xs font-bold transition cursor-pointer ${
+              showFilters ? 'bg-[#16A34A] border-[#16A34A]' : 'bg-white/10 hover:bg-white/20 border-white/20'
+            }`}
+          >
             <Filter className="w-4 h-4" />
             <span className="hidden sm:inline">Filtres</span>
           </button>

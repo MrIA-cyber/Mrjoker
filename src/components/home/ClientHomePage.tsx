@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import SmartProductImage from '../SmartProductImage';
+import { getMerchantCoverPhoto, getMerchantLogoUrl } from '../../utils/merchantImage';
 import { 
   Search, 
   Grid, 
@@ -1061,39 +1062,64 @@ export default function ClientHomePage({
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3.5">
-                  {filteredMerchants.slice(0, 6).map((merchant) => (
-                    <div
-                      key={merchant.id}
-                      className="p-4 rounded-2xl bg-white border border-slate-100/90 shadow-xs hover:shadow-md transition space-y-2.5 cursor-pointer relative min-h-[110px] flex flex-col justify-between"
-                    >
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                          <div className="w-11 h-11 rounded-2xl bg-[#0F172A] text-white flex items-center justify-center font-black text-xs shrink-0 overflow-hidden shadow-xs">
-                            {merchant.logo ? <img src={merchant.logo} alt={merchant.name} className="w-full h-full object-cover" /> : 'BM'}
-                          </div>
-                          <div className="truncate">
-                            <div className="flex items-center gap-1">
-                              <h4 className="font-extrabold text-xs sm:text-sm text-[#0F172A] truncate">{merchant.shopName || merchant.name}</h4>
-                              <ShieldCheck className="w-4 h-4 text-[#16A34A] shrink-0" />
-                            </div>
-                            <p className="text-[11px] text-slate-500 font-medium">{merchant.location || 'Bafoussam Centre'}</p>
-                          </div>
+                  {filteredMerchants.slice(0, 6).map((merchant) => {
+                    const coverPhoto = getMerchantCoverPhoto(merchant);
+                    const logoUrl = getMerchantLogoUrl(merchant);
+                    const isEmojiLogo = merchant.logo && merchant.logo.length <= 4;
+
+                    return (
+                      <div
+                        key={merchant.id}
+                        className="rounded-2xl bg-white border border-slate-100/90 shadow-xs hover:shadow-md transition cursor-pointer relative overflow-hidden flex flex-col justify-between group"
+                      >
+                        <div className="relative h-20 bg-slate-100 overflow-hidden">
+                          <img 
+                            src={coverPhoto} 
+                            alt={merchant.shopName || merchant.name} 
+                            className="w-full h-full object-cover group-hover:scale-105 transition duration-300" 
+                          />
+                          <div className="absolute inset-0 bg-gradient-to-t from-slate-950/60 via-transparent to-transparent" />
+                          
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setReportingTarget({ type: 'boutique', name: merchant.shopName || merchant.name });
+                            }}
+                            className="absolute top-2 right-2 p-1.5 rounded-full bg-black/40 text-white hover:bg-rose-600 transition cursor-pointer z-10"
+                            title="Signaler la boutique"
+                          >
+                            <Flag className="w-3 h-3" />
+                          </button>
                         </div>
 
-                        <button
-                          onClick={() => setReportingTarget({ type: 'boutique', name: merchant.shopName || merchant.name })}
-                          className="p-1 text-slate-400 hover:text-rose-600 cursor-pointer"
-                          title="Signaler la boutique"
-                        >
-                          <Flag className="w-3.5 h-3.5" />
-                        </button>
+                        <div className="p-3.5 pt-2 flex-1 flex flex-col justify-between space-y-2">
+                          <div className="flex items-start gap-2.5 -mt-6 relative z-10">
+                            <div className="w-10 h-10 rounded-xl bg-white text-slate-900 border-2 border-white flex items-center justify-center font-black text-xs shrink-0 overflow-hidden shadow-sm">
+                              {isEmojiLogo ? (
+                                <span className="text-base">{merchant.logo}</span>
+                              ) : (
+                                <img src={logoUrl} alt={merchant.name} className="w-full h-full object-cover" />
+                              )}
+                            </div>
+                            <div className="truncate pt-4">
+                              <div className="flex items-center gap-1">
+                                <h4 className="font-extrabold text-xs sm:text-sm text-[#0F172A] truncate group-hover:text-emerald-600 transition-colors">
+                                  {merchant.shopName || merchant.name}
+                                </h4>
+                                <ShieldCheck className="w-4 h-4 text-[#16A34A] shrink-0" />
+                              </div>
+                              <p className="text-[11px] text-slate-500 font-medium truncate">{merchant.location || 'Bafoussam Centre'}</p>
+                            </div>
+                          </div>
+
+                          <div className="pt-2 border-t border-slate-50 flex items-center justify-between text-[11px]">
+                            <span className="font-bold text-[#16A34A] bg-emerald-50 px-2 py-0.5 rounded-md text-[10px]">Boutique Agréée</span>
+                            <span className="text-slate-500 font-bold group-hover:text-emerald-600 transition">Visiter →</span>
+                          </div>
+                        </div>
                       </div>
-                      <div className="pt-2 border-t border-slate-50 flex items-center justify-between text-[11px]">
-                        <span className="font-bold text-[#16A34A] bg-emerald-50 px-2 py-0.5 rounded-md">Commerçant vérifié</span>
-                        <span className="text-slate-400 font-semibold">Voir la boutique →</span>
-                      </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
             )}

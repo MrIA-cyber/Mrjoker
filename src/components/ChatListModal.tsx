@@ -243,7 +243,15 @@ export default function ChatListModal({
                         <p className="text-[10px] text-slate-500">📍 {merchant.location}</p>
                       </div>
                     </div>
-                    <button className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-[10px] font-bold flex items-center gap-1">
+                    <button 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (onStartNewChatWithMerchant) {
+                          onStartNewChatWithMerchant(merchant.id, merchant.shopName || merchant.name);
+                        }
+                      }}
+                      className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-[10px] font-bold flex items-center gap-1 cursor-pointer"
+                    >
                       <span>Démarrer</span>
                       <ArrowRight className="w-3 h-3" />
                     </button>

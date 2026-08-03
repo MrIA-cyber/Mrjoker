@@ -19,6 +19,7 @@ import {
 import { motion } from 'motion/react';
 import VerifiedBadge from './VerifiedBadge';
 import SmartProductImage from './SmartProductImage';
+import { getMerchantLogoUrl, getMerchantCoverPhoto } from '../utils/merchantImage';
 import { translations, Language } from '../translations';
 
 interface BestMerchantWidgetProps {
@@ -128,8 +129,12 @@ export default function BestMerchantWidget({
             </div>
 
             <div className="flex items-center gap-3">
-              <div className="w-14 h-14 rounded-2xl bg-indigo-50 dark:bg-indigo-950/25 border border-indigo-100 dark:border-indigo-900/50 flex items-center justify-center text-3xl shadow-xs shrink-0">
-                {merchant.logo || '🏪'}
+              <div className="w-14 h-14 rounded-2xl bg-indigo-50 dark:bg-indigo-950/25 border border-indigo-100 dark:border-indigo-900/50 flex items-center justify-center text-3xl shadow-xs shrink-0 overflow-hidden">
+                {merchant.logo && merchant.logo.length <= 4 ? (
+                  <span>{merchant.logo}</span>
+                ) : (
+                  <img src={getMerchantLogoUrl(merchant)} alt={merchant.shopName} className="w-full h-full object-cover" />
+                )}
               </div>
               <div>
                 <div className="flex items-center gap-2 flex-wrap">

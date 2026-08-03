@@ -10,6 +10,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import VerifiedBadge from './VerifiedBadge';
 import SmartProductImage from './SmartProductImage';
 import { getProductVerifiedImage } from '../utils/productImageValidator';
+import { getMerchantLogoUrl, getMerchantCoverPhoto } from '../utils/merchantImage';
 import { translations, Language } from '../translations';
 
 interface ProductDetailsModalProps {
@@ -151,6 +152,7 @@ export default function ProductDetailsModal({
   // Quantity & Option States
   const [quantity, setQuantity] = useState(1);
   const [selectedColor, setSelectedColor] = useState('Default');
+  const [selectedSize, setSelectedSize] = useState<string>(() => product.sizes?.[0] || '');
 
   // Active Tab State (Description / Specs / Merchant / Reviews / Shipping)
   const [activeTab, setActiveTab] = useState<'desc' | 'specs' | 'merchant' | 'reviews' | 'shipping'>('desc');
@@ -649,14 +651,22 @@ export default function ProductDetailsModal({
                         {isFr ? 'Tailles disponibles' : 'Available Sizes'}
                       </label>
                       <div className="flex items-center flex-wrap gap-2">
-                        {product.sizes.map((sizeName) => (
-                          <button
-                            key={sizeName}
-                            className="px-3 py-1.5 rounded-xl text-xs font-bold border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 bg-slate-50 dark:bg-slate-800/40 hover:border-indigo-500"
-                          >
-                            <span>{sizeName}</span>
-                          </button>
-                        ))}
+                        {product.sizes.map((sizeName) => {
+                          const isSelected = selectedSize === sizeName;
+                          return (
+                            <button
+                              key={sizeName}
+                              onClick={() => setSelectedSize(sizeName)}
+                              className={`px-3 py-1.5 rounded-xl text-xs font-bold border transition cursor-pointer ${
+                                isSelected
+                                  ? 'border-[#16A34A] bg-[#16A34A] text-white shadow-xs'
+                                  : 'border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 bg-slate-50 dark:bg-slate-800/40 hover:border-[#16A34A]'
+                              }`}
+                            >
+                              <span>{sizeName}</span>
+                            </button>
+                          );
+                        })}
                       </div>
                     </div>
                   )}
@@ -747,7 +757,7 @@ export default function ProductDetailsModal({
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <img 
-                      src={merchant?.logo || product.image} 
+                      src={getMerchantLogoUrl(merchant || { id: product.merchantId, shopName: product.merchantName })} 
                       alt={product.merchantName}
                       referrerPolicy="no-referrer"
                       className="w-11 h-11 rounded-xl object-cover border border-slate-200 dark:border-slate-700"
@@ -1104,7 +1114,7 @@ export default function ProductDetailsModal({
                   <div className="bg-slate-50 dark:bg-slate-800/40 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 space-y-4">
                     <div className="flex items-center gap-4">
                       <img 
-                        src={merchant?.logo || product.image} 
+                        src={getMerchantLogoUrl(merchant || { id: product.merchantId, shopName: product.merchantName })} 
                         alt={product.merchantName} 
                         referrerPolicy="no-referrer"
                         className="w-16 h-16 rounded-2xl object-cover border border-slate-200 shadow-md"
@@ -1267,7 +1277,7 @@ export default function ProductDetailsModal({
             </div>
 
             <div className="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-100 dark:border-slate-800 flex items-center gap-3">
-              <img src={merchant?.logo || product.image} alt="Logo" referrerPolicy="no-referrer" className="w-12 h-12 rounded-xl object-cover" />
+              <img src={getMerchantLogoUrl(merchant || { id: product.merchantId, shopName: product.merchantName })} alt="Logo" referrerPolicy="no-referrer" className="w-12 h-12 rounded-xl object-cover" />
               <div>
                 <h4 className="font-extrabold text-sm text-slate-900 dark:text-white">{product.merchantName}</h4>
                 <p className="text-xs text-slate-500">{merchant?.location || product.origin}</p>

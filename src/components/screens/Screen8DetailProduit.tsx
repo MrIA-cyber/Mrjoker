@@ -9,6 +9,8 @@ interface Screen8DetailProduitProps {
 
 export default function Screen8DetailProduit({ onBack, onAddToCart, onBuyNow }: Screen8DetailProduitProps) {
   const [selectedImage, setSelectedImage] = useState(0);
+  const [isLiked, setIsLiked] = useState(false);
+  const [shareToast, setShareToast] = useState(false);
 
   const images = [
     'https://images.unsplash.com/photo-1610945265064-0e34e5519bbf?auto=format&fit=crop&w=800&q=80',
@@ -30,10 +32,24 @@ export default function Screen8DetailProduit({ onBack, onAddToCart, onBuyNow }: 
           <span className="text-xs font-extrabold text-slate-300 uppercase tracking-wider">DÉTAIL PRODUIT — BAFOUSSAM</span>
         </div>
         <div className="flex items-center gap-2">
-          <button className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition cursor-pointer">
-            <Heart className="w-4 h-4 text-rose-400 fill-rose-400" />
+          <button 
+            onClick={() => setIsLiked(!isLiked)}
+            className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition cursor-pointer"
+            title="Ajouter aux favoris"
+          >
+            <Heart className={`w-4 h-4 ${isLiked ? 'text-rose-500 fill-rose-500' : 'text-slate-300'}`} />
           </button>
-          <button className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition cursor-pointer">
+          <button 
+            onClick={() => {
+              if (navigator.clipboard) {
+                navigator.clipboard.writeText(window.location.href);
+              }
+              setShareToast(true);
+              setTimeout(() => setShareToast(false), 3000);
+            }}
+            className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition cursor-pointer"
+            title="Partager ce produit"
+          >
             <Share2 className="w-4 h-4" />
           </button>
         </div>
