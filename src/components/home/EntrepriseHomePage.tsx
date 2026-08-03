@@ -556,7 +556,7 @@ export default function EntrepriseHomePage({
                         <td className="p-3.5 text-slate-300">{emp.role}</td>
                         <td className="p-3.5 text-blue-400 font-semibold">{emp.dept}</td>
                         <td className="p-3.5 text-slate-400 font-mono text-[11px]">{emp.phone}<br/>{emp.email}</td>
-                        <td className="p-3.5 font-bold text-emerald-400">{emp.salary.toLocaleString()} FCFA</td>
+                        <td className="p-3.5 font-bold text-emerald-400">{(emp.salary || 0).toLocaleString()} FCFA</td>
                         <td className="p-3.5">
                           <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-emerald-500/20 text-emerald-400">
                             {emp.status}
@@ -771,7 +771,7 @@ export default function EntrepriseHomePage({
                       <td className="p-3.5 font-bold text-white">{ord.clientName}</td>
                       <td className="p-3.5 text-slate-300">{ord.items}</td>
                       <td className="p-3.5 text-slate-400">{ord.date}</td>
-                      <td className="p-3.5 font-black text-emerald-400">{ord.total.toLocaleString()} FCFA</td>
+                      <td className="p-3.5 font-black text-emerald-400">{(ord.total || 0).toLocaleString()} FCFA</td>
                       <td className="p-3.5">
                         <span className={`px-2 py-0.5 rounded-full text-[10px] font-black ${
                           ord.status === 'Livrée' ? 'bg-emerald-500/20 text-emerald-400' : 'bg-amber-500/20 text-amber-300'
@@ -844,9 +844,9 @@ export default function EntrepriseHomePage({
                         <span className="text-[10px] text-slate-500 font-mono">{inv.clientNiu}</span>
                       </td>
                       <td className="p-3.5 text-slate-400">{inv.date}<br/><span className="text-[10px] text-amber-400">Échéance: {inv.dueDate}</span></td>
-                      <td className="p-3.5 font-mono text-slate-300">{inv.amountHT.toLocaleString()} FCFA</td>
-                      <td className="p-3.5 font-mono text-slate-400">{inv.tax.toLocaleString()} FCFA</td>
-                      <td className="p-3.5 font-black text-emerald-400">{inv.amountTTC.toLocaleString()} FCFA</td>
+                      <td className="p-3.5 font-mono text-slate-300">{(inv.amountHT || 0).toLocaleString()} FCFA</td>
+                      <td className="p-3.5 font-mono text-slate-400">{(inv.tax || 0).toLocaleString()} FCFA</td>
+                      <td className="p-3.5 font-black text-emerald-400">{(inv.amountTTC || 0).toLocaleString()} FCFA</td>
                       <td className="p-3.5">
                         <span className={`px-2 py-0.5 rounded-full text-[10px] font-black ${
                           inv.status === 'Payé' ? 'bg-emerald-500/20 text-emerald-400' : 'bg-amber-500/20 text-amber-300'
@@ -859,7 +859,7 @@ export default function EntrepriseHomePage({
                           onClick={() => {
                             handleDownloadPDF(
                               `Facture_${inv.id}`,
-                              `N° FACTURE: ${inv.id}\nCLIENT: ${inv.clientName} (NIU: ${inv.clientNiu})\nDATE ÉMISSION: ${inv.date}\nDATE ÉCHÉANCE: ${inv.dueDate}\nMONTANT HT: ${inv.amountHT.toLocaleString()} FCFA\nTVA 19.25%: ${inv.tax.toLocaleString()} FCFA\nMONTANT TOTAL TTC: ${inv.amountTTC.toLocaleString()} FCFA\nSTATUT REGLEMENT: ${inv.status}`
+                              `N° FACTURE: ${inv.id}\nCLIENT: ${inv.clientName} (NIU: ${inv.clientNiu})\nDATE ÉMISSION: ${inv.date}\nDATE ÉCHÉANCE: ${inv.dueDate}\nMONTANT HT: ${(inv.amountHT || 0).toLocaleString()} FCFA\nTVA 19.25%: ${(inv.tax || 0).toLocaleString()} FCFA\nMONTANT TOTAL TTC: ${(inv.amountTTC || 0).toLocaleString()} FCFA\nSTATUT REGLEMENT: ${inv.status}`
                             );
                           }}
                           className="px-2.5 py-1.5 bg-blue-950/80 hover:bg-blue-900 text-blue-300 text-xs font-bold rounded-lg flex items-center gap-1.5 ml-auto cursor-pointer border border-blue-800/50"
@@ -1234,7 +1234,7 @@ export default function EntrepriseHomePage({
                   <h3 className="text-lg font-black text-white mt-2">{subscription.planName}</h3>
                   <p className="text-xs text-slate-400">Expire le: {subscription.expiryDate}</p>
                 </div>
-                <span className="text-xl font-black text-blue-400">{subscription.monthlyPrice.toLocaleString()} FCFA/mois</span>
+                <span className="text-xl font-black text-blue-400">{(subscription?.monthlyPrice || 0).toLocaleString()} FCFA/mois</span>
               </div>
 
               <div className="text-xs text-slate-300 space-y-1 border-t border-slate-800 pt-3">
