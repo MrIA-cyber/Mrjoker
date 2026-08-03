@@ -956,7 +956,7 @@ export default function App() {
         />
 
         {/* 1. Header Navigation Block (Rendered for sub-views, as BafoussamMarketHomePage has its own reference header) */}
-        {activeView !== 'shop' && (
+        {activeView !== 'shop' && activeView !== 'connexion' && activeView !== 'inscription' && (
           <StoreHeader
             currentUser={currentUser}
             activeView={activeView}
@@ -1422,6 +1422,7 @@ export default function App() {
                 onSuccess={handleUserSubscriptionSuccess}
                 lang={lang}
                 onLangChange={handleLangChange}
+                initialStep={activeView === 'inscription' ? 'register' : 'login'}
               />
             </motion.div>
           )}
