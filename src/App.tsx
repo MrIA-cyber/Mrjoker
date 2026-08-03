@@ -916,6 +916,8 @@ export default function App() {
     }
   };
 
+  const isAuthPage = activeView === 'connexion' || activeView === 'inscription';
+
   // 1. Automatic 8K Splash Screen at App Launch
   if (isAppBooting) {
     return (
@@ -1006,7 +1008,7 @@ export default function App() {
         {/* Floating countdown pills removed per minimal premium UI directive */}
 
       {/* 2. Main Body Content Switcher */}
-      <main className="flex-1 pb-16">
+      <main className={`flex-1 ${isAuthPage ? 'flex flex-col justify-center items-center py-0' : 'pb-16'}`}>
         <AnimatePresence mode="wait">
           
           {/* Shop View Layout - Bafoussam Market Home Page */}
@@ -1551,14 +1553,16 @@ export default function App() {
       </main>
 
       {/* 3. New AfriNova Premium Footer */}
-      <AfriNovaFooter lang={lang} onNavigate={(page) => {
-        if (page === 'cart') setIsCartOpen(true);
-        else if (page === 'orders') setActiveView('orders');
-        else if (page === 'merchant') setActiveView('merchant');
-        else if (page === 'news') setActiveView('news');
-        else if (page === 'dashboard') setActiveView('dashboard');
-        else setActiveView('shop');
-      }} />
+      {!isAuthPage && (
+        <AfriNovaFooter lang={lang} onNavigate={(page) => {
+          if (page === 'cart') setIsCartOpen(true);
+          else if (page === 'orders') setActiveView('orders');
+          else if (page === 'merchant') setActiveView('merchant');
+          else if (page === 'news') setActiveView('news');
+          else if (page === 'dashboard') setActiveView('dashboard');
+          else setActiveView('shop');
+        }} />
+      )}
 
       {/* 4. Modals and Overlays Box */}
       <AnimatePresence>
