@@ -126,8 +126,12 @@ export default function App() {
   });
 
   // UI Navigation states
-  const [activeView, setActiveView] = useState<'shop' | 'merchant' | 'orders' | 'news' | 'admin' | 'dashboard'>(() => {
-    return (localStorage.getItem('bafoussam_active_view') as any) || 'shop';
+  const [activeView, setActiveView] = useState<'shop' | 'merchant' | 'orders' | 'news' | 'admin' | 'dashboard' | 'connexion' | 'inscription'>(() => {
+    const status = checkSessionStatus();
+    if (status.isValid && status.savedUser) {
+      return getTargetDashboardForRole(status.savedUser.accountType);
+    }
+    return 'connexion';
   });
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [isCartOpen, setIsCartOpen] = useState(false);
@@ -517,15 +521,13 @@ export default function App() {
 
   // Auth Action handlers
   const handleUserSubscriptionSuccess = (user: User) => {
+    markSessionActive(user);
     setCurrentUser(user);
 
     // Auto-identify unique role and load corresponding dashboard
     const userRole = mapAccountTypeToRole(user.accountType);
-    if (userRole === 'BOUTIQUE') {
-      setActiveView('merchant');
-    } else {
-      setActiveView('shop');
-    }
+    const targetDashboard = getTargetDashboardForRole(user.accountType);
+    setActiveView(targetDashboard);
 
     logAuditEvent({
       userId: user.id,
@@ -547,13 +549,16 @@ export default function App() {
 
   const handleLogout = () => {
     signOut(auth).catch((err) => console.error("Firebase signOut error:", err));
+    markSessionInactive(true);
     setCurrentUser(null);
     setWelcomeNotification(null);
     setCart([]);
     setOrders([]);
     setIsAdminUnlocked(false);
-    setActiveView('shop');
+    setActiveView('connexion');
     localStorage.removeItem('bafoussam_session_start_time');
+    localStorage.removeItem('bafoussam_user');
+    localStorage.removeItem('bafoussam_active_view');
     setSessionStartTime(null);
   };
 
@@ -889,11 +894,33 @@ export default function App() {
   // Calculate Cart items count
   const cartItemsCount = cart.reduce((acc, item) => acc + item.quantity, 0);
 
+  const handleSplashComplete = () => {
+    setIsAppBooting(false);
+    const status = checkSessionStatus();
+
+    if (status.isValid && status.savedUser) {
+      markSessionActive(status.savedUser);
+      setCurrentUser(status.savedUser);
+
+      const targetDashboard = getTargetDashboardForRole(status.savedUser.accountType);
+      const savedLastView = localStorage.getItem('bafoussam_active_view') || localStorage.getItem('bafoussam_last_view');
+      const viewToLoad = (savedLastView && savedLastView !== 'shop' && savedLastView !== 'connexion' && savedLastView !== 'inscription')
+        ? (savedLastView as any)
+        : targetDashboard;
+
+      setActiveView(viewToLoad);
+    } else {
+      setCurrentUser(null);
+      markSessionInactive(true);
+      setActiveView('connexion');
+    }
+  };
+
   // 1. Automatic 8K Splash Screen at App Launch
   if (isAppBooting) {
     return (
       <SplashScreen 
-        onComplete={() => setIsAppBooting(false)} 
+        onComplete={handleSplashComplete} 
         lang={lang} 
         autoComplete={true}
       />

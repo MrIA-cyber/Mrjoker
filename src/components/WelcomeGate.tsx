@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { User } from '../types';
-import { Phone, Lock, Globe, AlertCircle, ShieldCheck, ArrowRight, Eye, EyeOff, HelpCircle, Loader2 } from 'lucide-react';
+import { Phone, Lock, Globe, AlertCircle, ShieldCheck, ArrowRight, Eye, EyeOff, HelpCircle, Loader2, User as UserIcon } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { translations, Language } from '../translations';
 import SupportPhoneNumber from './SupportPhoneNumber';
@@ -16,14 +16,15 @@ interface WelcomeGateProps {
   onSuccess: (user: User) => void;
   lang: Language;
   onLangChange: (lang: Language) => void;
+  initialStep?: 'login' | 'register';
 }
 
-export default function WelcomeGate({ onSuccess, lang, onLangChange }: WelcomeGateProps) {
+export default function WelcomeGate({ onSuccess, lang, onLangChange, initialStep = 'login' }: WelcomeGateProps) {
   const getTranslation = (key: string) => {
     return (translations[lang] as any)[key] || '';
   };
 
-  const [step, setStep] = useState<'register' | 'login' | 'searching-subscription'>('register');
+  const [step, setStep] = useState<'register' | 'login' | 'searching-subscription'>(initialStep);
 
   // Login State
   const [loginPhone, setLoginPhone] = useState('');
@@ -229,6 +230,40 @@ export default function WelcomeGate({ onSuccess, lang, onLangChange }: WelcomeGa
           >
             <Globe className="w-3.5 h-3.5 text-[#16A34A] inline mr-1" />
             <span>{lang === 'fr' ? 'EN' : 'FR'}</span>
+          </button>
+        </div>
+
+        {/* Choice between Se connecter & S'inscrire */}
+        <div className="flex bg-slate-100 p-1.5 rounded-2xl border border-slate-200/80">
+          <button
+            type="button"
+            onClick={() => {
+              setValidationError('');
+              setStep('login');
+            }}
+            className={`flex-1 py-2.5 rounded-xl text-xs sm:text-sm font-extrabold transition-all cursor-pointer flex items-center justify-center gap-2 ${
+              step === 'login'
+                ? 'bg-white text-[#0F172A] shadow-xs border border-slate-200/80 font-black'
+                : 'text-slate-500 hover:text-slate-900'
+            }`}
+          >
+            <Lock className="w-4 h-4 text-[#16A34A]" />
+            <span>{lang === 'fr' ? 'Se connecter' : 'Sign In'}</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setValidationError('');
+              setStep('register');
+            }}
+            className={`flex-1 py-2.5 rounded-xl text-xs sm:text-sm font-extrabold transition-all cursor-pointer flex items-center justify-center gap-2 ${
+              step === 'register'
+                ? 'bg-[#16A34A] text-white shadow-xs font-black'
+                : 'text-slate-500 hover:text-slate-900'
+            }`}
+          >
+            <UserIcon className="w-4 h-4" />
+            <span>{lang === 'fr' ? "S'inscrire" : 'Sign Up'}</span>
           </button>
         </div>
 

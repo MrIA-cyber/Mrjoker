@@ -155,12 +155,14 @@ export function getTargetDashboardForRole(accountType: AccountType): 'shop' | 'm
   switch (accountType) {
     case 'vendeur':
       return 'merchant';
+    case 'admin':
+      return 'admin';
     case 'entreprise':
     case 'prestataire':
     case 'livreur':
     case 'client':
     default:
-      return 'shop';
+      return 'dashboard';
   }
 }
 
