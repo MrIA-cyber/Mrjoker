@@ -223,20 +223,20 @@ export const PhoneCountryInput: React.FC<PhoneCountryInputProps> = ({
           type="button"
           disabled={disabled}
           onClick={() => setIsModalOpen(true)}
-          className="h-[52px] pl-3.5 pr-2.5 flex items-center gap-1.5 text-xs font-extrabold text-[#0F172A] hover:bg-slate-100/80 rounded-l-2xl border-r border-slate-200 transition cursor-pointer shrink-0 select-none group"
+          className="h-[52px] pl-3 pr-2 sm:pl-3.5 sm:pr-2.5 flex items-center gap-1 sm:gap-1.5 text-xs font-extrabold text-[#0F172A] hover:bg-slate-100/80 rounded-l-2xl border-r border-slate-200 transition cursor-pointer shrink-0 select-none group"
           title={lang === 'fr' ? 'Changer de pays' : 'Change country'}
         >
-          <span className="text-xl leading-none transition-transform group-hover:scale-110">
+          <span className="text-lg sm:text-xl leading-none transition-transform group-hover:scale-110 shrink-0">
             {selectedCountry.flag}
           </span>
-          <span className="font-mono font-black text-slate-800 text-xs sm:text-sm">
+          <span className="font-mono font-black text-slate-800 text-xs sm:text-sm whitespace-nowrap shrink-0">
             {selectedCountry.dialCode}
           </span>
-          <ChevronDown className="w-3.5 h-3.5 text-slate-400 group-hover:text-slate-700 transition-transform duration-200 group-hover:translate-y-0.5" />
+          <ChevronDown className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-slate-400 group-hover:text-slate-700 transition-transform duration-200 group-hover:translate-y-0.5 shrink-0" />
         </button>
 
         {/* Telephone Number Input Field */}
-        <div className="relative flex-1 flex items-center">
+        <div className="relative flex-1 min-w-0 flex items-center">
           <input
             id={id}
             type="tel"
@@ -250,11 +250,11 @@ export const PhoneCountryInput: React.FC<PhoneCountryInputProps> = ({
             }}
             onChange={handleDigitChange}
             placeholder={placeholder || selectedCountry.placeholder}
-            className="w-full h-[52px] px-3.5 bg-transparent text-sm sm:text-base font-mono font-extrabold text-[#0F172A] placeholder:text-slate-400 focus:outline-none"
+            className="w-full h-[52px] px-2.5 sm:px-3.5 bg-transparent text-sm sm:text-base font-mono font-extrabold text-[#0F172A] placeholder:text-slate-400 focus:outline-none min-w-0 truncate"
           />
 
           {/* Status Checkmark / Alert */}
-          <div className="pr-3.5 flex items-center gap-1">
+          <div className="pr-2.5 sm:pr-3.5 flex items-center gap-1 shrink-0">
             {isValid ? (
               <CheckCircle2 className="w-5 h-5 text-[#16A34A] shrink-0 animate-in fade-in" />
             ) : isTouched && nationalDigits && !isValid ? (

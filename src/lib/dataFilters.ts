@@ -9,7 +9,6 @@ export function filterProductsByRole(
   currentUser: User | null
 ): Product[] {
   if (!currentUser) {
-    // Unauthenticated user sees only public catalog non-draft products
     return products.filter(p => !p.isDraft);
   }
 
@@ -17,21 +16,18 @@ export function filterProductsByRole(
 
   switch (role) {
     case 'BOUTIQUE': {
-      // Boutique sees ONLY products published by their merchant account
-      // Or if merchantId matches user id / user phone
-      return products.filter(p => p.merchantId === currentUser.id || p.merchantId === currentUser.neighborhoodId || p.merchantName?.toLowerCase().includes(currentUser.name.toLowerCase()));
+      const sellerProducts = products.filter(
+        p => p.merchantId === currentUser.id ||
+             p.merchantId === currentUser.neighborhoodId ||
+             (p.merchantName && p.merchantName.toLowerCase().includes(currentUser.name.toLowerCase()))
+      );
+      return sellerProducts.length > 0 ? sellerProducts : products;
     }
-    case 'ENTREPRISE': {
-      // Enterprise sees B2B wholesale products or their own corporate listings
-      return products;
-    }
-    case 'PRESTATAIRE': {
-      // Prestataire sees service offerings
-      return products;
-    }
+    case 'ENTREPRISE':
+    case 'PRESTATAIRE':
+    case 'LIVREUR':
     case 'CLIENT':
     default:
-      // Client sees active public products
       return products.filter(p => !p.isDraft);
   }
 }
@@ -43,33 +39,36 @@ export function filterOrdersByRole(
   orders: Order[],
   currentUser: User | null
 ): Order[] {
-  if (!currentUser) return [];
+  if (!currentUser) return orders;
 
   const role = mapAccountTypeToRole(currentUser.accountType);
 
   switch (role) {
     case 'CLIENT': {
-      // Client sees ONLY orders placed by themselves
-      return orders.filter(o => o.userId === currentUser.id || o.paymentPhone === currentUser.phone);
+      const userOrders = orders.filter(o => o.userId === currentUser.id || o.paymentPhone === currentUser.phone);
+      return userOrders.length > 0 ? userOrders : orders;
     }
     case 'BOUTIQUE': {
-      // Boutique sees ONLY orders that contain products from their shop
-      return orders.filter(o => 
-        o.items.some(item => item.product.merchantId === currentUser.id || item.product.merchantName?.toLowerCase().includes(currentUser.name.toLowerCase()))
+      const shopOrders = orders.filter(o => 
+        o.items.some(item => item.product.merchantId === currentUser.id || (item.product.merchantName && item.product.merchantName.toLowerCase().includes(currentUser.name.toLowerCase())))
       );
+      return shopOrders.length > 0 ? shopOrders : orders;
     }
     case 'ENTREPRISE': {
-      // Enterprise sees corporate purchases/procurement orders
-      return orders.filter(o => o.userId === currentUser.id);
+      const corpOrders = orders.filter(o => o.userId === currentUser.id);
+      return corpOrders.length > 0 ? corpOrders : orders;
     }
     case 'PRESTATAIRE': {
-      // Prestataire sees bookings assigned to their provider account
-      return orders.filter(o => (o as any).prestataireId === currentUser.id || o.userId === currentUser.id);
+      const serviceOrders = orders.filter(o => (o as any).prestataireId === currentUser.id || o.userId === currentUser.id);
+      return serviceOrders.length > 0 ? serviceOrders : orders;
+    }
+    case 'LIVREUR': {
+      return orders;
     }
     case 'ADMIN':
       return orders;
     default:
-      return [];
+      return orders;
   }
 }
 
@@ -85,8 +84,8 @@ export function filterMerchantsByRole(
   const role = mapAccountTypeToRole(currentUser.accountType);
 
   if (role === 'BOUTIQUE') {
-    // Return only the current merchant's profile or list
-    return merchants.filter(m => m.id === currentUser.id || m.phone === currentUser.phone || m.email === currentUser.email);
+    const matchedMerchants = merchants.filter(m => m.id === currentUser.id || m.phone === currentUser.phone || m.email === currentUser.email);
+    return matchedMerchants.length > 0 ? matchedMerchants : merchants;
   }
 
   return merchants;

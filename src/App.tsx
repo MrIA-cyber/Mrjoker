@@ -43,6 +43,15 @@ import ChatListModal from './components/ChatListModal';
 import RealtimeChatNotificationToast from './components/RealtimeChatNotificationToast';
 import { ChatThread, subscribeToUserChats, createOrGetChat } from './services/chatService';
 import ProtectedRoute from './components/ProtectedRoute';
+import LoginAuthModal from './components/LoginAuthModal';
+import {
+  checkSessionStatus,
+  saveWorkspaceState,
+  restoreWorkspaceState,
+  getTargetDashboardForRole,
+  markSessionActive,
+  markSessionInactive,
+} from './lib/sessionManager';
 import { mapAccountTypeToRole, getDashboardForRole, isViewAllowedForRole } from './lib/rbac';
 import { logAuditEvent } from './lib/auditLogger';
 import { Sparkles, ShoppingBag, ShieldCheck, Truck, Store, ArrowRight, HelpCircle, Bell, X, Lock, Key, Sun, Moon, AlertCircle, Clock, Smartphone, Layers, Headphones, Coins, CheckCircle2 } from 'lucide-react';
@@ -197,13 +206,117 @@ export default function App() {
   };
   
   // Search, Filters & Sorting
-  const [searchTerm, setSearchTerm] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState('Tous');
-  const [sortBy, setSortBy] = useState<'popular' | 'price_asc' | 'price_desc' | 'rating'>('popular');
+  const [searchTerm, setSearchTerm] = useState(() => restoreWorkspaceState().searchTerm);
+  const [selectedCategory, setSelectedCategory] = useState(() => restoreWorkspaceState().selectedCategory);
+  const [sortBy, setSortBy] = useState<'popular' | 'price_asc' | 'price_desc' | 'rating'>(() => restoreWorkspaceState().sortBy);
   const [isRestrictedAuthOpen, setIsRestrictedAuthOpen] = useState(false);
   const [isAppBooting, setIsAppBooting] = useState(true);
   const [isSubscriptionModalOpen, setIsSubscriptionModalOpen] = useState(false);
   const [isAddProductOpen, setIsAddProductOpen] = useState(false);
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [isExpiredSession, setIsExpiredSession] = useState(false);
+
+  // Save workspace state automatically when user modifies view, filters, or cart
+  useEffect(() => {
+    saveWorkspaceState({
+      lastView: activeView,
+      searchTerm,
+      selectedCategory,
+      sortBy,
+      cart,
+    });
+  }, [activeView, searchTerm, selectedCategory, sortBy, cart]);
+
+  const handleLoginClick = () => {
+    const status = checkSessionStatus();
+
+    if (status.isValid && status.savedUser) {
+      // 1. Session is STILL VALID! Auto-connect immediately!
+      markSessionActive(status.savedUser);
+      setCurrentUser(status.savedUser);
+
+      // Restore saved workspace state
+      const restored = restoreWorkspaceState();
+      if (restored.searchTerm) setSearchTerm(restored.searchTerm);
+      if (restored.selectedCategory) setSelectedCategory(restored.selectedCategory);
+      if (restored.sortBy) setSortBy(restored.sortBy);
+      if (restored.cart && restored.cart.length > 0) setCart(restored.cart);
+
+      // Calculate target dashboard view for role
+      const targetDashboard = getTargetDashboardForRole(status.savedUser.accountType);
+      const viewToLoad = restored.lastView && restored.lastView !== 'shop' ? restored.lastView : targetDashboard;
+
+      setActiveView(viewToLoad);
+
+      const roleText = status.savedUser.accountType.toUpperCase();
+      triggerToast(
+        lang === 'fr'
+          ? `Reconnexion automatique réussie ! Redirection vers votre tableau de bord (${roleText}).`
+          : `Auto-reconnection successful! Redirecting to your ${roleText} dashboard.`,
+        'success'
+      );
+    } else {
+      // 2. Session expired or no saved user -> prompt for re-authentication
+      setIsExpiredSession(status.isExpired);
+      if (status.isExpired) {
+        triggerToast(
+          lang === 'fr'
+            ? 'Votre session a expiré. Veuillez saisir votre mot de passe pour restaurer vos données.'
+            : 'Session expired. Please sign in to restore your saved data.',
+          'info'
+        );
+      }
+      setIsAuthModalOpen(true);
+    }
+  };
+
+  const handleLoginSuccess = (user: User) => {
+    markSessionActive(user);
+    setCurrentUser(user);
+    setIsAuthModalOpen(false);
+
+    // Save to all registered users list
+    try {
+      const savedUsersRaw = localStorage.getItem('bafoussam_all_registered_users');
+      let savedUsers: User[] = savedUsersRaw ? JSON.parse(savedUsersRaw) : [];
+      if (!savedUsers.some((u) => u.id === user.id || u.phone === user.phone)) {
+        savedUsers.push(user);
+        localStorage.setItem('bafoussam_all_registered_users', JSON.stringify(savedUsers));
+      }
+    } catch (e) {
+      console.error('Error saving registered user:', e);
+    }
+
+    // Restore workspace state
+    const restored = restoreWorkspaceState();
+    if (restored.searchTerm) setSearchTerm(restored.searchTerm);
+    if (restored.selectedCategory) setSelectedCategory(restored.selectedCategory);
+    if (restored.sortBy) setSortBy(restored.sortBy);
+    if (restored.cart && restored.cart.length > 0) setCart(restored.cart);
+
+    // Target dashboard for role
+    const userRole = mapAccountTypeToRole(user.accountType);
+    const targetDashboard = getTargetDashboardForRole(user.accountType);
+    const viewToLoad = restored.lastView && restored.lastView !== 'shop' ? restored.lastView : targetDashboard;
+
+    setActiveView(viewToLoad);
+
+    logAuditEvent({
+      userId: user.id,
+      userName: user.name,
+      userRole: userRole,
+      action: 'LOGIN_AUTO_REDIRECT_DASHBOARD',
+      resource: `dashboard_${userRole.toLowerCase()}`,
+      status: 'LOGIN',
+    });
+
+    triggerToast(
+      lang === 'fr'
+        ? `Connexion réussie ! Redirection vers votre tableau de bord ${user.accountType.toUpperCase()}`
+        : `Signed in successfully! Redirecting to your ${user.accountType.toUpperCase()} dashboard`,
+      'success'
+    );
+  };
 
   // Toast Notification State
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'info' | 'error' } | null>(null);
@@ -787,16 +900,6 @@ export default function App() {
     );
   }
 
-  // 2. If user hasn't completed paid subscription, lock site access behind WelcomeGate paywall
-  if (!currentUser) {
-    return (
-      <div className="relative min-h-screen">
-        <WelcomeGate 
-          onSuccess={handleUserSubscriptionSuccess} 
-          lang={lang}
-          onLangChange={handleLangChange}
-        />
-        
         {/* Custom session disconnection overlay notification */}
         <AnimatePresence>
           {showSessionExpiredToast && (
@@ -829,9 +932,6 @@ export default function App() {
             </motion.div>
           )}
         </AnimatePresence>
-      </div>
-    );
-  }
 
   const isUserSubscriptionExpired = !!(currentUser && (currentUser.isSubscribed === false || (currentUser.subscriptionExpiryDate && new Date(currentUser.subscriptionExpiryDate) < new Date())));
 
@@ -896,6 +996,7 @@ export default function App() {
             selectedCategory={selectedCategory}
             onCategoryChange={setSelectedCategory}
             onLogout={handleLogout}
+            onLoginClick={handleLoginClick}
             isAdminUnlocked={isAdminUnlocked}
             theme={theme}
             onToggleTheme={handleToggleTheme}
@@ -954,6 +1055,7 @@ export default function App() {
                 lang={lang}
                 onLangChange={handleLangChange}
                 onLogout={handleLogout}
+                onLoginClick={handleLoginClick}
                 orders={orders}
                 theme={theme}
                 onToggleTheme={handleToggleTheme}
@@ -1688,6 +1790,16 @@ export default function App() {
           productName={activeChatModal.productName}
         />
       )}
+
+      {/* Login & Session Restoration Modal */}
+      <LoginAuthModal
+        isOpen={isAuthModalOpen}
+        onClose={() => setIsAuthModalOpen(false)}
+        onSuccess={handleLoginSuccess}
+        lang={lang}
+        isExpiredSession={isExpiredSession}
+        savedUserPhone={checkSessionStatus().savedUser?.phone || ''}
+      />
 
       </div>
     </div>

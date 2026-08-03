@@ -33,7 +33,7 @@ import SupportPhoneNumber from './SupportPhoneNumber';
 import { AfriNovaLogo } from './AfriNovaLogo';
 
 interface StoreHeaderProps {
-  currentUser: User;
+  currentUser: User | null;
   activeView: 'shop' | 'merchant' | 'orders' | 'news' | 'admin' | 'dashboard';
   onViewChange: (view: 'shop' | 'merchant' | 'orders' | 'news' | 'admin' | 'dashboard') => void;
   cartItemsCount: number;
@@ -44,6 +44,7 @@ interface StoreHeaderProps {
   selectedCategory: string;
   onCategoryChange: (category: string) => void;
   onLogout: () => void;
+  onLoginClick?: () => void;
   isAdminUnlocked?: boolean;
   theme: 'light' | 'dark';
   onToggleTheme: () => void;
@@ -80,6 +81,7 @@ export default function StoreHeader({
   selectedCategory,
   onCategoryChange,
   onLogout,
+  onLoginClick,
   isAdminUnlocked = false,
   theme,
   onToggleTheme,
@@ -199,14 +201,25 @@ export default function StoreHeader({
             {theme === 'light' ? <Moon className="w-3.5 h-3.5 text-amber-400" /> : <Sun className="w-3.5 h-3.5 text-amber-300" />}
           </button>
 
-          <button
-            onClick={onLogout}
-            className="flex items-center gap-1 hover:text-red-400 transition cursor-pointer h-7 text-slate-400 text-xs ml-1"
-            title="Se déconnecter"
-          >
-            <LogOut className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">{t.logout}</span>
-          </button>
+          {currentUser ? (
+            <button
+              onClick={onLogout}
+              className="flex items-center gap-1 hover:text-red-400 transition cursor-pointer h-7 text-slate-400 text-xs ml-1"
+              title="Se déconnecter"
+            >
+              <LogOut className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">{t.logout}</span>
+            </button>
+          ) : (
+            <button
+              onClick={onLoginClick}
+              className="flex items-center gap-1 hover:text-emerald-400 transition cursor-pointer h-7 text-emerald-400 font-bold text-xs ml-1"
+              title="Se connecter"
+            >
+              <LogOut className="w-3.5 h-3.5 rotate-180" />
+              <span>Se connecter</span>
+            </button>
+          )}
         </div>
       </div>
 
@@ -217,7 +230,7 @@ export default function StoreHeader({
             <div className="relative shrink-0">
               <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-500 p-0.5 shadow-md">
                 <div className="w-full h-full rounded-full bg-slate-900 flex items-center justify-center font-black text-xs text-white uppercase font-display">
-                  {currentUser.name ? currentUser.name.slice(0, 2) : 'AN'}
+                  {currentUser?.name ? currentUser.name.slice(0, 2) : 'AN'}
                 </div>
               </div>
               <span className="absolute bottom-0 right-0 w-3 h-3 rounded-full bg-emerald-400 border-2 border-slate-900" />
@@ -225,10 +238,10 @@ export default function StoreHeader({
             <div>
               <h2 className="text-sm sm:text-base font-black tracking-tight text-white flex items-center gap-1.5 font-display">
                 <span>👋 Bonjour,</span>
-                <span className="text-emerald-400">{currentUser.name}</span>
+                <span className="text-emerald-400">{currentUser?.name || 'Visiteur Bafoussam'}</span>
               </h2>
               <p className="text-[11px] text-slate-300 font-medium leading-none mt-0.5">
-                Bienvenue sur AfriNova
+                {currentUser ? 'Bienvenue sur AfriNova' : 'Connectez-vous pour accéder à votre espace'}
               </p>
             </div>
           </div>

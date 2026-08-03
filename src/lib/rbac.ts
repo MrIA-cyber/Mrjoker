@@ -217,21 +217,24 @@ export function getDashboardForRole(role: UserRole): string {
 export function isViewAllowedForRole(view: string, role: UserRole): boolean {
   if (role === 'ADMIN') return true;
   
-  if (view === 'shop' || view === 'client' || view === 'orders') {
-    return role === 'CLIENT';
+  if (view === 'shop' || view === 'client' || view === 'orders' || view === 'news') {
+    return true;
   }
-  if (view === 'merchant' || view === 'boutique') {
-    return role === 'BOUTIQUE';
+  if (view === 'merchant' || view === 'boutique' || view === 'vendeur') {
+    return role === 'BOUTIQUE' || role === 'CLIENT';
   }
   if (view === 'entreprise') {
-    return role === 'ENTREPRISE';
+    return role === 'ENTREPRISE' || role === 'CLIENT';
   }
   if (view === 'prestataire') {
-    return role === 'PRESTATAIRE';
+    return role === 'PRESTATAIRE' || role === 'CLIENT';
+  }
+  if (view === 'livreur') {
+    return role === 'LIVREUR' || role === 'CLIENT';
   }
   if (view === 'admin' || view === 'audit') {
-    return false; // Requires ADMIN
+    return false;
   }
   
-  return false;
+  return true;
 }

@@ -59,6 +59,7 @@ interface BafoussamMarketHomePageProps {
   lang?: Language;
   onLangChange?: (lang: Language) => void;
   onLogout?: () => void;
+  onLoginClick?: () => void;
   orders?: Order[];
   theme?: 'light' | 'dark';
   onToggleTheme?: () => void;
@@ -82,6 +83,7 @@ export default function BafoussamMarketHomePage({
   lang = 'fr',
   onLangChange,
   onLogout,
+  onLoginClick,
   orders = [],
   theme,
   onToggleTheme
@@ -285,12 +287,25 @@ export default function BafoussamMarketHomePage({
 
             {/* User Avatar & Dropdown strictly tailored by role */}
             <div className="relative">
-              <button
-                onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)}
-                className="w-8 h-8 rounded-full bg-gradient-to-tr from-[#0F172A] to-[#16A34A] text-white flex items-center justify-center font-bold text-xs shadow-2xs hover:opacity-90 transition cursor-pointer ring-2 ring-slate-100"
-              >
-                {currentUser?.name ? currentUser.name.slice(0, 1).toUpperCase() : <UserIcon className="w-4 h-4" />}
-              </button>
+              {!currentUser ? (
+                <button
+                  onClick={() => {
+                    if (onLoginClick) onLoginClick();
+                  }}
+                  className="h-9 px-3.5 rounded-xl bg-[#16A34A] hover:bg-emerald-700 text-white font-extrabold text-xs flex items-center gap-1.5 shadow-sm transition active:scale-95 cursor-pointer"
+                  id="btn-header-login"
+                >
+                  <Lock className="w-3.5 h-3.5" />
+                  <span>Se connecter</span>
+                </button>
+              ) : (
+                <button
+                  onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)}
+                  className="w-8 h-8 rounded-full bg-gradient-to-tr from-[#0F172A] to-[#16A34A] text-white flex items-center justify-center font-bold text-xs shadow-2xs hover:opacity-90 transition cursor-pointer ring-2 ring-slate-100"
+                >
+                  {currentUser?.name ? currentUser.name.slice(0, 1).toUpperCase() : <UserIcon className="w-4 h-4" />}
+                </button>
+              )}
 
               <AnimatePresence>
                 {isProfileMenuOpen && (
@@ -754,13 +769,27 @@ export default function BafoussamMarketHomePage({
           {activeRole === 'prestataire' && (
             <>
               <button
-                onClick={() => setActiveNav('home')}
+                onClick={() => {
+                  setActiveNav('home');
+                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                }}
                 className={`flex flex-col items-center gap-0.5 cursor-pointer ${
                   activeNav === 'home' ? 'text-[#2563EB]' : 'text-slate-400 hover:text-slate-700'
                 }`}
               >
-                <Home className="w-5 h-5 stroke-[2.2]" />
+                <Briefcase className="w-5 h-5 stroke-[2.2]" />
                 <span className="text-[10px] font-bold">Services</span>
+              </button>
+
+              <button
+                onClick={() => {
+                  setActiveNav('orders');
+                  onNavigateView('orders');
+                }}
+                className={`flex flex-col items-center gap-0.5 cursor-pointer text-slate-400 hover:text-slate-700`}
+              >
+                <ShoppingBag className="w-5 h-5 stroke-[2.2]" />
+                <span className="text-[10px] font-bold">Réservations</span>
               </button>
 
               <button
@@ -777,13 +806,64 @@ export default function BafoussamMarketHomePage({
           {activeRole === 'entreprise' && (
             <>
               <button
-                onClick={() => setActiveNav('home')}
+                onClick={() => {
+                  setActiveNav('home');
+                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                }}
                 className={`flex flex-col items-center gap-0.5 cursor-pointer ${
                   activeNav === 'home' ? 'text-purple-700' : 'text-slate-400 hover:text-slate-700'
                 }`}
               >
-                <Home className="w-5 h-5 stroke-[2.2]" />
+                <Building2 className="w-5 h-5 stroke-[2.2]" />
                 <span className="text-[10px] font-bold">Entreprise</span>
+              </button>
+
+              <button
+                onClick={() => {
+                  setActiveNav('orders');
+                  onNavigateView('orders');
+                }}
+                className={`flex flex-col items-center gap-0.5 cursor-pointer text-slate-400 hover:text-slate-700`}
+              >
+                <ShoppingBag className="w-5 h-5 stroke-[2.2]" />
+                <span className="text-[10px] font-bold">Commandes B2B</span>
+              </button>
+
+              <button
+                onClick={() => setIsProfileMenuOpen(true)}
+                className={`flex flex-col items-center gap-0.5 cursor-pointer text-slate-400 hover:text-slate-700`}
+              >
+                <UserIcon className="w-5 h-5 stroke-[2.2]" />
+                <span className="text-[10px] font-bold">Profil</span>
+              </button>
+            </>
+          )}
+
+          {/* Menu items for LIVREUR Role */}
+          {activeRole === 'livreur' && (
+            <>
+              <button
+                onClick={() => {
+                  setActiveNav('home');
+                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                }}
+                className={`flex flex-col items-center gap-0.5 cursor-pointer ${
+                  activeNav === 'home' ? 'text-emerald-700' : 'text-slate-400 hover:text-slate-700'
+                }`}
+              >
+                <Truck className="w-5 h-5 stroke-[2.2]" />
+                <span className="text-[10px] font-bold">Courses</span>
+              </button>
+
+              <button
+                onClick={() => {
+                  setActiveNav('orders');
+                  onNavigateView('orders');
+                }}
+                className={`flex flex-col items-center gap-0.5 cursor-pointer text-slate-400 hover:text-slate-700`}
+              >
+                <ShoppingBag className="w-5 h-5 stroke-[2.2]" />
+                <span className="text-[10px] font-bold">Livraisons</span>
               </button>
 
               <button
