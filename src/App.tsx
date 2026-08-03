@@ -900,39 +900,6 @@ export default function App() {
     );
   }
 
-        {/* Custom session disconnection overlay notification */}
-        <AnimatePresence>
-          {showSessionExpiredToast && (
-            <motion.div
-              initial={{ opacity: 0, y: -50, scale: 0.95 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: -20, scale: 0.95 }}
-              className="fixed top-6 left-1/2 -translate-x-1/2 z-[100] max-w-md w-[90%] bg-rose-600 text-white px-6 py-4 rounded-3xl shadow-2xl border border-rose-500/30 flex items-start gap-3.5"
-              id="session-expired-overlay"
-            >
-              <div className="bg-white/10 p-2 rounded-2xl text-rose-100 shrink-0">
-                <Bell className="w-5 h-5 animate-bounce" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center justify-between">
-                  <h4 className="font-extrabold text-sm">{lang === 'fr' ? 'Session Expirée ⏰' : 'Session Expired ⏰'}</h4>
-                  <button 
-                    onClick={() => setShowSessionExpiredToast(false)}
-                    className="text-white/70 hover:text-white p-1 hover:bg-white/10 rounded-lg transition cursor-pointer"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
-                </div>
-                <p className="text-xs text-rose-100 leading-relaxed mt-1">
-                  {lang === 'fr'
-                    ? "Votre session a été automatiquement déconnectée car aucun achat n'a été effectué dans le délai imparti de 10 minutes."
-                    : "Your session has been automatically disconnected because no purchase was made within the allotted 10 minutes."}
-                </p>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
   const isUserSubscriptionExpired = !!(currentUser && (currentUser.isSubscribed === false || (currentUser.subscriptionExpiryDate && new Date(currentUser.subscriptionExpiryDate) < new Date())));
 
   if (isUserSubscriptionExpired) {
@@ -1790,6 +1757,39 @@ export default function App() {
           productName={activeChatModal.productName}
         />
       )}
+
+      {/* Custom session disconnection overlay notification */}
+      <AnimatePresence>
+        {showSessionExpiredToast && (
+          <motion.div
+            initial={{ opacity: 0, y: -50, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -20, scale: 0.95 }}
+            className="fixed top-6 left-1/2 -translate-x-1/2 z-[100] max-w-md w-[90%] bg-rose-600 text-white px-6 py-4 rounded-3xl shadow-2xl border border-rose-500/30 flex items-start gap-3.5"
+            id="session-expired-overlay"
+          >
+            <div className="bg-white/10 p-2 rounded-2xl text-rose-100 shrink-0">
+              <Bell className="w-5 h-5 animate-bounce" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center justify-between">
+                <h4 className="font-extrabold text-sm">{lang === 'fr' ? 'Session Expirée ⏰' : 'Session Expired ⏰'}</h4>
+                <button 
+                  onClick={() => setShowSessionExpiredToast(false)}
+                  className="text-white/70 hover:text-white p-1 hover:bg-white/10 rounded-lg transition cursor-pointer"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+              <p className="text-xs text-rose-100 leading-relaxed mt-1">
+                {lang === 'fr'
+                  ? "Votre session a été automatiquement déconnectée car aucun achat n'a été effectué dans le délai imparti de 10 minutes."
+                  : "Your session has been automatically disconnected because no purchase was made within the allotted 10 minutes."}
+              </p>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Login & Session Restoration Modal */}
       <LoginAuthModal
