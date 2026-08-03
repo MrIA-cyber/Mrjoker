@@ -297,7 +297,7 @@ export default function EntrepriseHomePage({
   };
 
   return (
-    <div className="w-full bg-[#0F172A] text-slate-100 min-h-screen pb-24 font-sans relative">
+    <div className="w-full min-h-screen bg-[#F8FAFC] text-[#0F172A] font-sans pb-24 relative selection:bg-emerald-100 selection:text-emerald-900">
       
       {/* FLOATING TOAST NOTIFICATION */}
       <AnimatePresence>
@@ -306,60 +306,73 @@ export default function EntrepriseHomePage({
             initial={{ opacity: 0, y: 50 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 20 }}
-            className="fixed bottom-6 right-6 z-50 bg-[#2563EB] text-white px-5 py-3 rounded-2xl shadow-2xl flex items-center gap-3 border border-blue-400/30"
+            className="fixed bottom-6 right-6 z-50 bg-[#16A34A] text-white px-5 py-3 rounded-2xl shadow-2xl flex items-center gap-3 border border-emerald-300/30"
           >
-            <CheckCircle2 className="w-5 h-5 text-emerald-300" />
+            <CheckCircle2 className="w-5 h-5 text-white" />
             <span className="text-xs font-black">{toastMessage}</span>
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* HEADER CORPORATE ENTERPRISE */}
-      <div className="bg-gradient-to-r from-[#1E1B4B] via-[#0F172A] to-[#2563EB] border-b border-slate-800 p-5 sm:p-6 shadow-2xl">
-        <div className="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div className="space-y-1">
-            <div className="flex items-center gap-2">
-              <span className="bg-[#2563EB] text-white text-[10px] font-black px-2.5 py-0.5 rounded-full uppercase tracking-wider flex items-center gap-1">
-                <Building2 className="w-3.5 h-3.5" /> Système ERP Enterprise B2B
+      {/* ==================== 1. ENTREPRISE HEADER ==================== */}
+      <header className="sticky top-0 z-40 bg-white/90 backdrop-blur-md border-b border-slate-100 shadow-2xs px-4 sm:px-6 py-3">
+        <div className="max-w-7xl mx-auto flex items-center justify-between gap-3">
+          
+          {/* Logo & Entreprise Profile Badge */}
+          <div className="flex items-center gap-3">
+            <div 
+              onClick={() => setActiveTab('accueil')}
+              className="flex items-center gap-2 cursor-pointer group"
+            >
+              <AfriNovaLogo size="md" variant="light" showSlogan={false} />
+              <span className="bg-[#16A34A]/15 text-[#15803D] text-[9px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider flex items-center gap-1 border border-emerald-200">
+                <Building2 className="w-3 h-3 text-[#16A34A]" />
+                <span>Système ERP Enterprise B2B</span>
               </span>
-              <span className="text-slate-400 text-xs font-mono">{contact.cityQuarter}</span>
             </div>
-            <h1 className="text-2xl sm:text-3xl font-black font-display text-white">
-              {profile.companyName}
-            </h1>
-            <p className="text-xs text-slate-300 font-medium">
-              Système de gestion globale: Employés, Départements, Facturation, Offres & Campagnes Marketing B2B.
-            </p>
           </div>
 
-          <div className="flex items-center gap-2 shrink-0">
+          {/* Quick Actions */}
+          <div className="flex items-center gap-1.5 sm:gap-2">
+            
+            {/* Quick Publish B2B Offer */}
             <button
               onClick={() => {
                 setActiveTab('offres');
                 setIsOfferModalOpen(true);
               }}
-              className="h-10 px-4 rounded-xl bg-[#2563EB] hover:bg-[#1D4ED8] text-white text-xs font-black transition flex items-center gap-2 shadow-lg cursor-pointer"
+              className="bg-[#16A34A] hover:bg-[#15803D] text-white font-extrabold px-3 py-1.5 rounded-full transition shadow-xs flex items-center gap-1.5 text-xs cursor-pointer"
             >
-              <Plus className="w-4 h-4 stroke-[3]" />
-              <span>Publier Offre B2B</span>
+              <Plus className="w-3.5 h-3.5 stroke-[3]" />
+              <span className="hidden sm:inline">Publier Offre B2B</span>
             </button>
+
+            {/* Support Call Button */}
+            <button
+              onClick={() => setActiveTab('support')}
+              className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-extrabold transition cursor-pointer"
+            >
+              <PhoneCall className="w-3.5 h-3.5 text-[#16A34A]" />
+              <span>Support VIP</span>
+            </button>
+
+            {/* Logout */}
             {onLogout && (
               <button
                 onClick={onLogout}
-                className="h-10 px-3.5 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 text-xs font-bold border border-rose-500/30 transition flex items-center gap-1.5 cursor-pointer"
-                title="Se déconnecter"
+                className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-full transition cursor-pointer"
+                title="Déconnexion"
               >
-                <LogOut className="w-4 h-4 text-rose-400" />
-                <span className="hidden sm:inline">Se Déconnecter</span>
+                <LogOut className="w-4 h-4" />
               </button>
             )}
           </div>
         </div>
-      </div>
+      </header>
 
-      {/* SUB-NAVIGATION BAR (Enterprise Tabs Only - NO Client/Boutique/Prestataire) */}
-      <div className="bg-slate-900/95 border-b border-slate-800 sticky top-0 z-30 shadow-md mb-6 backdrop-blur-md">
-        <div className="max-w-7xl mx-auto px-4 overflow-x-auto scrollbar-none flex items-center gap-1.5 py-2.5">
+      {/* ==================== 2. SUB-NAVIGATION TABS BAR ==================== */}
+      <div className="bg-white border-b border-slate-200/80 sticky top-[57px] z-30 shadow-2xs">
+        <div className="max-w-7xl mx-auto px-4 overflow-x-auto scrollbar-none flex items-center gap-1 py-1.5">
           {[
             { id: 'accueil', label: 'Vue Générale', icon: Building2 },
             { id: 'employes', label: `Employés (${employees.length})`, icon: Users },
@@ -388,13 +401,13 @@ export default function EntrepriseHomePage({
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id as any)}
-                className={`px-3 py-1.5 rounded-xl text-xs font-extrabold flex items-center gap-1.5 shrink-0 transition cursor-pointer ${
+                className={`px-3 py-1.5 rounded-xl text-xs font-extrabold flex items-center gap-1.5 shrink-0 transition cursor-pointer relative ${
                   isActive
-                    ? 'bg-[#2563EB] text-white shadow-md'
-                    : 'text-slate-400 hover:bg-slate-800 hover:text-white'
+                    ? 'bg-[#0F172A] text-white shadow-xs'
+                    : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
                 }`}
               >
-                <IconComp className={`w-3.5 h-3.5 ${isActive ? 'text-white' : 'text-slate-400'}`} />
+                <IconComp className={`w-3.5 h-3.5 ${isActive ? 'text-[#16A34A]' : 'text-slate-400'}`} />
                 <span>{tab.label}</span>
                 {tab.badge && (
                   <span className="bg-[#16A34A] text-white text-[9px] font-black px-1.5 py-0.2 rounded-full ml-0.5">
@@ -408,37 +421,37 @@ export default function EntrepriseHomePage({
       </div>
 
       {/* DYNAMIC TAB MAIN CONTENT */}
-      <main className="max-w-7xl mx-auto px-4 space-y-6">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4 space-y-6">
 
         {/* 1. VUE GÉNÉRALE / ACCUEIL */}
         {activeTab === 'accueil' && (
           <div className="space-y-6">
             {/* KPI Cards */}
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-              <div className="bg-slate-900 p-4 rounded-2xl border border-slate-800 space-y-1">
-                <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Chiffre d'Affaires Mensuel</span>
-                <p className="text-xl font-black text-[#2563EB]">{b2bOrders.reduce((sum, o) => sum + (o.total || 0), 0).toLocaleString('fr-FR')} FCFA</p>
-                <span className="text-[10px] font-bold text-emerald-400 flex items-center gap-1">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+              <div className="bg-white p-4.5 rounded-2xl border border-slate-200/80 shadow-xs space-y-1">
+                <span className="text-[10px] font-extrabold text-slate-500 uppercase tracking-wider">Chiffre d'Affaires Mensuel</span>
+                <p className="text-xl font-black text-[#0F172A]">{b2bOrders.reduce((sum, o) => sum + (o.total || 0), 0).toLocaleString('fr-FR')} FCFA</p>
+                <span className="text-[10px] font-bold text-[#16A34A] flex items-center gap-1">
                   <ArrowUpRight className="w-3 h-3" /> En direct
                 </span>
               </div>
 
-              <div className="bg-slate-900 p-4 rounded-2xl border border-slate-800 space-y-1">
-                <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Masse Salariale</span>
-                <p className="text-xl font-black text-white">{employees.reduce((acc, e) => acc + (e.salary || 0), 0).toLocaleString('fr-FR')} FCFA</p>
-                <span className="text-[10px] text-blue-400 font-bold">{employees.length} employés actifs</span>
+              <div className="bg-white p-4.5 rounded-2xl border border-slate-200/80 shadow-xs space-y-1">
+                <span className="text-[10px] font-extrabold text-slate-500 uppercase tracking-wider">Masse Salariale</span>
+                <p className="text-xl font-black text-[#0F172A]">{employees.reduce((acc, e) => acc + (e.salary || 0), 0).toLocaleString('fr-FR')} FCFA</p>
+                <span className="text-[10px] text-indigo-600 font-bold">{employees.length} employés actifs</span>
               </div>
 
-              <div className="bg-slate-900 p-4 rounded-2xl border border-slate-800 space-y-1">
-                <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Factures à Recouvrer</span>
-                <p className="text-xl font-black text-amber-400">{invoices.filter(i => i.status !== 'Payé').reduce((sum, i) => sum + (i.amountTTC || 0), 0).toLocaleString('fr-FR')} FCFA</p>
-                <span className="text-[10px] text-amber-300 font-bold">{invoices.filter(i => i.status !== 'Payé').length} en attente</span>
+              <div className="bg-white p-4.5 rounded-2xl border border-slate-200/80 shadow-xs space-y-1">
+                <span className="text-[10px] font-extrabold text-slate-500 uppercase tracking-wider">Factures à Recouvrer</span>
+                <p className="text-xl font-black text-[#D97706]">{invoices.filter(i => i.status !== 'Payé').reduce((sum, i) => sum + (i.amountTTC || 0), 0).toLocaleString('fr-FR')} FCFA</p>
+                <span className="text-[10px] text-amber-700 font-bold">{invoices.filter(i => i.status !== 'Payé').length} en attente</span>
               </div>
 
-              <div className="bg-slate-900 p-4 rounded-2xl border border-slate-800 space-y-1">
-                <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Bénéfice Net Estimé</span>
-                <p className="text-xl font-black text-emerald-400">0 FCFA</p>
-                <span className="text-[10px] text-emerald-300 font-bold">Marge brute 0%</span>
+              <div className="bg-white p-4.5 rounded-2xl border border-slate-200/80 shadow-xs space-y-1">
+                <span className="text-[10px] font-extrabold text-slate-500 uppercase tracking-wider">Bénéfice Net Estimé</span>
+                <p className="text-xl font-black text-[#16A34A]">0 FCFA</p>
+                <span className="text-[10px] text-[#15803D] font-bold">Marge brute 0%</span>
               </div>
             </div>
 

@@ -33,6 +33,7 @@ import ClientHomePage from './home/ClientHomePage';
 import VendeurHomePage from './home/VendeurHomePage';
 import PrestataireHomePage from './home/PrestataireHomePage';
 import EntrepriseHomePage from './home/EntrepriseHomePage';
+import LivreurHomePage from './home/LivreurHomePage';
 import { UserRole, mapAccountTypeToRole, getDashboardForRole, isViewAllowedForRole } from '../lib/rbac';
 import { logAuditEvent } from '../lib/auditLogger';
 import { filterProductsByRole, filterOrdersByRole, filterMerchantsByRole } from '../lib/dataFilters';
@@ -496,6 +497,17 @@ export default function BafoussamMarketHomePage({
               />
             ) : activeRole === 'entreprise' ? (
               <EntrepriseHomePage
+                currentUser={currentUser}
+                products={roleProducts}
+                merchants={roleMerchants}
+                orders={roleOrders}
+                onOpenAddModal={onOpenAddModal}
+                onNavigateView={onNavigateView}
+                onSelectProduct={onSelectProduct}
+                onLogout={onLogout}
+              />
+            ) : activeRole === 'livreur' ? (
+              <LivreurHomePage
                 currentUser={currentUser}
                 products={roleProducts}
                 merchants={roleMerchants}

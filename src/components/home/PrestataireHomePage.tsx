@@ -646,71 +646,104 @@ export default function PrestataireHomePage({
         )}
       </AnimatePresence>
 
-      {/* HEADER BANNER PRESTATAIRE PRO */}
-      <div className="bg-gradient-to-r from-[#0F172A] via-[#1E1B4B] to-[#2563EB] rounded-3xl p-5 sm:p-6 text-white shadow-md relative overflow-hidden mb-5">
-        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div className="space-y-1">
-            <div className="flex items-center gap-2 flex-wrap">
-              <span className="bg-[#2563EB] text-white text-[10px] font-black px-2.5 py-0.5 rounded-full uppercase tracking-wider flex items-center gap-1 border border-blue-300/30">
-                <Wrench className="w-3 h-3" /> Espace Prestataire Pro
+      {/* ==================== 1. PRESTATAIRE HEADER ==================== */}
+      <header className="sticky top-0 z-40 bg-white/90 backdrop-blur-md border-b border-slate-100 shadow-2xs px-4 sm:px-6 py-3">
+        <div className="max-w-7xl mx-auto flex items-center justify-between gap-3">
+          
+          {/* Logo & Prestataire Profile Badge */}
+          <div className="flex items-center gap-3">
+            <div 
+              onClick={() => setActiveTab('accueil')}
+              className="flex items-center gap-2 cursor-pointer group"
+            >
+              <AfriNovaLogo size="md" variant="light" showSlogan={false} />
+              <span className="bg-[#16A34A]/15 text-[#15803D] text-[9px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider flex items-center gap-1 border border-emerald-200">
+                <Wrench className="w-3 h-3 text-[#16A34A]" />
+                <span>Espace Prestataire Pro</span>
               </span>
-              <span className="bg-emerald-500/20 text-emerald-300 text-[10px] font-bold px-2 py-0.5 rounded-full border border-emerald-400/30">
-                ✓ Profil Vérifié AfriNova
-              </span>
-              <span className="text-slate-300 text-xs font-semibold">{providerProfile.city}</span>
             </div>
-            <h1 className="text-xl sm:text-2xl font-black font-display">
-              {providerProfile.name}
-            </h1>
-            <p className="text-xs text-slate-200 font-medium">
-              {providerProfile.tradeTitle}
-            </p>
           </div>
 
-          <div className="flex items-center gap-2 shrink-0 flex-wrap">
+          {/* Quick Prestataire Actions */}
+          <div className="flex items-center gap-1.5 sm:gap-2">
+            
             {/* Disponibilité Status Toggle */}
             <button
               onClick={() => {
                 setIsAvailable(!isAvailable);
                 showToast(isAvailable ? '🔴 Statut passé en Indisponible' : '🟢 Statut passé en En Ligne (Disponible)');
               }}
-              className={`h-10 px-3.5 rounded-xl text-xs font-black transition flex items-center gap-2 border cursor-pointer ${
+              className={`px-3 py-1.5 rounded-full text-xs font-extrabold transition flex items-center gap-1.5 border cursor-pointer ${
                 isAvailable 
-                  ? 'bg-emerald-500/20 text-emerald-300 border-emerald-400/30' 
-                  : 'bg-rose-500/20 text-rose-300 border-rose-400/30'
+                  ? 'bg-emerald-50 text-[#15803D] border-emerald-200' 
+                  : 'bg-rose-50 text-rose-700 border-rose-200'
               }`}
             >
-              <span className={`w-2.5 h-2.5 rounded-full ${isAvailable ? 'bg-emerald-400 animate-pulse' : 'bg-rose-400'}`} />
-              <span>{isAvailable ? '🟢 En Ligne' : '🔴 Indisponible'}</span>
+              <span className={`w-2 h-2 rounded-full ${isAvailable ? 'bg-[#16A34A] animate-pulse' : 'bg-rose-500'}`} />
+              <span className="hidden sm:inline">{isAvailable ? 'En Ligne' : 'Indisponible'}</span>
+            </button>
+
+            {/* Quick Add Service */}
+            <button
+              onClick={() => {
+                setEditingService(null);
+                setServiceForm({
+                  name: '',
+                  category: 'Électricité & Énergie Solaire',
+                  price: 25000,
+                  pricingType: 'fixe',
+                  description: '',
+                  imagesText: 'https://images.unsplash.com/photo-1621905251189-08b45d6a269e?auto=format&fit=crop&w=600&q=80',
+                  videoUrl: '',
+                  zonesText: 'Bafoussam Tamdja, Kamkop',
+                  duration: '2 heures'
+                });
+                setIsAddServiceModalOpen(true);
+              }}
+              className="bg-[#16A34A] hover:bg-[#15803D] text-white font-extrabold px-3 py-1.5 rounded-full transition shadow-xs flex items-center gap-1.5 text-xs cursor-pointer"
+            >
+              <Plus className="w-3.5 h-3.5 stroke-[3]" />
+              <span className="hidden sm:inline">+ Service</span>
             </button>
 
             {/* Notification Center Trigger */}
             <button
               onClick={() => setShowNotificationPanel(!showNotificationPanel)}
-              className="h-10 w-10 rounded-xl bg-white/10 hover:bg-white/20 text-white flex items-center justify-center relative cursor-pointer border border-white/10 transition"
+              className={`p-2 rounded-full transition relative cursor-pointer ${
+                showNotificationPanel ? 'bg-amber-50 text-[#D97706]' : 'text-slate-600 hover:bg-slate-100'
+              }`}
               title="Centre de notifications"
             >
-              <Bell className="w-4 h-4" />
+              <Bell className="w-5 h-5" />
               {unreadNotifCount > 0 && (
-                <span className="absolute -top-1 -right-1 bg-rose-500 text-white font-black text-[9px] w-4 h-4 rounded-full flex items-center justify-center shadow-xs">
+                <span className="absolute top-0.5 right-0.5 min-w-[16px] h-[16px] px-1 bg-red-500 text-white font-black text-[9px] rounded-full flex items-center justify-center ring-2 ring-white">
                   {unreadNotifCount}
                 </span>
               )}
             </button>
 
+            {/* Support Call Button */}
+            <button
+              onClick={() => setActiveTab('support')}
+              className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-extrabold transition cursor-pointer"
+            >
+              <PhoneCall className="w-3.5 h-3.5 text-[#16A34A]" />
+              <span>Support</span>
+            </button>
+
+            {/* Logout */}
             {onLogout && (
               <button
                 onClick={onLogout}
-                className="h-10 px-3 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-bold border border-white/20 transition flex items-center gap-1.5 cursor-pointer"
-                title="Se déconnecter"
+                className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-full transition cursor-pointer"
+                title="Déconnexion"
               >
-                <LogOut className="w-4 h-4 text-rose-300" />
-                <span className="hidden sm:inline">Déconnexion</span>
+                <LogOut className="w-4 h-4" />
               </button>
             )}
           </div>
         </div>
-      </div>
+      </header>
 
       {/* QUICK ACTIONS BAR (BARRE D'ACTIONS RAPIDES 1-CLIC) */}
       <div className="bg-white p-4 rounded-3xl border border-slate-200/90 shadow-sm mb-6 space-y-2">
@@ -870,16 +903,16 @@ export default function PrestataireHomePage({
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id as any)}
-                className={`px-3.5 py-2 rounded-xl text-xs font-extrabold flex items-center gap-1.5 shrink-0 transition cursor-pointer ${
+                className={`px-3 py-1.5 rounded-xl text-xs font-extrabold flex items-center gap-1.5 shrink-0 transition cursor-pointer relative ${
                   isActive
-                    ? 'bg-[#0F172A] text-white shadow-2xs'
+                    ? 'bg-[#0F172A] text-white shadow-xs'
                     : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
                 }`}
               >
-                <IconComp className={`w-3.5 h-3.5 ${isActive ? 'text-[#2563EB]' : 'text-slate-400'}`} />
+                <IconComp className={`w-3.5 h-3.5 ${isActive ? 'text-[#16A34A]' : 'text-slate-400'}`} />
                 <span>{tab.label}</span>
                 {tab.badge && (
-                  <span className="bg-[#2563EB] text-white text-[9px] font-black px-1.5 py-0.2 rounded-full ml-0.5">
+                  <span className="bg-[#16A34A] text-white text-[9px] font-black px-1.5 py-0.2 rounded-full ml-0.5">
                     {tab.badge}
                   </span>
                 )}
@@ -890,7 +923,7 @@ export default function PrestataireHomePage({
       </div>
 
       {/* MAIN DYNAMIC TAB CONTENTS */}
-      <main className="max-w-7xl mx-auto px-4 space-y-6">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4 space-y-6">
 
         {/* 1. ACCUEIL - VUE GÉNÉRALE */}
         {activeTab === 'accueil' && (

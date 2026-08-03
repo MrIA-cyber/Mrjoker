@@ -311,59 +311,76 @@ export default function VendeurHomePage({
   const deliveredOrders = localOrders.filter(o => o.status === 'delivered');
 
   return (
-    <div className="w-full bg-[#F8FAFC] text-[#0F172A] min-h-screen pb-24 font-sans selection:bg-[#16A34A] selection:text-white">
+    <div className="w-full min-h-screen bg-[#F8FAFC] text-[#0F172A] font-sans pb-24 relative selection:bg-emerald-100 selection:text-emerald-900">
       
-      {/* HEADER BANNER BOUTIQUE */}
-      <div className="bg-gradient-to-r from-[#0F172A] via-[#1E1B4B] to-[#16A34A] rounded-3xl p-5 sm:p-6 text-white shadow-lg relative overflow-hidden mb-5 border border-slate-800">
-        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div className="space-y-1.5">
-            <div className="flex items-center gap-2 flex-wrap">
-              <span className="bg-[#16A34A] text-white text-[10px] font-black px-2.5 py-0.5 rounded-full uppercase tracking-wider flex items-center gap-1 border border-emerald-300/30">
-                <Store className="w-3 h-3" /> Espace Vendeur Boutique
-              </span>
-              <span className="text-slate-300 text-xs font-semibold flex items-center gap-1">
-                <MapPin className="w-3 h-3 text-emerald-400" /> {shopLocation}
-              </span>
-              <span className={`px-2 py-0.5 text-[9px] font-black rounded-full uppercase ${isOpenNow ? 'bg-emerald-500/30 text-emerald-300 border border-emerald-500/40' : 'bg-rose-500/30 text-rose-300 border border-rose-500/40'}`}>
-                {isOpenNow ? '• Boutique Ouverte' : '• Fermé'}
+      {/* ==================== 1. VENDEUR HEADER ==================== */}
+      <header className="sticky top-0 z-40 bg-white/90 backdrop-blur-md border-b border-slate-100 shadow-2xs px-4 sm:px-6 py-3">
+        <div className="max-w-7xl mx-auto flex items-center justify-between gap-3">
+          
+          {/* Logo & Vendeur Profile Badge */}
+          <div className="flex items-center gap-3">
+            <div 
+              onClick={() => setActiveTab('accueil')}
+              className="flex items-center gap-2 cursor-pointer group"
+            >
+              <AfriNovaLogo size="md" variant="light" showSlogan={false} />
+              <span className="bg-[#16A34A]/15 text-[#15803D] text-[9px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider flex items-center gap-1 border border-emerald-200">
+                <Store className="w-3 h-3 text-[#16A34A]" />
+                <span>Espace Vendeur Boutique</span>
               </span>
             </div>
-
-            <h1 className="text-xl sm:text-2xl font-black font-display tracking-tight text-white flex items-center gap-2 flex-wrap">
-              <span>Tableau de bord de la boutique</span>
-              <span className="text-xs font-semibold text-emerald-200">({shopName})</span>
-            </h1>
-            <p className="text-xs text-slate-200 font-medium max-w-xl">
-              Gestionnaire officiel de vente en ligne : Produits, Photos, Vidéos, Stocks, Commandes, Retraits Mobile Money & Messagerie.
-            </p>
           </div>
 
-          <div className="flex items-center gap-2 shrink-0">
+          {/* Quick Vendeur Actions */}
+          <div className="flex items-center gap-1.5 sm:gap-2">
+            
+            {/* Add Product Trigger */}
             <button
               onClick={onOpenAddModal}
-              className="h-10 px-4 rounded-xl bg-[#16A34A] hover:bg-[#15803D] active:scale-95 text-white text-xs font-black transition flex items-center gap-2 shadow-md cursor-pointer"
+              className="bg-[#16A34A] hover:bg-[#15803D] text-white font-extrabold px-3 py-1.5 rounded-full transition shadow-xs flex items-center gap-1.5 text-xs cursor-pointer"
             >
-              <Plus className="w-4 h-4 stroke-[3]" />
-              <span>Nouveau Produit</span>
+              <Plus className="w-3.5 h-3.5 stroke-[3]" />
+              <span className="hidden sm:inline">Nouveau Produit</span>
             </button>
 
+            {/* Quick Messages */}
+            <button
+              onClick={() => setActiveTab('messages')}
+              className={`p-2 rounded-full transition relative cursor-pointer ${
+                activeTab === 'messages' ? 'bg-indigo-50 text-[#4F46E5]' : 'text-slate-600 hover:bg-slate-100'
+              }`}
+              title="Messages clients"
+            >
+              <MessageSquare className="w-5 h-5" />
+              <span className="absolute top-0 right-0 w-2.5 h-2.5 bg-indigo-600 rounded-full ring-2 ring-white" />
+            </button>
+
+            {/* Support Call Button */}
+            <button
+              onClick={() => setActiveTab('support')}
+              className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-extrabold transition cursor-pointer"
+            >
+              <PhoneCall className="w-3.5 h-3.5 text-[#16A34A]" />
+              <span>Support</span>
+            </button>
+
+            {/* Logout */}
             {onLogout && (
               <button
                 onClick={onLogout}
-                className="h-10 px-3 rounded-xl bg-white/10 hover:bg-rose-600/90 text-white text-xs font-bold border border-white/20 transition flex items-center gap-1.5 cursor-pointer"
-                title="Se déconnecter"
+                className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-full transition cursor-pointer"
+                title="Déconnexion"
               >
-                <LogOut className="w-4 h-4 text-rose-300" />
-                <span className="hidden sm:inline">Déconnexion</span>
+                <LogOut className="w-4 h-4" />
               </button>
             )}
           </div>
         </div>
-      </div>
+      </header>
 
-      {/* BOUTIQUE SUB-NAVIGATION TABS BAR */}
-      <div className="bg-white border-y border-slate-200 sticky top-[57px] z-30 shadow-xs mb-6">
-        <div className="max-w-7xl mx-auto px-4 overflow-x-auto scrollbar-none flex items-center gap-1.5 py-2.5">
+      {/* ==================== 2. VENDEUR SUB-NAVIGATION TABS BAR ==================== */}
+      <div className="bg-white border-b border-slate-200/80 sticky top-[57px] z-30 shadow-2xs">
+        <div className="max-w-7xl mx-auto px-4 overflow-x-auto scrollbar-none flex items-center gap-1 py-1.5">
           {[
             { id: 'accueil', label: 'Tableau de Bord', icon: Store },
             { id: 'produits', label: `Produits (${localProducts.length})`, icon: Package },
@@ -392,7 +409,7 @@ export default function VendeurHomePage({
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id as any)}
-                className={`px-3 py-1.5 rounded-xl text-xs font-extrabold flex items-center gap-1.5 shrink-0 transition cursor-pointer ${
+                className={`px-3 py-1.5 rounded-xl text-xs font-extrabold flex items-center gap-1.5 shrink-0 transition cursor-pointer relative ${
                   isActive
                     ? 'bg-[#0F172A] text-white shadow-xs'
                     : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
@@ -411,8 +428,8 @@ export default function VendeurHomePage({
         </div>
       </div>
 
-      {/* MAIN CONTAINER */}
-      <main className="max-w-7xl mx-auto px-4 space-y-6">
+      {/* ==================== MAIN CONTAINER ==================== */}
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4 space-y-6">
 
         {/* 1. TABLEAU DE BORD ACCUEIL */}
         {activeTab === 'accueil' && (
