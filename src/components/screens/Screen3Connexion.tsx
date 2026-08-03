@@ -4,6 +4,9 @@ import { Mail, Lock, Eye, EyeOff, ArrowRight, ShieldCheck, Sparkles, Loader2, Al
 import { signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
 import { auth } from '../../firebase';
 import { getFrenchAuthErrorMessage } from '../../utils/firebaseErrors';
+import { verifyPassword, ensureAdminAccountExists } from '../../utils/security';
+import { arePhonesEqual } from '../../utils/accountValidation';
+import { User } from '../../types';
 
 interface Screen3ConnexionProps {
   onLoginSuccess?: () => void;
@@ -22,17 +25,50 @@ export default function Screen3Connexion({ onLoginSuccess, onGoToSignup }: Scree
     setErrorMessage('');
     setIsLoading(true);
 
-    const formattedEmail = email.includes('@') 
-      ? email.trim() 
-      : `${email.trim().replace(/[^0-9+]/g, '')}@afrinova.cm`;
+    // Ensure admin account exists in local database
+    const adminUser = ensureAdminAccountExists();
+
+    const cleanInput = email.trim();
+    const formattedEmail = cleanInput.includes('@') 
+      ? cleanInput 
+      : `${cleanInput.replace(/[^0-9+]/g, '')}@afrinova.cm`;
 
     try {
       await signInWithEmailAndPassword(auth, formattedEmail, password);
       setIsLoading(false);
       if (onLoginSuccess) onLoginSuccess();
     } catch (error: any) {
-      setIsLoading(false);
-      setErrorMessage(getFrenchAuthErrorMessage(error));
+      // Local database fallback
+      try {
+        const savedUsersRaw = localStorage.getItem('bafoussam_all_registered_users');
+        const savedUsers: User[] = savedUsersRaw ? JSON.parse(savedUsersRaw) : [adminUser];
+
+        const matchedUser = savedUsers.find(u => 
+          u.email === formattedEmail || 
+          u.phone === cleanInput || 
+          arePhonesEqual(u.phone, cleanInput)
+        );
+
+        if (!matchedUser) {
+          setIsLoading(false);
+          setErrorMessage(getFrenchAuthErrorMessage(error));
+          return;
+        }
+
+        if (!verifyPassword(password, matchedUser.password)) {
+          setIsLoading(false);
+          setErrorMessage('Mot de passe incorrect. Veuillez vérifier vos identifiants.');
+          return;
+        }
+
+        // Save active user session
+        localStorage.setItem('bafoussam_user', JSON.stringify(matchedUser));
+        setIsLoading(false);
+        if (onLoginSuccess) onLoginSuccess();
+      } catch (localErr) {
+        setIsLoading(false);
+        setErrorMessage(getFrenchAuthErrorMessage(error));
+      }
     }
   };
 
@@ -52,17 +88,17 @@ export default function Screen3Connexion({ onLoginSuccess, onGoToSignup }: Scree
   };
 
   return (
-    <div className="w-full max-w-xl mx-auto bg-white text-slate-900 rounded-3xl overflow-hidden shadow-2xl border border-slate-100 p-6 sm:p-8 flex flex-col justify-between min-h-[580px] relative">
+    <div className="w-full max-w-xl mx-auto bg-white text-slate-900 rounded-2xl sm:rounded-3xl overflow-hidden shadow-2xl border border-slate-100 p-4 sm:p-8 flex flex-col justify-between min-h-[500px] sm:min-h-[580px] relative">
       
       {/* Top Bar Header */}
-      <div className="flex items-center justify-between pb-2 border-b border-slate-100">
-        <div className="flex items-center gap-2">
-          <div className="w-6 h-6 rounded-lg bg-[#16A34A] text-white flex items-center justify-center font-black text-xs">
+      <div className="flex items-center justify-between pb-2 border-b border-slate-100 gap-2">
+        <div className="flex items-center gap-2 min-w-0">
+          <div className="w-6 h-6 rounded-lg bg-[#16A34A] text-white flex items-center justify-center font-black text-xs shrink-0">
             B
           </div>
-          <span className="text-[11px] font-extrabold text-slate-400 uppercase tracking-wider">ÉCRAN 3 — CONNEXION</span>
+          <span className="text-[10px] sm:text-[11px] font-extrabold text-slate-400 uppercase tracking-wider truncate">CONNEXION SÉCURISÉE</span>
         </div>
-        <div className="flex items-center gap-1 bg-emerald-50 text-emerald-700 px-2.5 py-0.5 rounded-full text-[10px] font-bold border border-emerald-200">
+        <div className="flex items-center gap-1 bg-emerald-50 text-emerald-700 px-2 sm:px-2.5 py-0.5 rounded-full text-[9px] sm:text-[10px] font-bold border border-emerald-200 shrink-0">
           <ShieldCheck className="w-3 h-3 text-emerald-600" />
           <span>Accès Sécurisé</span>
         </div>

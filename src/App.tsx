@@ -54,8 +54,9 @@ import {
 } from './lib/sessionManager';
 import { mapAccountTypeToRole, getDashboardForRole, isViewAllowedForRole } from './lib/rbac';
 import { logAuditEvent } from './lib/auditLogger';
-import { Sparkles, ShoppingBag, ShieldCheck, Truck, Store, ArrowRight, HelpCircle, Bell, X, Lock, Key, Sun, Moon, AlertCircle, Clock, Smartphone, Layers, Headphones, Coins, CheckCircle2 } from 'lucide-react';
+import { Sparkles, ShoppingBag, ShieldCheck, ShieldAlert, Truck, Store, ArrowRight, HelpCircle, Bell, X, Lock, Key, Sun, Moon, AlertCircle, Clock, Smartphone, Layers, Headphones, Coins, CheckCircle2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import { ensureAdminAccountExists, verifyPassword, hashPassword, PRIMARY_ADMIN_ACCOUNT } from './utils/security';
 
 // Mot de passe de démonstration — à changer avant toute mise en production réelle.
 const ADMIN_PASSWORD = "danielle1996";
@@ -279,11 +280,21 @@ export default function App() {
     setCurrentUser(user);
     setIsAuthModalOpen(false);
 
+    const isAdmin = user.accountType === 'admin';
+    if (isAdmin) {
+      setIsAdminUnlocked(true);
+      localStorage.setItem('bafoussam_admin_unlocked', 'true');
+    } else {
+      setIsAdminUnlocked(false);
+      localStorage.setItem('bafoussam_admin_unlocked', 'false');
+    }
+
     // Save to all registered users list
     try {
+      ensureAdminAccountExists();
       const savedUsersRaw = localStorage.getItem('bafoussam_all_registered_users');
       let savedUsers: User[] = savedUsersRaw ? JSON.parse(savedUsersRaw) : [];
-      if (!savedUsers.some((u) => u.id === user.id || u.phone === user.phone)) {
+      if (!savedUsers.some((u) => u.id === user.id || u.phone === user.phone || u.email === user.email)) {
         savedUsers.push(user);
         localStorage.setItem('bafoussam_all_registered_users', JSON.stringify(savedUsers));
       }
@@ -301,7 +312,7 @@ export default function App() {
     // Target dashboard for role
     const userRole = mapAccountTypeToRole(user.accountType);
     const targetDashboard = getTargetDashboardForRole(user.accountType);
-    const viewToLoad = restored.lastView && restored.lastView !== 'shop' ? restored.lastView : targetDashboard;
+    const viewToLoad = isAdmin ? 'admin' : (restored.lastView && restored.lastView !== 'shop' ? restored.lastView : targetDashboard);
 
     setActiveView(viewToLoad);
 
@@ -316,8 +327,8 @@ export default function App() {
 
     triggerToast(
       lang === 'fr'
-        ? `Connexion réussie ! Redirection vers votre tableau de bord ${user.accountType.toUpperCase()}`
-        : `Signed in successfully! Redirecting to your ${user.accountType.toUpperCase()} dashboard`,
+        ? `Connexion réussie ! Redirection vers votre tableau de bord ${isAdmin ? 'ADMINISTRATEUR' : user.accountType.toUpperCase()}`
+        : `Signed in successfully! Redirecting to your ${isAdmin ? 'ADMINISTRATOR' : user.accountType.toUpperCase()} dashboard`,
       'success'
     );
   };
@@ -510,6 +521,17 @@ export default function App() {
   useEffect(() => {
     localStorage.setItem('bafoussam_orders', JSON.stringify(orders));
   }, [orders]);
+
+  useEffect(() => {
+    ensureAdminAccountExists();
+    if (currentUser?.accountType === 'admin') {
+      setIsAdminUnlocked(true);
+      localStorage.setItem('bafoussam_admin_unlocked', 'true');
+    } else {
+      setIsAdminUnlocked(false);
+      localStorage.setItem('bafoussam_admin_unlocked', 'false');
+    }
+  }, [currentUser]);
 
   useEffect(() => {
     localStorage.setItem('bafoussam_admin_unlocked', isAdminUnlocked ? 'true' : 'false');
@@ -1449,14 +1471,13 @@ export default function App() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
             >
-              {isAdminUnlocked ? (
+              {currentUser?.accountType === 'admin' || isAdminUnlocked ? (
                 <AdminPanel
                   onClose={() => {
                     setIsAdminUnlocked(false);
                     localStorage.setItem('bafoussam_admin_unlocked', 'false');
                     setActiveView('shop');
                     localStorage.setItem('bafoussam_active_view', 'shop');
-                    window.location.reload();
                   }}
                   merchants={merchants}
                   products={products}
@@ -1470,78 +1491,39 @@ export default function App() {
                   lang={lang}
                 />
               ) : (
-                <div className="max-w-md mx-auto my-16 bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-2xl p-8 text-center space-y-6 relative overflow-hidden" id="admin-lock-screen">
-                  <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-slate-400 via-indigo-500 to-indigo-600"></div>
+                <div className="max-w-md mx-auto my-16 bg-white dark:bg-slate-900 rounded-3xl border border-red-200 dark:border-red-900 shadow-2xl p-8 text-center space-y-6 relative overflow-hidden" id="admin-lock-screen">
+                  <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-red-500 via-rose-500 to-red-600"></div>
                   
-                  <div className="w-16 h-16 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-2xl flex items-center justify-center mx-auto shadow-sm">
-                    <Lock className="w-8 h-8" />
+                  <div className="w-16 h-16 bg-red-50 dark:bg-red-950/50 text-red-600 dark:text-red-400 rounded-2xl flex items-center justify-center mx-auto shadow-sm">
+                    <ShieldAlert className="w-8 h-8" />
                   </div>
 
-                  <div className="space-y-1.5">
-                    <h2 className="text-xl font-extrabold text-slate-900 dark:text-slate-100 tracking-tight">Accès restreint</h2>
+                  <div className="space-y-2">
+                    <h2 className="text-xl font-extrabold text-slate-900 dark:text-slate-100 tracking-tight">Accès Administrateur Restreint</h2>
                     <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed max-w-sm mx-auto">
-                      Veuillez saisir votre mot de passe pour poursuivre.
+                      Seul le compte Administrateur officiel (Identifiant : 658151516) dispose des privilèges d'accès au tableau de bord système.
                     </p>
                   </div>
 
-                  <div className="space-y-4 pt-2">
-                    <div>
-                      <input
-                        type="password"
-                        placeholder="Mot de passe"
-                        id="admin-passcode-input"
-                        className="w-full text-center px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 text-sm font-mono tracking-widest font-bold text-slate-800 dark:text-white"
-                        value={passcodeAttempt}
-                        onChange={(e) => {
-                          setPasscodeAttempt(e.target.value);
-                          if (adminPasscodeError) setAdminPasscodeError('');
-                        }}
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter') {
-                            const code = passcodeAttempt.trim();
-                            if (code === ADMIN_PASSWORD) {
-                              setIsAdminUnlocked(true);
-                              setAdminPasscodeError('');
-                            } else {
-                              setAdminPasscodeError("Mot de passe incorrect");
-                            }
-                          }
-                        }}
-                      />
-                      
-                      {adminPasscodeError && (
-                        <p className="text-[11px] text-red-500 font-bold mt-2 flex items-center justify-center gap-1">
-                          <AlertCircle className="w-3.5 h-3.5" />
-                          <span>{adminPasscodeError}</span>
-                        </p>
-                      )}
-                    </div>
-
+                  <div className="pt-2 space-y-2">
                     <button
                       onClick={() => {
-                        const code = passcodeAttempt.trim();
-                        if (code === ADMIN_PASSWORD) {
-                          setIsAdminUnlocked(true);
-                          setAdminPasscodeError('');
-                        } else {
-                          setAdminPasscodeError("Mot de passe incorrect");
-                        }
+                        setIsAuthModalOpen(true);
                       }}
-                      className="w-full bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-black py-3 rounded-xl transition shadow-lg shadow-indigo-600/20 flex items-center justify-center gap-2 cursor-pointer"
+                      className="w-full py-3 bg-[#16A34A] hover:bg-emerald-700 text-white font-extrabold text-xs rounded-xl shadow-md transition cursor-pointer flex items-center justify-center gap-2"
                     >
-                      <Key className="w-3.5 h-3.5" />
-                      <span>Valider</span>
+                      <Lock className="w-4 h-4" />
+                      <span>Se connecter comme Administrateur</span>
                     </button>
 
                     <button
                       onClick={() => {
                         setActiveView('shop');
-                        setPasscodeAttempt('');
-                        setAdminPasscodeError('');
+                        localStorage.setItem('bafoussam_active_view', 'shop');
                       }}
-                      className="w-full bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-bold py-2.5 rounded-xl transition cursor-pointer"
+                      className="w-full py-2.5 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-bold text-xs rounded-xl hover:bg-slate-200 transition cursor-pointer"
                     >
-                      Retourner au Marché principal
+                      Retour à la boutique
                     </button>
                   </div>
                 </div>

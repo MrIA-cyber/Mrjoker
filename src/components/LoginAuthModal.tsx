@@ -9,6 +9,7 @@ import { signInWithEmailAndPassword } from 'firebase/auth';
 import { auth } from '../firebase';
 import { getFrenchAuthErrorMessage } from '../utils/firebaseErrors';
 import { arePhonesEqual } from '../utils/accountValidation';
+import { verifyPassword, ensureAdminAccountExists } from '../utils/security';
 
 interface LoginAuthModalProps {
   isOpen: boolean;
@@ -64,6 +65,9 @@ export default function LoginAuthModal({
     setValidationError('');
     setIsLoading(true);
 
+    // Ensure admin account exists in local database
+    ensureAdminAccountExists();
+
     const formattedEmail = cleanInputPhone.includes('@')
       ? cleanInputPhone
       : `${cleanInputPhone.replace(/[^0-9+]/g, '')}@afrinova.cm`;
@@ -86,12 +90,17 @@ export default function LoginAuthModal({
 
       onSuccess(matchedUser);
     } catch (fbErr) {
-      // Fallback local lookup
+      // Fallback local lookup with secure password verification
       try {
         const savedUsersRaw = localStorage.getItem('bafoussam_all_registered_users');
         const savedUsers: User[] = savedUsersRaw ? JSON.parse(savedUsersRaw) : [];
 
-        const matchedUser = savedUsers.find(u => arePhonesEqual(u.phone, cleanInputPhone) || u.phone.includes(cleanInputPhone) || u.email === cleanInputPhone);
+        const matchedUser = savedUsers.find(u => 
+          arePhonesEqual(u.phone, cleanInputPhone) || 
+          u.phone.includes(cleanInputPhone) || 
+          u.email === cleanInputPhone ||
+          u.email === formattedEmail
+        );
 
         if (!matchedUser) {
           setIsLoading(false);
@@ -99,9 +108,9 @@ export default function LoginAuthModal({
           return;
         }
 
-        if (loginPassword !== matchedUser.password) {
+        if (!verifyPassword(loginPassword, matchedUser.password)) {
           setIsLoading(false);
-          setValidationError(getFrenchAuthErrorMessage(fbErr));
+          setValidationError(lang === 'fr' ? 'Mot de passe incorrect. Veuillez réessayer.' : 'Incorrect password. Please try again.');
           return;
         }
 
@@ -116,12 +125,12 @@ export default function LoginAuthModal({
 
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-md">
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/70 backdrop-blur-md overflow-y-auto">
         <motion.div
           initial={{ opacity: 0, scale: 0.95, y: 15 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.95, y: 15 }}
-          className="w-full max-w-md bg-white rounded-3xl shadow-2xl border border-slate-200 overflow-hidden relative"
+          className="w-full max-w-md max-h-[90vh] overflow-y-auto bg-white rounded-2xl sm:rounded-3xl shadow-2xl border border-slate-200 relative my-auto"
         >
           {/* Header Bar */}
           <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 bg-slate-50/80">

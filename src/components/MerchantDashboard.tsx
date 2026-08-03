@@ -2202,14 +2202,13 @@ export default function MerchantDashboard({
                 </div>
 
                 {/* 6 Profile Selector Tabs */}
-                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 pt-1">
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 pt-1">
                   {[
                     { id: 'client' as AccountType, label: 'Client', emoji: '👤', badge: '5j Essai' },
                     { id: 'vendeur' as AccountType, label: 'Vendeur', emoji: '🛒', badge: 'Boutique' },
                     { id: 'entreprise' as AccountType, label: 'Entreprise', emoji: '🏢', badge: 'Pro & B2B' },
                     { id: 'prestataire' as AccountType, label: 'Prestataire', emoji: '🔧', badge: 'Services' },
                     { id: 'livreur' as AccountType, label: 'Livreur', emoji: '🚚', badge: 'Express' },
-                    { id: 'admin' as AccountType, label: 'Admin', emoji: '🛡️', badge: 'Système' },
                   ].map((role) => {
                     const isActive = activeProfileRoleTab === role.id;
                     return (

@@ -115,21 +115,6 @@ export const PROFILE_OPTIONS: ProfileOption[] = [
       'Missions de livraison géolocalisées',
       'Retrait des gains MoMo direct'
     ]
-  },
-  {
-    id: 'admin',
-    title: 'Administrateur',
-    emoji: '🛡️',
-    icon: ShieldCheck,
-    description: "Je supervise la plateforme, valide les vérifications et gère le système.",
-    trialDays: 3650,
-    formattedTrial: "Accès Illimité",
-    badge: 'Super Admin',
-    benefits: [
-      'Accès total au panneau d\'administration',
-      'Validation des vérifications & boutiques',
-      'Supervision des transactions & sécurité'
-    ]
   }
 ];
 

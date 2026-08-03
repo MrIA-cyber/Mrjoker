@@ -11,6 +11,7 @@ import { normalizePhoneNumber, normalizeEmail, arePhonesEqual } from '../utils/a
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { auth } from '../firebase';
 import { getFrenchAuthErrorMessage } from '../utils/firebaseErrors';
+import { verifyPassword, ensureAdminAccountExists } from '../utils/security';
 
 interface WelcomeGateProps {
   onSuccess: (user: User) => void;
@@ -34,9 +35,10 @@ export default function WelcomeGate({ onSuccess, lang, onLangChange, initialStep
   const [failedLoginCount, setFailedLoginCount] = useState(0);
   const [loginLockoutEndTime, setLoginLockoutEndTime] = useState<number | null>(null);
 
-  // Seed registered users list in localStorage if empty
+  // Seed registered users list in localStorage if empty and ensure Admin account exists
   useEffect(() => {
     try {
+      ensureAdminAccountExists();
       const savedUsersRaw = localStorage.getItem('bafoussam_all_registered_users');
       if (!savedUsersRaw) {
         const today = new Date();
@@ -59,6 +61,7 @@ export default function WelcomeGate({ onSuccess, lang, onLangChange, initialStep
           }
         ];
         localStorage.setItem('bafoussam_all_registered_users', JSON.stringify(seedUsers));
+        ensureAdminAccountExists();
       }
     } catch (err) {
       console.error(err);
@@ -166,7 +169,12 @@ export default function WelcomeGate({ onSuccess, lang, onLangChange, initialStep
           const savedUsersRaw = localStorage.getItem('bafoussam_all_registered_users');
           const savedUsers: User[] = savedUsersRaw ? JSON.parse(savedUsersRaw) : [];
 
-          const matchedUser = savedUsers.find(u => u.phone.includes(cleanInputPhone) || u.email === cleanInputPhone);
+          const matchedUser = savedUsers.find(u => 
+            arePhonesEqual(u.phone, cleanInputPhone) || 
+            u.phone.includes(cleanInputPhone) || 
+            u.email === cleanInputPhone ||
+            u.email === formattedEmail
+          );
 
           if (!matchedUser) {
             setStep('login');
@@ -174,9 +182,9 @@ export default function WelcomeGate({ onSuccess, lang, onLangChange, initialStep
             return;
           }
 
-          if (loginPassword !== matchedUser.password) {
+          if (!verifyPassword(loginPassword, matchedUser.password)) {
             setStep('login');
-            setValidationError(getFrenchAuthErrorMessage(fbErr));
+            setValidationError(lang === 'fr' ? 'Mot de passe incorrect. Veuillez réessayer.' : 'Incorrect password. Please try again.');
             return;
           }
 
@@ -217,7 +225,7 @@ export default function WelcomeGate({ onSuccess, lang, onLangChange, initialStep
       <motion.div
         initial={{ opacity: 0, scale: 0.98 }}
         animate={{ opacity: 1, scale: 1 }}
-        className="relative z-10 w-full max-w-md bg-white rounded-[20px] shadow-[0_16px_48px_rgba(15,23,42,0.08)] border border-slate-200/80 p-6 sm:p-8 overflow-hidden space-y-6"
+        className="relative z-10 w-full max-w-md bg-white rounded-[20px] shadow-[0_16px_48px_rgba(15,23,42,0.08)] border border-slate-200/80 p-4 sm:p-8 overflow-hidden space-y-5 sm:space-y-6"
       >
         {/* Header */}
         <div className="flex items-center justify-between pb-4 border-b border-slate-100">

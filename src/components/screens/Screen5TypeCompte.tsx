@@ -61,16 +61,6 @@ export default function Screen5TypeCompte({ onSelectAccountType, onContinue }: S
       iconBg: 'bg-gradient-to-tr from-blue-500 to-sky-600',
       description: 'Prenez en charge les livraisons en ville, optimisez vos trajets et recevez vos gains instantanément via Mobile Money.',
     },
-    {
-      id: 'admin' as AccountType,
-      title: 'Administrateur Système',
-      subtitle: 'Gestion globale, Modération & Validation CNI',
-      badge: 'Super Admin',
-      badgeColor: 'bg-rose-100 text-rose-800 border-rose-300',
-      icon: ShieldCheck,
-      iconBg: 'bg-gradient-to-tr from-rose-600 to-red-700',
-      description: 'Supervisez l\'ensemble du réseau AfriNova, validez les vérifications de boutiques et configurez le système.',
-    },
   ];
 
   const handleSelect = (id: any) => {
