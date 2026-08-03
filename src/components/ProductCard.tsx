@@ -5,12 +5,52 @@ import { Star, ShoppingCart, Sparkles, MapPin, Heart, Flag, Zap, ShieldCheck } f
 import VerifiedBadge from './VerifiedBadge';
 import SmartProductImage from './SmartProductImage';
 
+export function ProductCardSkeleton() {
+  return (
+    <div className="bg-white dark:bg-slate-900 rounded-[20px] border border-slate-100 dark:border-slate-800/80 p-0 flex flex-col justify-between overflow-hidden shadow-2xs h-full animate-pulse">
+      <div>
+        {/* Aspect 4/3 image skeleton */}
+        <div className="aspect-[4/3] bg-slate-200 dark:bg-slate-800 rounded-t-[20px] relative">
+          <div className="absolute top-2.5 right-2.5 w-7 h-7 rounded-full bg-slate-300 dark:bg-slate-700" />
+          <div className="absolute top-2.5 left-2.5 w-20 h-4 rounded-md bg-slate-300 dark:bg-slate-700" />
+        </div>
+        
+        {/* Content Skeleton */}
+        <div className="p-3 space-y-2.5">
+          {/* Category / Rating row */}
+          <div className="flex items-center justify-between">
+            <div className="h-3 w-16 bg-slate-200 dark:bg-slate-800 rounded-md" />
+            <div className="h-3 w-12 bg-slate-200 dark:bg-slate-800 rounded-md" />
+          </div>
+
+          {/* Title row */}
+          <div className="space-y-1.5 pt-0.5">
+            <div className="h-4 w-5/6 bg-slate-200 dark:bg-slate-800 rounded-md" />
+            <div className="h-4 w-2/3 bg-slate-200 dark:bg-slate-800 rounded-md" />
+          </div>
+
+          {/* Price row */}
+          <div className="pt-1 flex items-center gap-2">
+            <div className="h-5 w-28 bg-emerald-100 dark:bg-emerald-950/60 rounded-md" />
+          </div>
+        </div>
+      </div>
+
+      {/* Button Skeleton */}
+      <div className="p-3 pt-0 flex items-center gap-1.5 mt-auto">
+        <div className="flex-1 h-8 bg-slate-200 dark:bg-slate-800 rounded-xl" />
+        <div className="w-8 h-8 bg-slate-200 dark:bg-slate-800 rounded-xl" />
+      </div>
+    </div>
+  );
+}
+
 interface ProductCardProps {
   key?: string | number;
-  product: Product;
+  product?: Product;
   isMerchantVerified?: boolean;
-  onAddToCart: (product: Product) => void;
-  onSelect: (product: Product) => void;
+  onAddToCart?: (product: Product) => void;
+  onSelect?: (product: Product) => void;
   onToggleFavorite?: (e: React.MouseEvent, productId: string) => void;
   onReport?: (product: Product) => void;
   onInstantBuy?: (product: Product) => void;
@@ -18,6 +58,7 @@ interface ProductCardProps {
   reviews?: Review[];
   lang?: string;
   index?: number;
+  isLoading?: boolean;
 }
 
 export default function ProductCard({ 
@@ -32,7 +73,11 @@ export default function ProductCard({
   reviews = [],
   lang = 'fr',
   index = 0,
+  isLoading = false,
 }: ProductCardProps) {
+  if (isLoading || !product) {
+    return <ProductCardSkeleton />;
+  }
   const [favoriteState, setFavoriteState] = useState(isFavorite);
   const isBoostedActive = product.isBoosted && (!product.boostExpiryDate || new Date(product.boostExpiryDate) >= new Date());
 
@@ -76,7 +121,7 @@ export default function ProductCard({
         {/* Product Image Frame - 4:3 Aspect Ratio reduces card height by ~25% */}
         <div
           className="aspect-[4/3] bg-slate-100 dark:bg-slate-950 relative overflow-hidden cursor-pointer rounded-t-[20px]"
-          onClick={() => onSelect(product)}
+          onClick={() => onSelect?.(product)}
         >
           <SmartProductImage
             product={product}
@@ -144,7 +189,7 @@ export default function ProductCard({
           {/* Title clamped to strictly 2 lines */}
           <h4
             className="font-bold text-xs sm:text-sm text-slate-900 dark:text-slate-100 hover:text-emerald-600 dark:hover:text-emerald-400 cursor-pointer transition line-clamp-2 leading-snug min-h-[2.2rem]"
-            onClick={() => onSelect(product)}
+            onClick={() => onSelect?.(product)}
             title={product.name}
           >
             {product.name}
@@ -171,7 +216,7 @@ export default function ProductCard({
           whileTap={{ scale: 0.95 }}
           onClick={(e) => {
             e.stopPropagation();
-            onAddToCart(product);
+            onAddToCart?.(product);
           }}
           disabled={product.stock === 0}
           className={`flex-1 h-8 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer shadow-2xs ${
