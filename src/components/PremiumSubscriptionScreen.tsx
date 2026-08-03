@@ -308,8 +308,6 @@ export default function PremiumSubscriptionScreen({
         return <Building2 className="w-6 h-6 text-amber-500" />;
       case 'livreur':
         return <Truck className="w-6 h-6 text-blue-500" />;
-      case 'trader':
-        return <TrendingUp className="w-6 h-6 text-cyan-500" />;
       case 'admin':
         return <ShieldCheck className="w-6 h-6 text-rose-500" />;
       default:

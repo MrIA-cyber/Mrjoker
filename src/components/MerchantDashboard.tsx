@@ -106,8 +106,8 @@ export default function MerchantDashboard({
       );
       if (userMerchant) {
         setActiveMerchantId(userMerchant.id);
-      } else if (merchants && merchants.length > 0) {
-        setActiveMerchantId(merchants[0].id);
+      } else {
+        setActiveMerchantId(currentUser.id);
       }
     } else if (!activeMerchantId && merchants && merchants.length > 0) {
       setActiveMerchantId(merchants[0].id);
@@ -293,7 +293,20 @@ export default function MerchantDashboard({
     sales: 0,
   };
 
-  const activeMerchant = merchants.find(m => m.id === activeMerchantId) || merchants[0] || fallbackMerchant;
+  const activeMerchant = merchants.find(m => m.id === activeMerchantId) || (currentUser ? {
+    id: currentUser.id,
+    name: currentUser.name ? `Boutique ${currentUser.name}` : 'Ma Boutique',
+    ownerName: currentUser.name || 'Vendeur',
+    email: currentUser.email || '',
+    phone: currentUser.phone || '',
+    category: 'Commerce Général',
+    rating: 5.0,
+    reviewCount: 0,
+    description: 'Boutique en cours de configuration. Modifiez la description et ajoutez vos produits !',
+    neighborhood: currentUser.neighborhood || 'Bafoussam',
+    logo: currentUser.avatar || 'https://images.unsplash.com/photo-1534452203293-494d7ddbf7e0?auto=format&fit=crop&w=300&q=80',
+    isVerified: true
+  } as Merchant : merchants[0] || fallbackMerchant);
 
   useEffect(() => {
     const merchantIdToQuery = activeMerchant?.id || 'm1';
@@ -2095,15 +2108,14 @@ export default function MerchantDashboard({
                   </div>
                 </div>
 
-                {/* 7 Profile Selector Tabs */}
-                <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2 pt-1">
+                {/* 6 Profile Selector Tabs */}
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 pt-1">
                   {[
                     { id: 'client' as AccountType, label: 'Client', emoji: '👤', badge: '5j Essai' },
                     { id: 'vendeur' as AccountType, label: 'Vendeur', emoji: '🛒', badge: 'Boutique' },
                     { id: 'entreprise' as AccountType, label: 'Entreprise', emoji: '🏢', badge: 'Pro & B2B' },
                     { id: 'prestataire' as AccountType, label: 'Prestataire', emoji: '🔧', badge: 'Services' },
                     { id: 'livreur' as AccountType, label: 'Livreur', emoji: '🚚', badge: 'Express' },
-                    { id: 'trader' as AccountType, label: 'Trader', emoji: '📈', badge: 'Bourse' },
                     { id: 'admin' as AccountType, label: 'Admin', emoji: '🛡️', badge: 'Système' },
                   ].map((role) => {
                     const isActive = activeProfileRoleTab === role.id;
@@ -2261,28 +2273,6 @@ export default function MerchantDashboard({
                       { label: 'Historique des Courses', icon: FileText }
                     ],
                     permissions: ['Dispatching de courses GPS', 'Retrait solde instantané', 'Passage En Ligne/Hors Ligne', 'Attestation de transporteur']
-                  },
-                  trader: {
-                    title: 'Profil Trader / Opportunités & Bourse',
-                    badgeTitle: 'Trader Vérifié AfriTrade',
-                    badgeColor: 'bg-cyan-100 text-cyan-800 border-cyan-300',
-                    emoji: '📈',
-                    priceMonthly: '12 000 FCFA / mois',
-                    priceYearly: '120 000 FCFA / an',
-                    trialText: "10 jours d'essai gratuit offert",
-                    benefits: [
-                      'Accès au flux de cotations en temps réel sur les matières premières',
-                      'Tableau de bord d\'opportunités d\'affaires P2P',
-                      'Sécurisation des transactions par compte séquestre AfriNova',
-                      'Signaux de marché & alertes automatiques de prix',
-                      'Statistiques d\'évolution des cours et rapports de rentabilité'
-                    ],
-                    actions: [
-                      { label: 'Consulter les Cotations', icon: TrendingUp },
-                      { label: 'Ordres d\'Achat / Vente P2P', icon: Layers },
-                      { label: 'Rapports Financiers', icon: PieChart }
-                    ],
-                    permissions: ['Flux boursier temps réel', 'Transactions P2P séquestre', 'Publication de signaux', 'Historique financier']
                   },
                   admin: {
                     title: 'Profil Administrateur / Super Admin',

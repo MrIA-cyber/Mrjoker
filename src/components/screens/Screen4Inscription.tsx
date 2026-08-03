@@ -117,21 +117,6 @@ export const PROFILE_OPTIONS: ProfileOption[] = [
     ]
   },
   {
-    id: 'trader',
-    title: 'Trader',
-    emoji: '📈',
-    icon: TrendingUp,
-    description: "Je négocie des actifs, opportunités de marché et produits du terroir.",
-    trialDays: 10,
-    formattedTrial: "10 jours d'essai gratuit",
-    badge: 'Bourse & P2P',
-    benefits: [
-      "10 jours d'essai gratuit offert",
-      'Flux des cours en temps réel',
-      'Transactions P2P sécurisées par séquestre'
-    ]
-  },
-  {
     id: 'admin',
     title: 'Administrateur',
     emoji: '🛡️',

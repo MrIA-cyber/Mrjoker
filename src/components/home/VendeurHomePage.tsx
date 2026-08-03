@@ -79,76 +79,46 @@ export default function VendeurHomePage({
   >('accueil');
 
   // Filter products for connected boutique
-  const myMerchant = merchants.find(m => m.id === currentUser?.id) || merchants[0];
-  const [localProducts, setLocalProducts] = useState<Product[]>(
-    products.filter(p => p.merchantId === myMerchant?.id || p.merchantId === 'm1')
-  );
+  const myMerchant = merchants.find(m => 
+    (currentUser?.id && m.id === currentUser.id) ||
+    (currentUser?.email && m.email && m.email.toLowerCase() === currentUser.email.toLowerCase()) ||
+    (currentUser?.phone && m.phone && m.phone === currentUser.phone)
+  ) || {
+    id: currentUser?.id || 'm-user',
+    name: currentUser?.name ? `Boutique ${currentUser.name}` : 'Ma Boutique',
+    ownerName: currentUser?.name || 'Vendeur',
+    email: currentUser?.email || '',
+    phone: currentUser?.phone || '',
+    category: 'Commerce Général',
+    rating: 5.0,
+    reviewCount: 0,
+    description: 'Boutique en cours de configuration. Modifiez la description et ajoutez vos produits !',
+    neighborhood: currentUser?.neighborhood || 'Bafoussam',
+    logo: currentUser?.avatar || 'https://images.unsplash.com/photo-1534452203293-494d7ddbf7e0?auto=format&fit=crop&w=300&q=80',
+    isVerified: true
+  };
+
+  const [localProducts, setLocalProducts] = useState<Product[]>(() => {
+    // Return products that belong to this seller
+    return products.filter(p => p.merchantId === myMerchant.id);
+  });
 
   // Shop Categories state
   const [shopCategories, setShopCategories] = useState<string[]>([
     'Épices & Aromates',
     'Huiles & Produits Bio',
     'Artisanat Local Bafoussam',
-    'Produits Vivriers Marché A',
+    'Produits Vivriers',
     'Boissons & Jus Naturels'
   ]);
   const [newCatInput, setNewCatInput] = useState('');
 
-  // Local Orders state with full lifecycle (Pending, Preparing, Delivering, Delivered, Cancelled)
-  const [localOrders, setLocalOrders] = useState<Order[]>(
-    initialOrders.length > 0 ? initialOrders : [
-      {
-        id: 'CMD-8492',
-        userId: 'c-101',
-        userName: 'Mireille Talla',
-        createdAt: new Date().toISOString(),
-        status: 'pending',
-        total: 24500,
-        deliveryNeighborhood: 'Tamdja',
-        deliveryDetails: 'Près de la Pharmacie Centrale',
-        paymentMethod: 'momo',
-        paymentPhone: '+237 677 89 45 12',
-        deliveryTimeEstimated: 20,
-        items: [
-          { product: { id: 'p1', name: 'Poivre Blanc Penja Agréé 500g', price: 4500, images: ['https://images.unsplash.com/photo-1596040033229-a9821ebd058d?auto=format&fit=crop&w=400&q=80'] } as Product, quantity: 2 },
-          { product: { id: 'p2', name: 'Huile de Palme Rouge Bio 5L', price: 15500, images: ['https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?auto=format&fit=crop&w=400&q=80'] } as Product, quantity: 1 }
-        ]
-      },
-      {
-        id: 'CMD-8493',
-        userId: 'c-102',
-        userName: 'Emmanuel Kamga',
-        createdAt: new Date(Date.now() - 3600000 * 2).toISOString(),
-        status: 'preparing',
-        total: 18000,
-        deliveryNeighborhood: 'Kamkop',
-        deliveryDetails: 'Avenue des Écoles, Portail Bleu',
-        paymentMethod: 'orange',
-        paymentPhone: '+237 699 11 22 33',
-        deliveryTimeEstimated: 30,
-        items: [
-          { product: { id: 'p3', name: 'Miel Sauvage Ouest Cameroun 1L', price: 12000, images: ['https://images.unsplash.com/photo-1587049352846-4a222e784d38?auto=format&fit=crop&w=400&q=80'] } as Product, quantity: 1 },
-          { product: { id: 'p4', name: 'Café Arabica Moulu Bafoussam 500g', price: 6000, images: ['https://images.unsplash.com/photo-1559056199-641a0ac8b55e?auto=format&fit=crop&w=400&q=80'] } as Product, quantity: 1 }
-        ]
-      },
-      {
-        id: 'CMD-8488',
-        userId: 'c-103',
-        userName: 'Danielle Nguemo',
-        createdAt: new Date(Date.now() - 86400000).toISOString(),
-        status: 'delivering',
-        total: 35000,
-        deliveryNeighborhood: 'Marché A',
-        deliveryDetails: 'Entrée Principale Stand 14',
-        paymentMethod: 'momo',
-        paymentPhone: '+237 670 12 34 56',
-        deliveryTimeEstimated: 15,
-        items: [
-          { product: { id: 'p5', name: 'Sac de Riz Ndop Parfumé 25kg', price: 35000, images: ['https://images.unsplash.com/photo-1586201375761-83865001e31c?auto=format&fit=crop&w=400&q=80'] } as Product, quantity: 1 }
-        ]
-      }
-    ]
-  );
+  // Local Orders state for this seller
+  const [localOrders, setLocalOrders] = useState<Order[]>(() => {
+    return initialOrders.filter(o => 
+      o.items.some(item => item.product.merchantId === myMerchant.id)
+    );
+  });
 
   // Refuse Order Modal state
   const [refusingOrderId, setRefusingOrderId] = useState<string | null>(null);

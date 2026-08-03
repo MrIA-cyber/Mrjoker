@@ -44,8 +44,6 @@ export default function VerifiedBadge({ id, className = '', size = 'sm', isVerif
         return 'Prestataire Certifié';
       case 'livreur':
         return 'Livreur Agréé';
-      case 'trader':
-        return 'Trader Vérifié';
       case 'admin':
         return 'Super Admin';
       default:
@@ -65,8 +63,6 @@ export default function VerifiedBadge({ id, className = '', size = 'sm', isVerif
         return 'text-purple-700 bg-purple-50 border-purple-200';
       case 'livreur':
         return 'text-sky-700 bg-sky-50 border-sky-200';
-      case 'trader':
-        return 'text-teal-700 bg-teal-50 border-teal-200';
       case 'admin':
         return 'text-rose-700 bg-rose-50 border-rose-200';
       default:

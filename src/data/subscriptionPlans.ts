@@ -98,24 +98,6 @@ export const INITIAL_SUBSCRIPTION_PLANS: SubscriptionPlan[] = [
     ],
   },
   {
-    id: 'trader',
-    name: 'Profil Trader (Trade & Opportunités)',
-    monthlyPrice: 12000,
-    yearlyPrice: 120000, // Saves 24000 FCFA
-    trialDays: 10,
-    recommended: false,
-    badge: 'Bourse & P2P',
-    color: 'cyan',
-    features: [
-      '10 jours d\'essai gratuit offerts',
-      'Accès au flux de trading & matières premières',
-      'Tableau de bord des cotations en temps réel',
-      'Transactions P2P sécurisées par séquestre AfriNova',
-      'Alertes sur opportunités de marché & signaux',
-      'Statistiques de rentabilité & rapports financiers',
-    ],
-  },
-  {
     id: 'admin',
     name: 'Profil Administrateur (Système)',
     monthlyPrice: 0,

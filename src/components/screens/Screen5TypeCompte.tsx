@@ -62,16 +62,6 @@ export default function Screen5TypeCompte({ onSelectAccountType, onContinue }: S
       description: 'Prenez en charge les livraisons en ville, optimisez vos trajets et recevez vos gains instantanément via Mobile Money.',
     },
     {
-      id: 'trader' as AccountType,
-      title: 'Trader & Opportunités',
-      subtitle: 'Négociation d\'actifs, matières premières & P2P',
-      badge: 'Bourse & P2P',
-      badgeColor: 'bg-cyan-100 text-cyan-800 border-cyan-300',
-      icon: TrendingUp,
-      iconBg: 'bg-gradient-to-tr from-cyan-600 to-teal-700',
-      description: 'Accédez au flux des cours en direct, échangez des opportunités commerciales et sécurisez vos transactions P2P.',
-    },
-    {
       id: 'admin' as AccountType,
       title: 'Administrateur Système',
       subtitle: 'Gestion globale, Modération & Validation CNI',

@@ -220,52 +220,23 @@ export default function PrestataireHomePage({
   const [calendarViewMode, setCalendarViewMode] = useState<'day' | 'week' | 'month'>('week');
   const [calendarSelectedDate, setCalendarSelectedDate] = useState('01 Août 2026');
 
-  // 1. SERVICES LIST
-  const [servicesList, setServicesList] = useState<PrestataireService[]>([
-    {
-      id: 'srv-101',
-      name: 'Installation & Dépannage Solaire 5KVA',
-      category: 'Électricité & Énergie Solaire',
-      price: 35000,
-      pricingType: 'fixe',
-      description: 'Diagnostic complet, pose convertisseur hybride, régulateur MPPT et câblage sécurisé aux normes CE.',
-      images: [
-        'https://images.unsplash.com/photo-1509391365360-2e959784a276?auto=format&fit=crop&w=600&q=80',
-        'https://images.unsplash.com/photo-1513836279014-a89f7a76ae86?auto=format&fit=crop&w=600&q=80'
-      ],
-      videoUrl: 'https://www.youtube.com/watch?v=demo_solaire_bafoussam',
-      zones: ['Bafoussam Tamdja', 'Bafoussam Kamkop', 'Bafoussam Djeleng'],
-      duration: '2h - 4h'
-    },
-    {
-      id: 'srv-102',
-      name: 'Réparation & Entretien Réfrigérateur & Froid',
-      category: 'Froid & Climatisation',
-      price: 15000,
-      pricingType: 'horaire',
-      description: 'Recharge en gaz R134a, réparation compresseur, débouchage circuit et thermostat à domicile.',
-      images: [
-        'https://images.unsplash.com/photo-1581092918056-0c4c3acd3789?auto=format&fit=crop&w=600&q=80'
-      ],
-      videoUrl: '',
-      zones: ['Bafoussam Tamdja', 'Marché A', 'Marché B', 'Bamendzi'],
-      duration: '1h - 2h'
-    },
-    {
-      id: 'srv-103',
-      name: 'Installation Plomberie PPR & Chauffe-eau Villa',
-      category: 'Plomberie & Sanitaires',
-      price: 45000,
-      pricingType: 'devis',
-      description: 'Pose tuyauterie polypropylène PPR, installation chauffe-eau solaire et raccordement fosse septique.',
-      images: [
-        'https://images.unsplash.com/photo-1504307651254-35680f356dfd?auto=format&fit=crop&w=600&q=80'
-      ],
-      videoUrl: 'https://www.youtube.com/watch?v=plomberie_demo',
-      zones: ['Bafoussam Ville', 'Kouogouo', 'Haoussa'],
-      duration: 'Demi-journée'
+  // 1. SERVICES LIST (Per-user localStorage persistence, empty by default for new profile)
+  const [servicesList, setServicesList] = useState<PrestataireService[]>(() => {
+    try {
+      const saved = localStorage.getItem('bafoussam_prestataire_services_' + (currentUser?.id || 'guest'));
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
     }
-  ]);
+  });
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('bafoussam_prestataire_services_' + (currentUser?.id || 'guest'), JSON.stringify(servicesList));
+    } catch (e) {
+      console.error(e);
+    }
+  }, [servicesList, currentUser?.id]);
 
   // Modal Service Add / Edit
   const [isAddServiceModalOpen, setIsAddServiceModalOpen] = useState(false);
@@ -473,20 +444,34 @@ export default function PrestataireHomePage({
   const [replyingReviewId, setReplyingReviewId] = useState<string | null>(null);
   const [reviewReplyInput, setReviewReplyInput] = useState('');
 
-  // 7. PROFIL PROFESSIONNEL
-  const [providerProfile, setProviderProfile] = useState({
-    name: currentUser?.name || 'Artisan & Tech Bafoussam',
-    tradeTitle: 'Électricien, Installateur Solaire & Frigoriste Certifié',
-    phone: currentUser?.phone || '+237 677 89 45 12',
-    whatsapp: '+237 699 88 77 66',
-    email: currentUser?.email || 'prestataire.bafoussam@afrinova.cm',
-    address: 'Carrefour Express, Quartier Tamdja',
-    city: 'Bafoussam, Ouest Cameroun',
-    bio: 'Artisan qualifié avec plus de 8 ans d\'expérience dans les installations électriques résidentielles, le solaire photovoltaïque hybride et la réparation d\'équipements de froid.',
-    experienceYears: '8 ans',
-    diplomas: 'CAP Électricité Bâtiment, Habilitation Solaire Hybride Schneider',
-    photoUrl: 'https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&w=400&q=80'
+  // 7. PROFIL PROFESSIONNEL (Per-user localStorage persistence)
+  const [providerProfile, setProviderProfile] = useState(() => {
+    try {
+      const saved = localStorage.getItem('bafoussam_prestataire_profile_' + (currentUser?.id || 'guest'));
+      if (saved) return JSON.parse(saved);
+    } catch {}
+    return {
+      name: currentUser?.name || 'Mon Profil Prestataire',
+      tradeTitle: 'Prestataire de Services & Artisan Certifié',
+      phone: currentUser?.phone || '',
+      whatsapp: currentUser?.phone || '',
+      email: currentUser?.email || '',
+      address: currentUser?.neighborhood ? `Quartier ${currentUser.neighborhood}` : 'Bafoussam',
+      city: 'Bafoussam, Ouest Cameroun',
+      bio: 'Profil prestataire en cours de configuration. Décrivez vos compétences et votre expérience !',
+      experienceYears: '1 an',
+      diplomas: 'Prestataire Agréé AfriNova',
+      photoUrl: currentUser?.avatar || 'https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&w=400&q=80'
+    };
   });
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('bafoussam_prestataire_profile_' + (currentUser?.id || 'guest'), JSON.stringify(providerProfile));
+    } catch (e) {
+      console.error(e);
+    }
+  }, [providerProfile, currentUser?.id]);
 
   // 8. ABONNEMENT PRO
   const [subscription] = useState({

@@ -1,4 +1,4 @@
-export type AccountType = 'client' | 'vendeur' | 'prestataire' | 'entreprise' | 'livreur' | 'trader' | 'admin';
+export type AccountType = 'client' | 'vendeur' | 'prestataire' | 'entreprise' | 'livreur' | 'admin';
 
 export interface SubscriptionPlan {
   id: AccountType;

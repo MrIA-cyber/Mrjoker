@@ -87,43 +87,69 @@ export default function EntrepriseHomePage({
     setTimeout(() => setToastMessage(null), 3500);
   };
 
-  // 1. EMPLOYEES STATE (Gérer, Ajouter, Modifier, Supprimer)
-  const [employees, setEmployees] = useState([
-    { id: 'emp-1', name: 'Dr. Jean-Baptiste Foka', role: 'Directeur Général', dept: 'Direction', status: 'Actif', phone: '+237 677 11 22 33', email: 'j.foka@westcam-corp.cm', salary: 1200000 },
-    { id: 'emp-2', name: 'Mme Sandrine Nguemo', role: 'Chef de Projets B2B', dept: 'Commercial', status: 'Actif', phone: '+237 699 44 55 66', email: 's.nguemo@westcam-corp.cm', salary: 650000 },
-    { id: 'emp-3', name: 'Alain Fotso', role: 'Responsable Logistique', dept: 'Supply Chain', status: 'Actif', phone: '+237 680 77 88 99', email: 'a.fotso@westcam-corp.cm', salary: 500000 },
-    { id: 'emp-4', name: 'Carine Mbassi', role: 'Comptable Senior', dept: 'Finance & Audit', status: 'Actif', phone: '+237 655 33 22 11', email: 'c.mbassi@westcam-corp.cm', salary: 580000 },
-  ]);
+  // 1. EMPLOYEES STATE (Per-user localStorage persistence)
+  const [employees, setEmployees] = useState<any[]>(() => {
+    try {
+      const saved = localStorage.getItem('bafoussam_entreprise_emp_' + (currentUser?.id || 'guest'));
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
+  useEffect(() => {
+    try { localStorage.setItem('bafoussam_entreprise_emp_' + (currentUser?.id || 'guest'), JSON.stringify(employees)); } catch {}
+  }, [employees, currentUser?.id]);
+
   const [empSearch, setEmpSearch] = useState('');
   const [isEmpModalOpen, setIsEmpModalOpen] = useState(false);
   const [editingEmp, setEditingEmp] = useState<any>(null);
   const [empForm, setEmpForm] = useState({ name: '', role: '', dept: 'Commercial', phone: '', email: '', salary: '400000', status: 'Actif' });
 
-  // 2. DEPARTMENTS STATE (Créer des départements)
-  const [departments, setDepartments] = useState([
-    { id: 'dep-1', name: 'Direction Générale', head: 'Dr. Jean-Baptiste Foka', staffCount: 3, budget: '0 FCFA' },
-    { id: 'dep-2', name: 'Commercial & Ventes B2B', head: 'Mme Sandrine Nguemo', staffCount: 5, budget: '0 FCFA' },
-    { id: 'dep-3', name: 'Logistique & Transit', head: 'Alain Fotso', staffCount: 4, budget: '0 FCFA' },
-    { id: 'dep-4', name: 'Finance & Audit', head: 'Carine Mbassi', staffCount: 2, budget: '0 FCFA' },
-  ]);
+  // 2. DEPARTMENTS STATE (Per-user localStorage persistence)
+  const [departments, setDepartments] = useState<any[]>(() => {
+    try {
+      const saved = localStorage.getItem('bafoussam_entreprise_dep_' + (currentUser?.id || 'guest'));
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
+  useEffect(() => {
+    try { localStorage.setItem('bafoussam_entreprise_dep_' + (currentUser?.id || 'guest'), JSON.stringify(departments)); } catch {}
+  }, [departments, currentUser?.id]);
+
   const [isDeptModalOpen, setIsDeptModalOpen] = useState(false);
   const [deptForm, setDeptForm] = useState({ name: '', head: '', budget: '0' });
 
-  // 3. CORPORATE PRODUCTS STATE (Gérer les produits)
-  const [corpProducts, setCorpProducts] = useState([
-    { id: 'cp-1', name: 'Kit Solaire Autonome 5000W B2B', price: 1850000, category: 'Énergie', stock: 12, ref: 'SOL-5000' },
-    { id: 'cp-2', name: 'Lot Café Arabica Bio Gros 500kg', price: 2400000, category: 'Agroalimentaire', stock: 45, ref: 'AGRO-CAF-500' },
-    { id: 'cp-3', name: 'Transformateur Triphasé 100KVA', price: 4200000, category: 'Industrie', stock: 4, ref: 'IND-TR-100' },
-  ]);
+  // 3. CORPORATE PRODUCTS STATE (Per-user localStorage persistence)
+  const [corpProducts, setCorpProducts] = useState<any[]>(() => {
+    try {
+      const saved = localStorage.getItem('bafoussam_entreprise_prod_' + (currentUser?.id || 'guest'));
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
+  useEffect(() => {
+    try { localStorage.setItem('bafoussam_entreprise_prod_' + (currentUser?.id || 'guest'), JSON.stringify(corpProducts)); } catch {}
+  }, [corpProducts, currentUser?.id]);
+
   const [isProdModalOpen, setIsProdModalOpen] = useState(false);
   const [prodForm, setProdForm] = useState({ name: '', category: 'Industrie', price: '0', stock: '10', ref: 'PRO-01' });
 
-  // 4. CORPORATE SERVICES STATE (Gérer les services)
-  const [corpServices, setCorpServices] = useState([
-    { id: 'cs-1', title: 'Audit & Maintenance Solaire B2B', price: '250 000 FCFA/intervention', category: 'Ingénierie', description: 'Diagnostic complet des installations photovoltaïques.' },
-    { id: 'cs-2', title: 'Infogérance & Réseaux d\'Entreprise', price: '350 000 FCFA/mois', category: 'Informatique', description: 'Supervision réseau, cybersécurité et assistance 24/7.' },
-    { id: 'cs-3', title: 'Transit & Dédouanement Fret Ouest', price: 'Sur Devis', category: 'Logistique', description: 'Transport sécurisé Douala - Bafoussam - Bamenda.' },
-  ]);
+  // 4. CORPORATE SERVICES STATE (Per-user localStorage persistence)
+  const [corpServices, setCorpServices] = useState<any[]>(() => {
+    try {
+      const saved = localStorage.getItem('bafoussam_entreprise_serv_' + (currentUser?.id || 'guest'));
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
+  useEffect(() => {
+    try { localStorage.setItem('bafoussam_entreprise_serv_' + (currentUser?.id || 'guest'), JSON.stringify(corpServices)); } catch {}
+  }, [corpServices, currentUser?.id]);
+
   const [isServModalOpen, setIsServModalOpen] = useState(false);
   const [servForm, setServForm] = useState({ title: '', category: 'Ingénierie', price: '0 FCFA', description: '' });
 
@@ -178,26 +204,46 @@ export default function EntrepriseHomePage({
   const [activeMsgIndex, setActiveMsgIndex] = useState(0);
   const [newMsgText, setNewMsgText] = useState('');
 
-  // 12. PROFILE & CONTACT STATE (Modifier profil entreprise & modifier coordonnées)
-  const [profile, setProfile] = useState({
-    companyName: currentUser?.name || 'West-Cameroon Corporate SA',
-    rccm: 'RC/BAF/2024/B/1402',
-    niu: 'M0518123984A',
-    legalForm: 'Société Anonyme (SA)',
-    industry: 'Énergie, Agro-industrie & Services B2B',
-    capital: '50 000 000 FCFA',
-    description: 'Leader régional de la fourniture d\'équipements solaires, agro-alimentaires et de services d\'ingénierie B2B à Bafoussam et dans la région de l\'Ouest Cameroun.'
+  // 12. PROFILE & CONTACT STATE (Per-user localStorage persistence)
+  const [profile, setProfile] = useState(() => {
+    try {
+      const saved = localStorage.getItem('bafoussam_entreprise_profile_' + (currentUser?.id || 'guest'));
+      if (saved) return JSON.parse(saved);
+    } catch {}
+    return {
+      companyName: currentUser?.name ? `Société ${currentUser.name}` : 'Ma Société Enterprise',
+      rccm: 'En cours d\'enregistrement',
+      niu: 'Non configuré',
+      legalForm: 'SARL / SA',
+      industry: 'Services & Commerce B2B',
+      capital: '10 000 000 FCFA',
+      description: 'Profil entreprise B2B en cours de configuration. Modifiez les informations de votre société !'
+    };
   });
 
-  const [contact, setContact] = useState({
-    address: 'Avenue de l\'Indépendance, Immeuble du Centre',
-    cityQuarter: 'Bafoussam, Tamdja',
-    primaryPhone: '+237 677 89 45 12',
-    secondaryPhone: '+237 699 12 34 56',
-    email: 'contact@westcam-corporate.cm',
-    website: 'https://westcam-corporate.cm',
-    poBox: 'B.P. 408 Bafoussam'
+  useEffect(() => {
+    try { localStorage.setItem('bafoussam_entreprise_profile_' + (currentUser?.id || 'guest'), JSON.stringify(profile)); } catch {}
+  }, [profile, currentUser?.id]);
+
+  const [contact, setContact] = useState(() => {
+    try {
+      const saved = localStorage.getItem('bafoussam_entreprise_contact_' + (currentUser?.id || 'guest'));
+      if (saved) return JSON.parse(saved);
+    } catch {}
+    return {
+      address: currentUser?.neighborhood ? `Quartier ${currentUser.neighborhood}` : 'Bafoussam',
+      cityQuarter: 'Bafoussam',
+      primaryPhone: currentUser?.phone || '',
+      secondaryPhone: '',
+      email: currentUser?.email || '',
+      website: '',
+      poBox: 'B.P. Bafoussam'
+    };
   });
+
+  useEffect(() => {
+    try { localStorage.setItem('bafoussam_entreprise_contact_' + (currentUser?.id || 'guest'), JSON.stringify(contact)); } catch {}
+  }, [contact, currentUser?.id]);
 
   // 13. SUBSCRIPTION STATE (Gérer son abonnement)
   const [subscription, setSubscription] = useState({

@@ -334,41 +334,7 @@ export default function ClientHomePage({
   const [recentBrowsing, setRecentBrowsing] = useState<Product[]>([]);
 
   // Local state for orders (to allow instant cancel, invoice download)
-  const [localOrders, setLocalOrders] = useState<Order[]>(orders.length > 0 ? orders : [
-    {
-      id: 'CMD-8492',
-      userId: 'client-1',
-      userName: 'Paul Kamdem',
-      createdAt: new Date().toISOString(),
-      status: 'delivering',
-      total: 24500,
-      deliveryNeighborhood: 'Tamdja',
-      deliveryDetails: 'près de la Pharmacie Centrale, Bafoussam',
-      paymentMethod: 'momo',
-      paymentPhone: '+237 677 89 45 12',
-      deliveryTimeEstimated: 20,
-      items: [
-        { product: { id: '1', name: 'Poivre Blanc Penja Agréé 500g', price: 4500 } as Product, quantity: 2 },
-        { product: { id: '2', name: 'Huile de Palme Rouge Bio 5L', price: 15500 } as Product, quantity: 1 }
-      ]
-    },
-    {
-      id: 'CMD-7310',
-      userId: 'client-1',
-      userName: 'Paul Kamdem',
-      createdAt: new Date(Date.now() - 86400000 * 3).toISOString(),
-      status: 'pending',
-      total: 12000,
-      deliveryNeighborhood: 'Kamkop',
-      deliveryDetails: 'Portail Bleu',
-      paymentMethod: 'orange',
-      paymentPhone: '+237 699 11 22 33',
-      deliveryTimeEstimated: 35,
-      items: [
-        { product: { id: '3', name: 'Miel Sauvage Ouest Cameroun 1L', price: 12000 } as Product, quantity: 1 }
-      ]
-    }
-  ]);
+  const [localOrders, setLocalOrders] = useState<Order[]>(orders);
 
   // Interactive Modals State
   const [selectedService, setSelectedService] = useState<typeof SERVICES_DATA[0] | null>(null);
@@ -389,10 +355,10 @@ export default function ClientHomePage({
   const [newReviewComment, setNewReviewComment] = useState('');
 
   // Profile Edit State
-  const [profileName, setProfileName] = useState(currentUser?.name || 'Paul Kamdem');
-  const [profilePhone, setProfilePhone] = useState(currentUser?.phone || '+237 677 89 45 12');
-  const [profileQuarter, setProfileQuarter] = useState('Tamdja, Bafoussam');
-  const [profileLandmark, setProfileLandmark] = useState('Face Pharmacie Centrale, Portail Vert');
+  const [profileName, setProfileName] = useState(currentUser?.name || '');
+  const [profilePhone, setProfilePhone] = useState(currentUser?.phone || '');
+  const [profileQuarter, setProfileQuarter] = useState(currentUser?.neighborhood || 'Bafoussam');
+  const [profileLandmark, setProfileLandmark] = useState('');
   const [oldPassword, setOldPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
 
@@ -404,7 +370,7 @@ export default function ClientHomePage({
   const [clientReviews, setClientReviews] = useState(INITIAL_CLIENT_REVIEWS);
 
   // Active delivery detection
-  const activeOrder = localOrders.find(o => o.status === 'delivering' || o.status === 'preparing' || o.status === 'picked_up') || localOrders[0];
+  const activeOrder = localOrders.find(o => o.status === 'delivering' || o.status === 'preparing' || o.status === 'picked_up') || null;
 
   // Auto-slide banner
   useEffect(() => {
