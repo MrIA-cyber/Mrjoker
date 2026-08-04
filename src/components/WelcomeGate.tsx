@@ -337,24 +337,13 @@ export default function WelcomeGate({ onSuccess, lang, onLangChange, initialStep
                   </div>
                 )}
 
-                <div className="pt-2 space-y-2">
+                <div className="pt-2">
                   <button
                     type="submit"
                     className="w-full h-[52px] rounded-2xl text-base font-black bg-gradient-to-r from-[#16A34A] via-[#15803D] to-[#7C3AED] hover:brightness-105 active:scale-[0.98] text-white shadow-md flex items-center justify-center gap-2 transition cursor-pointer"
                   >
                     <span>{lang === 'fr' ? 'Se connecter' : 'Sign in'}</span>
                     <ArrowRight className="w-5 h-5" />
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setValidationError('');
-                      setStep('register');
-                    }}
-                    className="w-full h-[48px] rounded-2xl text-xs font-extrabold bg-slate-100 hover:bg-slate-200 text-slate-700 transition cursor-pointer"
-                  >
-                    {lang === 'fr' ? 'Créer un nouveau compte' : 'Create a new account'}
                   </button>
                 </div>
               </form>

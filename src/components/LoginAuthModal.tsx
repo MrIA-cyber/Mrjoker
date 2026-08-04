@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { User } from '../types';
-import { Lock, X, Eye, EyeOff, ShieldCheck, ArrowRight, AlertCircle, Loader2, RefreshCw } from 'lucide-react';
+import { Lock, X, Eye, EyeOff, ShieldCheck, ArrowRight, AlertCircle, Loader2, RefreshCw, User as UserIcon } from 'lucide-react';
 import { Language, translations } from '../translations';
 import PhoneCountryInput from './PhoneCountryInput';
 import { AfriNovaLogo } from './AfriNovaLogo';
@@ -30,6 +30,7 @@ export default function LoginAuthModal({
   savedUserPhone = '',
   onGoToSignup,
 }: LoginAuthModalProps) {
+  const [activeTab, setActiveTab] = useState<'login' | 'register'>('login');
   const [loginPhone, setLoginPhone] = useState('');
   const [loginPassword, setLoginPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -38,6 +39,7 @@ export default function LoginAuthModal({
 
   useEffect(() => {
     if (isOpen) {
+      setActiveTab('login');
       if (savedUserPhone) {
         setLoginPhone(savedUserPhone);
       }
@@ -123,6 +125,20 @@ export default function LoginAuthModal({
     }
   };
 
+  const handleSwitchTab = (tab: 'login' | 'register') => {
+    setValidationError('');
+    if (tab === 'register') {
+      if (onGoToSignup) {
+        onClose();
+        onGoToSignup();
+      } else {
+        setActiveTab('register');
+      }
+    } else {
+      setActiveTab('login');
+    }
+  };
+
   return (
     <AnimatePresence>
       <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/70 backdrop-blur-md overflow-y-auto">
@@ -144,18 +160,33 @@ export default function LoginAuthModal({
           </div>
 
           <div className="p-6 space-y-5">
-            {/* Title / Status */}
-            <div className="space-y-1 text-center">
-              <h3 className="text-xl font-black text-slate-900 font-display">
-                {isExpiredSession
-                  ? (lang === 'fr' ? 'Session Expirée' : 'Session Expired')
-                  : (lang === 'fr' ? 'Connexion à votre espace' : 'Sign in to your account')}
-              </h3>
-              <p className="text-xs text-slate-500 font-medium">
-                {isExpiredSession
-                  ? (lang === 'fr' ? 'Veuillez ressaisir votre mot de passe pour restaurer votre session et vos travaux.' : 'Please re-enter your password to restore your active workspace.')
-                  : (lang === 'fr' ? 'Entrez vos identifiants pour accéder directement à votre tableau de bord.' : 'Enter your credentials to access your dashboard.')}
-              </p>
+            {/* Tab Selection Switcher */}
+            <div className="flex bg-slate-100 p-1.5 rounded-2xl border border-slate-200/80">
+              <button
+                type="button"
+                onClick={() => handleSwitchTab('login')}
+                className={`flex-1 py-2.5 rounded-xl text-xs sm:text-sm font-extrabold transition-all cursor-pointer flex items-center justify-center gap-2 ${
+                  activeTab === 'login'
+                    ? 'bg-white text-[#0F172A] shadow-xs border border-slate-200/80 font-black'
+                    : 'text-slate-500 hover:text-slate-900'
+                }`}
+              >
+                <Lock className="w-4 h-4 text-[#16A34A]" />
+                <span>{lang === 'fr' ? 'Se connecter' : 'Sign in'}</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => handleSwitchTab('register')}
+                className={`flex-1 py-2.5 rounded-xl text-xs sm:text-sm font-extrabold transition-all cursor-pointer flex items-center justify-center gap-2 ${
+                  activeTab === 'register'
+                    ? 'bg-[#16A34A] text-white shadow-xs font-black'
+                    : 'text-slate-500 hover:text-slate-900'
+                }`}
+              >
+                <UserIcon className="w-4 h-4" />
+                <span>{lang === 'fr' ? "S'inscrire" : 'Sign up'}</span>
+              </button>
             </div>
 
             {/* Expired Session Alert Banner */}
@@ -178,73 +209,100 @@ export default function LoginAuthModal({
               </div>
             )}
 
-            {/* Login Form */}
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div>
-                <PhoneCountryInput
-                  id="modal-login-phone"
-                  label={lang === 'fr' ? 'Numéro de téléphone' : 'Phone Number'}
-                  required
-                  value={loginPhone}
-                  lang={lang}
-                  onChange={(val) => setLoginPhone(val)}
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-extrabold text-slate-700 uppercase mb-1">
-                  {lang === 'fr' ? 'Mot de passe' : 'Password'} <span className="text-red-500">*</span>
-                </label>
-                <div className="relative">
-                  <Lock className="w-5 h-5 text-slate-400 absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none" />
-                  <input
-                    type={showPassword ? 'text' : 'password'}
-                    required
-                    value={loginPassword}
-                    onChange={(e) => setLoginPassword(e.target.value)}
-                    placeholder="••••••••"
-                    className="w-full h-[52px] pl-12 pr-12 bg-slate-50 focus:bg-white border border-slate-200 rounded-2xl text-sm text-[#0F172A] font-semibold focus:outline-none focus:ring-2 focus:ring-[#16A34A]/25 focus:border-[#16A34A] transition"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3.5 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-[#16A34A] cursor-pointer"
-                  >
-                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                  </button>
-                </div>
-              </div>
-
-              <div className="pt-2 space-y-2">
-                <button
-                  type="submit"
-                  disabled={isLoading}
-                  className="w-full h-[52px] rounded-2xl text-base font-black bg-gradient-to-r from-[#16A34A] via-emerald-600 to-indigo-600 hover:brightness-105 active:scale-[0.98] text-white shadow-md flex items-center justify-center gap-2 transition cursor-pointer disabled:opacity-60"
+            <AnimatePresence mode="wait">
+              {activeTab === 'login' ? (
+                <motion.div
+                  key="modal-login-tab"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.2, ease: 'easeOut' }}
+                  className="space-y-4"
                 >
-                  {isLoading ? (
-                    <Loader2 className="w-5 h-5 animate-spin" />
-                  ) : (
-                    <>
-                      <span>{lang === 'fr' ? 'Se connecter' : 'Sign in'}</span>
-                      <ArrowRight className="w-5 h-5" />
-                    </>
-                  )}
-                </button>
+                  <form onSubmit={handleSubmit} className="space-y-4">
+                    <div>
+                      <PhoneCountryInput
+                        id="modal-login-phone"
+                        label={lang === 'fr' ? 'Numéro de téléphone' : 'Phone Number'}
+                        required
+                        value={loginPhone}
+                        lang={lang}
+                        onChange={(val) => setLoginPhone(val)}
+                      />
+                    </div>
 
-                {onGoToSignup && (
+                    <div>
+                      <label className="block text-xs font-extrabold text-slate-700 uppercase mb-1">
+                        {lang === 'fr' ? 'Mot de passe' : 'Password'} <span className="text-red-500">*</span>
+                      </label>
+                      <div className="relative">
+                        <Lock className="w-5 h-5 text-slate-400 absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none" />
+                        <input
+                          type={showPassword ? 'text' : 'password'}
+                          required
+                          value={loginPassword}
+                          onChange={(e) => setLoginPassword(e.target.value)}
+                          placeholder="••••••••"
+                          className="w-full h-[52px] pl-12 pr-12 bg-slate-50 focus:bg-white border border-slate-200 rounded-2xl text-sm text-[#0F172A] font-semibold focus:outline-none focus:ring-2 focus:ring-[#16A34A]/25 focus:border-[#16A34A] transition"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowPassword(!showPassword)}
+                          className="absolute right-3.5 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-[#16A34A] cursor-pointer"
+                        >
+                          {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="pt-2">
+                      <button
+                        type="submit"
+                        disabled={isLoading}
+                        className="w-full h-[52px] rounded-2xl text-base font-black bg-gradient-to-r from-[#16A34A] via-emerald-600 to-indigo-600 hover:brightness-105 active:scale-[0.98] text-white shadow-md flex items-center justify-center gap-2 transition cursor-pointer disabled:opacity-60"
+                      >
+                        {isLoading ? (
+                          <Loader2 className="w-5 h-5 animate-spin" />
+                        ) : (
+                          <>
+                            <span>{lang === 'fr' ? 'Se connecter' : 'Sign in'}</span>
+                            <ArrowRight className="w-5 h-5" />
+                          </>
+                        )}
+                      </button>
+                    </div>
+                  </form>
+                </motion.div>
+              ) : (
+                <motion.div
+                  key="modal-register-tab"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.2, ease: 'easeOut' }}
+                  className="space-y-4 text-center py-4"
+                >
+                  <p className="text-xs text-slate-600 font-semibold">
+                    {lang === 'fr'
+                      ? 'Rejoignez la communauté AfriNova et profitez de tous nos services.'
+                      : 'Join the AfriNova community and access all features.'}
+                  </p>
                   <button
                     type="button"
                     onClick={() => {
-                      onClose();
-                      onGoToSignup();
+                      if (onGoToSignup) {
+                        onClose();
+                        onGoToSignup();
+                      }
                     }}
-                    className="w-full h-[46px] rounded-2xl text-xs font-extrabold bg-slate-100 hover:bg-slate-200 text-slate-700 transition cursor-pointer"
+                    className="w-full h-[52px] rounded-2xl text-base font-black bg-gradient-to-r from-[#16A34A] via-emerald-600 to-indigo-600 hover:brightness-105 active:scale-[0.98] text-white shadow-md flex items-center justify-center gap-2 transition cursor-pointer"
                   >
-                    {lang === 'fr' ? 'Créer un nouveau compte' : 'Create a new account'}
+                    <span>{lang === 'fr' ? 'Créer mon compte' : 'Create my account'}</span>
+                    <ArrowRight className="w-5 h-5" />
                   </button>
-                )}
-              </div>
-            </form>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
 
           <div className="px-6 py-3 bg-slate-50 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-400 font-semibold">

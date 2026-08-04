@@ -178,15 +178,18 @@ export default function SplashScreen({
   // Fluid transition (280ms exit) as soon as loading reaches 100%
   useEffect(() => {
     if (isLoaded && autoComplete && onComplete) {
+      let finishTimer: any = null;
       const exitTimer = setTimeout(() => {
         setIsExiting(true); // Smooth 280ms Fade + Scale transition
-        const finishTimer = setTimeout(() => {
+        finishTimer = setTimeout(() => {
           onComplete();
         }, 280);
-        return () => clearTimeout(finishTimer);
       }, 80);
 
-      return () => clearTimeout(exitTimer);
+      return () => {
+        clearTimeout(exitTimer);
+        if (finishTimer) clearTimeout(finishTimer);
+      };
     }
   }, [isLoaded, autoComplete, onComplete]);
 
