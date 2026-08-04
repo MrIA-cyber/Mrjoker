@@ -14,21 +14,23 @@ import StoreHeader from './components/StoreHeader';
 import ProductCard from './components/ProductCard';
 import ProductDetailsModal from './components/ProductDetailsModal';
 import CartDrawer from './components/CartDrawer';
-import MerchantDashboard from './components/MerchantDashboard';
 import DeliveryTracker from './components/DeliveryTracker';
 import CityNews from './components/CityNews';
 import BestMerchantWidget from './components/BestMerchantWidget';
-import AdminPanel from './components/AdminPanel';
 import SmartRecommendationBanner from './components/SmartRecommendationBanner';
-import SubscriptionExpiredScreen from './components/SubscriptionExpiredScreen';
-import PremiumSubscriptionScreen from './components/PremiumSubscriptionScreen';
 import SubscriptionNotificationBanner from './components/SubscriptionNotificationBanner';
 import SupportPhoneNumber from './components/SupportPhoneNumber';
 import RestrictedAuthModal from './components/RestrictedAuthModal';
 import SplashScreen from './components/SplashScreen';
 import BafoussamMarketHomePage from './components/BafoussamMarketHomePage';
-import AddProductModal from './components/AddProductModal';
 import Screen2Onboarding from './components/screens/Screen2Onboarding';
+
+// Lazy loading heavy view components for optimal bundle splitting and performance
+const MerchantDashboard = React.lazy(() => import('./components/MerchantDashboard'));
+const AdminPanel = React.lazy(() => import('./components/AdminPanel'));
+const SubscriptionExpiredScreen = React.lazy(() => import('./components/SubscriptionExpiredScreen'));
+const PremiumSubscriptionScreen = React.lazy(() => import('./components/PremiumSubscriptionScreen'));
+const AddProductModal = React.lazy(() => import('./components/AddProductModal'));
 import Screen3Connexion from './components/screens/Screen3Connexion';
 import Screen4Inscription from './components/screens/Screen4Inscription';
 import Screen5TypeCompte from './components/screens/Screen5TypeCompte';
@@ -1397,21 +1399,28 @@ export default function App() {
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
               >
-                <MerchantDashboard
-                  currentUser={currentUser}
-                  products={products}
-                  merchants={merchants}
-                  orders={orders}
-                  onUpdateOrderStatus={handleUpdateOrderStatus}
-                  onAddProduct={handleAddProductAsMerchant}
-                  onDeleteProduct={handleDeleteProductAsMerchant}
-                  onUpgradeMerchant={handleUpgradeMerchantToPremium}
-                  onRegisterMerchant={(newMerchant) => setMerchants((prev) => [...prev, newMerchant])}
-                  onSimulateMerchantExpiration={handleSimulateMerchantExpiration}
-                  onBoostProduct={handleBoostProduct}
-                  onSwitchToClientSpace={() => setActiveView('shop')}
-                  lang={lang}
-                />
+                <React.Suspense fallback={
+                  <div className="w-full min-h-[60vh] flex flex-col items-center justify-center p-8 space-y-3">
+                    <div className="w-10 h-10 border-4 border-[#16A34A] border-t-transparent rounded-full animate-spin" />
+                    <p className="text-xs font-bold text-slate-500">Chargement de l'espace boutique...</p>
+                  </div>
+                }>
+                  <MerchantDashboard
+                    currentUser={currentUser}
+                    products={products}
+                    merchants={merchants}
+                    orders={orders}
+                    onUpdateOrderStatus={handleUpdateOrderStatus}
+                    onAddProduct={handleAddProductAsMerchant}
+                    onDeleteProduct={handleDeleteProductAsMerchant}
+                    onUpgradeMerchant={handleUpgradeMerchantToPremium}
+                    onRegisterMerchant={(newMerchant) => setMerchants((prev) => [...prev, newMerchant])}
+                    onSimulateMerchantExpiration={handleSimulateMerchantExpiration}
+                    onBoostProduct={handleBoostProduct}
+                    onSwitchToClientSpace={() => setActiveView('shop')}
+                    lang={lang}
+                  />
+                </React.Suspense>
               </motion.div>
             </ProtectedRoute>
           )}
@@ -1472,24 +1481,31 @@ export default function App() {
               exit={{ opacity: 0 }}
             >
               {currentUser?.accountType === 'admin' || isAdminUnlocked ? (
-                <AdminPanel
-                  onClose={() => {
-                    setIsAdminUnlocked(false);
-                    localStorage.setItem('bafoussam_admin_unlocked', 'false');
-                    setActiveView('shop');
-                    localStorage.setItem('bafoussam_active_view', 'shop');
-                  }}
-                  merchants={merchants}
-                  products={products}
-                  onUpdateMerchants={setMerchants}
-                  onUpdateProducts={setProducts}
-                  currentUser={currentUser}
-                  onLogout={handleLogout}
-                  onUpdateCurrentUser={setCurrentUser}
-                  orders={orders}
-                  onUpdateOrders={setOrders}
-                  lang={lang}
-                />
+                <React.Suspense fallback={
+                  <div className="w-full min-h-[60vh] flex flex-col items-center justify-center p-8 space-y-3">
+                    <div className="w-10 h-10 border-4 border-[#7C3AED] border-t-transparent rounded-full animate-spin" />
+                    <p className="text-xs font-bold text-slate-500">Chargement de la console d'administration...</p>
+                  </div>
+                }>
+                  <AdminPanel
+                    onClose={() => {
+                      setIsAdminUnlocked(false);
+                      localStorage.setItem('bafoussam_admin_unlocked', 'false');
+                      setActiveView('shop');
+                      localStorage.setItem('bafoussam_active_view', 'shop');
+                    }}
+                    merchants={merchants}
+                    products={products}
+                    onUpdateMerchants={setMerchants}
+                    onUpdateProducts={setProducts}
+                    currentUser={currentUser}
+                    onLogout={handleLogout}
+                    onUpdateCurrentUser={setCurrentUser}
+                    orders={orders}
+                    onUpdateOrders={setOrders}
+                    lang={lang}
+                  />
+                </React.Suspense>
               ) : (
                 <div className="max-w-md mx-auto my-16 bg-white dark:bg-slate-900 rounded-3xl border border-red-200 dark:border-red-900 shadow-2xl p-8 text-center space-y-6 relative overflow-hidden" id="admin-lock-screen">
                   <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-red-500 via-rose-500 to-red-600"></div>

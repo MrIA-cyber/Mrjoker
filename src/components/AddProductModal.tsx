@@ -270,7 +270,7 @@ export default function AddProductModal({
   const previewProduct = buildProductObject(false);
 
   return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center p-2 sm:p-4 bg-slate-950/80 backdrop-blur-md font-sans overflow-hidden animate-fade-in">
+    <div className="fixed inset-0 z-[60] flex items-center justify-center p-2 sm:p-4 bg-slate-950/80 backdrop-blur-md font-sans overflow-hidden animate-fade-in" role="dialog" aria-modal="true" aria-labelledby="add-product-modal-title">
       <div className="bg-white dark:bg-slate-900 w-full max-w-5xl h-full sm:h-[94vh] sm:rounded-3xl shadow-2xl border border-slate-200 dark:border-slate-800 flex flex-col relative overflow-hidden transition-colors duration-200">
         
         {/* TOP HEADER BAR */}
@@ -280,7 +280,7 @@ export default function AddProductModal({
               <Package className="w-5 h-5" />
             </div>
             <div>
-              <h2 className="font-black text-lg text-slate-900 dark:text-white leading-tight">
+              <h2 id="add-product-modal-title" className="font-black text-lg text-slate-900 dark:text-white leading-tight">
                 {existingProduct ? (isFr ? 'Modifier le Produit' : 'Edit Product') : (isFr ? 'Ajouter un Nouveau Produit' : 'Add New Product')}
               </h2>
               <p className="text-xs text-slate-500 font-medium">
@@ -301,6 +301,7 @@ export default function AddProductModal({
 
             <button
               onClick={onClose}
+              aria-label={isFr ? 'Fermer la fenêtre d\'ajout de produit' : 'Close add product modal'}
               className="p-2 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-full text-slate-500 transition cursor-pointer"
             >
               <X className="w-5 h-5" />

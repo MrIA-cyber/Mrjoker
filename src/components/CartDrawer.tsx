@@ -124,7 +124,7 @@ export default function CartDrawer({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex justify-end font-sans" id="cart-drawer-container">
+    <div className="fixed inset-0 z-50 flex justify-end font-sans" id="cart-drawer-container" role="dialog" aria-modal="true" aria-labelledby="cart-drawer-title">
       {/* Backdrop */}
       <div className="absolute inset-0 bg-slate-900/60" onClick={onClose} />
 
@@ -135,13 +135,14 @@ export default function CartDrawer({
         <div className="p-5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <span className="text-xl">🛒</span>
-            <h3 className="font-bold text-slate-900 dark:text-white text-lg">{lang === 'fr' ? 'Votre Panier' : 'Your Cart'}</h3>
+            <h3 id="cart-drawer-title" className="font-bold text-slate-900 dark:text-white text-lg">{lang === 'fr' ? 'Votre Panier' : 'Your Cart'}</h3>
             <span className="bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-bold text-xs px-2 py-0.5 rounded-full">
               {items.length}
             </span>
           </div>
           <button
             onClick={onClose}
+            aria-label={lang === 'fr' ? 'Fermer le panier' : 'Close cart'}
             className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full text-slate-600 dark:text-slate-300 cursor-pointer transition animate-hover"
           >
             <X className="w-5 h-5" />

@@ -140,6 +140,7 @@ export default function ChatModal({
 
             <button
               onClick={onClose}
+              aria-label="Fermer la fenêtre de discussion"
               className="p-2 text-slate-300 hover:text-white bg-white/10 hover:bg-white/20 rounded-xl transition cursor-pointer"
               title="Fermer"
             >

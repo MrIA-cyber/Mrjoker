@@ -287,6 +287,9 @@ export default function ProductDetailsModal({
     <div 
       className="fixed inset-0 z-50 flex items-center justify-center p-0 md:p-4 bg-slate-950/75 backdrop-blur-md font-sans overflow-hidden animate-fade-in" 
       id="product-details-modal-overlay"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="product-details-modal-name"
     >
       <div 
         className="bg-white dark:bg-slate-900 w-full max-w-6xl h-full md:h-[92vh] md:rounded-3xl shadow-2xl border border-slate-100 dark:border-slate-800 flex flex-col relative overflow-hidden transition-colors duration-200"
@@ -298,7 +301,7 @@ export default function ProductDetailsModal({
               {product.category}
             </span>
             <span className="text-slate-300 dark:text-slate-700 hidden sm:inline">•</span>
-            <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 truncate hidden sm:inline">
+            <span id="product-details-modal-name" className="text-xs font-semibold text-slate-500 dark:text-slate-400 truncate hidden sm:inline">
               {product.name}
             </span>
           </div>
@@ -307,6 +310,7 @@ export default function ProductDetailsModal({
             {/* Wishlist Heart button */}
             <button
               onClick={handleToggleWishlist}
+              aria-label={isWishlisted ? (isFr ? 'Retirer des favoris' : 'Remove from wishlist') : (isFr ? 'Ajouter aux favoris' : 'Add to wishlist')}
               className={`p-2.5 rounded-full transition cursor-pointer flex items-center justify-center ${
                 isWishlisted 
                   ? 'bg-rose-50 text-rose-500 dark:bg-rose-950/60 dark:text-rose-400' 
@@ -320,6 +324,7 @@ export default function ProductDetailsModal({
             {/* Share button */}
             <button
               onClick={handleShare}
+              aria-label={isFr ? 'Partager le produit' : 'Share product'}
               className="p-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 rounded-full cursor-pointer transition flex items-center justify-center"
               title={isFr ? 'Partager le produit' : 'Share product'}
             >
@@ -329,6 +334,7 @@ export default function ProductDetailsModal({
             {/* Close modal button */}
             <button
               onClick={onClose}
+              aria-label={isFr ? 'Fermer les détails du produit' : 'Close product details'}
               className="p-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 rounded-full cursor-pointer transition flex items-center justify-center"
               id="btn-close-details-modal"
             >

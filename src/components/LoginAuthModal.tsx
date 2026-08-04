@@ -148,11 +148,17 @@ export default function LoginAuthModal({
           exit={{ opacity: 0, scale: 0.95, y: 15 }}
           className="w-full max-w-md max-h-[90vh] overflow-y-auto bg-white rounded-2xl sm:rounded-3xl shadow-2xl border border-slate-200 relative my-auto"
         >
-          {/* Header Bar */}
-          <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 bg-slate-50/80">
+          <div 
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="modal-login-title"
+            className="flex items-center justify-between px-6 py-4 border-b border-slate-100 bg-slate-50/80"
+          >
             <AfriNovaLogo size="sm" showSlogan={false} lang={lang} />
             <button
+              type="button"
               onClick={onClose}
+              aria-label={lang === 'fr' ? 'Fermer la fenêtre de connexion' : 'Close login modal'}
               className="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-200/60 rounded-full transition cursor-pointer"
             >
               <X className="w-5 h-5" />
@@ -248,6 +254,7 @@ export default function LoginAuthModal({
                         <button
                           type="button"
                           onClick={() => setShowPassword(!showPassword)}
+                          aria-label={showPassword ? (lang === 'fr' ? 'Masquer le mot de passe' : 'Hide password') : (lang === 'fr' ? 'Afficher le mot de passe' : 'Show password')}
                           className="absolute right-3.5 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-[#16A34A] cursor-pointer"
                         >
                           {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
