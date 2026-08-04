@@ -223,7 +223,7 @@ export const PhoneCountryInput: React.FC<PhoneCountryInputProps> = ({
           type="button"
           disabled={disabled}
           onClick={() => setIsModalOpen(true)}
-          className="h-[46px] sm:h-[48px] pl-3 pr-2 sm:pl-3.5 sm:pr-2.5 flex items-center gap-1 sm:gap-1.5 text-xs font-extrabold text-[#0F172A] hover:bg-slate-100/80 rounded-l-2xl border-r border-slate-200 transition cursor-pointer shrink-0 select-none group"
+          className="h-[48px] pl-3 pr-2 sm:pl-3.5 sm:pr-2.5 flex items-center gap-1 sm:gap-1.5 text-xs font-extrabold text-[#0F172A] hover:bg-slate-100/80 rounded-l-2xl border-r border-slate-200 transition cursor-pointer shrink-0 select-none group"
           title={lang === 'fr' ? 'Changer de pays' : 'Change country'}
         >
           <span className="text-lg sm:text-xl leading-none transition-transform group-hover:scale-110 shrink-0">
@@ -250,7 +250,7 @@ export const PhoneCountryInput: React.FC<PhoneCountryInputProps> = ({
             }}
             onChange={handleDigitChange}
             placeholder={placeholder || selectedCountry.placeholder}
-            className="w-full h-[46px] sm:h-[48px] px-2.5 sm:px-3.5 bg-transparent text-sm sm:text-base font-mono font-extrabold text-[#0F172A] placeholder:text-slate-400 focus:outline-none min-w-0 truncate"
+            className="w-full h-[48px] px-2.5 sm:px-3.5 bg-transparent text-sm sm:text-base font-mono font-extrabold text-[#0F172A] placeholder:text-slate-400 focus:outline-none min-w-0 truncate"
           />
 
           {/* Status Checkmark / Alert */}

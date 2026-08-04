@@ -650,51 +650,51 @@ export default function MerchantDashboard({
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 font-sans text-[#0F172A]" id="merchant-portal-container">
+    <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-3 sm:py-4 font-sans text-[#0F172A]" id="merchant-portal-container">
       
       {/* ========================================================= */}
       {/* CONNECTED MERCHANT TABLEAU DE BORD PRO                    */}
       {/* ========================================================= */}
-      <div className="space-y-6">
+      <div className="space-y-3 sm:space-y-4">
 
         {/* --------------------------------------------------------- */}
         {/* HEADER: STORE IDENTITY & SINGLE MAIN STATUS               */}
         {/* --------------------------------------------------------- */}
-        <div className="bg-white/98 backdrop-blur-md text-slate-900 rounded-3xl p-5 sm:p-6 border border-slate-200/90 shadow-sm space-y-4 relative overflow-hidden">
-          <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-[#16A34A] via-[#15803D] to-[#7C3AED]"></div>
+        <div className="bg-white/98 backdrop-blur-md text-slate-900 rounded-2xl sm:rounded-3xl p-3.5 sm:p-4 border border-slate-200/90 shadow-2xs space-y-2.5 relative overflow-hidden">
+          <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#16A34A] via-[#15803D] to-[#7C3AED]"></div>
           
-          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
             
             {/* Left: Logo, Store Details & Single Main Status Badge */}
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-3">
               <div className="relative shrink-0">
-                <div className="w-14 h-14 sm:w-16 sm:h-16 bg-gradient-to-br from-[#16A34A] to-[#7C3AED] text-white rounded-2xl flex items-center justify-center font-black text-xl sm:text-2xl shadow-sm border border-emerald-300/40">
+                <div className="w-11 h-11 sm:w-12 sm:h-12 bg-gradient-to-br from-[#16A34A] to-[#7C3AED] text-white rounded-xl sm:rounded-2xl flex items-center justify-center font-black text-lg sm:text-xl shadow-2xs border border-emerald-300/40">
                   {activeMerchant?.logo || 'MB'}
                 </div>
                 {activeMerchant?.shopPhoto && (
                   <img
                     src={activeMerchant.shopPhoto}
                     alt={activeMerchant.shopName}
-                    className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl object-cover absolute inset-0 border-2 border-white shadow-sm"
+                    className="w-11 h-11 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl object-cover absolute inset-0 border-2 border-white shadow-2xs"
                   />
                 )}
               </div>
 
-              <div className="space-y-1">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <span className="bg-emerald-100 text-[#16A34A] border border-emerald-300/80 font-black text-[10px] uppercase tracking-wider px-2.5 py-0.5 rounded-full flex items-center gap-1">
+              <div className="space-y-0.5">
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  <span className="bg-emerald-100 text-[#16A34A] border border-emerald-300/80 font-black text-[9.5px] uppercase tracking-wider px-2 py-0.5 rounded-full flex items-center gap-1">
                     <Store className="w-3 h-3 text-[#16A34A]" /> Seller Center
                   </span>
-                  <h1 className="text-lg sm:text-xl font-black text-[#0F172A] tracking-tight">
+                  <h1 className="text-base sm:text-lg font-black text-[#0F172A] tracking-tight">
                     {activeMerchant?.shopName || 'Boutique Royale Bafoussam'}
                   </h1>
                   <VerifiedBadge size="sm" />
 
                   {/* Single Main Shop Status Toggle */}
-                  <div className="relative inline-flex items-center bg-slate-100 p-1 rounded-full border border-slate-200 ml-1">
+                  <div className="relative inline-flex items-center bg-slate-100 p-0.5 rounded-full border border-slate-200 ml-1">
                     <button
                       onClick={() => setShopStatus('open')}
-                      className={`px-2.5 py-0.5 rounded-full text-[11px] font-black transition cursor-pointer flex items-center gap-1 ${
+                      className={`px-2 py-0.5 rounded-full text-[10.5px] font-black transition cursor-pointer flex items-center gap-1 min-h-[30px] sm:min-h-[32px] ${
                         shopStatus === 'open' ? 'bg-[#16A34A] text-white shadow-3xs' : 'text-slate-600 hover:text-slate-900'
                       }`}
                     >
@@ -703,7 +703,7 @@ export default function MerchantDashboard({
                     </button>
                     <button
                       onClick={() => setShopStatus('paused')}
-                      className={`px-2.5 py-0.5 rounded-full text-[11px] font-black transition cursor-pointer flex items-center gap-1 ${
+                      className={`px-2 py-0.5 rounded-full text-[10.5px] font-black transition cursor-pointer flex items-center gap-1 min-h-[30px] sm:min-h-[32px] ${
                         shopStatus === 'paused' ? 'bg-amber-500 text-slate-950 shadow-3xs' : 'text-slate-600 hover:text-slate-900'
                       }`}
                     >
@@ -711,7 +711,7 @@ export default function MerchantDashboard({
                     </button>
                     <button
                       onClick={() => setShopStatus('closed')}
-                      className={`px-2.5 py-0.5 rounded-full text-[11px] font-black transition cursor-pointer flex items-center gap-1 ${
+                      className={`px-2 py-0.5 rounded-full text-[10.5px] font-black transition cursor-pointer flex items-center gap-1 min-h-[30px] sm:min-h-[32px] ${
                         shopStatus === 'closed' ? 'bg-rose-600 text-white shadow-3xs' : 'text-slate-600 hover:text-slate-900'
                       }`}
                     >
@@ -720,7 +720,7 @@ export default function MerchantDashboard({
                   </div>
                 </div>
 
-                <div className="flex items-center gap-2 text-xs text-slate-500 flex-wrap">
+                <div className="flex items-center gap-1.5 text-[11px] text-slate-500 flex-wrap">
                   <span className="flex items-center gap-1 font-semibold text-slate-700">
                     <Users className="w-3.5 h-3.5 text-[#16A34A]" /> {activeMerchant?.name}
                   </span>
@@ -737,10 +737,10 @@ export default function MerchantDashboard({
             </div>
 
             {/* Right: Header Primary Actions & Menu Plus */}
-            <div className="flex items-center gap-2 flex-wrap shrink-0">
+            <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap shrink-0">
               <button
                 onClick={() => setShowAddProductModal(true)}
-                className="bg-gradient-to-r from-[#16A34A] to-[#15803D] hover:from-[#15803D] hover:to-[#166534] text-white font-black text-xs py-2 px-4 rounded-xl shadow-xs transition flex items-center gap-1.5 cursor-pointer active:scale-98 min-h-[40px]"
+                className="bg-gradient-to-r from-[#16A34A] to-[#15803D] hover:from-[#15803D] hover:to-[#166534] text-white font-black text-xs py-1.5 px-3.5 rounded-xl shadow-2xs transition flex items-center justify-center gap-1.5 cursor-pointer active:scale-98 min-h-[48px]"
               >
                 <Plus className="w-4 h-4 stroke-[3]" />
                 <span>+ Nouveau produit</span>
@@ -748,7 +748,7 @@ export default function MerchantDashboard({
 
               <button
                 onClick={() => setDashboardTab('reviews')}
-                className="bg-amber-50 hover:bg-amber-100/80 text-amber-900 border border-amber-200 font-extrabold text-xs py-2 px-3 rounded-xl transition flex items-center gap-1.5 cursor-pointer min-h-[40px]"
+                className="bg-amber-50 hover:bg-amber-100/80 text-amber-900 border border-amber-200 font-extrabold text-xs py-1.5 px-3 rounded-xl transition flex items-center justify-center gap-1.5 cursor-pointer min-h-[48px]"
               >
                 <Star className="w-3.5 h-3.5 fill-amber-500 text-amber-500" />
                 <span>Avis ({reviews.length})</span>
@@ -757,7 +757,7 @@ export default function MerchantDashboard({
               {onSwitchToClientSpace && (
                 <button
                   onClick={onSwitchToClientSpace}
-                  className="bg-slate-100 hover:bg-slate-200 text-slate-800 font-extrabold text-xs py-2 px-3 rounded-xl border border-slate-200 transition flex items-center gap-1.5 cursor-pointer min-h-[40px]"
+                  className="bg-slate-100 hover:bg-slate-200 text-slate-800 font-extrabold text-xs py-1.5 px-3 rounded-xl border border-slate-200 transition flex items-center justify-center gap-1.5 cursor-pointer min-h-[48px]"
                 >
                   <Eye className="w-3.5 h-3.5 text-slate-600" />
                   <span>Vitrine</span>
@@ -768,7 +768,7 @@ export default function MerchantDashboard({
               <div className="relative">
                 <button
                   onClick={() => setShowMoreMenu(!showMoreMenu)}
-                  className="bg-purple-50 hover:bg-purple-100 text-[#7C3AED] border border-purple-200 font-extrabold text-xs py-2 px-3 rounded-xl transition flex items-center gap-1 cursor-pointer min-h-[40px]"
+                  className="bg-purple-50 hover:bg-purple-100 text-[#7C3AED] border border-purple-200 font-extrabold text-xs py-1.5 px-3 rounded-xl transition flex items-center justify-center gap-1 cursor-pointer min-h-[48px]"
                 >
                   <Settings className="w-3.5 h-3.5" />
                   <span>Plus ▾</span>
@@ -824,13 +824,13 @@ export default function MerchantDashboard({
         {/* --------------------------------------------------------- */}
         {/* MAIN NAVIGATION TAB BAR (UNIFIED STYLING)                 */}
         {/* --------------------------------------------------------- */}
-        <div className="bg-white/98 backdrop-blur-md rounded-2xl p-2 border border-slate-200/90 shadow-2xs flex items-center justify-between gap-1 overflow-x-auto no-scrollbar">
+        <div className="bg-white/98 backdrop-blur-md rounded-xl sm:rounded-2xl p-1 sm:p-1.5 border border-slate-200/90 shadow-3xs flex items-center justify-between gap-1 overflow-x-auto no-scrollbar">
           <div className="flex items-center gap-1 min-w-max">
             
             {/* Vue Générale */}
             <button
               onClick={() => setDashboardTab('overview')}
-              className={`px-4 py-2 rounded-xl text-xs font-extrabold transition cursor-pointer flex items-center gap-1.5 ${
+              className={`px-3 py-1.5 rounded-lg text-xs font-extrabold transition cursor-pointer flex items-center gap-1.5 min-h-[38px] ${
                 dashboardTab === 'overview'
                   ? 'bg-[#16A34A] text-white shadow-xs'
                   : 'text-slate-700 hover:bg-slate-100'
@@ -842,7 +842,7 @@ export default function MerchantDashboard({
             {/* Produits */}
             <button
               onClick={() => setDashboardTab('products')}
-              className={`px-4 py-2 rounded-xl text-xs font-extrabold transition cursor-pointer flex items-center gap-1.5 ${
+              className={`px-3 py-1.5 rounded-lg text-xs font-extrabold transition cursor-pointer flex items-center gap-1.5 min-h-[38px] ${
                 dashboardTab === 'products'
                   ? 'bg-[#16A34A] text-white shadow-xs'
                   : 'text-slate-700 hover:bg-slate-100'
@@ -854,7 +854,7 @@ export default function MerchantDashboard({
             {/* Commandes */}
             <button
               onClick={() => setDashboardTab('orders')}
-              className={`px-4 py-2 rounded-xl text-xs font-extrabold transition cursor-pointer flex items-center gap-1.5 relative ${
+              className={`px-3 py-1.5 rounded-lg text-xs font-extrabold transition cursor-pointer flex items-center gap-1.5 relative min-h-[38px] ${
                 dashboardTab === 'orders'
                   ? 'bg-[#16A34A] text-white shadow-xs'
                   : 'text-slate-700 hover:bg-slate-100'
@@ -871,7 +871,7 @@ export default function MerchantDashboard({
             {/* Finances */}
             <button
               onClick={() => setDashboardTab('payments')}
-              className={`px-4 py-2 rounded-xl text-xs font-extrabold transition cursor-pointer flex items-center gap-1.5 ${
+              className={`px-3 py-1.5 rounded-lg text-xs font-extrabold transition cursor-pointer flex items-center gap-1.5 min-h-[38px] ${
                 dashboardTab === 'payments'
                   ? 'bg-[#16A34A] text-white shadow-xs'
                   : 'text-slate-700 hover:bg-slate-100'
@@ -883,7 +883,7 @@ export default function MerchantDashboard({
             {/* Avis & Messages */}
             <button
               onClick={() => setDashboardTab('messages')}
-              className={`px-4 py-2 rounded-xl text-xs font-extrabold transition cursor-pointer flex items-center gap-1.5 ${
+              className={`px-3 py-1.5 rounded-lg text-xs font-extrabold transition cursor-pointer flex items-center gap-1.5 min-h-[38px] ${
                 dashboardTab === 'messages' || dashboardTab === 'reviews'
                   ? 'bg-[#16A34A] text-white shadow-xs'
                   : 'text-slate-700 hover:bg-slate-100'
@@ -895,7 +895,7 @@ export default function MerchantDashboard({
             {/* Statistiques */}
             <button
               onClick={() => setDashboardTab('stats')}
-              className={`px-4 py-2 rounded-xl text-xs font-extrabold transition cursor-pointer flex items-center gap-1.5 ${
+              className={`px-3 py-1.5 rounded-lg text-xs font-extrabold transition cursor-pointer flex items-center gap-1.5 min-h-[38px] ${
                 dashboardTab === 'stats'
                   ? 'bg-[#16A34A] text-white shadow-xs'
                   : 'text-slate-700 hover:bg-slate-100'
@@ -911,19 +911,19 @@ export default function MerchantDashboard({
         {/* OVERVIEW TAB (REDEFINED ESSENTIALS & ADVANCED WIDGETS)    */}
         {/* --------------------------------------------------------- */}
         {dashboardTab === 'overview' && (
-          <div className="space-y-6">
+          <div className="space-y-3.5 sm:space-y-4">
 
             {/* 1. ESSENTIAL 6 STATS CARDS & "VOIR TOUTES LES STATISTIQUES" */}
-            <div className="bg-white/98 rounded-3xl p-5 border border-slate-200/90 shadow-sm space-y-4">
+            <div className="bg-white/98 rounded-2xl sm:rounded-3xl p-3.5 sm:p-4 border border-slate-200/90 shadow-2xs space-y-2.5">
               <div className="flex items-center justify-between">
-                <h3 className="font-extrabold text-slate-900 text-xs uppercase tracking-wider flex items-center gap-2">
+                <h3 className="font-extrabold text-slate-900 text-xs uppercase tracking-wider flex items-center gap-1.5">
                   <BarChart3 className="w-4 h-4 text-[#16A34A]" /> Indicateurs Clés de Vente
                 </h3>
                 
                 {/* Button: Voir toutes les statistiques */}
                 <button
                   onClick={() => setDashboardTab('stats')}
-                  className="bg-emerald-50 hover:bg-emerald-100 text-[#16A34A] border border-emerald-200/80 font-black text-xs py-1.5 px-3 rounded-xl transition flex items-center gap-1 cursor-pointer"
+                  className="bg-emerald-50 hover:bg-emerald-100 text-[#16A34A] border border-emerald-200/80 font-black text-[11px] py-1 px-2.5 rounded-xl transition flex items-center gap-1 cursor-pointer"
                 >
                   <span>Voir toutes les statistiques</span>
                   <ArrowRight className="w-3.5 h-3.5" />
@@ -931,27 +931,27 @@ export default function MerchantDashboard({
               </div>
 
               {/* Firestore & Local Cache Fast-Load Status Banner */}
-              <div className="bg-gradient-to-r from-emerald-950 via-slate-900 to-emerald-950 text-white rounded-2xl p-3 border border-emerald-500/30 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 text-xs shadow-md">
+              <div className="bg-gradient-to-r from-emerald-950 via-slate-900 to-emerald-950 text-white rounded-xl sm:rounded-2xl p-2 sm:p-2.5 border border-emerald-500/30 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 text-xs shadow-2xs">
                 <div className="flex items-center gap-2">
-                  <span className="relative flex h-2.5 w-2.5 shrink-0">
+                  <span className="relative flex h-2 w-2 shrink-0">
                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                    <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
                   </span>
                   <div>
                     <div className="flex items-center gap-1.5 font-black flex-wrap">
-                      <span className="text-emerald-400">⚡ Mode Instant-Load Actif</span>
-                      <span className="bg-emerald-500/20 text-emerald-300 text-[10px] px-2 py-0.5 rounded-full border border-emerald-500/30 font-bold">
+                      <span className="text-emerald-400 text-xs">⚡ Mode Instant-Load Actif</span>
+                      <span className="bg-emerald-500/20 text-emerald-300 text-[9.5px] px-2 py-0.2 rounded-full border border-emerald-500/30 font-bold">
                         Cache Firestore Local (0ms)
                       </span>
                     </div>
-                    <p className="text-[11px] text-slate-300 mt-0.5">
-                      Vos indicateurs clés sont restaurés instantanément depuis le cache local et synchronisés en arrière-plan via Firestore.
+                    <p className="text-[10.5px] text-slate-300 mt-0.5 leading-tight">
+                      Vos indicateurs sont restaurés instantanément depuis le cache local et synchronisés via Firestore.
                     </p>
                   </div>
                 </div>
 
                 {cachedStats?.lastUpdated && (
-                  <div className="text-[10px] font-mono font-bold text-emerald-300 bg-white/10 px-2.5 py-1 rounded-xl border border-white/10 shrink-0 flex items-center gap-1">
+                  <div className="text-[10px] font-mono font-bold text-emerald-300 bg-white/10 px-2 py-0.5 rounded-lg border border-white/10 shrink-0 flex items-center gap-1">
                     <Clock className="w-3 h-3 text-emerald-400" />
                     <span>Synchro: {new Date(cachedStats.lastUpdated).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}</span>
                   </div>
@@ -959,133 +959,133 @@ export default function MerchantDashboard({
               </div>
 
               {/* 6 Essential Cards Grid */}
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 sm:gap-2.5">
                 
                 {/* 1. CA (Revenue) */}
-                <div onClick={() => setDashboardTab('payments')} className="afrinova-card p-3.5 transition cursor-pointer hover:border-emerald-300">
-                  <span className="text-[10px] font-black uppercase text-slate-500 dark:text-slate-400 block">Chiffre d'Affaires</span>
-                  <span className="text-base font-black text-[#0F172A] dark:text-[#34D399] block mt-1">{(monthlySalesTotal).toLocaleString('fr-FR')} F</span>
-                  <span className="text-[10px] font-bold text-emerald-700 dark:text-emerald-400 block mt-0.5">
+                <div onClick={() => setDashboardTab('payments')} className="afrinova-card p-2.5 sm:p-3 transition cursor-pointer hover:border-emerald-300">
+                  <span className="text-[9.5px] sm:text-[10px] font-black uppercase text-slate-500 dark:text-slate-400 block">Chiffre d'Affaires</span>
+                  <span className="text-sm sm:text-base font-black text-[#0F172A] dark:text-[#34D399] block mt-0.5">{(monthlySalesTotal).toLocaleString('fr-FR')} F</span>
+                  <span className="text-[9.5px] sm:text-[10px] font-bold text-emerald-700 dark:text-emerald-400 block mt-0.5">
                     {monthlySalesTotal > 0 ? '↑ +14.2% ce mois' : '0.0% ce mois'}
                   </span>
                 </div>
 
                 {/* 2. Commandes */}
-                <div onClick={() => setDashboardTab('orders')} className="afrinova-card p-3.5 transition cursor-pointer hover:border-purple-300">
-                  <span className="text-[10px] font-black uppercase text-slate-500 block">Commandes</span>
-                  <span className="text-base font-black text-[#0F172A] block mt-1">{merchantOrders.length + 152}</span>
-                  <span className="text-[10px] font-bold text-[#7C3AED] block mt-0.5">{pendingOrdersCount} en attente</span>
+                <div onClick={() => setDashboardTab('orders')} className="afrinova-card p-2.5 sm:p-3 transition cursor-pointer hover:border-purple-300">
+                  <span className="text-[9.5px] sm:text-[10px] font-black uppercase text-slate-500 block">Commandes</span>
+                  <span className="text-sm sm:text-base font-black text-[#0F172A] block mt-0.5">{merchantOrders.length + 152}</span>
+                  <span className="text-[9.5px] sm:text-[10px] font-bold text-[#7C3AED] block mt-0.5">{pendingOrdersCount} en attente</span>
                 </div>
 
                 {/* 3. Produits */}
-                <div onClick={() => setDashboardTab('products')} className="afrinova-card p-3.5 transition cursor-pointer hover:border-emerald-300">
-                  <span className="text-[10px] font-black uppercase text-slate-500 block">Produits Actifs</span>
-                  <span className="text-base font-black text-[#0F172A] block mt-1">{merchantProducts.length}</span>
-                  <span className="text-[10px] font-bold text-amber-700 block mt-0.5">{lowStockProducts.length} stock faible</span>
+                <div onClick={() => setDashboardTab('products')} className="afrinova-card p-2.5 sm:p-3 transition cursor-pointer hover:border-emerald-300">
+                  <span className="text-[9.5px] sm:text-[10px] font-black uppercase text-slate-500 block">Produits Actifs</span>
+                  <span className="text-sm sm:text-base font-black text-[#0F172A] block mt-0.5">{merchantProducts.length}</span>
+                  <span className="text-[9.5px] sm:text-[10px] font-bold text-amber-700 block mt-0.5">{lowStockProducts.length} stock faible</span>
                 </div>
 
                 {/* 4. Clients */}
-                <div onClick={() => setDashboardTab('stats')} className="afrinova-card p-3.5 transition cursor-pointer hover:border-slate-300">
-                  <span className="text-[10px] font-black uppercase text-slate-500 block">Clients Fidèles</span>
-                  <span className="text-base font-black text-[#0F172A] block mt-1">{kpiNewCustomers}</span>
-                  <span className="text-[10px] font-bold text-emerald-700 block mt-0.5">82% satisfaction</span>
+                <div onClick={() => setDashboardTab('stats')} className="afrinova-card p-2.5 sm:p-3 transition cursor-pointer hover:border-slate-300">
+                  <span className="text-[9.5px] sm:text-[10px] font-black uppercase text-slate-500 block">Clients Fidèles</span>
+                  <span className="text-sm sm:text-base font-black text-[#0F172A] block mt-0.5">{kpiNewCustomers}</span>
+                  <span className="text-[9.5px] sm:text-[10px] font-bold text-emerald-700 block mt-0.5">82% satisfaction</span>
                 </div>
 
                 {/* 5. Note Vendeur */}
-                <div onClick={() => setDashboardTab('reviews')} className="afrinova-card p-3.5 transition cursor-pointer hover:border-amber-300">
-                  <span className="text-[10px] font-black uppercase text-slate-500 block">Note Boutique</span>
-                  <span className="text-base font-black text-[#0F172A] block mt-1 flex items-center gap-1">
-                    <Star className="w-4 h-4 fill-amber-500 text-amber-500" /> {averageRating}
+                <div onClick={() => setDashboardTab('reviews')} className="afrinova-card p-2.5 sm:p-3 transition cursor-pointer hover:border-amber-300">
+                  <span className="text-[9.5px] sm:text-[10px] font-black uppercase text-slate-500 block">Note Boutique</span>
+                  <span className="text-sm sm:text-base font-black text-[#0F172A] block mt-0.5 flex items-center gap-1">
+                    <Star className="w-3.5 h-3.5 fill-amber-500 text-amber-500" /> {averageRating}
                   </span>
-                  <span className="text-[10px] font-bold text-slate-500 block mt-0.5">({reviews.length} avis certifiés)</span>
+                  <span className="text-[9.5px] sm:text-[10px] font-bold text-slate-500 block mt-0.5">({reviews.length} avis certifiés)</span>
                 </div>
 
                 {/* 6. Visiteurs */}
-                <div onClick={() => setDashboardTab('stats')} className="afrinova-card p-3.5 transition cursor-pointer hover:border-purple-300">
-                  <span className="text-[10px] font-black uppercase text-slate-500 block">Visiteurs Vues</span>
-                  <span className="text-base font-black text-[#0F172A] block mt-1">{storefrontViews}</span>
-                  <span className="text-[10px] font-bold text-[#7C3AED] block mt-0.5">{kpiConversionRate}% conversion</span>
+                <div onClick={() => setDashboardTab('stats')} className="afrinova-card p-2.5 sm:p-3 transition cursor-pointer hover:border-purple-300">
+                  <span className="text-[9.5px] sm:text-[10px] font-black uppercase text-slate-500 block">Visiteurs Vues</span>
+                  <span className="text-sm sm:text-base font-black text-[#0F172A] block mt-0.5">{storefrontViews}</span>
+                  <span className="text-[9.5px] sm:text-[10px] font-bold text-[#7C3AED] block mt-0.5">{kpiConversionRate}% conversion</span>
                 </div>
 
               </div>
             </div>
 
             {/* 2. FINANCIAL BALANCE, MONTHLY GOAL & ASSISTANT IA VENDEUR */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-2.5 sm:gap-3">
               
               {/* Solde Disponible & Retrait MoMo */}
-              <div className="afrinova-card p-5 space-y-3 bg-gradient-to-br from-emerald-500 to-[#15803D] text-white">
+              <div className="afrinova-card p-3.5 sm:p-4 space-y-2 bg-gradient-to-br from-emerald-500 to-[#15803D] text-white">
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-black uppercase tracking-wider text-emerald-100 flex items-center gap-1">
-                    <CreditCard className="w-4 h-4" /> Solde Disponible
+                    <CreditCard className="w-3.5 h-3.5" /> Solde Disponible
                   </span>
-                  <span className="bg-emerald-400/30 text-white text-[10px] font-black px-2 py-0.5 rounded-full border border-emerald-300/40">
+                  <span className="bg-emerald-400/30 text-white text-[9.5px] font-black px-2 py-0.2 rounded-full border border-emerald-300/40">
                     SÉCURISÉ
                   </span>
                 </div>
 
                 <div>
-                  <span className="text-2xl font-black block">385 000 FCFA</span>
-                  <p className="text-[11px] text-emerald-100/90 mt-0.5">Disponible pour virement Mobile Money immédiat.</p>
+                  <span className="text-xl sm:text-2xl font-black block">385 000 FCFA</span>
+                  <p className="text-[10.5px] text-emerald-100/90 mt-0.5">Disponible pour virement Mobile Money immédiat.</p>
                 </div>
 
                 <button
                   onClick={() => setDashboardTab('payments')}
-                  className="w-full bg-white text-[#15803D] hover:bg-emerald-50 font-black text-xs py-2.5 rounded-xl transition flex items-center justify-center gap-2 cursor-pointer shadow-md"
+                  className="w-full bg-white text-[#15803D] hover:bg-emerald-50 font-black text-xs py-2 rounded-xl transition flex items-center justify-center gap-2 cursor-pointer shadow-xs min-h-[48px]"
                 >
                   <DollarSign className="w-4 h-4 text-[#15803D]" /> Demander un Retrait MoMo / OM
                 </button>
               </div>
 
               {/* Objectif Mensuel (Goal) */}
-              <div className="afrinova-card p-5 space-y-3">
+              <div className="afrinova-card p-3.5 sm:p-4 space-y-2">
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-black uppercase tracking-wider text-slate-600 flex items-center gap-1">
-                    <Award className="w-4 h-4 text-[#7C3AED]" /> Objectif Mensuel
+                    <Award className="w-3.5 h-3.5 text-[#7C3AED]" /> Objectif Mensuel
                   </span>
                   <span className="text-xs font-black text-[#7C3AED]">72.5%</span>
                 </div>
 
                 <div>
-                  <div className="flex justify-between text-xs font-extrabold text-slate-800 mb-1.5">
+                  <div className="flex justify-between text-xs font-extrabold text-slate-800 mb-1">
                     <span>1 450 000 FCFA</span>
                     <span className="text-slate-400">Objectif: 2 000 000 F</span>
                   </div>
-                  <div className="h-3 w-full bg-slate-100 rounded-full overflow-hidden border border-slate-200">
+                  <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden border border-slate-200">
                     <div className="h-full bg-gradient-to-r from-[#16A34A] to-[#7C3AED] rounded-full" style={{ width: '72.5%' }}></div>
                   </div>
                 </div>
 
-                <p className="text-[11px] text-slate-500 font-semibold">
-                  il vous reste <strong>550 000 FCFA</strong> à réaliser sous 11 jours pour valider le bonus partenaire AfriNova !
+                <p className="text-[10.5px] text-slate-500 font-semibold leading-tight">
+                  il vous reste <strong>550 000 FCFA</strong> à réaliser sous 11 jours pour valider le bonus AfriNova !
                 </p>
               </div>
 
               {/* Assistant IA Vendeur (AfriNova AI) */}
-              <div className="afrinova-card p-5 space-y-3 bg-purple-50/70 border-purple-200">
+              <div className="afrinova-card p-3.5 sm:p-4 space-y-2 bg-purple-50/70 border-purple-200">
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-black uppercase tracking-wider text-[#7C3AED] flex items-center gap-1.5">
-                    <Sparkles className="w-4 h-4 text-[#7C3AED]" /> Assistant IA Vendeur
+                    <Sparkles className="w-3.5 h-3.5 text-[#7C3AED]" /> Assistant IA Vendeur
                   </span>
-                  <span className="bg-purple-200/80 text-[#7C3AED] text-[10px] font-extrabold px-2 py-0.5 rounded-full">
+                  <span className="bg-purple-200/80 text-[#7C3AED] text-[9.5px] font-extrabold px-2 py-0.2 rounded-full">
                     RECOMMANDATION
                   </span>
                 </div>
 
-                <div className="space-y-2 text-xs">
-                  <div className="bg-white p-2.5 rounded-xl border border-purple-100 flex items-start gap-2 shadow-2xs">
-                    <AlertTriangle className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
+                <div className="space-y-1.5 text-xs">
+                  <div className="bg-white p-2 rounded-xl border border-purple-100 flex items-start gap-2 shadow-2xs">
+                    <AlertTriangle className="w-3.5 h-3.5 text-amber-500 shrink-0 mt-0.5" />
                     <div>
-                      <strong className="text-slate-900 block font-bold">Réapprovisionnement requis</strong>
-                      <span className="text-[11px] text-slate-600">Le stock de <i>Piment Jaune de Penja</i> est inférieur à 5 unités.</span>
+                      <strong className="text-slate-900 block font-bold text-[11px]">Réapprovisionnement requis</strong>
+                      <span className="text-[10.5px] text-slate-600 leading-tight block">Stock <i>Piment Jaune de Penja</i> &lt; 5 unités.</span>
                     </div>
                   </div>
 
-                  <div className="bg-white p-2.5 rounded-xl border border-purple-100 flex items-start gap-2 shadow-2xs">
-                    <TrendingUp className="w-4 h-4 text-[#16A34A] shrink-0 mt-0.5" />
+                  <div className="bg-white p-2 rounded-xl border border-purple-100 flex items-start gap-2 shadow-2xs">
+                    <TrendingUp className="w-3.5 h-3.5 text-[#16A34A] shrink-0 mt-0.5" />
                     <div>
-                      <strong className="text-slate-900 block font-bold">Heure de pointe détectée</strong>
-                      <span className="text-[11px] text-slate-600">Forte demande à Tamdja Bafoussam entre 16h et 18h.</span>
+                      <strong className="text-slate-900 block font-bold text-[11px]">Heure de pointe détectée</strong>
+                      <span className="text-[10.5px] text-slate-600 leading-tight block">Forte demande Tamdja Bafoussam (16h-18h).</span>
                     </div>
                   </div>
                 </div>

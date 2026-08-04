@@ -422,60 +422,60 @@ export default function EntrepriseHomePage({
       </div>
 
       {/* DYNAMIC TAB MAIN CONTENT */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4 space-y-6">
+      <main className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 pt-3 space-y-3.5 sm:space-y-4">
 
         {/* 1. VUE GÉNÉRALE / ACCUEIL */}
         {activeTab === 'accueil' && (
-          <div className="space-y-6">
+          <div className="space-y-3.5 sm:space-y-4">
             {/* KPI Cards */}
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-              <div className="bg-white p-4.5 rounded-2xl border border-slate-200/80 shadow-xs space-y-1">
-                <span className="text-[10px] font-extrabold text-slate-500 uppercase tracking-wider">Chiffre d'Affaires Mensuel</span>
-                <p className="text-xl font-black text-[#0F172A]">{b2bOrders.reduce((sum, o) => sum + (o.total || 0), 0).toLocaleString('fr-FR')} FCFA</p>
-                <span className="text-[10px] font-bold text-[#16A34A] flex items-center gap-1">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3">
+              <div className="bg-white p-3 sm:p-3.5 rounded-xl sm:rounded-2xl border border-slate-200/80 shadow-2xs space-y-1">
+                <span className="text-[9.5px] font-extrabold text-slate-500 uppercase tracking-wider">Chiffre d'Affaires Mensuel</span>
+                <p className="text-lg sm:text-xl font-black text-[#0F172A]">{b2bOrders.reduce((sum, o) => sum + (o.total || 0), 0).toLocaleString('fr-FR')} FCFA</p>
+                <span className="text-[9.5px] font-bold text-[#16A34A] flex items-center gap-1">
                   <ArrowUpRight className="w-3 h-3" /> En direct
                 </span>
               </div>
 
-              <div className="bg-white p-4.5 rounded-2xl border border-slate-200/80 shadow-xs space-y-1">
-                <span className="text-[10px] font-extrabold text-slate-500 uppercase tracking-wider">Masse Salariale</span>
-                <p className="text-xl font-black text-[#0F172A]">{employees.reduce((acc, e) => acc + (e.salary || 0), 0).toLocaleString('fr-FR')} FCFA</p>
-                <span className="text-[10px] text-indigo-600 font-bold">{employees.length} employés actifs</span>
+              <div className="bg-white p-3 sm:p-3.5 rounded-xl sm:rounded-2xl border border-slate-200/80 shadow-2xs space-y-1">
+                <span className="text-[9.5px] font-extrabold text-slate-500 uppercase tracking-wider">Masse Salariale</span>
+                <p className="text-lg sm:text-xl font-black text-[#0F172A]">{employees.reduce((acc, e) => acc + (e.salary || 0), 0).toLocaleString('fr-FR')} FCFA</p>
+                <span className="text-[9.5px] text-indigo-600 font-bold">{employees.length} employés actifs</span>
               </div>
 
-              <div className="bg-white p-4.5 rounded-2xl border border-slate-200/80 shadow-xs space-y-1">
-                <span className="text-[10px] font-extrabold text-slate-500 uppercase tracking-wider">Factures à Recouvrer</span>
-                <p className="text-xl font-black text-[#D97706]">{invoices.filter(i => i.status !== 'Payé').reduce((sum, i) => sum + (i.amountTTC || 0), 0).toLocaleString('fr-FR')} FCFA</p>
-                <span className="text-[10px] text-amber-700 font-bold">{invoices.filter(i => i.status !== 'Payé').length} en attente</span>
+              <div className="bg-white p-3 sm:p-3.5 rounded-xl sm:rounded-2xl border border-slate-200/80 shadow-2xs space-y-1">
+                <span className="text-[9.5px] font-extrabold text-slate-500 uppercase tracking-wider">Factures à Recouvrer</span>
+                <p className="text-lg sm:text-xl font-black text-[#D97706]">{invoices.filter(i => i.status !== 'Payé').reduce((sum, i) => sum + (i.amountTTC || 0), 0).toLocaleString('fr-FR')} FCFA</p>
+                <span className="text-[9.5px] text-amber-700 font-bold">{invoices.filter(i => i.status !== 'Payé').length} en attente</span>
               </div>
 
-              <div className="bg-white p-4.5 rounded-2xl border border-slate-200/80 shadow-xs space-y-1">
-                <span className="text-[10px] font-extrabold text-slate-500 uppercase tracking-wider">Bénéfice Net Estimé</span>
-                <p className="text-xl font-black text-[#16A34A]">0 FCFA</p>
-                <span className="text-[10px] text-[#15803D] font-bold">Marge brute 0%</span>
+              <div className="bg-white p-3 sm:p-3.5 rounded-xl sm:rounded-2xl border border-slate-200/80 shadow-2xs space-y-1">
+                <span className="text-[9.5px] font-extrabold text-slate-500 uppercase tracking-wider">Bénéfice Net Estimé</span>
+                <p className="text-lg sm:text-xl font-black text-[#16A34A]">0 FCFA</p>
+                <span className="text-[9.5px] text-[#15803D] font-bold">Marge brute 0%</span>
               </div>
             </div>
 
             {/* Quick Actions Modules */}
-            <div className="bg-slate-900 p-5 rounded-3xl border border-slate-800 space-y-3">
-              <h3 className="text-xs font-black uppercase text-slate-400 tracking-wider">Accès Rapide aux Fonctions Entreprise</h3>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <div className="bg-slate-900 p-3.5 sm:p-4 rounded-2xl sm:rounded-3xl border border-slate-800 space-y-2.5">
+              <h3 className="text-[11px] font-black uppercase text-slate-400 tracking-wider">Accès Rapide aux Fonctions Entreprise</h3>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-2.5">
                 <button
                   onClick={() => { setActiveTab('employes'); setIsEmpModalOpen(true); }}
-                  className="p-4 rounded-2xl bg-indigo-950/60 hover:bg-indigo-900/60 text-indigo-200 border border-indigo-800/40 text-left space-y-1 transition cursor-pointer"
+                  className="p-3 rounded-xl bg-indigo-950/60 hover:bg-indigo-900/60 text-indigo-200 border border-indigo-800/40 text-left space-y-0.5 transition cursor-pointer min-h-[48px] flex flex-col justify-center"
                 >
-                  <Users className="w-5 h-5 text-indigo-400" />
+                  <Users className="w-4 h-4 text-indigo-400" />
                   <p className="text-xs font-black">Ajouter Employé</p>
-                  <p className="text-[10px] text-indigo-300">Ressources Humaines</p>
+                  <p className="text-[9.5px] text-indigo-300">Ressources Humaines</p>
                 </button>
 
                 <button
                   onClick={() => { setActiveTab('factures'); setIsInvoiceModalOpen(true); }}
-                  className="p-4 rounded-2xl bg-blue-950/60 hover:bg-blue-900/60 text-blue-200 border border-blue-800/40 text-left space-y-1 transition cursor-pointer"
+                  className="p-3 rounded-xl bg-blue-950/60 hover:bg-blue-900/60 text-blue-200 border border-blue-800/40 text-left space-y-0.5 transition cursor-pointer min-h-[48px] flex flex-col justify-center"
                 >
-                  <FileText className="w-5 h-5 text-blue-400" />
+                  <FileText className="w-4 h-4 text-blue-400" />
                   <p className="text-xs font-black">Émettre Facture</p>
-                  <p className="text-[10px] text-blue-300">Gestion Facturation</p>
+                  <p className="text-[9.5px] text-blue-300">Gestion Facturation</p>
                 </button>
 
                 <button

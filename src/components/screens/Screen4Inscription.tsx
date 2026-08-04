@@ -375,7 +375,7 @@ export default function Screen4Inscription({ onSignupSuccess, onGoToLogin, lang 
   const progressPercent = currentStep === 'step1' ? 50 : 100;
 
   return (
-    <div className="relative min-h-screen w-full flex flex-col justify-center items-center px-3 sm:px-6 md:px-8 py-2 sm:py-4 font-sans overflow-x-hidden selection:bg-emerald-100 selection:text-emerald-900">
+    <div className="relative min-h-screen w-full flex flex-col justify-center items-center px-2.5 sm:px-5 md:px-6 py-1.5 sm:py-3 font-sans overflow-x-hidden selection:bg-emerald-100 selection:text-emerald-900">
       
       {/* 2. BACKGROUND: Premium ambient gradient with delicate African geometric texture */}
       <div className="fixed inset-0 pointer-events-none z-0 bg-gradient-to-br from-[#FAFAF9] via-[#F3F0FF]/50 to-[#ECFDF5]/70">
@@ -398,12 +398,12 @@ export default function Screen4Inscription({ onSignupSuccess, onGoToLogin, lang 
         initial={{ opacity: 0, y: 12, scale: 0.98 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
         transition={{ duration: 0.3, ease: 'easeOut' }}
-        className="relative z-10 w-full max-w-full sm:max-w-xl md:max-w-2xl lg:max-w-[660px] bg-white/95 backdrop-blur-md rounded-[20px] sm:rounded-[24px] shadow-[0_20px_60px_-15px_rgba(15,23,42,0.08)] border border-slate-200/90 overflow-hidden flex flex-col my-auto"
+        className="relative z-10 w-full max-w-full sm:max-w-xl md:max-w-2xl lg:max-w-[650px] bg-white/95 backdrop-blur-md rounded-2xl sm:rounded-3xl shadow-[0_16px_50px_-15px_rgba(15,23,42,0.08)] border border-slate-200/90 overflow-hidden flex flex-col my-auto"
       >
 
         {/* 1. EN-TÊTE PREMIUM */}
-        <div className="bg-white px-4 sm:px-6 md:px-7 pt-3.5 sm:pt-4 pb-3 border-b border-slate-100 shadow-2xs">
-          <div className="flex items-center justify-between gap-3 flex-wrap sm:flex-nowrap">
+        <div className="bg-white px-3.5 sm:px-5 md:px-6 pt-2.5 sm:pt-3 pb-2 border-b border-slate-100 shadow-2xs">
+          <div className="flex items-center justify-between gap-2.5 flex-wrap sm:flex-nowrap">
             
             {/* Official Logo AfriNova */}
             <AfriNovaLogo size="md" showSlogan={true} lang={currentLang} />
@@ -412,7 +412,7 @@ export default function Screen4Inscription({ onSignupSuccess, onGoToLogin, lang 
             <button
               type="button"
               onClick={toggleLanguage}
-              className="px-2.5 py-1 rounded-full bg-slate-50 hover:bg-emerald-50 text-slate-700 hover:text-[#16A34A] border border-slate-200 hover:border-emerald-300 flex items-center gap-1.5 text-xs font-black transition-all cursor-pointer active:scale-95 shrink-0 shadow-2xs"
+              className="px-2.5 py-1 rounded-full bg-slate-50 hover:bg-emerald-50 text-slate-700 hover:text-[#16A34A] border border-slate-200 hover:border-emerald-300 flex items-center gap-1.5 text-xs font-black transition-all cursor-pointer active:scale-95 shrink-0 shadow-2xs min-h-[36px]"
               title="Changer de langue / Switch language"
             >
               <Globe className="w-3.5 h-3.5 text-[#16A34A] shrink-0" />
@@ -424,7 +424,7 @@ export default function Screen4Inscription({ onSignupSuccess, onGoToLogin, lang 
 
           {/* 4. ANIMATED PROGRESS BAR */}
           {currentStep !== 'success' && (
-            <div className="mt-2.5 pt-2 border-t border-slate-100 space-y-1">
+            <div className="mt-2 pt-1.5 border-t border-slate-100 space-y-0.5">
               <div className="flex items-center justify-between text-xs font-extrabold gap-2">
                 <span className="text-slate-700 tracking-tight flex items-center gap-1.5 min-w-0">
                   <span className="text-[#16A34A] font-black shrink-0">
@@ -439,13 +439,13 @@ export default function Screen4Inscription({ onSignupSuccess, onGoToLogin, lang 
                       : (currentLang === 'fr' ? 'Sécurité SMS & Pass' : 'Security & Verification')}
                   </span>
                 </span>
-                <span className="font-mono text-[#16A34A] bg-[#DCFCE7] border border-emerald-300/80 px-2.5 py-0.5 rounded-full text-[11px] font-black shrink-0 whitespace-nowrap">
+                <span className="font-mono text-[#16A34A] bg-[#DCFCE7] border border-emerald-300/80 px-2 py-0.5 rounded-full text-[10.5px] font-black shrink-0 whitespace-nowrap">
                   {progressPercent} %
                 </span>
               </div>
 
               {/* Progress Line */}
-              <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden p-0.5 border border-slate-200/50">
+              <div className="w-full h-1 bg-slate-100 rounded-full overflow-hidden p-0.5 border border-slate-200/50">
                 <motion.div 
                   className="h-full bg-gradient-to-r from-[#16A34A] via-[#15803D] to-[#7C3AED] rounded-full shadow-xs"
                   initial={{ width: '50%' }}
@@ -458,14 +458,14 @@ export default function Screen4Inscription({ onSignupSuccess, onGoToLogin, lang 
         </div>
 
         {/* CARD BODY CONTENT */}
-        <div className="p-3.5 sm:p-5 md:p-6 space-y-3 sm:space-y-3.5">
+        <div className="p-3 sm:p-4 md:p-5 space-y-2 sm:space-y-2.5">
 
           {/* Global Error Message */}
           {formError && (
             <motion.div 
               initial={{ opacity: 0, y: -8 }}
               animate={{ opacity: 1, y: 0 }}
-              className="bg-red-50/95 border border-red-300 text-red-800 p-3 sm:p-3.5 rounded-2xl text-xs sm:text-sm font-bold flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 shadow-2xs"
+              className="bg-red-50/95 border border-red-300 text-red-800 p-2.5 sm:p-3 rounded-xl text-xs font-bold flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 shadow-2xs"
             >
               <div className="flex items-start gap-2 min-w-0">
                 <AlertCircle className="w-4 h-4 text-red-600 shrink-0 mt-0.5 sm:mt-0" />
@@ -475,7 +475,7 @@ export default function Screen4Inscription({ onSignupSuccess, onGoToLogin, lang 
                 <button
                   type="button"
                   onClick={onGoToLogin}
-                  className="px-3 py-1.5 rounded-xl bg-red-600 hover:bg-red-700 text-white text-xs font-black transition shrink-0 cursor-pointer shadow-2xs active:scale-95"
+                  className="px-2.5 py-1 rounded-lg bg-red-600 hover:bg-red-700 text-white text-xs font-black transition shrink-0 cursor-pointer shadow-2xs active:scale-95 min-h-[36px]"
                 >
                   {currentLang === 'fr' ? 'Se connecter' : 'Log In'}
                 </button>
@@ -495,11 +495,11 @@ export default function Screen4Inscription({ onSignupSuccess, onGoToLogin, lang 
                 exit={{ opacity: 0, x: 12 }}
                 transition={{ duration: 0.2, ease: 'easeOut' }}
                 onSubmit={handleProceedToStep2}
-                className="space-y-2.5 sm:space-y-3"
+                className="space-y-2 sm:space-y-2.5"
               >
                 {/* Champ 1: Nom complet */}
                 <div>
-                  <div className="flex items-center justify-between mb-1">
+                  <div className="flex items-center justify-between mb-0.5">
                     <label className="block text-xs font-extrabold text-slate-700 uppercase tracking-wide">
                       {currentLang === 'fr' ? 'Nom complet' : 'Full Name'} <span className="text-red-500">*</span>
                     </label>
@@ -518,7 +518,7 @@ export default function Screen4Inscription({ onSignupSuccess, onGoToLogin, lang 
                       onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
                       placeholder="Ex: Jean Kamdem"
                       required
-                      className={`w-full h-[46px] sm:h-[48px] pl-10 pr-9 bg-[#F8FAFC] focus:bg-white border rounded-2xl text-sm sm:text-base text-[#0F172A] font-semibold shadow-2xs focus:outline-none focus:ring-2 focus:ring-[#16A34A]/25 focus:border-[#16A34A] transition-all duration-200 placeholder:text-slate-400 ${
+                      className={`w-full h-[48px] pl-10 pr-9 bg-[#F8FAFC] focus:bg-white border rounded-xl text-sm sm:text-base text-[#0F172A] font-semibold shadow-2xs focus:outline-none focus:ring-2 focus:ring-[#16A34A]/25 focus:border-[#16A34A] transition-all duration-200 placeholder:text-slate-400 ${
                         touchedFields.fullName && !isFullNameValid ? 'border-red-500 bg-red-50/20' : 'border-slate-200'
                       }`}
                     />
@@ -527,7 +527,7 @@ export default function Screen4Inscription({ onSignupSuccess, onGoToLogin, lang 
                     )}
                   </div>
                   {touchedFields.fullName && !isFullNameValid && (
-                    <p className="text-xs text-red-500 font-bold mt-1 flex items-center gap-1">
+                    <p className="text-xs text-red-500 font-bold mt-0.5 flex items-center gap-1">
                       <AlertCircle className="w-3.5 h-3.5 shrink-0" />
                       <span>{currentLang === 'fr' ? 'Au moins 2 caractères requis' : 'At least 2 characters required'}</span>
                     </p>
@@ -552,29 +552,29 @@ export default function Screen4Inscription({ onSignupSuccess, onGoToLogin, lang 
 
                 {/* Champ 3: Sélection du profil */}
                 <div>
-                  <div className="flex items-center justify-between mb-1">
+                  <div className="flex items-center justify-between mb-0.5">
                     <label className="block text-xs font-extrabold text-slate-700 uppercase tracking-wide">
                       {currentLang === 'fr' ? 'Profil utilisateur' : 'User Profile'} <span className="text-red-500">*</span>
                     </label>
                   </div>
 
-                  {/* Profile Selected Card - Compact & Un-truncated */}
-                  <div className="p-2.5 sm:p-3 rounded-2xl bg-gradient-to-br from-emerald-50/90 via-emerald-50/40 to-slate-50/70 border border-emerald-300/80 shadow-2xs relative overflow-hidden transition-all">
-                    <div className="flex items-start justify-between gap-2.5">
-                      <div className="flex items-start gap-2.5 min-w-0 flex-1">
-                        <div className="w-9 h-9 rounded-xl bg-[#16A34A] text-white flex items-center justify-center text-base font-bold shrink-0 shadow-xs mt-0.5">
+                  {/* Profile Selected Card - Compact & Ultra-sleek */}
+                  <div className="p-2 sm:p-2.5 rounded-xl bg-gradient-to-br from-emerald-50/90 via-emerald-50/40 to-slate-50/70 border border-emerald-300/80 shadow-2xs relative overflow-hidden transition-all">
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="flex items-center gap-2 min-w-0 flex-1">
+                        <div className="w-8 h-8 rounded-lg bg-[#16A34A] text-white flex items-center justify-center text-sm font-bold shrink-0 shadow-xs">
                           {selectedProfileObj.emoji}
                         </div>
-                        <div className="min-w-0 flex-1 space-y-0.5">
-                          <div className="flex flex-wrap items-center gap-1.5">
-                            <h4 className="text-xs sm:text-sm font-black text-[#0F172A]">
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <h4 className="text-xs sm:text-sm font-black text-[#0F172A] truncate">
                               {selectedProfileObj.title}
                             </h4>
-                            <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-white text-[#16A34A] border border-emerald-300/80 shrink-0 shadow-3xs whitespace-nowrap">
+                            <span className="text-[9.5px] font-black px-1.5 py-0.5 rounded-full bg-white text-[#16A34A] border border-emerald-300/80 shrink-0 shadow-3xs whitespace-nowrap">
                               {selectedProfileObj.formattedTrial}
                             </span>
                           </div>
-                          <p className="text-[11px] sm:text-xs text-slate-600 font-medium leading-tight">
+                          <p className="text-[11px] text-slate-600 font-medium leading-tight truncate">
                             {selectedProfileObj.id === 'client'
                               ? (currentLang === 'fr' 
                                   ? `Achats & services au ${selectedCountry ? `${selectedCountry.flag} ${selectedCountry.nameFr}` : 'Cameroun'}`
@@ -586,20 +586,20 @@ export default function Screen4Inscription({ onSignupSuccess, onGoToLogin, lang 
                         </div>
                       </div>
 
-                      {/* Compact Modifier Button always aligned right */}
+                      {/* Modifier Button */}
                       <button
                         type="button"
                         onClick={() => setIsProfileModalOpen(true)}
-                        className="px-2.5 py-1 rounded-xl bg-white hover:bg-emerald-100 text-[#16A34A] border border-emerald-300 text-[11px] font-bold transition shrink-0 cursor-pointer shadow-2xs active:scale-95 ml-1 self-start"
+                        className="px-2 py-1 rounded-lg bg-white hover:bg-emerald-100 text-[#16A34A] border border-emerald-300 text-[10.5px] font-bold transition shrink-0 cursor-pointer shadow-2xs active:scale-95"
                       >
                         {currentLang === 'fr' ? 'Modifier' : 'Modify'}
                       </button>
                     </div>
 
-                    {/* Concise Benefits Display (Horizontal Flexible Chips) */}
-                    <div className="pt-2 mt-2 border-t border-emerald-200/60 flex flex-wrap gap-1">
+                    {/* Concise Benefits Display */}
+                    <div className="pt-1.5 mt-1.5 border-t border-emerald-200/60 flex flex-wrap gap-1">
                       {selectedProfileObj.benefits.slice(0, 3).map((benefit, i) => (
-                        <span key={i} className="text-[10px] sm:text-[10.5px] text-slate-700 bg-white/95 border border-emerald-200/80 px-2 py-0.5 rounded-lg font-bold flex items-center gap-1 shadow-3xs max-w-full">
+                        <span key={i} className="text-[9.5px] sm:text-[10px] text-slate-700 bg-white/95 border border-emerald-200/80 px-1.5 py-0.5 rounded-md font-bold flex items-center gap-1 shadow-3xs max-w-full">
                           <CheckCircle2 className="w-3 h-3 text-[#16A34A] shrink-0" />
                           <span className="leading-tight">{benefit}</span>
                         </span>
@@ -609,13 +609,13 @@ export default function Screen4Inscription({ onSignupSuccess, onGoToLogin, lang 
                 </div>
 
                 {/* Bouton Principal Step 1: "Continuer" */}
-                <div className="space-y-1 pt-0.5">
+                <div className="space-y-0.5 pt-0.5">
                   <motion.button
                     whileHover={{ scale: 1.01 }}
                     whileTap={{ scale: 0.98 }}
                     type="submit"
                     disabled={isSubmitting || !isStep1FormValid}
-                    className="relative w-full h-[46px] sm:h-[48px] rounded-xl text-sm sm:text-base font-black bg-gradient-to-r from-[#16A34A] via-[#15803D] to-[#7C3AED] text-white shadow-[0_4px_16px_rgba(22,163,74,0.3)] hover:shadow-[0_6px_22px_rgba(22,163,74,0.45)] flex items-center justify-center gap-2 transition-all duration-300 cursor-pointer overflow-hidden disabled:opacity-50 disabled:cursor-not-allowed disabled:pointer-events-none disabled:shadow-none group"
+                    className="relative w-full h-[48px] rounded-xl text-sm sm:text-base font-black bg-gradient-to-r from-[#16A34A] via-[#15803D] to-[#7C3AED] text-white shadow-[0_4px_16px_rgba(22,163,74,0.3)] hover:shadow-[0_6px_22px_rgba(22,163,74,0.45)] flex items-center justify-center gap-2 transition-all duration-300 cursor-pointer overflow-hidden disabled:opacity-50 disabled:cursor-not-allowed disabled:pointer-events-none disabled:shadow-none group"
                   >
                     {/* Luminous sweep animation */}
                     <span className="absolute inset-0 w-1/2 h-full bg-white/20 skew-x-12 -translate-x-full group-hover:translate-x-[300%] transition-transform duration-1000 ease-in-out pointer-events-none" />
@@ -633,27 +633,27 @@ export default function Screen4Inscription({ onSignupSuccess, onGoToLogin, lang 
                     )}
                   </motion.button>
                   {!isStep1FormValid && (
-                    <p className="text-[10.5px] font-semibold text-slate-400 text-center">
+                    <p className="text-[10px] font-semibold text-slate-400 text-center">
                       {currentLang === 'fr' ? 'Saisissez votre nom et téléphone pour continuer' : 'Enter your name and phone number to continue'}
                     </p>
                   )}
                 </div>
 
-                {/* 8. BADGES DE CONFIANCE - Compact Height Grid */}
-                <div className="pt-2 border-t border-slate-100 grid grid-cols-2 sm:grid-cols-4 gap-1.5 text-[10px] font-extrabold text-slate-600 items-stretch">
-                  <div className="py-1.5 px-1.5 rounded-xl bg-slate-50/90 border border-slate-100 flex items-center justify-center gap-1 hover:bg-emerald-50/60 hover:border-emerald-200/80 transition-all text-center h-full w-full min-h-[34px]">
+                {/* 8. BADGES DE CONFIANCE - Ultra-Compact Single Row / Grid */}
+                <div className="pt-1.5 border-t border-slate-100 grid grid-cols-2 sm:grid-cols-4 gap-1 text-[9.5px] sm:text-[10px] font-extrabold text-slate-600 items-stretch">
+                  <div className="py-1 px-1 rounded-lg bg-slate-50/90 border border-slate-100 flex items-center justify-center gap-1 hover:bg-emerald-50/60 transition-all text-center h-full w-full min-h-[30px] sm:min-h-[32px]">
                     <Lock className="w-3 h-3 text-[#16A34A] shrink-0" />
                     <span className="leading-tight">{currentLang === 'fr' ? 'Données chiffrées' : 'Encrypted data'}</span>
                   </div>
-                  <div className="py-1.5 px-1.5 rounded-xl bg-slate-50/90 border border-slate-100 flex items-center justify-center gap-1 hover:bg-emerald-50/60 hover:border-emerald-200/80 transition-all text-center h-full w-full min-h-[34px]">
+                  <div className="py-1 px-1 rounded-lg bg-slate-50/90 border border-slate-100 flex items-center justify-center gap-1 hover:bg-emerald-50/60 transition-all text-center h-full w-full min-h-[30px] sm:min-h-[32px]">
                     <Smartphone className="w-3 h-3 text-[#16A34A] shrink-0" />
                     <span className="leading-tight">{currentLang === 'fr' ? 'Vérification auto' : 'Auto verification'}</span>
                   </div>
-                  <div className="py-1.5 px-1.5 rounded-xl bg-slate-50/90 border border-slate-100 flex items-center justify-center gap-1 hover:bg-emerald-50/60 hover:border-emerald-200/80 transition-all text-center h-full w-full min-h-[34px]">
+                  <div className="py-1 px-1 rounded-lg bg-slate-50/90 border border-slate-100 flex items-center justify-center gap-1 hover:bg-emerald-50/60 transition-all text-center h-full w-full min-h-[30px] sm:min-h-[32px]">
                     <ShieldCheck className="w-3 h-3 text-[#16A34A] shrink-0" />
                     <span className="leading-tight">{currentLang === 'fr' ? 'Anti-fraude' : 'Anti-fraud'}</span>
                   </div>
-                  <div className="py-1.5 px-1.5 rounded-xl bg-slate-50/90 border border-slate-100 flex items-center justify-center gap-1 hover:bg-emerald-50/60 hover:border-emerald-200/80 transition-all text-center h-full w-full min-h-[34px]">
+                  <div className="py-1 px-1 rounded-lg bg-slate-50/90 border border-slate-100 flex items-center justify-center gap-1 hover:bg-emerald-50/60 transition-all text-center h-full w-full min-h-[30px] sm:min-h-[32px]">
                     <Globe className="w-3 h-3 text-[#16A34A] shrink-0" />
                     <span className="leading-tight">{currentLang === 'fr' ? 'Toute l\'Afrique' : 'All of Africa'}</span>
                   </div>
@@ -672,7 +672,7 @@ export default function Screen4Inscription({ onSignupSuccess, onGoToLogin, lang 
                 exit={{ opacity: 0, x: -12 }}
                 transition={{ duration: 0.2, ease: 'easeOut' }}
                 onSubmit={handleFinalSignup}
-                className="space-y-2.5 sm:space-y-3"
+                className="space-y-2 sm:space-y-2.5"
               >
                 {/* Back to Step 1 Button */}
                 <button
@@ -685,8 +685,8 @@ export default function Screen4Inscription({ onSignupSuccess, onGoToLogin, lang 
                 </button>
 
                 {/* Smart OTP Verification Banner */}
-                <div className="p-2.5 sm:p-3 rounded-2xl bg-emerald-50/90 border border-emerald-300/90 text-xs text-[#0F172A] space-y-1.5 shadow-2xs">
-                  <div className="flex items-center justify-between font-bold text-[#15803D] flex-wrap gap-2">
+                <div className="p-2 sm:p-2.5 rounded-xl bg-emerald-50/90 border border-emerald-300/90 text-xs text-[#0F172A] space-y-1 shadow-2xs">
+                  <div className="flex items-center justify-between font-bold text-[#15803D] flex-wrap gap-1.5">
                     <span className="flex items-center gap-1.5">
                       <Smartphone className="w-4 h-4 text-[#16A34A] shrink-0" />
                       <span>{currentLang === 'fr' ? 'Code SMS envoyé' : 'SMS Code sent'}</span>
@@ -712,7 +712,7 @@ export default function Screen4Inscription({ onSignupSuccess, onGoToLogin, lang 
 
                 {/* Champ 1: Code OTP */}
                 <div>
-                  <div className="flex items-center justify-between mb-1">
+                  <div className="flex items-center justify-between mb-0.5">
                     <label className="block text-xs font-extrabold text-slate-700 uppercase tracking-wide">
                       {currentLang === 'fr' ? 'Code de vérification SMS' : 'SMS Verification Code'} <span className="text-red-500">*</span>
                     </label>
@@ -732,7 +732,7 @@ export default function Screen4Inscription({ onSignupSuccess, onGoToLogin, lang 
                       placeholder="Ex: 123456"
                       required
                       maxLength={6}
-                      className={`w-full h-[46px] sm:h-[48px] pl-10 pr-9 bg-[#F8FAFC] focus:bg-white border rounded-2xl text-sm sm:text-base text-[#0F172A] font-mono font-bold tracking-widest shadow-2xs focus:outline-none focus:ring-2 focus:ring-[#16A34A]/25 focus:border-[#16A34A] transition-all duration-200 placeholder:text-slate-400 ${
+                      className={`w-full h-[48px] pl-10 pr-9 bg-[#F8FAFC] focus:bg-white border rounded-xl text-sm sm:text-base text-[#0F172A] font-mono font-bold tracking-widest shadow-2xs focus:outline-none focus:ring-2 focus:ring-[#16A34A]/25 focus:border-[#16A34A] transition-all duration-200 placeholder:text-slate-400 ${
                         touchedFields.otpCode && !isOtpValid ? 'border-red-500 bg-red-50/20' : 'border-slate-200'
                       }`}
                     />
@@ -744,7 +744,7 @@ export default function Screen4Inscription({ onSignupSuccess, onGoToLogin, lang 
 
                 {/* Champ 2: Adresse e-mail (FACULTATIVE) */}
                 <div>
-                  <div className="flex items-center justify-between mb-1">
+                  <div className="flex items-center justify-between mb-0.5">
                     <label className="block text-xs font-extrabold text-slate-700 uppercase tracking-wide">
                       {currentLang === 'fr' ? 'Adresse e-mail' : 'Email Address'} <span className="text-slate-400 font-semibold lowercase text-xs">(facultative)</span>
                     </label>
@@ -762,16 +762,16 @@ export default function Screen4Inscription({ onSignupSuccess, onGoToLogin, lang 
                       onBlur={() => markFieldTouched('email')}
                       onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                       placeholder="ex: jean.kamdem@mail.com"
-                      className="w-full h-[46px] sm:h-[48px] pl-10 pr-9 bg-[#F8FAFC] focus:bg-white border border-slate-200 rounded-2xl text-sm sm:text-base text-[#0F172A] font-semibold shadow-2xs focus:outline-none focus:ring-2 focus:ring-[#16A34A]/25 focus:border-[#16A34A] transition-all duration-200 placeholder:text-slate-400"
+                      className="w-full h-[48px] pl-10 pr-9 bg-[#F8FAFC] focus:bg-white border border-slate-200 rounded-xl text-sm sm:text-base text-[#0F172A] font-semibold shadow-2xs focus:outline-none focus:ring-2 focus:ring-[#16A34A]/25 focus:border-[#16A34A] transition-all duration-200 placeholder:text-slate-400"
                     />
                   </div>
                 </div>
 
                 {/* Champ 3 & 4: Mot de passe & Confirmation */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 sm:gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-2.5">
                   {/* Mot de passe */}
                   <div>
-                    <div className="flex items-center justify-between mb-1">
+                    <div className="flex items-center justify-between mb-0.5">
                       <label className="block text-xs font-extrabold text-slate-700 uppercase tracking-wide">
                         {currentLang === 'fr' ? 'Mot de passe' : 'Password'} <span className="text-red-500">*</span>
                       </label>
@@ -791,14 +791,14 @@ export default function Screen4Inscription({ onSignupSuccess, onGoToLogin, lang 
                         placeholder="••••••••"
                         required
                         minLength={8}
-                        className={`w-full h-[46px] sm:h-[48px] pl-10 pr-10 bg-[#F8FAFC] focus:bg-white border rounded-2xl text-sm sm:text-base text-[#0F172A] font-semibold shadow-2xs focus:outline-none focus:ring-2 focus:ring-[#16A34A]/25 focus:border-[#16A34A] transition-all duration-200 placeholder:text-slate-400 ${
+                        className={`w-full h-[48px] pl-10 pr-10 bg-[#F8FAFC] focus:bg-white border rounded-xl text-sm sm:text-base text-[#0F172A] font-semibold shadow-2xs focus:outline-none focus:ring-2 focus:ring-[#16A34A]/25 focus:border-[#16A34A] transition-all duration-200 placeholder:text-slate-400 ${
                           touchedFields.password && !isPasswordValid ? 'border-red-500 bg-red-50/20' : 'border-slate-200'
                         }`}
                       />
                       <button
                         type="button"
                         onClick={() => setShowPassword(!showPassword)}
-                        className="absolute right-3.5 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-[#16A34A] transition-colors cursor-pointer"
+                        className="absolute right-3.5 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-[#16A34A] transition-colors cursor-pointer min-h-[36px] flex items-center justify-center"
                       >
                         {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                       </button>
@@ -817,7 +817,7 @@ export default function Screen4Inscription({ onSignupSuccess, onGoToLogin, lang 
 
                   {/* Confirmation */}
                   <div>
-                    <div className="flex items-center justify-between mb-1">
+                    <div className="flex items-center justify-between mb-0.5">
                       <label className="block text-xs font-extrabold text-slate-700 uppercase tracking-wide">
                         {currentLang === 'fr' ? 'Confirmation' : 'Confirm'} <span className="text-red-500">*</span>
                       </label>
@@ -837,14 +837,14 @@ export default function Screen4Inscription({ onSignupSuccess, onGoToLogin, lang 
                         placeholder="••••••••"
                         required
                         minLength={8}
-                        className={`w-full h-[46px] sm:h-[48px] pl-10 pr-10 bg-[#F8FAFC] focus:bg-white border rounded-2xl text-sm sm:text-base text-[#0F172A] font-semibold shadow-2xs focus:outline-none focus:ring-2 focus:ring-[#16A34A]/25 focus:border-[#16A34A] transition-all duration-200 placeholder:text-slate-400 ${
+                        className={`w-full h-[48px] pl-10 pr-10 bg-[#F8FAFC] focus:bg-white border rounded-xl text-sm sm:text-base text-[#0F172A] font-semibold shadow-2xs focus:outline-none focus:ring-2 focus:ring-[#16A34A]/25 focus:border-[#16A34A] transition-all duration-200 placeholder:text-slate-400 ${
                           touchedFields.confirmPassword && !isConfirmPasswordValid ? 'border-red-500 bg-red-50/20' : 'border-slate-200'
                         }`}
                       />
                       <button
                         type="button"
                         onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                        className="absolute right-3.5 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-[#16A34A] transition-colors cursor-pointer"
+                        className="absolute right-3.5 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-[#16A34A] transition-colors cursor-pointer min-h-[36px] flex items-center justify-center"
                       >
                         {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                       </button>
@@ -853,13 +853,13 @@ export default function Screen4Inscription({ onSignupSuccess, onGoToLogin, lang 
                 </div>
 
                 {/* Bouton Principal Step 2: "Créer mon compte" with Glow */}
-                <div className="space-y-1 pt-0.5">
+                <div className="space-y-0.5 pt-0.5">
                   <motion.button
                     whileHover={{ scale: 1.01 }}
                     whileTap={{ scale: 0.98 }}
                     type="submit"
                     disabled={isSubmitting || !isStep2FormValid}
-                    className="relative w-full h-[46px] sm:h-[48px] rounded-xl text-sm sm:text-base font-black bg-gradient-to-r from-[#16A34A] via-[#15803D] to-[#7C3AED] text-white shadow-[0_4px_16px_rgba(22,163,74,0.3)] hover:shadow-[0_6px_22px_rgba(22,163,74,0.45)] flex items-center justify-center gap-2 transition-all duration-300 cursor-pointer overflow-hidden disabled:opacity-50 disabled:cursor-not-allowed disabled:pointer-events-none disabled:shadow-none group"
+                    className="relative w-full h-[48px] rounded-xl text-sm sm:text-base font-black bg-gradient-to-r from-[#16A34A] via-[#15803D] to-[#7C3AED] text-white shadow-[0_4px_16px_rgba(22,163,74,0.3)] hover:shadow-[0_6px_22px_rgba(22,163,74,0.45)] flex items-center justify-center gap-2 transition-all duration-300 cursor-pointer overflow-hidden disabled:opacity-50 disabled:cursor-not-allowed disabled:pointer-events-none disabled:shadow-none group"
                   >
                     <span className="absolute inset-0 w-1/2 h-full bg-white/20 skew-x-12 -translate-x-full group-hover:translate-x-[300%] transition-transform duration-1000 ease-in-out pointer-events-none" />
 
@@ -876,27 +876,27 @@ export default function Screen4Inscription({ onSignupSuccess, onGoToLogin, lang 
                     )}
                   </motion.button>
                   {!isStep2FormValid && (
-                    <p className="text-[10.5px] font-semibold text-slate-400 text-center">
+                    <p className="text-[10px] font-semibold text-slate-400 text-center">
                       {currentLang === 'fr' ? 'Saisissez le code SMS et un mot de passe valide (8+ car.)' : 'Fill in SMS code and a valid password (8+ chars)'}
                     </p>
                   )}
                 </div>
 
-                {/* 8. BADGES DE CONFIANCE - Compact Height Grid */}
-                <div className="pt-2 border-t border-slate-100 grid grid-cols-2 sm:grid-cols-4 gap-1.5 text-[10px] font-extrabold text-slate-600 items-stretch">
-                  <div className="py-1.5 px-1.5 rounded-xl bg-slate-50/90 border border-slate-100 flex items-center justify-center gap-1 hover:bg-emerald-50/60 hover:border-emerald-200/80 transition-all text-center h-full w-full min-h-[34px]">
+                {/* 8. BADGES DE CONFIANCE - Ultra-Compact Grid */}
+                <div className="pt-1.5 border-t border-slate-100 grid grid-cols-2 sm:grid-cols-4 gap-1 text-[9.5px] sm:text-[10px] font-extrabold text-slate-600 items-stretch">
+                  <div className="py-1 px-1 rounded-lg bg-slate-50/90 border border-slate-100 flex items-center justify-center gap-1 hover:bg-emerald-50/60 transition-all text-center h-full w-full min-h-[30px] sm:min-h-[32px]">
                     <Lock className="w-3 h-3 text-[#16A34A] shrink-0" />
                     <span className="leading-tight">{currentLang === 'fr' ? 'Données chiffrées' : 'Encrypted data'}</span>
                   </div>
-                  <div className="py-1.5 px-1.5 rounded-xl bg-slate-50/90 border border-slate-100 flex items-center justify-center gap-1 hover:bg-emerald-50/60 hover:border-emerald-200/80 transition-all text-center h-full w-full min-h-[34px]">
+                  <div className="py-1 px-1 rounded-lg bg-slate-50/90 border border-slate-100 flex items-center justify-center gap-1 hover:bg-emerald-50/60 transition-all text-center h-full w-full min-h-[30px] sm:min-h-[32px]">
                     <Smartphone className="w-3 h-3 text-[#16A34A] shrink-0" />
                     <span className="leading-tight">{currentLang === 'fr' ? 'Vérification auto' : 'Auto verification'}</span>
                   </div>
-                  <div className="py-1.5 px-1.5 rounded-xl bg-slate-50/90 border border-slate-100 flex items-center justify-center gap-1 hover:bg-emerald-50/60 hover:border-emerald-200/80 transition-all text-center h-full w-full min-h-[34px]">
+                  <div className="py-1 px-1 rounded-lg bg-slate-50/90 border border-slate-100 flex items-center justify-center gap-1 hover:bg-emerald-50/60 transition-all text-center h-full w-full min-h-[30px] sm:min-h-[32px]">
                     <ShieldCheck className="w-3 h-3 text-[#16A34A] shrink-0" />
                     <span className="leading-tight">{currentLang === 'fr' ? 'Anti-fraude' : 'Anti-fraud'}</span>
                   </div>
-                  <div className="py-1.5 px-1.5 rounded-xl bg-slate-50/90 border border-slate-100 flex items-center justify-center gap-1 hover:bg-emerald-50/60 hover:border-emerald-200/80 transition-all text-center h-full w-full min-h-[34px]">
+                  <div className="py-1 px-1 rounded-lg bg-slate-50/90 border border-slate-100 flex items-center justify-center gap-1 hover:bg-emerald-50/60 transition-all text-center h-full w-full min-h-[30px] sm:min-h-[32px]">
                     <Globe className="w-3 h-3 text-[#16A34A] shrink-0" />
                     <span className="leading-tight">{currentLang === 'fr' ? 'Toute l\'Afrique' : 'All of Africa'}</span>
                   </div>

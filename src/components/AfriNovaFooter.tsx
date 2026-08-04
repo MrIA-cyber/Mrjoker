@@ -185,37 +185,37 @@ export default function AfriNovaFooter({ lang = 'fr', onNavigate }: AfriNovaFoot
 
   return (
     <>
-      <footer className="w-full bg-white/95 backdrop-blur-md text-slate-800 border-t border-slate-200/90 mt-12 rounded-t-3xl overflow-hidden font-sans transition-all relative pb-28 sm:pb-12 shadow-md">
+      <footer className="w-full bg-white/95 backdrop-blur-md text-slate-800 border-t border-slate-200/90 mt-4 sm:mt-6 rounded-t-2xl sm:rounded-t-3xl overflow-hidden font-sans transition-all relative pb-20 sm:pb-6 shadow-xs">
         
         {/* Decorative Top Accent Line */}
         <div className="h-1 w-full bg-gradient-to-r from-[#16A34A] via-[#7C3AED] to-[#16A34A]" />
 
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-10">
+        <div className="max-w-7xl mx-auto px-3.5 sm:px-6 lg:px-8 py-3.5 sm:py-5">
 
           {/* ==================== 1. VERSION MOBILE (Android & iPhone - Accordion Mode) ==================== */}
-          <div className="block sm:hidden space-y-5">
+          <div className="block sm:hidden space-y-3">
             
             {/* Top Header Logo & Slogan */}
-            <div className="flex flex-col items-center justify-center text-center space-y-2 pb-2 border-b border-slate-200/80">
+            <div className="flex items-center justify-between pb-2 border-b border-slate-200/80">
               <div className="flex items-center gap-2">
                 <AfriNovaLogo variant="horizontal" size="sm" showText={true} showSlogan={false} />
-                <span className="bg-emerald-100 text-[#16A34A] text-[10px] font-black px-2.5 py-0.5 rounded-full border border-emerald-300/80 shadow-3xs">
-                  Version 1.0
+                <span className="bg-emerald-100 text-[#16A34A] text-[9.5px] font-black px-2 py-0.5 rounded-full border border-emerald-300/80 shadow-3xs">
+                  v1.0
                 </span>
               </div>
-              <p className="text-xs font-bold text-[#7C3AED] italic">
-                "L'Afrique connectée au monde."
+              <p className="text-[11px] font-bold text-[#7C3AED] italic">
+                "L'Afrique connectée"
               </p>
             </div>
 
             {/* Mobile Accordion Menu */}
-            <div className="space-y-2.5">
+            <div className="space-y-2">
               
               {/* Accordion 1: Présentation & Vision */}
-              <div className="bg-[#F8FAFC] rounded-2xl border border-slate-200/80 overflow-hidden shadow-3xs">
+              <div className="bg-[#F8FAFC] rounded-xl border border-slate-200/80 overflow-hidden shadow-3xs">
                 <button
                   onClick={() => toggleAccordion('presentation')}
-                  className="w-full px-4 py-3.5 flex items-center justify-between text-left text-xs font-black text-[#16A34A] uppercase tracking-wider cursor-pointer active:bg-emerald-50/50"
+                  className="w-full px-3.5 py-2.5 flex items-center justify-between text-left text-xs font-black text-[#16A34A] uppercase tracking-wider cursor-pointer active:bg-emerald-50/50 min-h-[44px]"
                 >
                   <div className="flex items-center gap-2">
                     <Globe className="w-4 h-4 text-[#16A34A]" />
@@ -230,13 +230,13 @@ export default function AfriNovaFooter({ lang = 'fr', onNavigate }: AfriNovaFoot
                       initial={{ opacity: 0, height: 0 }}
                       animate={{ opacity: 1, height: 'auto' }}
                       exit={{ opacity: 0, height: 0 }}
-                      className="px-3 pb-3 pt-1 space-y-1.5 border-t border-slate-200/60 bg-white"
+                      className="px-2.5 pb-2.5 pt-1 space-y-1 border-t border-slate-200/60 bg-white"
                     >
                       {['apropos', 'vision', 'mission', 'valeurs'].map((key) => (
                         <button
                           key={key}
                           onClick={() => setActiveModalLink(key)}
-                          className="w-full min-h-[44px] py-2.5 px-3 rounded-xl bg-slate-50 hover:bg-emerald-50 text-slate-700 hover:text-[#16A34A] text-xs font-bold flex items-center justify-between border border-slate-200/80 transition active:scale-[0.99] cursor-pointer"
+                          className="w-full min-h-[44px] py-2 px-3 rounded-lg bg-slate-50 hover:bg-emerald-50 text-slate-700 hover:text-[#16A34A] text-xs font-bold flex items-center justify-between border border-slate-200/80 transition active:scale-[0.99] cursor-pointer"
                         >
                           <span className="flex items-center gap-2">
                             <ChevronRight className="w-3.5 h-3.5 text-[#16A34A]" />
@@ -251,10 +251,10 @@ export default function AfriNovaFooter({ lang = 'fr', onNavigate }: AfriNovaFoot
               </div>
 
               {/* Accordion 2: Aide & Support 24/7 */}
-              <div className="bg-[#F8FAFC] rounded-2xl border border-slate-200/80 overflow-hidden shadow-3xs">
+              <div className="bg-[#F8FAFC] rounded-xl border border-slate-200/80 overflow-hidden shadow-3xs">
                 <button
                   onClick={() => toggleAccordion('support')}
-                  className="w-full px-4 py-3.5 flex items-center justify-between text-left text-xs font-black text-[#7C3AED] uppercase tracking-wider cursor-pointer active:bg-purple-50/50"
+                  className="w-full px-3.5 py-2.5 flex items-center justify-between text-left text-xs font-black text-[#7C3AED] uppercase tracking-wider cursor-pointer active:bg-purple-50/50 min-h-[44px]"
                 >
                   <div className="flex items-center gap-2">
                     <ShieldCheck className="w-4 h-4 text-[#7C3AED]" />
@@ -269,13 +269,13 @@ export default function AfriNovaFooter({ lang = 'fr', onNavigate }: AfriNovaFoot
                       initial={{ opacity: 0, height: 0 }}
                       animate={{ opacity: 1, height: 'auto' }}
                       exit={{ opacity: 0, height: 0 }}
-                      className="px-3 pb-3 pt-1 space-y-1.5 border-t border-slate-200/60 bg-white"
+                      className="px-2.5 pb-2.5 pt-1 space-y-1 border-t border-slate-200/60 bg-white"
                     >
                       {['support', 'contact', 'confidentialite', 'conditions'].map((key) => (
                         <button
                           key={key}
                           onClick={() => setActiveModalLink(key)}
-                          className="w-full min-h-[44px] py-2.5 px-3 rounded-xl bg-slate-50 hover:bg-purple-50 text-slate-700 hover:text-[#7C3AED] text-xs font-bold flex items-center justify-between border border-slate-200/80 transition active:scale-[0.99] cursor-pointer"
+                          className="w-full min-h-[44px] py-2 px-3 rounded-lg bg-slate-50 hover:bg-purple-50 text-slate-700 hover:text-[#7C3AED] text-xs font-bold flex items-center justify-between border border-slate-200/80 transition active:scale-[0.99] cursor-pointer"
                         >
                           <span className="flex items-center gap-2">
                             <ChevronRight className="w-3.5 h-3.5 text-[#7C3AED]" />
@@ -290,10 +290,10 @@ export default function AfriNovaFooter({ lang = 'fr', onNavigate }: AfriNovaFoot
               </div>
 
               {/* Accordion 3: Garanties & Sécurité */}
-              <div className="bg-[#F8FAFC] rounded-2xl border border-slate-200/80 overflow-hidden shadow-3xs">
+              <div className="bg-[#F8FAFC] rounded-xl border border-slate-200/80 overflow-hidden shadow-3xs">
                 <button
                   onClick={() => toggleAccordion('security')}
-                  className="w-full px-4 py-3.5 flex items-center justify-between text-left text-xs font-black text-amber-600 uppercase tracking-wider cursor-pointer active:bg-amber-50/50"
+                  className="w-full px-3.5 py-2.5 flex items-center justify-between text-left text-xs font-black text-amber-600 uppercase tracking-wider cursor-pointer active:bg-amber-50/50 min-h-[44px]"
                 >
                   <div className="flex items-center gap-2">
                     <Lock className="w-4 h-4 text-amber-600" />
@@ -308,9 +308,9 @@ export default function AfriNovaFooter({ lang = 'fr', onNavigate }: AfriNovaFoot
                       initial={{ opacity: 0, height: 0 }}
                       animate={{ opacity: 1, height: 'auto' }}
                       exit={{ opacity: 0, height: 0 }}
-                      className="px-3 pb-3 pt-2 space-y-2 border-t border-slate-200/60 bg-white text-xs text-slate-700"
+                      className="px-2.5 pb-2.5 pt-2 space-y-1.5 border-t border-slate-200/60 bg-white text-xs text-slate-700"
                     >
-                      <div className="p-3 bg-emerald-50/60 rounded-xl border border-emerald-200/70 flex items-center gap-3">
+                      <div className="p-2.5 bg-emerald-50/60 rounded-lg border border-emerald-200/70 flex items-center gap-2.5">
                         <Lock className="w-4 h-4 text-[#16A34A] shrink-0" />
                         <div>
                           <strong className="text-[#0F172A] block text-xs">Cryptage SSL 256-bit</strong>
@@ -318,7 +318,7 @@ export default function AfriNovaFooter({ lang = 'fr', onNavigate }: AfriNovaFoot
                         </div>
                       </div>
 
-                      <div className="p-3 bg-purple-50/60 rounded-xl border border-purple-200/70 flex items-center gap-3">
+                      <div className="p-2.5 bg-purple-50/60 rounded-lg border border-purple-200/70 flex items-center gap-2.5">
                         <ShieldCheck className="w-4 h-4 text-[#7C3AED] shrink-0" />
                         <div>
                           <strong className="text-[#0F172A] block text-xs">Commerçants Vérifiés</strong>
@@ -333,23 +333,20 @@ export default function AfriNovaFooter({ lang = 'fr', onNavigate }: AfriNovaFoot
             </div>
 
             {/* Mobile Footer Copyright */}
-            <div className="pt-3 border-t border-slate-200/80 text-center text-xs text-slate-600 space-y-1">
+            <div className="pt-2 border-t border-slate-200/80 text-center text-[11px] text-slate-600 space-y-0.5">
               <p className="font-extrabold text-[#0F172A]">
-                © 2026 AfriNova
-              </p>
-              <p className="text-slate-600 font-medium text-[11px]">
-                Fondé et développé par <strong className="text-[#16A34A] font-bold">Chris Pokam</strong>
+                © 2026 AfriNova • Fondé par <strong className="text-[#16A34A] font-bold">Chris Pokam</strong>
               </p>
               <p className="text-[10px] text-slate-400">Tous droits réservés.</p>
             </div>
           </div>
 
           {/* ==================== 2. VERSION TABLETTE (Intermediate Spacing & Grid) ==================== */}
-          <div className="hidden sm:block md:hidden space-y-6">
-            <div className="grid grid-cols-2 gap-6 items-start">
+          <div className="hidden sm:block md:hidden space-y-4">
+            <div className="grid grid-cols-2 gap-4 items-start">
               
               {/* Left Column: Brand & Slogan */}
-              <div className="space-y-3">
+              <div className="space-y-2">
                 <div className="flex items-center gap-2">
                   <AfriNovaLogo variant="horizontal" size="md" showText={true} showSlogan={false} />
                   <span className="bg-emerald-100 text-[#16A34A] text-[10px] font-black px-2 py-0.5 rounded-full border border-emerald-300/80">
@@ -361,7 +358,7 @@ export default function AfriNovaFooter({ lang = 'fr', onNavigate }: AfriNovaFoot
                   "L'Afrique connectée au monde."
                 </p>
 
-                <div className="text-xs text-slate-600 pt-2 border-t border-slate-200/80 space-y-1">
+                <div className="text-[11px] text-slate-600 pt-2 border-t border-slate-200/80 space-y-0.5">
                   <p className="font-bold text-[#0F172A]">© 2026 AfriNova</p>
                   <p>Fondé et développé par <span className="text-[#16A34A] font-bold">Chris Pokam</span></p>
                   <p className="text-[10px] text-slate-400">Tous droits réservés.</p>
@@ -370,15 +367,15 @@ export default function AfriNovaFooter({ lang = 'fr', onNavigate }: AfriNovaFoot
 
               {/* Right Column: Official Links Grid */}
               <div>
-                <h3 className="text-xs font-black uppercase text-[#16A34A] tracking-wider mb-2.5">
+                <h3 className="text-xs font-black uppercase text-[#16A34A] tracking-wider mb-2">
                   Navigation Officielle
                 </h3>
-                <div className="grid grid-cols-1 gap-1.5 text-xs font-medium">
+                <div className="grid grid-cols-1 gap-1 text-xs font-medium">
                   {Object.entries(officialLinksData).map(([key, item]) => (
                     <button
                       key={key}
                       onClick={() => setActiveModalLink(key)}
-                      className="text-left text-slate-700 hover:text-[#16A34A] transition flex items-center gap-1.5 cursor-pointer py-1"
+                      className="text-left text-slate-700 hover:text-[#16A34A] transition flex items-center gap-1.5 cursor-pointer py-0.5"
                     >
                       <ChevronRight className="w-3 h-3 text-[#16A34A]" />
                       <span>{item.title}</span>
@@ -391,47 +388,47 @@ export default function AfriNovaFooter({ lang = 'fr', onNavigate }: AfriNovaFoot
           </div>
 
           {/* ==================== 3. VERSION PC / DESKTOP (Multi-column Premium) ==================== */}
-          <div className="hidden md:grid md:grid-cols-4 gap-8">
+          <div className="hidden md:grid md:grid-cols-4 gap-6">
             
             {/* Column 1: Brand & Identity */}
-            <div className="space-y-4">
-              <div className="flex items-center gap-2.5">
+            <div className="space-y-2.5">
+              <div className="flex items-center gap-2">
                 <AfriNovaLogo variant="horizontal" size="md" showText={true} showSlogan={false} />
-                <span className="bg-emerald-100 text-[#16A34A] text-[10px] font-black px-2.5 py-0.5 rounded-full border border-emerald-300/80 shrink-0 shadow-3xs">
+                <span className="bg-emerald-100 text-[#16A34A] text-[10px] font-black px-2 py-0.5 rounded-full border border-emerald-300/80 shrink-0 shadow-3xs">
                   Version 1.0
                 </span>
               </div>
 
-              <p className="text-xs font-bold text-[#7C3AED] italic leading-relaxed">
+              <p className="text-xs font-bold text-[#7C3AED] italic leading-tight">
                 "L'Afrique connectée au monde."
               </p>
 
-              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-emerald-50 border border-emerald-200/80 text-[11px] text-[#16A34A] font-bold shadow-3xs">
+              <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-50 border border-emerald-200/80 text-[10.5px] text-[#16A34A] font-bold shadow-3xs">
                 <Sparkles className="w-3.5 h-3.5 text-[#16A34A]" />
                 <span>Plateforme Officielle Certifiée</span>
               </div>
 
-              <div className="pt-3 border-t border-slate-200/80 space-y-1 text-xs">
+              <div className="pt-2 border-t border-slate-200/80 space-y-0.5 text-[11px]">
                 <p className="font-black text-[#0F172A]">© 2026 AfriNova</p>
                 <p className="text-slate-600 font-medium">
-                  Fondé et développé par <strong className="text-[#16A34A] font-black">Chris Pokam</strong>
+                  Fondé par <strong className="text-[#16A34A] font-black">Chris Pokam</strong>
                 </p>
                 <p className="text-[10px] text-slate-400">Tous droits réservés.</p>
               </div>
             </div>
 
             {/* Column 2: À propos & Engagements */}
-            <div className="space-y-3">
+            <div className="space-y-2">
               <h3 className="text-xs font-black uppercase tracking-wider text-[#16A34A] flex items-center gap-1.5">
-                <Globe className="w-4 h-4" />
+                <Globe className="w-3.5 h-3.5" />
                 <span>Présentation</span>
               </h3>
-              <ul className="space-y-2 text-xs text-slate-600">
+              <ul className="space-y-1.5 text-xs text-slate-600">
                 {['apropos', 'vision', 'mission', 'valeurs'].map((key) => (
                   <li key={key}>
                     <button
                       onClick={() => setActiveModalLink(key)}
-                      className="hover:text-[#16A34A] transition flex items-center gap-1.5 cursor-pointer group"
+                      className="hover:text-[#16A34A] transition flex items-center gap-1.5 cursor-pointer group py-0.5"
                     >
                       <ChevronRight className="w-3 h-3 text-[#16A34A] group-hover:translate-x-0.5 transition-transform" />
                       <span>{officialLinksData[key].title}</span>
@@ -442,17 +439,17 @@ export default function AfriNovaFooter({ lang = 'fr', onNavigate }: AfriNovaFoot
             </div>
 
             {/* Column 3: Support & Légal */}
-            <div className="space-y-3">
+            <div className="space-y-2">
               <h3 className="text-xs font-black uppercase tracking-wider text-[#7C3AED] flex items-center gap-1.5">
-                <ShieldCheck className="w-4 h-4" />
+                <ShieldCheck className="w-3.5 h-3.5" />
                 <span>Aide & Légal</span>
               </h3>
-              <ul className="space-y-2 text-xs text-slate-600">
+              <ul className="space-y-1.5 text-xs text-slate-600">
                 {['support', 'contact', 'confidentialite', 'conditions'].map((key) => (
                   <li key={key}>
                     <button
                       onClick={() => setActiveModalLink(key)}
-                      className="hover:text-[#7C3AED] transition flex items-center gap-1.5 cursor-pointer group"
+                      className="hover:text-[#7C3AED] transition flex items-center gap-1.5 cursor-pointer group py-0.5"
                     >
                       <ChevronRight className="w-3 h-3 text-[#7C3AED] group-hover:translate-x-0.5 transition-transform" />
                       <span>{officialLinksData[key].title}</span>
@@ -463,25 +460,25 @@ export default function AfriNovaFooter({ lang = 'fr', onNavigate }: AfriNovaFoot
             </div>
 
             {/* Column 4: Confiance & Sécurité */}
-            <div className="space-y-3">
+            <div className="space-y-2">
               <h3 className="text-xs font-black uppercase tracking-wider text-[#0F172A] flex items-center gap-1.5">
-                <Lock className="w-4 h-4 text-[#16A34A]" />
+                <Lock className="w-3.5 h-3.5 text-[#16A34A]" />
                 <span>Garanties AfriNova</span>
               </h3>
-              <div className="space-y-2 text-xs text-slate-600">
-                <div className="p-2.5 bg-emerald-50/50 rounded-xl border border-emerald-200/70 flex items-center gap-2">
-                  <Lock className="w-4 h-4 text-[#16A34A] shrink-0" />
+              <div className="space-y-1.5 text-xs text-slate-600">
+                <div className="p-2 bg-emerald-50/50 rounded-lg border border-emerald-200/70 flex items-center gap-2">
+                  <Lock className="w-3.5 h-3.5 text-[#16A34A] shrink-0" />
                   <div>
-                    <strong className="text-[#0F172A] block text-[11px]">Cryptage SSL 256-bit</strong>
-                    <span className="text-[10px]">Transactions Mobile Money sécurisées</span>
+                    <strong className="text-[#0F172A] block text-[10.5px]">Cryptage SSL 256-bit</strong>
+                    <span className="text-[9.5px]">Paiements sécurisés</span>
                   </div>
                 </div>
 
-                <div className="p-2.5 bg-purple-50/50 rounded-xl border border-purple-200/70 flex items-center gap-2">
-                  <ShieldCheck className="w-4 h-4 text-[#7C3AED] shrink-0" />
+                <div className="p-2 bg-purple-50/50 rounded-lg border border-purple-200/70 flex items-center gap-2">
+                  <ShieldCheck className="w-3.5 h-3.5 text-[#7C3AED] shrink-0" />
                   <div>
-                    <strong className="text-[#0F172A] block text-[11px]">Commerçants Vérifiés</strong>
-                    <span className="text-[10px]">Protection contre les fraudes</span>
+                    <strong className="text-[#0F172A] block text-[10.5px]">Commerçants Vérifiés</strong>
+                    <span className="text-[9.5px]">Protection anti-fraude</span>
                   </div>
                 </div>
               </div>
