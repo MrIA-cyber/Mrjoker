@@ -1,13 +1,18 @@
-const CACHE_NAME = 'afrinova-v2';
+const CACHE_NAME = 'afrinova-v3';
 const ASSETS_TO_CACHE = [
   '/',
   '/index.html',
   '/manifest.json',
   '/logo-afrinova.svg',
+  '/icon-48.png',
+  '/icon-72.png',
+  '/icon-96.png',
+  '/icon-144.png',
   '/icon-192.png',
   '/icon-512.png',
   '/apple-touch-icon.png',
-  '/favicon.png'
+  '/favicon.png',
+  '/favicon.ico'
 ];
 
 self.addEventListener('install', (event) => {
