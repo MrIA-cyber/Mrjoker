@@ -31,7 +31,13 @@ async function generate() {
     .png()
     .toFile('public/favicon.png');
 
-  console.log('Successfully generated icon-192.png, icon-512.png, apple-touch-icon.png, favicon.png');
+  // favicon.ico (copy 64x64 or convert)
+  await sharp(svgBuffer)
+    .resize(48, 48)
+    .toFormat('png')
+    .toFile('public/favicon.ico');
+
+  console.log('Successfully generated icon-192.png, icon-512.png, apple-touch-icon.png, favicon.png, favicon.ico');
 }
 
 generate().catch(console.error);
