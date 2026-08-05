@@ -19,6 +19,7 @@ import CityNews from './components/CityNews';
 import BestMerchantWidget from './components/BestMerchantWidget';
 import SmartRecommendationBanner from './components/SmartRecommendationBanner';
 import SubscriptionNotificationBanner from './components/SubscriptionNotificationBanner';
+import PWAInstallBanner from './components/PWAInstallBanner';
 import SupportPhoneNumber from './components/SupportPhoneNumber';
 import RestrictedAuthModal from './components/RestrictedAuthModal';
 import SplashScreen from './components/SplashScreen';
@@ -980,6 +981,9 @@ export default function App() {
           onOpenSubscriptionModal={() => setIsSubscriptionModalOpen(true)}
           lang={lang}
         />
+
+        {/* PWA Direct Installation Prompt Banner */}
+        <PWAInstallBanner />
 
         {/* 1. Header Navigation Block (Rendered for sub-views, as BafoussamMarketHomePage has its own reference header) */}
         {activeView !== 'shop' && activeView !== 'connexion' && activeView !== 'inscription' && (

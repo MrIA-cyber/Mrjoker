@@ -1,21 +1,24 @@
 {
-  "short_name": "Bafoussam Market",
-  "name": "Bafoussam Market - Livraison locale à Bafoussam",
+  "short_name": "AfriNova",
+  "name": "AfriNova Market - Plateforme panafricaine",
   "icons": [
     {
       "src": "/icon-192.png",
       "type": "image/png",
-      "sizes": "192x192"
+      "sizes": "192x192",
+      "purpose": "any maskable"
     },
     {
       "src": "/icon-512.png",
       "type": "image/png",
-      "sizes": "512x512"
+      "sizes": "512x512",
+      "purpose": "any maskable"
     },
     {
-      "src": "/logo-bafoussam-market.svg",
+      "src": "/logo-afrinova.svg",
       "type": "image/svg+xml",
-      "sizes": "any"
+      "sizes": "any",
+      "purpose": "any"
     }
   ],
   "start_url": "/",
