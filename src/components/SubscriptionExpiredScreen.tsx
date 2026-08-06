@@ -21,6 +21,7 @@ export default function SubscriptionExpiredScreen({
 }: SubscriptionExpiredScreenProps) {
   const [operator, setOperator] = useState<'momo' | 'orange' | null>(null);
   const [phone, setPhone] = useState(currentUser.phone || '');
+  const [isPhoneValid, setIsPhoneValid] = useState(false);
   const [pin, setPin] = useState('');
   const [step, setStep] = useState<'details' | 'payment-select' | 'processing' | 'ussd-prompt' | 'success'>('details');
   const [error, setError] = useState('');
@@ -30,6 +31,10 @@ export default function SubscriptionExpiredScreen({
   };
 
   const handlePaymentSelect = (selectedOp: 'momo' | 'orange') => {
+    if (!phone || !isPhoneValid) {
+      setError(lang === 'fr' ? 'Le numéro de téléphone ne correspond pas au pays sélectionné.' : 'The phone number does not match the selected country.');
+      return;
+    }
     setOperator(selectedOp);
     setStep('processing');
     setError('');
@@ -220,7 +225,10 @@ export default function SubscriptionExpiredScreen({
                   required
                   value={phone}
                   lang={lang}
-                  onChange={(fullNum) => setPhone(fullNum)}
+                  onChange={(fullNum, isValid) => {
+                    setPhone(fullNum);
+                    setIsPhoneValid(isValid);
+                  }}
                 />
               </div>
 

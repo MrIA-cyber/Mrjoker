@@ -29,6 +29,16 @@ export default function Screen3Connexion({ onLoginSuccess, onGoToSignup }: Scree
     const adminUser = ensureAdminAccountExists();
 
     const cleanInput = email.trim();
+
+    if (!cleanInput.includes('@')) {
+      const digitsOnly = cleanInput.replace(/\D/g, '');
+      if (!digitsOnly || digitsOnly.length < 8 || digitsOnly.length > 15) {
+        setIsLoading(false);
+        setErrorMessage('Le numéro de téléphone saisi ne correspond à aucun format de pays valide.');
+        return;
+      }
+    }
+
     const formattedEmail = cleanInput.includes('@') 
       ? cleanInput 
       : `${cleanInput.replace(/[^0-9+]/g, '')}@afrinova.cm`;

@@ -84,6 +84,7 @@ export default function PremiumSubscriptionScreen({
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState<'momo' | 'orange' | 'visa' | 'mastercard'>('momo');
   const [paymentPhone, setPaymentPhone] = useState(currentUser?.phone || '');
+  const [isPhoneValid, setIsPhoneValid] = useState(false);
   const [cardNumber, setCardNumber] = useState('');
   const [cardExpiry, setCardExpiry] = useState('');
   const [cardCvc, setCardCvc] = useState('');
@@ -106,8 +107,8 @@ export default function PremiumSubscriptionScreen({
     setPaymentError('');
 
     if (paymentMethod === 'momo' || paymentMethod === 'orange') {
-      if (!paymentPhone.trim() || paymentPhone.trim().length < 8) {
-        setPaymentError(lang === 'fr' ? 'Veuillez saisir un numéro de téléphone valide.' : 'Please enter a valid phone number.');
+      if (!paymentPhone.trim() || !isPhoneValid) {
+        setPaymentError(lang === 'fr' ? 'Le numéro de téléphone ne correspond pas au pays sélectionné.' : 'The phone number does not match the selected country.');
         return;
       }
     } else {
@@ -621,7 +622,10 @@ export default function PremiumSubscriptionScreen({
                         required
                         value={paymentPhone}
                         lang={lang}
-                        onChange={(fullNum) => setPaymentPhone(fullNum)}
+                        onChange={(fullNum, isValid) => {
+                          setPaymentPhone(fullNum);
+                          setIsPhoneValid(isValid);
+                        }}
                       />
                     </div>
                   ) : (

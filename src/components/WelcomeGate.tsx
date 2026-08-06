@@ -29,6 +29,7 @@ export default function WelcomeGate({ onSuccess, lang, onLangChange, initialStep
 
   // Login State
   const [loginPhone, setLoginPhone] = useState('');
+  const [isLoginPhoneValid, setIsLoginPhoneValid] = useState(false);
   const [loginPassword, setLoginPassword] = useState('');
   const [showLoginPassword, setShowLoginPassword] = useState(false);
   const [validationError, setValidationError] = useState('');
@@ -133,8 +134,12 @@ export default function WelcomeGate({ onSuccess, lang, onLangChange, initialStep
 
     const cleanInputPhone = loginPhone.trim();
 
-    if (!cleanInputPhone) {
-      setValidationError(lang === 'fr' ? 'Veuillez entrer votre numéro de téléphone.' : 'Please enter your phone number.');
+    if (!cleanInputPhone || !isLoginPhoneValid) {
+      setValidationError(
+        lang === 'fr'
+          ? 'Le numéro de téléphone ne correspond pas au pays sélectionné. Veuillez vérifier le pays et le nombre de chiffres.'
+          : 'The phone number does not match the selected country. Please check country and digit count.'
+      );
       return;
     }
 
@@ -308,7 +313,10 @@ export default function WelcomeGate({ onSuccess, lang, onLangChange, initialStep
                     required
                     value={loginPhone}
                     lang={lang}
-                    onChange={(fullNumber) => setLoginPhone(fullNumber)}
+                    onChange={(fullNumber, isValid) => {
+                      setLoginPhone(fullNumber);
+                      setIsLoginPhoneValid(isValid);
+                    }}
                     placeholder={lang === 'fr' ? 'Entrez votre numéro de téléphone' : 'Enter your phone number'}
                   />
                 </div>

@@ -30,6 +30,7 @@ export default function CartDrawer({
   const [deliveryDetails, setDeliveryDetails] = useState('');
   const [paymentOperator, setPaymentOperator] = useState<'momo' | 'orange' | 'cash_on_delivery'>('momo');
   const [paymentPhone, setPaymentPhone] = useState(currentUser.phone);
+  const [isPhoneValid, setIsPhoneValid] = useState(false);
   
   const [step, setStep] = useState<'cart' | 'checkout' | 'processing' | 'ussd-prompt' | 'success'>('cart');
   const [pin, setPin] = useState('');
@@ -47,8 +48,8 @@ export default function CartDrawer({
       setValidationError(lang === 'fr' ? 'Veuillez préciser l\'adresse de livraison.' : 'Please specify the delivery address.');
       return;
     }
-    if (!paymentPhone.trim()) {
-      setValidationError(lang === 'fr' ? 'Veuillez spécifier le numéro de téléphone.' : 'Please specify the phone number.');
+    if (!paymentPhone.trim() || !isPhoneValid) {
+      setValidationError(lang === 'fr' ? 'Le numéro de téléphone ne correspond pas au pays sélectionné.' : 'The phone number does not match the selected country.');
       return;
     }
     setValidationError('');
@@ -399,7 +400,10 @@ export default function CartDrawer({
                       required
                       value={paymentPhone}
                       lang={lang}
-                      onChange={(fullNum) => setPaymentPhone(fullNum)}
+                      onChange={(fullNum, isValid) => {
+                        setPaymentPhone(fullNum);
+                        setIsPhoneValid(isValid);
+                      }}
                     />
                   </div>
 

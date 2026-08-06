@@ -30,7 +30,7 @@ export default function Screen10Paiement({ onPaymentSuccess }: Screen10PaiementP
   const deliveryFee = 1000;
   const total = subtotal + deliveryFee;
 
-  const isPhoneValid = phone.replace(/\D/g, '').length >= 8;
+  const [isPhoneValid, setIsPhoneValid] = useState(false);
 
   const handlePay = (e: React.FormEvent) => {
     e.preventDefault();
@@ -193,7 +193,10 @@ export default function Screen10Paiement({ onPaymentSuccess }: Screen10PaiementP
               required
               value={phone}
               lang="fr"
-              onChange={(fullNum) => setPhone(fullNum)}
+              onChange={(fullNum, isValid) => {
+                setPhone(fullNum);
+                setIsPhoneValid(isValid);
+              }}
             />
             <p className="text-[10px] text-slate-500 font-medium">
               Un message USSD va apparaître sur votre téléphone pour valider le code PIN.

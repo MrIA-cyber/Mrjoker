@@ -149,6 +149,7 @@ export default function Screen4Inscription({ onSignupSuccess, onGoToLogin, lang 
   const [selectedProfile, setSelectedProfile] = useState<ProfileType>('client');
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const [selectedCountry, setSelectedCountry] = useState<Country | null>(null);
+  const [isPhoneValidState, setIsPhoneValidState] = useState(false);
 
   // OTP Simulation state
   const [simulatedOtp, setSimulatedOtp] = useState('123456');
@@ -162,7 +163,7 @@ export default function Screen4Inscription({ onSignupSuccess, onGoToLogin, lang 
 
   // Real-time Field Validations
   const isFullNameValid = formData.fullName.trim().length >= 2;
-  const isPhoneValid = formData.phone.replace(/\s+/g, '').replace(/[^0-9+]/g, '').length >= 8;
+  const isPhoneValid = isPhoneValidState && formData.phone.length > 0;
   const isEmailValid = !formData.email.trim() || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email.trim()); // Email is optional
   const isOtpValid = formData.otpCode.trim().length >= 4;
   const isPasswordValid = formData.password.length >= 8;
@@ -201,7 +202,14 @@ export default function Screen4Inscription({ onSignupSuccess, onGoToLogin, lang 
     }
 
     if (!isPhoneValid) {
-      setFormError(currentLang === 'fr' ? 'Veuillez entrer un numéro de téléphone valide (ex: 677 89 45 12).' : 'Please enter a valid phone number.');
+      const cName = selectedCountry ? (currentLang === 'fr' ? selectedCountry.nameFr : selectedCountry.nameEn) : (currentLang === 'fr' ? 'sélectionné' : 'selected');
+      const dCode = selectedCountry ? selectedCountry.dialCode : '';
+      const reqDigits = selectedCountry ? selectedCountry.digits.join(' ou ') : '9';
+      setFormError(
+        currentLang === 'fr'
+          ? `Le numéro de téléphone ne correspond pas au pays sélectionné (${cName} ${dCode}). ${reqDigits} chiffres requis.`
+          : `The phone number does not match the selected country (${cName} ${dCode}). ${reqDigits} digits required.`
+      );
       return;
     }
 
@@ -549,6 +557,7 @@ export default function Screen4Inscription({ onSignupSuccess, onGoToLogin, lang 
                     onChange={(fullNumber, isValid, country) => {
                       setFormData({ ...formData, phone: fullNumber });
                       if (country) setSelectedCountry(country);
+                      setIsPhoneValidState(isValid);
                     }}
                   />
                 </div>

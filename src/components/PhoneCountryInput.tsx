@@ -128,14 +128,28 @@ export const PhoneCountryInput: React.FC<PhoneCountryInputProps> = ({
   // Handle national digit changes
   const handleDigitChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const rawValue = e.target.value;
-    const cleanDigits = rawValue.replace(/\D/g, '');
+    let activeCountry = selectedCountry;
+    let digitsPart = rawValue;
+
+    if (rawValue.startsWith('+') || rawValue.startsWith('00')) {
+      const dialSearch = rawValue.startsWith('00') ? '+' + rawValue.slice(2) : rawValue;
+      const foundCountry = COUNTRIES.find(c => dialSearch.startsWith(c.dialCode));
+      if (foundCountry) {
+        activeCountry = foundCountry;
+        setSelectedCountry(foundCountry);
+        setIsDetectedSuccess(false);
+        digitsPart = dialSearch.slice(foundCountry.dialCode.length);
+      }
+    }
+
+    const cleanDigits = digitsPart.replace(/\D/g, '');
     setNationalDigits(cleanDigits);
     setIsTouched(true);
 
-    const valid = validatePhoneDigits(cleanDigits, selectedCountry);
-    const fullNumber = cleanDigits ? `${selectedCountry.dialCode}${cleanDigits}` : '';
+    const valid = validatePhoneDigits(cleanDigits, activeCountry);
+    const fullNumber = cleanDigits ? `${activeCountry.dialCode}${cleanDigits}` : '';
     
-    onChange(fullNumber, valid, selectedCountry, cleanDigits);
+    onChange(fullNumber, valid, activeCountry, cleanDigits);
   };
 
   // Handle manual country selection
@@ -271,8 +285,8 @@ export const PhoneCountryInput: React.FC<PhoneCountryInputProps> = ({
           <span>
             {error ||
               (lang === 'fr'
-                ? `Format incorrect (${selectedCountry.digits.join(' ou ')} chiffres requis pour ${selectedCountry.nameFr})`
-                : `Invalid length (${selectedCountry.digits.join(' or ')} digits required for ${selectedCountry.nameEn})`)}
+                ? `Numéro invalide : ne correspond pas au pays sélectionné (${selectedCountry.nameFr} ${selectedCountry.dialCode}). ${selectedCountry.digits.join(' ou ')} chiffres requis.`
+                : `Invalid number: does not match selected country (${selectedCountry.nameEn} ${selectedCountry.dialCode}). ${selectedCountry.digits.join(' or ')} digits required.`)}
           </span>
         </p>
       )}

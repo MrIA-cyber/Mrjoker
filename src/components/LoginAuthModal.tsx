@@ -32,6 +32,7 @@ export default function LoginAuthModal({
 }: LoginAuthModalProps) {
   const [activeTab, setActiveTab] = useState<'login' | 'register'>('login');
   const [loginPhone, setLoginPhone] = useState('');
+  const [isLoginPhoneValid, setIsLoginPhoneValid] = useState(false);
   const [loginPassword, setLoginPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [validationError, setValidationError] = useState('');
@@ -52,8 +53,12 @@ export default function LoginAuthModal({
     e.preventDefault();
 
     const cleanInputPhone = loginPhone.trim();
-    if (!cleanInputPhone) {
-      setValidationError(lang === 'fr' ? 'Veuillez entrer votre numéro de téléphone.' : 'Please enter your phone number.');
+    if (!cleanInputPhone || !isLoginPhoneValid) {
+      setValidationError(
+        lang === 'fr'
+          ? 'Le numéro de téléphone ne correspond pas au pays sélectionné. Veuillez vérifier le pays et le nombre de chiffres.'
+          : 'The phone number does not match the selected country. Please check country and digit count.'
+      );
       return;
     }
 
@@ -231,7 +236,10 @@ export default function LoginAuthModal({
                         required
                         value={loginPhone}
                         lang={lang}
-                        onChange={(val) => setLoginPhone(val)}
+                        onChange={(val, isValid) => {
+                          setLoginPhone(val);
+                          setIsLoginPhoneValid(isValid);
+                        }}
                         placeholder={lang === 'fr' ? 'Entrez votre numéro de téléphone' : 'Enter your phone number'}
                       />
                     </div>
