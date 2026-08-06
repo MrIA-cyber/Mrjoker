@@ -387,23 +387,25 @@ export default function VendeurHomePage({
       </header>
 
       {/* ==================== 2. VENDEUR PRIMARY NAVIGATION (4 ESSENTIAL TABS) ==================== */}
+      {/* ==================== 2. VENDEUR PRIMARY NAVIGATION (5 MENUS PRINCIPAUX STRICTS) ==================== */}
       <div className="bg-white border-b border-slate-200 sticky top-[57px] z-30 shadow-2xs">
         <div className="max-w-7xl mx-auto px-4 py-2 flex items-center justify-between sm:justify-start gap-2 sm:gap-3 overflow-x-auto scrollbar-none">
           {[
-            { id: 'accueil', label: 'Tableau de Bord', icon: Store, isSelected: activeTab === 'accueil' },
-            { id: 'commandes_recues', label: `Commandes (${pendingOrders.length})`, icon: ShoppingBag, badge: pendingOrders.length > 0 ? pendingOrders.length : undefined, isSelected: ['commandes_recues', 'commandes_encours', 'livraisons'].includes(activeTab) },
-            { id: 'produits', label: `Produits & Stocks (${localProducts.length})`, icon: Package, isSelected: ['produits', 'stocks', 'categories'].includes(activeTab) },
-            { id: 'plus', label: 'Plus / Paramètres', icon: Settings, isSelected: !['accueil', 'commandes_recues', 'commandes_encours', 'livraisons', 'produits', 'stocks', 'categories'].includes(activeTab) || activeTab === 'plus' },
+            { id: 'accueil', label: 'Tableau de bord', icon: Store, isSelected: activeTab === 'accueil' },
+            { id: 'produits', label: `Produits (${localProducts.length})`, icon: Package, isSelected: ['produits', 'stocks', 'categories'].includes(activeTab) },
+            { id: 'commandes_recues', label: `Commandes ${pendingOrders.length > 0 ? `(${pendingOrders.length})` : ''}`, icon: ShoppingBag, badge: pendingOrders.length > 0 ? pendingOrders.length : undefined, isSelected: ['commandes_recues', 'commandes_encours', 'livraisons', 'commandes'].includes(activeTab) },
+            { id: 'revenus', label: 'Revenus', icon: DollarSign, isSelected: ['revenus', 'retraits'].includes(activeTab) },
+            { id: 'profil', label: 'Profil boutique', icon: Settings, isSelected: ['profil', 'profil_boutique', 'horaires', 'informations', 'paiements', 'abonnement', 'verification', 'clients', 'promotions', 'coupons', 'avis', 'support', 'messages', 'plus'].includes(activeTab) },
           ].map((tab) => {
             const IconComp = tab.icon;
             return (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id as any)}
-                className={`px-3.5 py-2 rounded-2xl text-xs font-extrabold flex items-center gap-2 shrink-0 transition cursor-pointer relative ${
+                className={`px-4 py-2 rounded-2xl text-xs font-extrabold flex items-center gap-2 shrink-0 transition cursor-pointer relative ${
                   tab.isSelected
-                    ? 'bg-[#0F172A] text-white shadow-sm'
-                    : 'bg-slate-50 text-slate-700 hover:bg-slate-100'
+                    ? 'bg-[#0F172A] text-white shadow-sm ring-1 ring-[#16A34A]/40'
+                    : 'bg-slate-50 text-slate-700 hover:bg-slate-100 hover:text-slate-900'
                 }`}
               >
                 <IconComp className={`w-4 h-4 ${tab.isSelected ? 'text-[#16A34A]' : 'text-slate-400'}`} />

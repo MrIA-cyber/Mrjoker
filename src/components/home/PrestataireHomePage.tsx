@@ -880,24 +880,25 @@ export default function PrestataireHomePage({
         )}
       </AnimatePresence>
 
-      {/* PRESTATAIRE PRIMARY NAVIGATION (4 ESSENTIAL TABS) */}
+      {/* PRESTATAIRE PRIMARY NAVIGATION (5 MENUS PRINCIPAUX STRICTS) */}
       <div className="bg-white border-b border-slate-200 sticky top-[57px] z-30 shadow-2xs mb-6">
         <div className="max-w-7xl mx-auto px-4 py-2 flex items-center justify-between sm:justify-start gap-2 sm:gap-3 overflow-x-auto scrollbar-none">
           {[
-            { id: 'accueil', label: 'Vue Générale', icon: Briefcase, isSelected: activeTab === 'accueil' },
-            { id: 'reservations', label: `Demandes & Planning (${bookingsList.filter(b => b.status === 'pending').length})`, icon: CalendarDays, badge: bookingsList.filter(b => b.status === 'pending').length || undefined, isSelected: ['reservations', 'carte', 'calendrier'].includes(activeTab) },
-            { id: 'services', label: `Services & Tarifs (${servicesList.length})`, icon: Wrench, isSelected: ['services', 'disponibilites'].includes(activeTab) },
-            { id: 'plus', label: 'Plus / Mon Compte', icon: UserIcon, isSelected: !['accueil', 'reservations', 'carte', 'calendrier', 'services', 'disponibilites'].includes(activeTab) || activeTab === 'plus' },
+            { id: 'accueil', label: 'Tableau de bord', icon: Briefcase, isSelected: activeTab === 'accueil' },
+            { id: 'services', label: `Services (${servicesList.length})`, icon: Wrench, isSelected: ['services', 'disponibilites'].includes(activeTab) },
+            { id: 'reservations', label: `Réservations ${bookingsList.filter(b => b.status === 'pending').length > 0 ? `(${bookingsList.filter(b => b.status === 'pending').length})` : ''}`, icon: CalendarDays, badge: bookingsList.filter(b => b.status === 'pending').length || undefined, isSelected: ['reservations', 'carte', 'calendrier'].includes(activeTab) },
+            { id: 'revenus', label: 'Revenus', icon: DollarSign, isSelected: ['revenus', 'portefeuille'].includes(activeTab) },
+            { id: 'profil', label: 'Profil prestataire', icon: UserIcon, isSelected: ['profil', 'profil_prestataire', 'parametres', 'paiement', 'abonnement', 'verification', 'notifications', 'avis', 'support', 'plus'].includes(activeTab) },
           ].map((tab) => {
             const IconComp = tab.icon;
             return (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id as any)}
-                className={`px-3.5 py-2 rounded-2xl text-xs font-extrabold flex items-center gap-2 shrink-0 transition cursor-pointer relative ${
+                className={`px-4 py-2 rounded-2xl text-xs font-extrabold flex items-center gap-2 shrink-0 transition cursor-pointer relative ${
                   tab.isSelected
-                    ? 'bg-[#0F172A] text-white shadow-sm'
-                    : 'bg-slate-50 text-slate-700 hover:bg-slate-100'
+                    ? 'bg-[#0F172A] text-white shadow-sm ring-1 ring-[#16A34A]/40'
+                    : 'bg-slate-50 text-slate-700 hover:bg-slate-100 hover:text-slate-900'
                 }`}
               >
                 <IconComp className={`w-4 h-4 ${tab.isSelected ? 'text-[#16A34A]' : 'text-slate-400'}`} />

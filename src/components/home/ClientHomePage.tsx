@@ -324,11 +324,14 @@ export default function ClientHomePage({
   onSwitchRole,
   theme = 'light'
 }: ClientHomePageProps) {
-  // Navigation Tabs for Client Dashboard
+  // Navigation Tabs for Client Dashboard (Max 5 menus principaux: Accueil, Rechercher, Commandes, Favoris, Mon profil)
   const [activeTab, setActiveTab] = useState<
-    'explore' | 'favorites' | 'orders' | 'delivery' | 'payments' | 
-    'messages' | 'notifications' | 'reviews' | 'subscription' | 'profile' | 'settings' | 'support' | 'plus'
+    'explore' | 'search' | 'orders' | 'favorites' | 'profile' |
+    'delivery' | 'payments' | 'messages' | 'notifications' | 'reviews' | 'subscription' | 'settings' | 'support'
   >('explore');
+
+  // Sub-section active inside "Mon profil"
+  const [profileSubTab, setProfileSubTab] = useState<'settings' | 'payments' | 'subscription' | 'notifications' | 'support' | 'messages' | 'reviews'>('settings');
 
   // Search type filter (Produits, Services, Boutiques, Entreprises)
   const [searchFilterType, setSearchFilterType] = useState<'all' | 'products' | 'services' | 'merchants' | 'companies'>('all');
@@ -609,24 +612,31 @@ export default function ClientHomePage({
         </div>
       </header>
 
-      {/* ==================== 2. CLIENT PRIMARY NAVIGATION (4 ESSENTIAL TABS) ==================== */}
+      {/* ==================== 2. CLIENT PRIMARY NAVIGATION (5 MENUS PRINCIPAUX STRICTS) ==================== */}
       <div className="bg-white border-b border-slate-200 sticky top-[57px] z-30 shadow-2xs">
         <div className="max-w-7xl mx-auto px-4 py-2 flex items-center justify-between sm:justify-start gap-2 sm:gap-3 overflow-x-auto scrollbar-none">
           {[
-            { id: 'explore', label: 'Catalogue & Achats', icon: Search, isSelected: activeTab === 'explore' },
-            { id: 'orders', label: `Mes Commandes (${localOrders.length})`, icon: Package, badge: localOrders.length > 0 ? localOrders.length : undefined, isSelected: ['orders', 'delivery'].includes(activeTab) },
-            { id: 'favorites', label: `Mes Favoris (${favoritedProducts.length})`, icon: Heart, badge: favoritedProducts.length > 0 ? favoritedProducts.length : undefined, isSelected: activeTab === 'favorites' },
-            { id: 'plus', label: 'Mon Compte / Plus', icon: UserIcon, badge: (unreadMessageCount + unreadNotifCount) > 0 ? (unreadMessageCount + unreadNotifCount) : undefined, isSelected: !['explore', 'orders', 'delivery', 'favorites'].includes(activeTab) || activeTab === 'plus' },
+            { id: 'explore', label: 'Accueil', icon: HomeIcon, isSelected: activeTab === 'explore' },
+            { id: 'search', label: 'Rechercher', icon: Search, isSelected: activeTab === 'search' },
+            { id: 'orders', label: `Commandes ${localOrders.length > 0 ? `(${localOrders.length})` : ''}`, icon: Package, badge: localOrders.length > 0 ? localOrders.length : undefined, isSelected: ['orders', 'delivery'].includes(activeTab) },
+            { id: 'favorites', label: `Favoris ${favoritedProducts.length > 0 ? `(${favoritedProducts.length})` : ''}`, icon: Heart, badge: favoritedProducts.length > 0 ? favoritedProducts.length : undefined, isSelected: activeTab === 'favorites' },
+            { id: 'profile', label: 'Mon profil', icon: UserIcon, badge: (unreadMessageCount + unreadNotifCount) > 0 ? (unreadMessageCount + unreadNotifCount) : undefined, isSelected: activeTab === 'profile' || ['settings', 'payments', 'subscription', 'notifications', 'support', 'messages', 'reviews'].includes(activeTab) },
           ].map((tab) => {
             const IconComp = tab.icon;
             return (
               <button
                 key={tab.id}
-                onClick={() => setActiveTab(tab.id as any)}
-                className={`px-3.5 py-2 rounded-2xl text-xs font-extrabold flex items-center gap-2 shrink-0 transition cursor-pointer relative ${
+                onClick={() => {
+                  if (tab.id === 'profile') {
+                    setActiveTab('profile');
+                  } else {
+                    setActiveTab(tab.id as any);
+                  }
+                }}
+                className={`px-4 py-2 rounded-2xl text-xs font-extrabold flex items-center gap-2 shrink-0 transition cursor-pointer relative ${
                   tab.isSelected
-                    ? 'bg-[#0F172A] text-white shadow-sm'
-                    : 'bg-slate-50 text-slate-700 hover:bg-slate-100'
+                    ? 'bg-[#0F172A] text-white shadow-sm ring-1 ring-[#16A34A]/40'
+                    : 'bg-slate-50 text-slate-700 hover:bg-slate-100 hover:text-slate-900'
                 }`}
               >
                 <IconComp className={`w-4 h-4 ${tab.isSelected ? 'text-[#16A34A]' : 'text-slate-400'}`} />
