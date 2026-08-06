@@ -1764,6 +1764,7 @@ export default function ClientHomePage({
                 <label className="text-[10px] font-bold uppercase text-slate-400">Ancien Mot de passe</label>
                 <input
                   type="password"
+                  autoComplete="off"
                   value={oldPassword}
                   onChange={(e) => setOldPassword(e.target.value)}
                   className="w-full px-3 py-2 border rounded-xl text-xs font-bold"
@@ -1773,6 +1774,7 @@ export default function ClientHomePage({
                 <label className="text-[10px] font-bold uppercase text-slate-400">Nouveau Mot de passe</label>
                 <input
                   type="password"
+                  autoComplete="off"
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
                   className="w-full px-3 py-2 border rounded-xl text-xs font-bold"

@@ -490,6 +490,7 @@ export default function Screen4Inscription({ onSignupSuccess, onGoToLogin, lang 
               <motion.form
                 key="step1-form"
                 noValidate
+                autoComplete="off"
                 initial={{ opacity: 0, x: -12 }}
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: 12 }}
@@ -513,6 +514,7 @@ export default function Screen4Inscription({ onSignupSuccess, onGoToLogin, lang 
                     <UserIcon className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
                     <input
                       type="text"
+                      autoComplete="off"
                       value={formData.fullName}
                       onBlur={() => markFieldTouched('fullName')}
                       onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
@@ -668,6 +670,7 @@ export default function Screen4Inscription({ onSignupSuccess, onGoToLogin, lang 
               <motion.form
                 key="step2-form"
                 noValidate
+                autoComplete="off"
                 initial={{ opacity: 0, x: 12 }}
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -12 }}
@@ -727,6 +730,7 @@ export default function Screen4Inscription({ onSignupSuccess, onGoToLogin, lang 
                     <Smartphone className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
                     <input
                       type="text"
+                      autoComplete="off"
                       value={formData.otpCode}
                       onBlur={() => markFieldTouched('otpCode')}
                       onChange={(e) => setFormData({ ...formData, otpCode: e.target.value })}
@@ -759,6 +763,7 @@ export default function Screen4Inscription({ onSignupSuccess, onGoToLogin, lang 
                     <Mail className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
                     <input
                       type="email"
+                      autoComplete="off"
                       value={formData.email}
                       onBlur={() => markFieldTouched('email')}
                       onChange={(e) => setFormData({ ...formData, email: e.target.value })}
@@ -786,6 +791,7 @@ export default function Screen4Inscription({ onSignupSuccess, onGoToLogin, lang 
                       <Lock className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
                       <input
                         type={showPassword ? 'text' : 'password'}
+                        autoComplete="off"
                         value={formData.password}
                         onBlur={() => markFieldTouched('password')}
                         onChange={(e) => setFormData({ ...formData, password: e.target.value })}
@@ -832,6 +838,7 @@ export default function Screen4Inscription({ onSignupSuccess, onGoToLogin, lang 
                       <Lock className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
                       <input
                         type={showConfirmPassword ? 'text' : 'password'}
+                        autoComplete="off"
                         value={formData.confirmPassword}
                         onBlur={() => markFieldTouched('confirmPassword')}
                         onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}

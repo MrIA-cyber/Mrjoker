@@ -241,7 +241,7 @@ export const PhoneCountryInput: React.FC<PhoneCountryInputProps> = ({
             id={id}
             type="tel"
             inputMode="numeric"
-            autoComplete="tel-national"
+            autoComplete="off"
             disabled={disabled}
             value={nationalDigits}
             onBlur={() => {
@@ -249,7 +249,7 @@ export const PhoneCountryInput: React.FC<PhoneCountryInputProps> = ({
               if (onBlur) onBlur();
             }}
             onChange={handleDigitChange}
-            placeholder={placeholder || selectedCountry.placeholder}
+            placeholder={placeholder || (lang === 'fr' ? 'Entrez votre numéro' : 'Enter your number')}
             className="w-full h-[48px] px-2.5 sm:px-3.5 bg-transparent text-sm sm:text-base font-mono font-extrabold text-[#0F172A] placeholder:text-slate-400 focus:outline-none min-w-0 truncate"
           />
 

@@ -2840,6 +2840,7 @@ export default function MerchantDashboard({
                   <input
                     type="password"
                     required
+                    autoComplete="off"
                     value={loginPassword}
                     onChange={(e) => setLoginPassword(e.target.value)}
                     placeholder="Entrez le mot de passe"

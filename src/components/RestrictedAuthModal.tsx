@@ -131,7 +131,7 @@ export default function RestrictedAuthModal({
           </div>
 
           {/* Form Content */}
-          <form onSubmit={handleSubmit} className="p-6 space-y-5 text-center">
+          <form onSubmit={handleSubmit} autoComplete="off" className="p-6 space-y-5 text-center">
             <div className="w-14 h-14 mx-auto rounded-2xl bg-indigo-50 dark:bg-indigo-950/50 border border-indigo-100 dark:border-indigo-900/50 flex items-center justify-center text-indigo-600 dark:text-indigo-400 shadow-sm">
               <KeyRound className="w-7 h-7" />
             </div>
@@ -150,6 +150,7 @@ export default function RestrictedAuthModal({
             <div className="space-y-2">
               <input
                 type="password"
+                autoComplete="off"
                 placeholder={lang === 'fr' ? "Entrez votre mot de passe" : "Enter your password"}
                 value={password}
                 onChange={(e) => {

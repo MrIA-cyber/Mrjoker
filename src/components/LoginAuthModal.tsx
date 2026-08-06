@@ -223,7 +223,7 @@ export default function LoginAuthModal({
                   transition={{ duration: 0.2, ease: 'easeOut' }}
                   className="space-y-4"
                 >
-                  <form onSubmit={handleSubmit} className="space-y-4">
+                  <form onSubmit={handleSubmit} autoComplete="off" className="space-y-4">
                     <div>
                       <PhoneCountryInput
                         id="modal-login-phone"
@@ -245,6 +245,7 @@ export default function LoginAuthModal({
                         <input
                           type={showPassword ? 'text' : 'password'}
                           required
+                          autoComplete="off"
                           value={loginPassword}
                           onChange={(e) => setLoginPassword(e.target.value)}
                           placeholder={lang === 'fr' ? 'Entrez votre mot de passe' : 'Enter your password'}

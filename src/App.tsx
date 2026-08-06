@@ -584,6 +584,13 @@ export default function App() {
     localStorage.removeItem('bafoussam_session_start_time');
     localStorage.removeItem('bafoussam_user');
     localStorage.removeItem('bafoussam_active_view');
+    localStorage.removeItem('bafoussam_saved_login_phone');
+    localStorage.removeItem('bafoussam_saved_login_email');
+    try {
+      sessionStorage.clear();
+    } catch (e) {
+      // ignore
+    }
     setSessionStartTime(null);
   };
 

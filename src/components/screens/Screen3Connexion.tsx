@@ -128,7 +128,7 @@ export default function Screen3Connexion({ onLoginSuccess, onGoToSignup }: Scree
         )}
 
         {/* Login Form */}
-        <form onSubmit={handleSubmit} className="space-y-3.5">
+        <form onSubmit={handleSubmit} autoComplete="off" className="space-y-3.5">
           {/* Email Field */}
           <div>
             <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
@@ -138,6 +138,7 @@ export default function Screen3Connexion({ onLoginSuccess, onGoToSignup }: Scree
               <Mail className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
               <input
                 type="text"
+                autoComplete="off"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="Entrez votre numéro de téléphone ou email"
@@ -161,6 +162,7 @@ export default function Screen3Connexion({ onLoginSuccess, onGoToSignup }: Scree
               <Lock className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
               <input
                 type={showPassword ? 'text' : 'password'}
+                autoComplete="off"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="Entrez votre mot de passe"

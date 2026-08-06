@@ -35,6 +35,12 @@ export default function WelcomeGate({ onSuccess, lang, onLangChange, initialStep
   const [failedLoginCount, setFailedLoginCount] = useState(0);
   const [loginLockoutEndTime, setLoginLockoutEndTime] = useState<number | null>(null);
 
+  useEffect(() => {
+    setLoginPhone('');
+    setLoginPassword('');
+    setValidationError('');
+  }, [step]);
+
   // Seed registered users list in localStorage if empty and ensure Admin account exists
   useEffect(() => {
     try {
@@ -294,7 +300,7 @@ export default function WelcomeGate({ onSuccess, lang, onLangChange, initialStep
                 </p>
               </div>
 
-              <form onSubmit={handleLoginSubmit} className="space-y-4">
+              <form onSubmit={handleLoginSubmit} autoComplete="off" className="space-y-4">
                 <div>
                   <PhoneCountryInput
                     id="welcome-gate-login-phone"
@@ -316,6 +322,7 @@ export default function WelcomeGate({ onSuccess, lang, onLangChange, initialStep
                     <input
                       type={showLoginPassword ? 'text' : 'password'}
                       required
+                      autoComplete="off"
                       value={loginPassword}
                       onChange={(e) => setLoginPassword(e.target.value)}
                       placeholder={lang === 'fr' ? 'Entrez votre mot de passe' : 'Enter your password'}
