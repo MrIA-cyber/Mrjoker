@@ -176,7 +176,11 @@ export default function ProductCard({
             <div className="flex items-center gap-1 truncate">
               <span className="truncate font-medium text-slate-600 dark:text-slate-300">{product.merchantName || 'Boutique AfriNova'}</span>
               {(isMerchantVerified || (product as { merchantVerified?: boolean }).merchantVerified) && (
-                <VerifiedBadge id={`verified-badge-card-${product.id}`} />
+                <VerifiedBadge 
+                  id={`verified-badge-card-${product.id}`} 
+                  isVerified={true} 
+                  certificationDate={(product as { merchantCertificationDate?: string }).merchantCertificationDate} 
+                />
               )}
             </div>
             

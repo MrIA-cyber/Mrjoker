@@ -773,7 +773,14 @@ export default function ProductDetailsModal({
                         <h4 className="font-black text-slate-900 dark:text-white text-sm">
                           {product.merchantName}
                         </h4>
-                        {isMerchantVerified && <VerifiedBadge id="merchant-card-badge" />}
+                        {isMerchantVerified && (
+                          <VerifiedBadge 
+                            id="merchant-card-badge" 
+                            isVerified={true} 
+                            certificationDate={merchant?.certificationDate} 
+                            role="vendeur" 
+                          />
+                        )}
                       </div>
                       <p className="text-[11px] text-slate-500 flex items-center gap-1">
                         <MapPin className="w-3 h-3 text-indigo-500" />

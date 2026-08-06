@@ -1,15 +1,28 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { ShieldCheck, Check } from 'lucide-react';
 import { AccountType } from '../types';
 
 interface VerifiedBadgeProps {
   id?: string;
   className?: string;
-  size?: 'sm' | 'md';
+  size?: 'sm' | 'md' | 'lg';
   isVerified?: boolean;
   role?: AccountType | string;
+  certificationDate?: string;
+  showText?: boolean;
+  showFullBanner?: boolean;
 }
 
-export default function VerifiedBadge({ id, className = '', size = 'sm', isVerified = true, role = 'vendeur' }: VerifiedBadgeProps) {
+export default function VerifiedBadge({ 
+  id, 
+  className = '', 
+  size = 'sm', 
+  isVerified = true, 
+  role = 'vendeur',
+  certificationDate,
+  showText = true,
+  showFullBanner = false
+}: VerifiedBadgeProps) {
   const [showTooltip, setShowTooltip] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -23,58 +36,34 @@ export default function VerifiedBadge({ id, className = '', size = 'sm', isVerif
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const badgeSizeClasses = size === 'sm' 
-    ? "text-[9px] px-1.5 py-0.5" 
-    : "text-[10px] px-2 py-0.5";
-
-  const checkSizeClasses = size === 'sm'
-    ? "w-3 h-3 text-[7px]"
-    : "w-3.5 h-3.5 text-[8px]";
-
-  const getRoleLabel = () => {
-    switch (role?.toLowerCase()) {
-      case 'client':
-        return 'Client Vérifié';
-      case 'vendeur':
-      case 'boutique':
-        return 'Boutique Agréée';
-      case 'entreprise':
-        return 'Entreprise B2B';
-      case 'prestataire':
-        return 'Prestataire Certifié';
-      case 'livreur':
-        return 'Livreur Agréé';
-      case 'admin':
-        return 'Super Admin';
-      default:
-        return 'Vérifiée';
-    }
-  };
-
-  const getRoleColor = () => {
-    switch (role?.toLowerCase()) {
-      case 'client':
-        return 'text-emerald-700 bg-emerald-50 border-emerald-200';
-      case 'vendeur':
-        return 'text-blue-700 bg-blue-50 border-blue-200';
-      case 'entreprise':
-        return 'text-amber-700 bg-amber-50 border-amber-200';
-      case 'prestataire':
-        return 'text-purple-700 bg-purple-50 border-purple-200';
-      case 'livreur':
-        return 'text-sky-700 bg-sky-50 border-sky-200';
-      case 'admin':
-        return 'text-rose-700 bg-rose-50 border-rose-200';
-      default:
-        return 'text-blue-600 bg-blue-50 border-blue-100/40';
-    }
-  };
-
+  // PROFIL STANDARD: Ne pas afficher de badge.
   if (!isVerified) {
+    return null;
+  }
+
+  const badgeSizeClasses = size === 'sm' 
+    ? "text-[9px] px-2 py-0.5" 
+    : size === 'lg'
+    ? "text-xs px-3 py-1"
+    : "text-[10px] px-2.5 py-0.5";
+
+  const formattedDate = certificationDate 
+    ? new Date(certificationDate).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' })
+    : undefined;
+
+  if (showFullBanner) {
     return (
-      <span className={`inline-flex items-center gap-1 font-bold text-slate-400 bg-slate-100 rounded-full text-[9px] px-2 py-0.5 border border-slate-200 ${className}`}>
-        En attente CNI
-      </span>
+      <div className={`inline-flex items-center gap-2 bg-emerald-500/10 text-emerald-700 border border-emerald-500/30 px-3 py-1.5 rounded-xl text-xs font-extrabold ${className}`}>
+        <div className="w-5 h-5 rounded-full bg-emerald-600 text-white flex items-center justify-center shrink-0">
+          <Check className="w-3.5 h-3.5 stroke-[3]" />
+        </div>
+        <div>
+          <span className="block font-black text-emerald-900 leading-tight">Afrinova Verified</span>
+          <span className="block text-[10px] text-emerald-700 font-medium">
+            Profil vérifié par Afrinova {formattedDate ? `• Certifié le ${formattedDate}` : ''}
+          </span>
+        </div>
+      </div>
     );
   }
 
@@ -92,23 +81,34 @@ export default function VerifiedBadge({ id, className = '', size = 'sm', isVerif
           e.stopPropagation();
           setShowTooltip(!showTooltip);
         }}
-        className={`inline-flex items-center gap-1 font-extrabold rounded-full uppercase tracking-wider select-none cursor-help border transition hover:opacity-90 ${getRoleColor()} ${badgeSizeClasses}`}
+        className={`inline-flex items-center gap-1.5 font-black rounded-full tracking-wide select-none cursor-help border transition shadow-2xs hover:scale-105 bg-emerald-600 text-white border-emerald-700 ${badgeSizeClasses}`}
       >
-        <span className="bg-current text-white rounded-full w-3 h-3 flex items-center justify-center font-black leading-none shrink-0 text-[8px]">
+        <span className="bg-white text-emerald-700 rounded-full w-3.5 h-3.5 flex items-center justify-center font-black shrink-0 text-[9px] shadow-xs">
           ✓
         </span>
-        <span>{getRoleLabel()}</span>
+        {showText && <span>Afrinova Verified</span>}
       </button>
 
-      {/* Tooltip element */}
+      {/* Tooltip indication "Profil vérifié par Afrinova" */}
       {showTooltip && (
         <div 
-          className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-56 p-2.5 bg-slate-900 text-white text-[10px] rounded-xl shadow-xl z-50 text-center font-medium normal-case leading-normal border border-slate-800 pointer-events-none animate-fade-in"
+          className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-60 p-3 bg-slate-950 text-white text-[11px] rounded-2xl shadow-2xl z-50 text-center font-medium normal-case leading-snug border border-emerald-500/40 pointer-events-none animate-fade-in"
           style={{ animationDuration: '150ms' }}
         >
-          Ce compte ({getRoleLabel()}) a été officiellement vérifié par l'équipe AfriNova (CNI, emplacement et activité validés).
+          <div className="flex items-center justify-center gap-1.5 font-black text-emerald-400 mb-1 text-xs">
+            <ShieldCheck className="w-4 h-4 text-emerald-400" />
+            <span>Profil vérifié par Afrinova</span>
+          </div>
+          <p className="text-slate-300 text-[10px]">
+            Identité, documents légaux et localisation officiellement authentifiés par Afrinova.
+          </p>
+          {formattedDate && (
+            <span className="inline-block mt-1.5 text-[9px] font-mono text-emerald-300 bg-emerald-950/80 px-2 py-0.5 rounded-full border border-emerald-800">
+              Certifié le {formattedDate}
+            </span>
+          )}
           {/* Arrow */}
-          <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-1 border-4 border-transparent border-t-slate-900"></div>
+          <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-1 border-4 border-transparent border-t-slate-950"></div>
         </div>
       )}
     </div>

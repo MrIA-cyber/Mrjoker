@@ -413,24 +413,39 @@ export default function ClientHomePage({
     }, 1800);
   };
 
-  // Search filter
-  const filteredProducts = products.filter(p => {
-    const matchCategory = selectedCategory === 'Tous' || p.category === selectedCategory;
-    const matchSearch = !searchTerm || p.name.toLowerCase().includes(searchTerm.toLowerCase()) || p.description?.toLowerCase().includes(searchTerm.toLowerCase());
-    return matchCategory && matchSearch;
-  });
+  // Search filter with enhanced visibility for Certified Afrinova Profiles
+  const filteredProducts = products
+    .filter(p => {
+      const matchCategory = selectedCategory === 'Tous' || p.category === selectedCategory;
+      const matchSearch = !searchTerm || p.name.toLowerCase().includes(searchTerm.toLowerCase()) || p.description?.toLowerCase().includes(searchTerm.toLowerCase());
+      return matchCategory && matchSearch;
+    })
+    .sort((a, b) => {
+      const aMerchant = merchants.find(m => m.id === a.merchantId);
+      const bMerchant = merchants.find(m => m.id === b.merchantId);
+      const aVerified = aMerchant?.isVerified ? 1 : 0;
+      const bVerified = bMerchant?.isVerified ? 1 : 0;
+      if (bVerified !== aVerified) return bVerified - aVerified;
+      return (b.isBoosted ? 1 : 0) - (a.isBoosted ? 1 : 0);
+    });
 
-  const filteredServices = SERVICES_DATA.filter(s => {
-    return !searchTerm || s.title.toLowerCase().includes(searchTerm.toLowerCase()) || s.providerName.toLowerCase().includes(searchTerm.toLowerCase()) || s.category.toLowerCase().includes(searchTerm.toLowerCase());
-  });
+  const filteredServices = SERVICES_DATA
+    .filter(s => {
+      return !searchTerm || s.title.toLowerCase().includes(searchTerm.toLowerCase()) || s.providerName.toLowerCase().includes(searchTerm.toLowerCase()) || s.category.toLowerCase().includes(searchTerm.toLowerCase());
+    })
+    .sort((a, b) => (b.verified ? 1 : 0) - (a.verified ? 1 : 0));
 
-  const filteredMerchants = merchants.filter(m => {
-    return !searchTerm || m.name.toLowerCase().includes(searchTerm.toLowerCase()) || m.shopName?.toLowerCase().includes(searchTerm.toLowerCase()) || m.location?.toLowerCase().includes(searchTerm.toLowerCase());
-  });
+  const filteredMerchants = merchants
+    .filter(m => {
+      return !searchTerm || m.name.toLowerCase().includes(searchTerm.toLowerCase()) || m.shopName?.toLowerCase().includes(searchTerm.toLowerCase()) || m.location?.toLowerCase().includes(searchTerm.toLowerCase());
+    })
+    .sort((a, b) => (b.isVerified ? 1 : 0) - (a.isVerified ? 1 : 0));
 
-  const filteredCompanies = PARTNER_COMPANIES.filter(c => {
-    return !searchTerm || c.name.toLowerCase().includes(searchTerm.toLowerCase()) || c.industry.toLowerCase().includes(searchTerm.toLowerCase());
-  });
+  const filteredCompanies = PARTNER_COMPANIES
+    .filter(c => {
+      return !searchTerm || c.name.toLowerCase().includes(searchTerm.toLowerCase()) || c.industry.toLowerCase().includes(searchTerm.toLowerCase());
+    })
+    .sort((a, b) => (b.verified ? 1 : 0) - (a.verified ? 1 : 0));
 
   // Saved / Favorited Products
   const favoritedProducts = products.filter(p => favorites[p.id]);

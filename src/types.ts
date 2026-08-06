@@ -35,6 +35,8 @@ export interface User {
   email: string;
   password?: string;
   isVerifiedPhone?: boolean;
+  isVerified?: boolean;
+  certificationDate?: string;
   accountType?: AccountType;
   trialStartDate?: string;
   trialExpiryDate?: string;
@@ -71,6 +73,7 @@ export interface Merchant {
   premiumStartDate?: string;
   premiumExpiryDate?: string;
   isVerified?: boolean; // verified status badge
+  certificationDate?: string;
   createdAt?: string;
   logo: string;
   avatar?: string;
