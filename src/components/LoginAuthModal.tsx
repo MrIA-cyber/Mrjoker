@@ -40,13 +40,11 @@ export default function LoginAuthModal({
   useEffect(() => {
     if (isOpen) {
       setActiveTab('login');
-      if (savedUserPhone) {
-        setLoginPhone(savedUserPhone);
-      }
+      setLoginPhone('');
       setLoginPassword('');
       setValidationError('');
     }
-  }, [isOpen, savedUserPhone]);
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
@@ -234,6 +232,7 @@ export default function LoginAuthModal({
                         value={loginPhone}
                         lang={lang}
                         onChange={(val) => setLoginPhone(val)}
+                        placeholder={lang === 'fr' ? 'Entrez votre numéro de téléphone' : 'Enter your phone number'}
                       />
                     </div>
 
@@ -248,7 +247,7 @@ export default function LoginAuthModal({
                           required
                           value={loginPassword}
                           onChange={(e) => setLoginPassword(e.target.value)}
-                          placeholder="••••••••"
+                          placeholder={lang === 'fr' ? 'Entrez votre mot de passe' : 'Enter your password'}
                           className="w-full h-[52px] pl-12 pr-12 bg-slate-50 focus:bg-white border border-slate-200 rounded-2xl text-sm text-[#0F172A] font-semibold focus:outline-none focus:ring-2 focus:ring-[#16A34A]/25 focus:border-[#16A34A] transition"
                         />
                         <button

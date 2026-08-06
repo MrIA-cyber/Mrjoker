@@ -516,7 +516,7 @@ export default function Screen4Inscription({ onSignupSuccess, onGoToLogin, lang 
                       value={formData.fullName}
                       onBlur={() => markFieldTouched('fullName')}
                       onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
-                      placeholder="Ex: Jean Kamdem"
+                      placeholder={currentLang === 'fr' ? 'Entrez votre nom complet' : 'Enter your full name'}
                       required
                       className={`w-full h-[48px] pl-10 pr-9 bg-[#F8FAFC] focus:bg-white border rounded-xl text-sm sm:text-base text-[#0F172A] font-semibold shadow-2xs focus:outline-none focus:ring-2 focus:ring-[#16A34A]/25 focus:border-[#16A34A] transition-all duration-200 placeholder:text-slate-400 ${
                         touchedFields.fullName && !isFullNameValid ? 'border-red-500 bg-red-50/20' : 'border-slate-200'
@@ -542,6 +542,7 @@ export default function Screen4Inscription({ onSignupSuccess, onGoToLogin, lang 
                     required
                     value={formData.phone}
                     lang={currentLang}
+                    placeholder={currentLang === 'fr' ? 'Entrez votre numéro de téléphone' : 'Enter your phone number'}
                     onBlur={() => markFieldTouched('phone')}
                     onChange={(fullNumber, isValid, country) => {
                       setFormData({ ...formData, phone: fullNumber });
@@ -729,7 +730,7 @@ export default function Screen4Inscription({ onSignupSuccess, onGoToLogin, lang 
                       value={formData.otpCode}
                       onBlur={() => markFieldTouched('otpCode')}
                       onChange={(e) => setFormData({ ...formData, otpCode: e.target.value })}
-                      placeholder="Ex: 123456"
+                      placeholder={currentLang === 'fr' ? 'Entrez le code à 6 chiffres' : 'Enter 6-digit code'}
                       required
                       maxLength={6}
                       className={`w-full h-[48px] pl-10 pr-9 bg-[#F8FAFC] focus:bg-white border rounded-xl text-sm sm:text-base text-[#0F172A] font-mono font-bold tracking-widest shadow-2xs focus:outline-none focus:ring-2 focus:ring-[#16A34A]/25 focus:border-[#16A34A] transition-all duration-200 placeholder:text-slate-400 ${
@@ -761,7 +762,7 @@ export default function Screen4Inscription({ onSignupSuccess, onGoToLogin, lang 
                       value={formData.email}
                       onBlur={() => markFieldTouched('email')}
                       onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                      placeholder="ex: jean.kamdem@mail.com"
+                      placeholder={currentLang === 'fr' ? 'Entrez votre adresse e-mail' : 'Enter your email address'}
                       className="w-full h-[48px] pl-10 pr-9 bg-[#F8FAFC] focus:bg-white border border-slate-200 rounded-xl text-sm sm:text-base text-[#0F172A] font-semibold shadow-2xs focus:outline-none focus:ring-2 focus:ring-[#16A34A]/25 focus:border-[#16A34A] transition-all duration-200 placeholder:text-slate-400"
                     />
                   </div>
@@ -788,7 +789,7 @@ export default function Screen4Inscription({ onSignupSuccess, onGoToLogin, lang 
                         value={formData.password}
                         onBlur={() => markFieldTouched('password')}
                         onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                        placeholder="••••••••"
+                        placeholder={currentLang === 'fr' ? 'Entrez votre mot de passe' : 'Enter your password'}
                         required
                         minLength={8}
                         className={`w-full h-[48px] pl-10 pr-10 bg-[#F8FAFC] focus:bg-white border rounded-xl text-sm sm:text-base text-[#0F172A] font-semibold shadow-2xs focus:outline-none focus:ring-2 focus:ring-[#16A34A]/25 focus:border-[#16A34A] transition-all duration-200 placeholder:text-slate-400 ${
@@ -834,7 +835,7 @@ export default function Screen4Inscription({ onSignupSuccess, onGoToLogin, lang 
                         value={formData.confirmPassword}
                         onBlur={() => markFieldTouched('confirmPassword')}
                         onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
-                        placeholder="••••••••"
+                        placeholder={currentLang === 'fr' ? 'Confirmez votre mot de passe' : 'Confirm your password'}
                         required
                         minLength={8}
                         className={`w-full h-[48px] pl-10 pr-10 bg-[#F8FAFC] focus:bg-white border rounded-xl text-sm sm:text-base text-[#0F172A] font-semibold shadow-2xs focus:outline-none focus:ring-2 focus:ring-[#16A34A]/25 focus:border-[#16A34A] transition-all duration-200 placeholder:text-slate-400 ${

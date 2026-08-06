@@ -140,7 +140,7 @@ export default function Screen3Connexion({ onLoginSuccess, onGoToSignup }: Scree
                 type="text"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="Ex: client@bafoussam-market.cm"
+                placeholder="Entrez votre numéro de téléphone ou email"
                 required
                 className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 font-medium focus:outline-none focus:ring-2 focus:ring-[#16A34A]/30 focus:border-[#16A34A] transition"
               />
@@ -163,7 +163,7 @@ export default function Screen3Connexion({ onLoginSuccess, onGoToSignup }: Scree
                 type={showPassword ? 'text' : 'password'}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••"
+                placeholder="Entrez votre mot de passe"
                 required
                 className="w-full pl-10 pr-10 py-3 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 font-medium focus:outline-none focus:ring-2 focus:ring-[#16A34A]/30 focus:border-[#16A34A] transition"
               />

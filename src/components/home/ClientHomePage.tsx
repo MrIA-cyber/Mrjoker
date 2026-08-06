@@ -82,6 +82,7 @@ export interface ClientHomePageProps {
   cartCount?: number;
   onOpenCart?: () => void;
   onSwitchRole?: (role: AccountType) => void;
+  theme?: 'light' | 'dark';
 }
 
 // 1. PROMO SLIDES
@@ -320,7 +321,8 @@ export default function ClientHomePage({
   onLogout,
   cartCount = 0,
   onOpenCart,
-  onSwitchRole
+  onSwitchRole,
+  theme = 'light'
 }: ClientHomePageProps) {
   // Navigation Tabs for Client Dashboard
   const [activeTab, setActiveTab] = useState<
@@ -527,7 +529,7 @@ export default function ClientHomePage({
               onClick={() => setActiveTab('explore')}
               className="flex items-center gap-2 cursor-pointer group"
             >
-              <AfriNovaLogo size="md" variant="light" showSlogan={false} />
+              <AfriNovaLogo size="md" variant={theme === 'dark' ? 'dark' : 'light'} showSlogan={false} />
               <span className="bg-[#16A34A]/15 text-[#15803D] text-[9px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider flex items-center gap-1 border border-emerald-200">
                 <UserIcon className="w-3 h-3 text-[#16A34A]" />
                 <span>Espace Client</span>
@@ -656,29 +658,29 @@ export default function ClientHomePage({
         {activeTab === 'explore' && (
           <div className="space-y-6">
             
-            {/* 1. BARRE DE RECHERCHE INTELLIGENTE */}
-            <div className="bg-white p-3.5 rounded-3xl border border-slate-200/90 shadow-2xs space-y-3">
+            {/* 1. BARRE DE RECHERCHE INTELLIGENTE (Optimisée & Compacte) */}
+            <div className="bg-white p-2.5 sm:p-3 rounded-2xl sm:rounded-3xl border border-slate-200/90 shadow-2xs space-y-2">
               <div className="flex items-center gap-2">
                 <div className="relative flex-1">
-                  <Search className="w-4 h-4 text-slate-400 absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none" />
+                  <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
                   <input
                     type="text"
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    placeholder={isVoiceActive ? "Écoute en cours... Parlez à l'IA AfriNova Client" : "Rechercher produits, services, épicerie, boutiques Bafoussam..."}
-                    className={`w-full h-11 sm:h-12 pl-11 pr-24 bg-slate-50 border border-slate-200 rounded-2xl text-xs sm:text-sm text-[#0F172A] placeholder:text-slate-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-[#16A34A]/25 focus:border-[#16A34A] transition ${
+                    placeholder={isVoiceActive ? "Écoute en cours... Parlez à l'IA AfriNova" : "Rechercher produits, services, épicerie, boutiques..."}
+                    className={`w-full h-10 sm:h-11 pl-10 pr-24 bg-slate-50 border border-slate-200 rounded-xl sm:rounded-2xl text-xs text-[#0F172A] placeholder:text-slate-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-[#16A34A]/25 focus:border-[#16A34A] transition ${
                       isVoiceActive ? 'border-[#16A34A] ring-2 ring-[#16A34A]/30 animate-pulse' : ''
                     }`}
                   />
 
                   {/* Actions right inside input */}
-                  <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1">
+                  <div className="absolute right-2.5 top-1/2 -translate-y-1/2 flex items-center gap-0.5">
                     {searchTerm && (
                       <button
                         onClick={() => setSearchTerm('')}
                         className="p-1 text-slate-400 hover:text-slate-600 rounded-full cursor-pointer"
                       >
-                        <X className="w-4 h-4" />
+                        <X className="w-3.5 h-3.5" />
                       </button>
                     )}
 
@@ -689,7 +691,7 @@ export default function ClientHomePage({
                       }`}
                       title="Recherche vocale"
                     >
-                      <Mic className="w-4 h-4" />
+                      <Mic className="w-3.5 h-3.5" />
                     </button>
 
                     {onOpenScanner && (
@@ -698,7 +700,7 @@ export default function ClientHomePage({
                         className="p-1.5 text-slate-400 hover:text-[#16A34A] transition cursor-pointer"
                         title="Scanner Code QR"
                       >
-                        <ScanLine className="w-4 h-4" />
+                        <ScanLine className="w-3.5 h-3.5" />
                       </button>
                     )}
                   </div>
@@ -706,8 +708,8 @@ export default function ClientHomePage({
               </div>
 
               {/* Type Filter Buttons */}
-              <div className="flex items-center gap-1.5 text-xs overflow-x-auto scrollbar-none pt-1">
-                <span className="text-slate-400 font-extrabold uppercase text-[10px] shrink-0">Filtrer par:</span>
+              <div className="flex items-center gap-1.5 text-xs overflow-x-auto scrollbar-none pt-0.5">
+                <span className="text-slate-400 font-extrabold uppercase text-[9px] shrink-0">Filtrer par:</span>
                 {[
                   { id: 'all', label: 'Tout' },
                   { id: 'products', label: '🛍️ Produits' },
@@ -718,7 +720,7 @@ export default function ClientHomePage({
                   <button
                     key={f.id}
                     onClick={() => setSearchFilterType(f.id as any)}
-                    className={`px-3 py-1 rounded-xl font-bold transition shrink-0 cursor-pointer ${
+                    className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition shrink-0 cursor-pointer ${
                       searchFilterType === f.id
                         ? 'bg-[#16A34A] text-white shadow-2xs'
                         : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
@@ -730,13 +732,13 @@ export default function ClientHomePage({
               </div>
 
               {/* Quick Search Tags */}
-              <div className="flex items-center gap-2 text-[10px] font-bold text-slate-500 overflow-x-auto scrollbar-none">
-                <span className="text-slate-400 font-extrabold uppercase shrink-0">Tendances:</span>
-                {['Poivre blanc Bafoussam', 'Chaussures Ndop', 'Smartphone 5G', 'Service Dépannage Solaire', 'Plantain Mbuy'].map((tag) => (
+              <div className="flex items-center gap-1.5 text-[10px] font-bold text-slate-500 overflow-x-auto scrollbar-none">
+                <span className="text-slate-400 font-extrabold uppercase shrink-0 text-[9px]">Tendances:</span>
+                {['Poivre blanc Bafoussam', 'Chaussures Ndop', 'Smartphone 5G', 'Dépannage Solaire', 'Plantain Mbuy'].map((tag) => (
                   <button
                     key={tag}
                     onClick={() => setSearchTerm(tag)}
-                    className="px-2.5 py-0.5 rounded-lg bg-slate-100 hover:bg-emerald-50 hover:text-[#16A34A] transition shrink-0 cursor-pointer border border-slate-200/60"
+                    className="px-2 py-0.5 rounded-md bg-slate-100 hover:bg-emerald-50 hover:text-[#16A34A] transition shrink-0 cursor-pointer border border-slate-200/60"
                   >
                     {tag}
                   </button>
@@ -744,16 +746,16 @@ export default function ClientHomePage({
               </div>
             </div>
 
-            {/* 2. PROMOTIONS BANNER */}
-            <div className="relative rounded-3xl overflow-hidden shadow-md border border-slate-100">
+            {/* 2. BANNIÈRE PROMOTIONNELLE COMPACTE (Accès rapide aux produits) */}
+            <div className="relative rounded-2xl sm:rounded-3xl overflow-hidden shadow-sm border border-slate-100">
               <AnimatePresence mode="wait">
                 <motion.div
                   key={currentSlide}
-                  initial={{ opacity: 0, scale: 1.02 }}
+                  initial={{ opacity: 0, scale: 1.01 }}
                   animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.98 }}
-                  transition={{ duration: 0.4 }}
-                  className={`relative w-full aspect-[21/9] sm:aspect-[24/9] min-h-[140px] max-h-[220px] bg-gradient-to-r ${PROMO_SLIDES[currentSlide].bgGradient} p-4 sm:p-6 text-white flex items-center justify-between overflow-hidden`}
+                  exit={{ opacity: 0, scale: 0.99 }}
+                  transition={{ duration: 0.3 }}
+                  className={`relative w-full aspect-[28/9] sm:aspect-[36/9] min-h-[105px] sm:min-h-[120px] max-h-[145px] sm:max-h-[160px] bg-gradient-to-r ${PROMO_SLIDES[currentSlide].bgGradient} p-3 sm:p-4.5 text-white flex items-center justify-between overflow-hidden`}
                 >
                   <div className="absolute right-0 top-0 bottom-0 w-1/2 sm:w-2/5 opacity-25 sm:opacity-35 pointer-events-none overflow-hidden">
                     <img
@@ -764,42 +766,42 @@ export default function ClientHomePage({
                     <div className="absolute inset-0 bg-gradient-to-r from-[#0F172A] to-transparent" />
                   </div>
 
-                  <div className="relative z-10 max-w-lg space-y-1.5">
-                    <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-white/15 backdrop-blur-md text-[9px] sm:text-[10px] font-black uppercase tracking-wider text-emerald-300 border border-white/20">
-                      <Zap className="w-3 h-3 text-amber-400 animate-pulse" />
+                  <div className="relative z-10 max-w-lg space-y-1">
+                    <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-white/15 backdrop-blur-md text-[9px] font-black uppercase tracking-wider text-emerald-300 border border-white/20">
+                      <Zap className="w-2.5 h-2.5 text-amber-400 animate-pulse" />
                       <span>{PROMO_SLIDES[currentSlide].badge}</span>
                     </div>
 
-                    <h2 className="text-base sm:text-xl font-black font-display leading-tight text-white drop-shadow-xs">
+                    <h2 className="text-xs sm:text-base font-black font-display leading-tight text-white drop-shadow-xs">
                       {PROMO_SLIDES[currentSlide].title}
                     </h2>
 
-                    <p className="text-xs text-slate-200 line-clamp-1 font-medium hidden sm:block">
+                    <p className="text-[11px] text-slate-200 line-clamp-1 font-medium hidden sm:block">
                       {PROMO_SLIDES[currentSlide].subtitle}
                     </p>
 
-                    <div className="pt-1">
+                    <div className="pt-0.5">
                       <button
                         onClick={() => {
                           const el = document.getElementById('popular-products');
                           if (el) el.scrollIntoView({ behavior: 'smooth' });
                         }}
-                        className="px-3.5 py-1.5 rounded-xl bg-white hover:bg-slate-100 text-[#0F172A] text-xs font-black shadow-md flex items-center gap-1.5 transition active:scale-95 cursor-pointer"
+                        className="px-3 py-1 rounded-lg bg-white hover:bg-slate-100 text-[#0F172A] text-[11px] sm:text-xs font-black shadow-xs flex items-center gap-1 transition active:scale-95 cursor-pointer"
                       >
                         <span>{PROMO_SLIDES[currentSlide].cta}</span>
-                        <ChevronRight className="w-3.5 h-3.5 text-[#16A34A]" />
+                        <ChevronRight className="w-3 h-3 text-[#16A34A]" />
                       </button>
                     </div>
                   </div>
 
                   {/* Slide Indicators */}
-                  <div className="absolute bottom-3 right-4 z-20 flex items-center gap-1.5">
+                  <div className="absolute bottom-2.5 right-3.5 z-20 flex items-center gap-1">
                     {PROMO_SLIDES.map((_, i) => (
                       <button
                         key={i}
                         onClick={() => setCurrentSlide(i)}
                         className={`h-1.5 rounded-full transition-all duration-300 cursor-pointer ${
-                          i === currentSlide ? 'w-5 bg-[#16A34A]' : 'w-1.5 bg-white/40 hover:bg-white/70'
+                          i === currentSlide ? 'w-4 bg-[#16A34A]' : 'w-1.5 bg-white/40 hover:bg-white/70'
                         }`}
                       />
                     ))}
@@ -808,11 +810,11 @@ export default function ClientHomePage({
               </AnimatePresence>
             </div>
 
-            {/* 3. CATÉGORIES GRID */}
+            {/* 3. CATÉGORIES GRID COMPACT */}
             <div>
-              <div className="flex items-center justify-between mb-2.5">
-                <h3 className="text-xs sm:text-sm font-black text-[#0F172A] uppercase tracking-wider flex items-center gap-1.5">
-                  <Grid className="w-4 h-4 text-[#16A34A]" />
+              <div className="flex items-center justify-between mb-2">
+                <h3 className="text-xs sm:text-xs font-black text-[#0F172A] uppercase tracking-wider flex items-center gap-1.5">
+                  <Grid className="w-3.5 h-3.5 text-[#16A34A]" />
                   <span>Catégories & Univers Client</span>
                 </h3>
                 <button
@@ -823,7 +825,7 @@ export default function ClientHomePage({
                 </button>
               </div>
 
-              <div className="grid grid-cols-4 sm:grid-cols-8 gap-2">
+              <div className="grid grid-cols-4 sm:grid-cols-8 gap-1.5 sm:gap-2">
                 {CATEGORIES_GRID.map((cat) => {
                   const IconComp = cat.icon;
                   const isSelected = selectedCategory === cat.categoryName;
@@ -831,16 +833,16 @@ export default function ClientHomePage({
                     <button
                       key={cat.id}
                       onClick={() => onCategoryChange(cat.categoryName)}
-                      className={`p-2.5 rounded-2xl border transition flex flex-col items-center text-center space-y-1 cursor-pointer group relative ${
+                      className={`p-2 rounded-xl sm:rounded-2xl border transition flex flex-col items-center text-center space-y-0.5 cursor-pointer group relative ${
                         isSelected
                           ? 'bg-[#0F172A] text-white border-[#0F172A] shadow-xs'
                           : 'bg-white border-slate-100 hover:border-slate-200 text-slate-800 hover:bg-slate-50 shadow-2xs'
                       }`}
                     >
-                      <div className={`w-8 h-8 rounded-xl ${isSelected ? 'bg-white/10 text-white' : cat.bg} flex items-center justify-center transition group-hover:scale-110`}>
-                        <IconComp className="w-4 h-4 stroke-[2.2]" />
+                      <div className={`w-7 h-7 sm:w-8 sm:h-8 rounded-lg sm:rounded-xl ${isSelected ? 'bg-white/10 text-white' : cat.bg} flex items-center justify-center transition group-hover:scale-110`}>
+                        <IconComp className="w-3.5 h-3.5 stroke-[2.2]" />
                       </div>
-                      <span className="font-extrabold text-[10px] sm:text-[11px] leading-tight truncate w-full">
+                      <span className="font-extrabold text-[10px] leading-tight truncate w-full">
                         {cat.name}
                       </span>
                       <span className={`text-[9px] font-semibold ${isSelected ? 'text-slate-300' : 'text-slate-400'}`}>
@@ -894,9 +896,9 @@ export default function ClientHomePage({
                               containerClassName="rounded-t-[20px]"
                             />
 
-                            <span className="absolute top-2 left-2 z-10 bg-black/40 backdrop-blur-md text-white text-[9px] font-bold px-2 py-0.5 rounded-md flex items-center gap-0.5">
-                              <MapPin className="w-2.5 h-2.5 text-[#16A34A]" />
-                              <span className="truncate max-w-[70px] sm:max-w-[100px]">{product.neighborhood || 'Bafoussam'}</span>
+                            <span className="absolute top-2 left-2 z-10 bg-black/50 backdrop-blur-md text-white text-[9px] font-bold px-2 py-0.5 rounded-md flex items-center gap-0.5 max-w-[calc(100%-80px)]">
+                              <MapPin className="w-2.5 h-2.5 text-[#22C55E] shrink-0" />
+                              <span className="truncate" title={product.neighborhood || 'Bafoussam'}>{product.neighborhood || 'Bafoussam'}</span>
                             </span>
 
                             {/* Discrete 36px top-right buttons overlay */}
@@ -928,7 +930,7 @@ export default function ClientHomePage({
                                 <Star className="w-3 h-3 fill-amber-400 text-amber-400 shrink-0" />
                                 <span className="font-extrabold text-slate-800">{rating}</span>
                               </div>
-                              <span className="text-[9px] font-bold text-slate-400 truncate max-w-[80px]">
+                              <span className="text-[9px] font-bold text-slate-400 truncate max-w-[110px]" title={merchantName}>
                                 {merchantName}
                               </span>
                             </div>

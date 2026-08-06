@@ -635,6 +635,7 @@ export default function BafoussamMarketHomePage({
                 cartCount={cartItemsCount}
                 onOpenCart={onOpenCart}
                 onSwitchRole={handleSwitchRole}
+                theme={theme}
               />
             )}
           </motion.div>

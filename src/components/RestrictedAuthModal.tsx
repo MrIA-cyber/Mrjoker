@@ -150,7 +150,7 @@ export default function RestrictedAuthModal({
             <div className="space-y-2">
               <input
                 type="password"
-                placeholder={lang === 'fr' ? "Mot de passe" : "Password"}
+                placeholder={lang === 'fr' ? "Entrez votre mot de passe" : "Enter your password"}
                 value={password}
                 onChange={(e) => {
                   setPassword(e.target.value);
