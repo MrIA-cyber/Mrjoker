@@ -6,10 +6,14 @@ import { ResponsiveProvider } from './context/ResponsiveContext.tsx';
 import { AuthProvider } from './context/AuthContext.tsx';
 import './index.css';
 
-// Register PWA Service Worker
-if ('serviceWorker' in navigator && process.env.NODE_ENV === 'production') {
+// Register PWA Service Worker with auto-update
+if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js').catch((err) => {
+    navigator.serviceWorker.register('/sw.js').then((reg) => {
+      console.log('SW registered successfully:', reg.scope);
+      // Check for updates on page load
+      reg.update();
+    }).catch((err) => {
       console.log('SW registration failed: ', err);
     });
   });
