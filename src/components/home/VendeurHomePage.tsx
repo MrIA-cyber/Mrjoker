@@ -76,7 +76,7 @@ export default function VendeurHomePage({
   const [activeTab, setActiveTab] = useState<
     'accueil' | 'produits' | 'stocks' | 'categories' | 'commandes_recues' | 'commandes_encours' | 
     'livraisons' | 'clients' | 'messages' | 'promotions' | 'coupons' | 'stats' | 
-    'revenus' | 'retraits' | 'paiements' | 'abonnement' | 'avis' | 'profil' | 'horaires' | 'informations' | 'support'
+    'revenus' | 'retraits' | 'paiements' | 'abonnement' | 'avis' | 'profil' | 'horaires' | 'informations' | 'support' | 'plus'
   >('accueil');
 
   // Filter products for connected boutique
@@ -386,47 +386,30 @@ export default function VendeurHomePage({
         </div>
       </header>
 
-      {/* ==================== 2. VENDEUR SUB-NAVIGATION TABS BAR ==================== */}
-      <div className="bg-white border-b border-slate-200/80 sticky top-[57px] z-30 shadow-2xs">
-        <div className="max-w-7xl mx-auto px-4 overflow-x-auto scrollbar-none flex items-center gap-1 py-1.5">
+      {/* ==================== 2. VENDEUR PRIMARY NAVIGATION (4 ESSENTIAL TABS) ==================== */}
+      <div className="bg-white border-b border-slate-200 sticky top-[57px] z-30 shadow-2xs">
+        <div className="max-w-7xl mx-auto px-4 py-2 flex items-center justify-between sm:justify-start gap-2 sm:gap-3 overflow-x-auto scrollbar-none">
           {[
-            { id: 'accueil', label: 'Tableau de Bord', icon: Store },
-            { id: 'produits', label: `Produits (${localProducts.length})`, icon: Package },
-            { id: 'stocks', label: 'Stocks & Quantités', icon: AlertTriangle },
-            { id: 'categories', label: 'Catégories', icon: Layers },
-            { id: 'commandes_recues', label: `Commandes Reçues (${pendingOrders.length})`, icon: ShoppingBag, badge: pendingOrders.length > 0 ? pendingOrders.length : undefined },
-            { id: 'commandes_encours', label: `En Cours (${activeOrders.length})`, icon: Clock },
-            { id: 'livraisons', label: 'Livraisons', icon: Truck },
-            { id: 'messages', label: 'Messages Clients', icon: MessageSquare, badge: 1 },
-            { id: 'promotions', label: 'Ventes Flash', icon: Tag },
-            { id: 'coupons', label: 'Coupons', icon: Percent },
-            { id: 'stats', label: 'Statistiques', icon: BarChart3 },
-            { id: 'revenus', label: 'Chiffre d\'Affaires', icon: DollarSign },
-            { id: 'retraits', label: 'Demander Retrait', icon: CreditCard },
-            { id: 'paiements', label: 'Paiements Reçus', icon: FileText },
-            { id: 'abonnement', label: 'Abonnement', icon: ShieldCheck },
-            { id: 'avis', label: 'Avis Clients', icon: Star },
-            { id: 'profil', label: 'Profil Boutique', icon: Store },
-            { id: 'horaires', label: 'Horaires', icon: Clock },
-            { id: 'informations', label: 'Informations', icon: Shield },
-            { id: 'support', label: 'Support Vendeur', icon: HelpCircle },
+            { id: 'accueil', label: 'Tableau de Bord', icon: Store, isSelected: activeTab === 'accueil' },
+            { id: 'commandes_recues', label: `Commandes (${pendingOrders.length})`, icon: ShoppingBag, badge: pendingOrders.length > 0 ? pendingOrders.length : undefined, isSelected: ['commandes_recues', 'commandes_encours', 'livraisons'].includes(activeTab) },
+            { id: 'produits', label: `Produits & Stocks (${localProducts.length})`, icon: Package, isSelected: ['produits', 'stocks', 'categories'].includes(activeTab) },
+            { id: 'plus', label: 'Plus / Paramètres', icon: Settings, isSelected: !['accueil', 'commandes_recues', 'commandes_encours', 'livraisons', 'produits', 'stocks', 'categories'].includes(activeTab) || activeTab === 'plus' },
           ].map((tab) => {
             const IconComp = tab.icon;
-            const isActive = activeTab === tab.id;
             return (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id as any)}
-                className={`px-3 py-1.5 rounded-xl text-xs font-extrabold flex items-center gap-1.5 shrink-0 transition cursor-pointer relative ${
-                  isActive
-                    ? 'bg-[#0F172A] text-white shadow-xs'
-                    : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
+                className={`px-3.5 py-2 rounded-2xl text-xs font-extrabold flex items-center gap-2 shrink-0 transition cursor-pointer relative ${
+                  tab.isSelected
+                    ? 'bg-[#0F172A] text-white shadow-sm'
+                    : 'bg-slate-50 text-slate-700 hover:bg-slate-100'
                 }`}
               >
-                <IconComp className={`w-3.5 h-3.5 ${isActive ? 'text-[#16A34A]' : 'text-slate-400'}`} />
+                <IconComp className={`w-4 h-4 ${tab.isSelected ? 'text-[#16A34A]' : 'text-slate-400'}`} />
                 <span>{tab.label}</span>
                 {tab.badge && (
-                  <span className="bg-[#16A34A] text-white text-[9px] font-black px-1.5 py-0.2 rounded-full ml-0.5">
+                  <span className="bg-[#16A34A] text-white text-[10px] font-black px-1.5 py-0.2 rounded-full">
                     {tab.badge}
                   </span>
                 )}
@@ -1655,6 +1638,150 @@ export default function VendeurHomePage({
                   Contacter via WhatsApp
                 </a>
                 <span className="text-xs font-bold text-slate-700">+237 677 89 45 12</span>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* 21. MENU PLUS & PARAMÈTRES HUB */}
+        {activeTab === 'plus' && (
+          <div className="space-y-6">
+            <div className="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-xs space-y-1">
+              <h2 className="text-lg font-black text-[#0F172A] flex items-center gap-2">
+                <Settings className="w-5 h-5 text-[#16A34A]" />
+                <span>Plus & Paramètres Vendeur</span>
+              </h2>
+              <p className="text-xs text-slate-500">
+                Toutes vos options de configuration, finances, messages et support regroupées au même endroit.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {/* Card 1: Boutique & Horaires */}
+              <div className="bg-white p-5 rounded-3xl border border-slate-200/80 shadow-xs space-y-4 hover:border-emerald-300 transition">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-2xl bg-emerald-50 text-[#16A34A] flex items-center justify-center font-black">
+                    <Store className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h3 className="font-black text-sm text-[#0F172A]">Boutique & Horaires</h3>
+                    <p className="text-[11px] text-slate-500">Profil, nom, adresse et horaires</p>
+                  </div>
+                </div>
+                <div className="space-y-1.5 pt-1">
+                  <button onClick={() => setActiveTab('profil')} className="w-full text-left px-3 py-2 bg-slate-50 hover:bg-slate-100 rounded-xl text-xs font-extrabold text-slate-700 flex items-center justify-between cursor-pointer transition">
+                    <span>Profil & Emplacement</span>
+                    <ChevronRight className="w-4 h-4 text-slate-400" />
+                  </button>
+                  <button onClick={() => setActiveTab('horaires')} className="w-full text-left px-3 py-2 bg-slate-50 hover:bg-slate-100 rounded-xl text-xs font-extrabold text-slate-700 flex items-center justify-between cursor-pointer transition">
+                    <span>Horaires d'Ouverture</span>
+                    <ChevronRight className="w-4 h-4 text-slate-400" />
+                  </button>
+                  <button onClick={() => setActiveTab('informations')} className="w-full text-left px-3 py-2 bg-slate-50 hover:bg-slate-100 rounded-xl text-xs font-extrabold text-slate-700 flex items-center justify-between cursor-pointer transition">
+                    <span>Informations Légales & RCCM</span>
+                    <ChevronRight className="w-4 h-4 text-slate-400" />
+                  </button>
+                </div>
+              </div>
+
+              {/* Card 2: Finances & Retraits */}
+              <div className="bg-white p-5 rounded-3xl border border-slate-200/80 shadow-xs space-y-4 hover:border-emerald-300 transition">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-2xl bg-emerald-50 text-[#16A34A] flex items-center justify-center font-black">
+                    <DollarSign className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h3 className="font-black text-sm text-[#0F172A]">Finances & Retraits</h3>
+                    <p className="text-[11px] text-slate-500">Chiffre d'affaires et Mobile Money</p>
+                  </div>
+                </div>
+                <div className="space-y-1.5 pt-1">
+                  <button onClick={() => setActiveTab('retraits')} className="w-full text-left px-3 py-2 bg-emerald-50 hover:bg-emerald-100 rounded-xl text-xs font-black text-[#15803D] flex items-center justify-between cursor-pointer transition">
+                    <span>Demander un Retrait</span>
+                    <ChevronRight className="w-4 h-4 text-[#16A34A]" />
+                  </button>
+                  <button onClick={() => setActiveTab('revenus')} className="w-full text-left px-3 py-2 bg-slate-50 hover:bg-slate-100 rounded-xl text-xs font-extrabold text-slate-700 flex items-center justify-between cursor-pointer transition">
+                    <span>Synthèse Chiffre d'Affaires</span>
+                    <ChevronRight className="w-4 h-4 text-slate-400" />
+                  </button>
+                  <button onClick={() => setActiveTab('paiements')} className="w-full text-left px-3 py-2 bg-slate-50 hover:bg-slate-100 rounded-xl text-xs font-extrabold text-slate-700 flex items-center justify-between cursor-pointer transition">
+                    <span>Historique des Paiements</span>
+                    <ChevronRight className="w-4 h-4 text-slate-400" />
+                  </button>
+                </div>
+              </div>
+
+              {/* Card 3: Messages & Avis */}
+              <div className="bg-white p-5 rounded-3xl border border-slate-200/80 shadow-xs space-y-4 hover:border-indigo-300 transition">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center font-black">
+                    <MessageSquare className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h3 className="font-black text-sm text-[#0F172A]">Communication & Avis</h3>
+                    <p className="text-[11px] text-slate-500">Discussions clients et évaluations</p>
+                  </div>
+                </div>
+                <div className="space-y-1.5 pt-1">
+                  <button onClick={() => setActiveTab('messages')} className="w-full text-left px-3 py-2 bg-slate-50 hover:bg-slate-100 rounded-xl text-xs font-extrabold text-slate-700 flex items-center justify-between cursor-pointer transition">
+                    <span>Messages Clients</span>
+                    <ChevronRight className="w-4 h-4 text-slate-400" />
+                  </button>
+                  <button onClick={() => setActiveTab('avis')} className="w-full text-left px-3 py-2 bg-slate-50 hover:bg-slate-100 rounded-xl text-xs font-extrabold text-slate-700 flex items-center justify-between cursor-pointer transition">
+                    <span>Avis & Notes ({reviews.length})</span>
+                    <ChevronRight className="w-4 h-4 text-slate-400" />
+                  </button>
+                </div>
+              </div>
+
+              {/* Card 4: Marketing & Promotions */}
+              <div className="bg-white p-5 rounded-3xl border border-slate-200/80 shadow-xs space-y-4 hover:border-amber-300 transition">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center font-black">
+                    <Tag className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h3 className="font-black text-sm text-[#0F172A]">Marketing & Offres</h3>
+                    <p className="text-[11px] text-slate-500">Ventes flash, coupons et stats</p>
+                  </div>
+                </div>
+                <div className="space-y-1.5 pt-1">
+                  <button onClick={() => setActiveTab('promotions')} className="w-full text-left px-3 py-2 bg-slate-50 hover:bg-slate-100 rounded-xl text-xs font-extrabold text-slate-700 flex items-center justify-between cursor-pointer transition">
+                    <span>Ventes Flash ({promotions.length})</span>
+                    <ChevronRight className="w-4 h-4 text-slate-400" />
+                  </button>
+                  <button onClick={() => setActiveTab('coupons')} className="w-full text-left px-3 py-2 bg-slate-50 hover:bg-slate-100 rounded-xl text-xs font-extrabold text-slate-700 flex items-center justify-between cursor-pointer transition">
+                    <span>Coupons de Réduction</span>
+                    <ChevronRight className="w-4 h-4 text-slate-400" />
+                  </button>
+                  <button onClick={() => setActiveTab('stats')} className="w-full text-left px-3 py-2 bg-slate-50 hover:bg-slate-100 rounded-xl text-xs font-extrabold text-slate-700 flex items-center justify-between cursor-pointer transition">
+                    <span>Statistiques Vendeur</span>
+                    <ChevronRight className="w-4 h-4 text-slate-400" />
+                  </button>
+                </div>
+              </div>
+
+              {/* Card 5: Abonnement & Support */}
+              <div className="bg-white p-5 rounded-3xl border border-slate-200/80 shadow-xs space-y-4 hover:border-purple-300 transition">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-2xl bg-purple-50 text-purple-600 flex items-center justify-center font-black">
+                    <ShieldCheck className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h3 className="font-black text-sm text-[#0F172A]">Compte & Assistance</h3>
+                    <p className="text-[11px] text-slate-500">Abonnement Premium & Aide</p>
+                  </div>
+                </div>
+                <div className="space-y-1.5 pt-1">
+                  <button onClick={() => setActiveTab('abonnement')} className="w-full text-left px-3 py-2 bg-slate-50 hover:bg-slate-100 rounded-xl text-xs font-extrabold text-slate-700 flex items-center justify-between cursor-pointer transition">
+                    <span>Abonnement Vendeur Premium</span>
+                    <ChevronRight className="w-4 h-4 text-slate-400" />
+                  </button>
+                  <button onClick={() => setActiveTab('support')} className="w-full text-left px-3 py-2 bg-slate-50 hover:bg-slate-100 rounded-xl text-xs font-extrabold text-slate-700 flex items-center justify-between cursor-pointer transition">
+                    <span>Support & Contacter l'Équipe</span>
+                    <ChevronRight className="w-4 h-4 text-slate-400" />
+                  </button>
+                </div>
               </div>
             </div>
           </div>

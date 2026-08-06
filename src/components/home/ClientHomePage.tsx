@@ -327,7 +327,7 @@ export default function ClientHomePage({
   // Navigation Tabs for Client Dashboard
   const [activeTab, setActiveTab] = useState<
     'explore' | 'favorites' | 'orders' | 'delivery' | 'payments' | 
-    'messages' | 'notifications' | 'reviews' | 'subscription' | 'profile' | 'settings' | 'support'
+    'messages' | 'notifications' | 'reviews' | 'subscription' | 'profile' | 'settings' | 'support' | 'plus'
   >('explore');
 
   // Search type filter (Produits, Services, Boutiques, Entreprises)
@@ -609,39 +609,30 @@ export default function ClientHomePage({
         </div>
       </header>
 
-      {/* ==================== 2. CLIENT SUB-NAVIGATION TABS BAR ==================== */}
-      <div className="bg-white border-b border-slate-200/80 sticky top-[57px] z-30 shadow-2xs">
-        <div className="max-w-7xl mx-auto px-4 overflow-x-auto scrollbar-none flex items-center gap-1 py-1.5">
+      {/* ==================== 2. CLIENT PRIMARY NAVIGATION (4 ESSENTIAL TABS) ==================== */}
+      <div className="bg-white border-b border-slate-200 sticky top-[57px] z-30 shadow-2xs">
+        <div className="max-w-7xl mx-auto px-4 py-2 flex items-center justify-between sm:justify-start gap-2 sm:gap-3 overflow-x-auto scrollbar-none">
           {[
-            { id: 'explore', label: 'Recherche & Accueil', icon: Search },
-            { id: 'favorites', label: `Favoris (${favoritedProducts.length})`, icon: Heart },
-            { id: 'orders', label: `Commandes (${localOrders.length})`, icon: Package },
-            { id: 'delivery', label: 'Suivi Livraison', icon: Truck, badge: activeOrder ? '1' : undefined },
-            { id: 'payments', label: 'Moyens de Paiement', icon: CreditCard },
-            { id: 'messages', label: 'Messages Vendeurs', icon: MessageCircle, badge: unreadMessageCount > 0 ? unreadMessageCount : undefined },
-            { id: 'notifications', label: 'Notifications', icon: Bell, badge: unreadNotifCount > 0 ? unreadNotifCount : undefined },
-            { id: 'reviews', label: 'Avis & Notes', icon: Star },
-            { id: 'subscription', label: 'Abonnement VIP', icon: Crown },
-            { id: 'profile', label: 'Mon Profil & Adresses', icon: UserIcon },
-            { id: 'settings', label: 'Paramètres', icon: Settings },
-            { id: 'support', label: 'Support 24/7', icon: HelpCircle },
+            { id: 'explore', label: 'Catalogue & Achats', icon: Search, isSelected: activeTab === 'explore' },
+            { id: 'orders', label: `Mes Commandes (${localOrders.length})`, icon: Package, badge: localOrders.length > 0 ? localOrders.length : undefined, isSelected: ['orders', 'delivery'].includes(activeTab) },
+            { id: 'favorites', label: `Mes Favoris (${favoritedProducts.length})`, icon: Heart, badge: favoritedProducts.length > 0 ? favoritedProducts.length : undefined, isSelected: activeTab === 'favorites' },
+            { id: 'plus', label: 'Mon Compte / Plus', icon: UserIcon, badge: (unreadMessageCount + unreadNotifCount) > 0 ? (unreadMessageCount + unreadNotifCount) : undefined, isSelected: !['explore', 'orders', 'delivery', 'favorites'].includes(activeTab) || activeTab === 'plus' },
           ].map((tab) => {
             const IconComp = tab.icon;
-            const isActive = activeTab === tab.id;
             return (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id as any)}
-                className={`px-3 py-1.5 rounded-xl text-xs font-extrabold flex items-center gap-1.5 shrink-0 transition cursor-pointer relative ${
-                  isActive
-                    ? 'bg-[#0F172A] text-white shadow-xs'
-                    : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
+                className={`px-3.5 py-2 rounded-2xl text-xs font-extrabold flex items-center gap-2 shrink-0 transition cursor-pointer relative ${
+                  tab.isSelected
+                    ? 'bg-[#0F172A] text-white shadow-sm'
+                    : 'bg-slate-50 text-slate-700 hover:bg-slate-100'
                 }`}
               >
-                <IconComp className={`w-3.5 h-3.5 ${isActive ? 'text-[#16A34A]' : 'text-slate-400'}`} />
+                <IconComp className={`w-4 h-4 ${tab.isSelected ? 'text-[#16A34A]' : 'text-slate-400'}`} />
                 <span>{tab.label}</span>
                 {tab.badge && (
-                  <span className="bg-[#16A34A] text-white text-[9px] font-black px-1.5 py-0.2 rounded-full ml-0.5">
+                  <span className="bg-[#16A34A] text-white text-[10px] font-black px-1.5 py-0.2 rounded-full">
                     {tab.badge}
                   </span>
                 )}
@@ -1846,6 +1837,115 @@ export default function ClientHomePage({
               >
                 📞 Appeler le +237 677 89 45 12
               </a>
+            </div>
+          </div>
+        )}
+
+        {/* 13. MENU PLUS & MON COMPTE HUB */}
+        {activeTab === 'plus' && (
+          <div className="space-y-6 max-w-5xl">
+            <div className="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-xs space-y-1">
+              <h2 className="text-lg font-black text-[#0F172A] flex items-center gap-2">
+                <UserIcon className="w-5 h-5 text-[#16A34A]" />
+                <span>Mon Compte & Plus</span>
+              </h2>
+              <p className="text-xs text-slate-500">
+                Retrouvez vos moyens de paiement, vos échanges vendeurs, vos avis et l'assistance client à Bafoussam.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Card 1: Paiements & VIP */}
+              <div className="bg-white p-5 rounded-3xl border border-slate-200/80 shadow-xs space-y-4 hover:border-emerald-300 transition">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-2xl bg-emerald-50 text-[#16A34A] flex items-center justify-center font-black">
+                    <CreditCard className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h3 className="font-black text-sm text-[#0F172A]">Paiement & Privilèges</h3>
+                    <p className="text-[11px] text-slate-500">Mobile Money et statut VIP</p>
+                  </div>
+                </div>
+                <div className="space-y-1.5 pt-1">
+                  <button onClick={() => setActiveTab('payments')} className="w-full text-left px-3 py-2 bg-slate-50 hover:bg-slate-100 rounded-xl text-xs font-extrabold text-slate-700 flex items-center justify-between cursor-pointer transition">
+                    <span>Moyens de Paiement (MoMo, OM)</span>
+                    <ChevronRight className="w-4 h-4 text-slate-400" />
+                  </button>
+                  <button onClick={() => setActiveTab('subscription')} className="w-full text-left px-3 py-2 bg-amber-50 hover:bg-amber-100 rounded-xl text-xs font-black text-[#D97706] flex items-center justify-between cursor-pointer transition">
+                    <span>Abonnement Client VIP</span>
+                    <ChevronRight className="w-4 h-4 text-[#D97706]" />
+                  </button>
+                </div>
+              </div>
+
+              {/* Card 2: Messagerie & Alertes */}
+              <div className="bg-white p-5 rounded-3xl border border-slate-200/80 shadow-xs space-y-4 hover:border-indigo-300 transition">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center font-black">
+                    <MessageSquare className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h3 className="font-black text-sm text-[#0F172A]">Messagerie & Avis</h3>
+                    <p className="text-[11px] text-slate-500">Messages vendeurs et évaluations</p>
+                  </div>
+                </div>
+                <div className="space-y-1.5 pt-1">
+                  <button onClick={() => setActiveTab('messages')} className="w-full text-left px-3 py-2 bg-slate-50 hover:bg-slate-100 rounded-xl text-xs font-extrabold text-slate-700 flex items-center justify-between cursor-pointer transition">
+                    <span>Messages Vendeurs ({unreadMessageCount})</span>
+                    <ChevronRight className="w-4 h-4 text-slate-400" />
+                  </button>
+                  <button onClick={() => setActiveTab('notifications')} className="w-full text-left px-3 py-2 bg-slate-50 hover:bg-slate-100 rounded-xl text-xs font-extrabold text-slate-700 flex items-center justify-between cursor-pointer transition">
+                    <span>Notifications ({unreadNotifCount})</span>
+                    <ChevronRight className="w-4 h-4 text-slate-400" />
+                  </button>
+                  <button onClick={() => setActiveTab('reviews')} className="w-full text-left px-3 py-2 bg-slate-50 hover:bg-slate-100 rounded-xl text-xs font-extrabold text-slate-700 flex items-center justify-between cursor-pointer transition">
+                    <span>Mes Avis & Notes Laissés</span>
+                    <ChevronRight className="w-4 h-4 text-slate-400" />
+                  </button>
+                </div>
+              </div>
+
+              {/* Card 3: Profil & Adresses */}
+              <div className="bg-white p-5 rounded-3xl border border-slate-200/80 shadow-xs space-y-4 hover:border-blue-300 transition">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center font-black">
+                    <UserIcon className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h3 className="font-black text-sm text-[#0F172A]">Profil & Adresses</h3>
+                    <p className="text-[11px] text-slate-500">Lieux de livraison et sécurité</p>
+                  </div>
+                </div>
+                <div className="space-y-1.5 pt-1">
+                  <button onClick={() => setActiveTab('profile')} className="w-full text-left px-3 py-2 bg-slate-50 hover:bg-slate-100 rounded-xl text-xs font-extrabold text-slate-700 flex items-center justify-between cursor-pointer transition">
+                    <span>Mon Profil & Adresses Bafoussam</span>
+                    <ChevronRight className="w-4 h-4 text-slate-400" />
+                  </button>
+                  <button onClick={() => setActiveTab('settings')} className="w-full text-left px-3 py-2 bg-slate-50 hover:bg-slate-100 rounded-xl text-xs font-extrabold text-slate-700 flex items-center justify-between cursor-pointer transition">
+                    <span>Paramètres du Compte</span>
+                    <ChevronRight className="w-4 h-4 text-slate-400" />
+                  </button>
+                </div>
+              </div>
+
+              {/* Card 4: Support */}
+              <div className="bg-white p-5 rounded-3xl border border-slate-200/80 shadow-xs space-y-4 hover:border-emerald-300 transition">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-2xl bg-emerald-50 text-[#16A34A] flex items-center justify-center font-black">
+                    <HelpCircle className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h3 className="font-black text-sm text-[#0F172A]">Support & Assistance</h3>
+                    <p className="text-[11px] text-slate-500">Aide 7j/7 pour vos commandes</p>
+                  </div>
+                </div>
+                <div className="space-y-1.5 pt-1">
+                  <button onClick={() => setActiveTab('support')} className="w-full text-left px-3 py-2.5 bg-emerald-50 hover:bg-emerald-100 rounded-xl text-xs font-black text-[#15803D] flex items-center justify-between cursor-pointer transition">
+                    <span>Contacter l'Assistance AfriNova (+237 677 89 45 12)</span>
+                    <ChevronRight className="w-4 h-4 text-[#16A34A]" />
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
         )}

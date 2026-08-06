@@ -24,7 +24,9 @@ import {
   AlertCircle,
   Smartphone,
   CheckCircle,
-  QrCode
+  QrCode,
+  ChevronRight,
+  Settings
 } from 'lucide-react';
 import { Product, Merchant, Order, User } from '../../types';
 import { AfriNovaLogo } from '../AfriNovaLogo';
@@ -46,7 +48,7 @@ export default function LivreurHomePage({
   onLogout
 }: LivreurHomePageProps) {
   const [activeTab, setActiveTab] = useState<
-    'courses' | 'disponibilite' | 'gains' | 'historique' | 'notifications' | 'documents' | 'profil' | 'support'
+    'courses' | 'disponibilite' | 'gains' | 'historique' | 'notifications' | 'documents' | 'profil' | 'support' | 'plus'
   >('courses');
 
   const [isOnline, setIsOnline] = useState(true);
@@ -219,35 +221,29 @@ export default function LivreurHomePage({
         </div>
       </header>
 
-      {/* ==================== 2. SUB-NAVIGATION TABS BAR ==================== */}
-      <div className="bg-white border-b border-slate-200/80 sticky top-[57px] z-30 shadow-2xs">
-        <div className="max-w-7xl mx-auto px-4 overflow-x-auto scrollbar-none flex items-center gap-1 py-1.5">
+      {/* ==================== 2. LIVREUR PRIMARY NAVIGATION (3 ESSENTIAL TABS) ==================== */}
+      <div className="bg-white border-b border-slate-200 sticky top-[57px] z-30 shadow-2xs">
+        <div className="max-w-7xl mx-auto px-4 py-2 flex items-center justify-between sm:justify-start gap-2 sm:gap-3 overflow-x-auto scrollbar-none">
           {[
-            { id: 'courses', label: `Courses Active (${deliveries.length})`, icon: Truck, badge: deliveries.length > 0 ? deliveries.length : undefined },
-            { id: 'disponibilite', label: 'Statut GPS & Zones', icon: Navigation },
-            { id: 'gains', label: `Gains (${todayEarnings} F)`, icon: DollarSign },
-            { id: 'historique', label: `Historique (${completedHistory.length})`, icon: Clock },
-            { id: 'notifications', label: 'Alertes Livraisons', icon: Bell },
-            { id: 'documents', label: 'Permis & Badge', icon: ShieldCheck },
-            { id: 'profil', label: 'Profil Livreur', icon: UserIcon },
-            { id: 'support', label: 'Support 24/7', icon: HelpCircle },
+            { id: 'courses', label: `Courses Actives (${deliveries.length})`, icon: Truck, badge: deliveries.length > 0 ? deliveries.length : undefined, isSelected: activeTab === 'courses' },
+            { id: 'gains', label: `Gains (${todayEarnings} F)`, icon: DollarSign, isSelected: ['gains', 'historique'].includes(activeTab) },
+            { id: 'plus', label: 'Plus / Mon Compte', icon: UserIcon, isSelected: !['courses', 'gains', 'historique'].includes(activeTab) || activeTab === 'plus' },
           ].map((tab) => {
             const IconComp = tab.icon;
-            const isActive = activeTab === tab.id;
             return (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id as any)}
-                className={`px-3 py-1.5 rounded-xl text-xs font-extrabold flex items-center gap-1.5 shrink-0 transition cursor-pointer relative ${
-                  isActive
-                    ? 'bg-[#0F172A] text-white shadow-xs'
-                    : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
+                className={`px-3.5 py-2 rounded-2xl text-xs font-extrabold flex items-center gap-2 shrink-0 transition cursor-pointer relative ${
+                  tab.isSelected
+                    ? 'bg-[#0F172A] text-white shadow-sm'
+                    : 'bg-slate-50 text-slate-700 hover:bg-slate-100'
                 }`}
               >
-                <IconComp className={`w-3.5 h-3.5 ${isActive ? 'text-[#16A34A]' : 'text-slate-400'}`} />
+                <IconComp className={`w-4 h-4 ${tab.isSelected ? 'text-[#16A34A]' : 'text-slate-400'}`} />
                 <span>{tab.label}</span>
                 {tab.badge && (
-                  <span className="bg-[#16A34A] text-white text-[9px] font-black px-1.5 py-0.2 rounded-full ml-0.5">
+                  <span className="bg-[#16A34A] text-white text-[10px] font-black px-1.5 py-0.2 rounded-full">
                     {tab.badge}
                   </span>
                 )}
@@ -484,9 +480,96 @@ export default function LivreurHomePage({
           </div>
         )}
 
+        {/* 5. MENU PLUS & PARAMÈTRES LIVREUR */}
+        {activeTab === 'plus' && (
+          <div className="space-y-6 max-w-4xl">
+            <div className="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-xs space-y-1">
+              <h2 className="text-lg font-black text-[#0F172A] flex items-center gap-2">
+                <Settings className="w-5 h-5 text-[#16A34A]" />
+                <span>Plus & Compte Livreur</span>
+              </h2>
+              <p className="text-xs text-slate-500">
+                Gérez votre statut GPS, vos documents légaux (permis, badge), votre profil et contactez le support.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Card 1: Statut & GPS */}
+              <div className="bg-white p-5 rounded-3xl border border-slate-200/80 shadow-xs space-y-4 hover:border-emerald-300 transition">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-2xl bg-emerald-50 text-[#16A34A] flex items-center justify-center font-black">
+                    <Navigation className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h3 className="font-black text-sm text-[#0F172A]">Disponibilité & GPS</h3>
+                    <p className="text-[11px] text-slate-500">Zones de livraison et statut en ligne</p>
+                  </div>
+                </div>
+                <div className="space-y-1.5 pt-1">
+                  <button onClick={() => setActiveTab('disponibilite')} className="w-full text-left px-3 py-2 bg-slate-50 hover:bg-slate-100 rounded-xl text-xs font-extrabold text-slate-700 flex items-center justify-between cursor-pointer transition">
+                    <span>Statut GPS & Zones Couvertes</span>
+                    <ChevronRight className="w-4 h-4 text-slate-400" />
+                  </button>
+                  <button onClick={() => setActiveTab('documents')} className="w-full text-left px-3 py-2 bg-slate-50 hover:bg-slate-100 rounded-xl text-xs font-extrabold text-slate-700 flex items-center justify-between cursor-pointer transition">
+                    <span>Permis de Conduire & Badge</span>
+                    <ChevronRight className="w-4 h-4 text-slate-400" />
+                  </button>
+                </div>
+              </div>
+
+              {/* Card 2: Compte & Notifications */}
+              <div className="bg-white p-5 rounded-3xl border border-slate-200/80 shadow-xs space-y-4 hover:border-blue-300 transition">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center font-black">
+                    <UserIcon className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h3 className="font-black text-sm text-[#0F172A]">Mon Profil Livreur</h3>
+                    <p className="text-[11px] text-slate-500">Coordonnées et alertes</p>
+                  </div>
+                </div>
+                <div className="space-y-1.5 pt-1">
+                  <button onClick={() => setActiveTab('profil')} className="w-full text-left px-3 py-2 bg-slate-50 hover:bg-slate-100 rounded-xl text-xs font-extrabold text-slate-700 flex items-center justify-between cursor-pointer transition">
+                    <span>Informations Personnelles</span>
+                    <ChevronRight className="w-4 h-4 text-slate-400" />
+                  </button>
+                  <button onClick={() => setActiveTab('notifications')} className="w-full text-left px-3 py-2 bg-slate-50 hover:bg-slate-100 rounded-xl text-xs font-extrabold text-slate-700 flex items-center justify-between cursor-pointer transition">
+                    <span>Alertes & Sonneries de Livraison</span>
+                    <ChevronRight className="w-4 h-4 text-slate-400" />
+                  </button>
+                </div>
+              </div>
+
+              {/* Card 3: Support */}
+              <div className="bg-white p-5 rounded-3xl border border-slate-200/80 shadow-xs space-y-4 hover:border-emerald-300 transition md:col-span-2">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-2xl bg-emerald-50 text-[#16A34A] flex items-center justify-center font-black">
+                    <HelpCircle className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h3 className="font-black text-sm text-[#0F172A]">Assistance Livreur 24/7</h3>
+                    <p className="text-[11px] text-slate-500">Assistance téléphonique en cas de souci de livraison</p>
+                  </div>
+                </div>
+                <div className="pt-1">
+                  <button onClick={() => setActiveTab('support')} className="w-full text-left px-3 py-2.5 bg-emerald-50 hover:bg-emerald-100 rounded-xl text-xs font-black text-[#15803D] flex items-center justify-between cursor-pointer transition">
+                    <span>Contacter le Support Réactif AfriNova (+237 677 89 45 12)</span>
+                    <ChevronRight className="w-4 h-4 text-[#16A34A]" />
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* OTHER TABS PLACEHOLDERS */}
-        {(activeTab === 'notifications' || activeTab === 'documents' || activeTab === 'profil' || activeTab === 'support') && (
+        {(activeTab === 'notifications' || activeTab === 'documents' || activeTab === 'profil' || activeTab === 'support' || activeTab === 'disponibilite') && (
           <div className="bg-white rounded-2xl border border-slate-200/80 p-6 shadow-xs space-y-4 max-w-2xl">
+            <div className="flex items-center gap-2">
+              <button onClick={() => setActiveTab('plus')} className="px-2.5 py-1 text-xs font-extrabold text-slate-600 hover:text-slate-900 bg-slate-100 rounded-xl cursor-pointer">
+                ← Retour au Menu Plus
+              </button>
+            </div>
             <h2 className="text-base font-black text-[#0F172A] uppercase tracking-wider">
               Espace Livreur • {activeTab.toUpperCase()}
             </h2>

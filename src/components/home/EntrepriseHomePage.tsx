@@ -45,11 +45,89 @@ import {
   MapPin,
   Globe,
   Lock,
-  CheckCircle2
+  CheckCircle2,
+  Utensils,
+  Store,
+  Pill,
+  Clock,
+  Phone,
+  Settings,
+  ChevronLeft
 } from 'lucide-react';
 import { Product, Merchant, Order, User } from '../../types';
 import AboutAfriNovaSection from '../AboutAfriNovaSection';
 import { AfriNovaLogo } from '../AfriNovaLogo';
+
+export type EnterpriseActivityType = 
+  | 'restaurant' 
+  | 'boulangerie' 
+  | 'pharmacie' 
+  | 'boutique' 
+  | 'services' 
+  | 'autre';
+
+export const ACTIVITY_CATEGORIES = [
+  {
+    id: 'restaurant' as EnterpriseActivityType,
+    emoji: '🍽️',
+    title: 'Restaurant',
+    subtitle: 'Restauration, Menus & Plats',
+    description: 'Nom du restaurant, Logo/Photo, Adresse, Menu spécialités, Photos des plats, Horaires de service & Commandes.',
+    badgeBg: 'bg-amber-100 text-amber-900 border-amber-300',
+    icon: Utensils,
+    defaultNamePlaceholder: 'Ex: Le Palais des Saveurs Bafoussam',
+  },
+  {
+    id: 'boulangerie' as EnterpriseActivityType,
+    emoji: '🥖',
+    title: 'Boulangerie / Pâtisserie',
+    subtitle: 'Pain, Viennoiseries & Gâteaux',
+    description: 'Nom de la boulangerie, Produits disponibles, Photos, Horaires des fournées & Commandes spéciales.',
+    badgeBg: 'bg-orange-100 text-orange-900 border-orange-300',
+    icon: Store,
+    defaultNamePlaceholder: 'Ex: Boulangerie La Rose de Bafoussam',
+  },
+  {
+    id: 'pharmacie' as EnterpriseActivityType,
+    emoji: '💊',
+    title: 'Pharmacie',
+    subtitle: 'Santé, Médicaments & Garde',
+    description: 'Nom de la pharmacie, Localisation, Produits de santé disponibles, Horaires, Garde & Contact d\'urgence.',
+    badgeBg: 'bg-emerald-100 text-emerald-900 border-emerald-300',
+    icon: Pill,
+    defaultNamePlaceholder: 'Ex: Pharmacie du Marché A Bafoussam',
+  },
+  {
+    id: 'boutique' as EnterpriseActivityType,
+    emoji: '🏬',
+    title: 'Boutique / Commerce',
+    subtitle: 'Articles, Stocks, Prix & Ventes',
+    description: 'Nom de la boutique, Produits, Gestion de stock, Prix, Photos/vidéos & Commandes de livraison.',
+    badgeBg: 'bg-blue-100 text-blue-900 border-blue-300',
+    icon: ShoppingBag,
+    defaultNamePlaceholder: 'Ex: Elite Tech & Mode Bafoussam',
+  },
+  {
+    id: 'services' as EnterpriseActivityType,
+    emoji: '🛠️',
+    title: 'Prestataire de services',
+    subtitle: 'Type de service, Tarifs & Interventions',
+    description: 'Nom de l\'entreprise, Type de service, Description, Zone d\'intervention à Bafoussam & Tarifs/Devis.',
+    badgeBg: 'bg-indigo-100 text-indigo-900 border-indigo-300',
+    icon: Wrench,
+    defaultNamePlaceholder: 'Ex: Bafoussam BTP & Services Pro',
+  },
+  {
+    id: 'autre' as EnterpriseActivityType,
+    emoji: '🏢',
+    title: 'Autre entreprise',
+    subtitle: 'Société B2B, Industrie & Services Corporate',
+    description: 'Raison sociale, Registre du commerce (RCCM), Identifiant fiscal (NIU), Forme juridique & ERP B2B.',
+    badgeBg: 'bg-slate-100 text-slate-900 border-slate-300',
+    icon: Building2,
+    defaultNamePlaceholder: 'Ex: Groupe Industrielle de l\'Ouest SA',
+  }
+];
 
 interface EntrepriseHomePageProps {
   currentUser: User | null;
@@ -77,7 +155,7 @@ export default function EntrepriseHomePage({
     'accueil' | 'employes' | 'departements' | 'produits' | 'services' | 
     'commandes' | 'factures' | 'paiements' | 'offres' | 'campagnes' | 
     'promotions' | 'messagerie' | 'stats' | 'rapports' | 'benefices' | 
-    'performances' | 'abonnement' | 'profil' | 'coordonnees' | 'support'
+    'performances' | 'abonnement' | 'profil' | 'coordonnees' | 'support' | 'plus'
   >('accueil');
 
   // Notifications / Toast
@@ -213,14 +291,74 @@ export default function EntrepriseHomePage({
     } catch {}
     return {
       companyName: currentUser?.name ? `Société ${currentUser.name}` : 'Ma Société Enterprise',
+      activityType: 'restaurant' as EnterpriseActivityType,
       rccm: 'En cours d\'enregistrement',
       niu: 'Non configuré',
       legalForm: 'SARL / SA',
-      industry: 'Services & Commerce B2B',
-      capital: '10 000 000 FCFA',
-      description: 'Profil entreprise B2B en cours de configuration. Modifiez les informations de votre société !'
+      industry: 'Restauration & Gastronomie',
+      capital: '5 000 000 FCFA',
+      description: 'Bienvenue dans notre espace entreprise sur Afrinova !',
+      address: currentUser?.neighborhood ? `Quartier ${currentUser.neighborhood}` : 'Bafoussam Centre',
+      openingHours: '08h00 - 22h00, 7j/7',
+      specialtiesOrMenu: 'Menu traditionnel & Spécialités locales',
+      interventionZone: 'Bafoussam & Environs',
+      isPharmacyOnDuty: false,
+      emergencyPhone: currentUser?.phone || '',
+      priceRange: 'Standard FCFA',
+      productTypes: 'Produits & Menus variés',
+      logoUrl: ''
     };
   });
+
+  // WIZARD STATE FOR "CRÉER MON ENTREPRISE"
+  const [isCreateEnterpriseModalOpen, setIsCreateEnterpriseModalOpen] = useState(false);
+  const [wizardStep, setWizardStep] = useState<1 | 2>(1);
+  const [selectedActivityType, setSelectedActivityType] = useState<EnterpriseActivityType>('restaurant');
+  const [wizardForm, setWizardForm] = useState({
+    companyName: '',
+    legalForm: 'SARL',
+    rccm: '',
+    niu: '',
+    address: '',
+    cityQuarter: 'Bafoussam',
+    phone: '',
+    email: '',
+    openingHours: '08h00 - 22h00, 7j/7',
+    specialtiesOrMenu: '',
+    interventionZone: 'Bafoussam & Région Ouest',
+    isPharmacyOnDuty: false,
+    emergencyPhone: '',
+    priceRange: '',
+    productTypes: '',
+    description: '',
+    logoUrl: ''
+  });
+
+  const openCreateEnterpriseWizard = () => {
+    const currentActivity = profile.activityType || 'restaurant';
+    setSelectedActivityType(currentActivity);
+    setWizardForm({
+      companyName: profile.companyName || '',
+      legalForm: profile.legalForm || 'SARL',
+      rccm: profile.rccm || '',
+      niu: profile.niu || '',
+      address: contact.address || '',
+      cityQuarter: contact.cityQuarter || 'Bafoussam',
+      phone: contact.primaryPhone || '',
+      email: contact.email || '',
+      openingHours: profile.openingHours || '08h00 - 22h00, 7j/7',
+      specialtiesOrMenu: profile.specialtiesOrMenu || '',
+      interventionZone: profile.interventionZone || 'Bafoussam & Environs',
+      isPharmacyOnDuty: profile.isPharmacyOnDuty || false,
+      emergencyPhone: profile.emergencyPhone || contact.primaryPhone || '',
+      priceRange: profile.priceRange || '',
+      productTypes: profile.productTypes || '',
+      description: profile.description || '',
+      logoUrl: profile.logoUrl || ''
+    });
+    setWizardStep(1);
+    setIsCreateEnterpriseModalOpen(true);
+  };
 
   useEffect(() => {
     try { localStorage.setItem('bafoussam_entreprise_profile_' + (currentUser?.id || 'guest'), JSON.stringify(profile)); } catch {}
@@ -336,6 +474,15 @@ export default function EntrepriseHomePage({
           {/* Quick Actions */}
           <div className="flex items-center gap-1.5 sm:gap-2">
             
+            {/* Créer mon entreprise Button */}
+            <button
+              onClick={openCreateEnterpriseWizard}
+              className="bg-[#0F172A] hover:bg-slate-800 text-white font-extrabold px-3.5 py-1.5 rounded-full transition shadow-xs flex items-center gap-1.5 text-xs cursor-pointer border border-slate-700"
+            >
+              <Plus className="w-3.5 h-3.5 text-[#16A34A] stroke-[3]" />
+              <span>Créer mon entreprise</span>
+            </button>
+
             {/* Quick Publish B2B Offer */}
             <button
               onClick={() => {
@@ -371,47 +518,30 @@ export default function EntrepriseHomePage({
         </div>
       </header>
 
-      {/* ==================== 2. SUB-NAVIGATION TABS BAR ==================== */}
-      <div className="bg-white border-b border-slate-200/80 sticky top-[57px] z-30 shadow-2xs">
-        <div className="max-w-7xl mx-auto px-4 overflow-x-auto scrollbar-none flex items-center gap-1 py-1.5">
+      {/* ==================== 2. ENTREPRISE PRIMARY NAVIGATION (4 ESSENTIAL TABS) ==================== */}
+      <div className="bg-white border-b border-slate-200 sticky top-[57px] z-30 shadow-2xs">
+        <div className="max-w-7xl mx-auto px-4 py-2 flex items-center justify-between sm:justify-start gap-2 sm:gap-3 overflow-x-auto scrollbar-none">
           {[
-            { id: 'accueil', label: 'Vue Générale', icon: Building2 },
-            { id: 'employes', label: `Employés (${employees.length})`, icon: Users },
-            { id: 'departements', label: `Départements (${departments.length})`, icon: Briefcase },
-            { id: 'produits', label: `Produits (${corpProducts.length})`, icon: Package },
-            { id: 'services', label: `Services (${corpServices.length})`, icon: Wrench },
-            { id: 'commandes', label: `Commandes (${b2bOrders.length})`, icon: ShoppingBag },
-            { id: 'factures', label: `Factures (${invoices.length})`, icon: FileText },
-            { id: 'paiements', label: 'Paiements', icon: DollarSign },
-            { id: 'offres', label: `Offres (${offers.length})`, icon: FilePlus },
-            { id: 'campagnes', label: `Campagnes (${campaigns.length})`, icon: Megaphone },
-            { id: 'promotions', label: 'Promotions', icon: Tag },
-            { id: 'messagerie', label: 'Messagerie', icon: Mail, badge: 1 },
-            { id: 'stats', label: 'Statistiques', icon: BarChart3 },
-            { id: 'rapports', label: 'Rapports PDF', icon: Download },
-            { id: 'benefices', label: 'Bénéfices', icon: TrendingUp },
-            { id: 'performances', label: 'Performances', icon: PieChart },
-            { id: 'abonnement', label: 'Abonnement', icon: ShieldCheck },
-            { id: 'profil', label: 'Profil Entreprise', icon: Building2 },
-            { id: 'coordonnees', label: 'Coordonnées', icon: MapPin },
-            { id: 'support', label: 'Support VIP 24/7', icon: HelpCircle },
+            { id: 'accueil', label: 'Aperçu Général', icon: Building2, isSelected: activeTab === 'accueil' },
+            { id: 'commandes', label: `Achats & Devis B2B (${b2bOrders.length})`, icon: FileText, badge: b2bOrders.length > 0 ? b2bOrders.length : undefined, isSelected: ['commandes', 'factures', 'offres', 'paiements'].includes(activeTab) },
+            { id: 'employes', label: `Équipe & Dép. (${employees.length})`, icon: Users, isSelected: ['employes', 'departements'].includes(activeTab) },
+            { id: 'plus', label: 'Plus / Configuration', icon: Settings, isSelected: !['accueil', 'commandes', 'factures', 'offres', 'paiements', 'employes', 'departements'].includes(activeTab) || activeTab === 'plus' },
           ].map((tab) => {
             const IconComp = tab.icon;
-            const isActive = activeTab === tab.id;
             return (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id as any)}
-                className={`px-3 py-1.5 rounded-xl text-xs font-extrabold flex items-center gap-1.5 shrink-0 transition cursor-pointer relative ${
-                  isActive
-                    ? 'bg-[#0F172A] text-white shadow-xs'
-                    : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
+                className={`px-3.5 py-2 rounded-2xl text-xs font-extrabold flex items-center gap-2 shrink-0 transition cursor-pointer relative ${
+                  tab.isSelected
+                    ? 'bg-[#0F172A] text-white shadow-sm'
+                    : 'bg-slate-50 text-slate-700 hover:bg-slate-100'
                 }`}
               >
-                <IconComp className={`w-3.5 h-3.5 ${isActive ? 'text-[#16A34A]' : 'text-slate-400'}`} />
+                <IconComp className={`w-4 h-4 ${tab.isSelected ? 'text-[#16A34A]' : 'text-slate-400'}`} />
                 <span>{tab.label}</span>
                 {tab.badge && (
-                  <span className="bg-[#16A34A] text-white text-[9px] font-black px-1.5 py-0.2 rounded-full ml-0.5">
+                  <span className="bg-[#16A34A] text-white text-[10px] font-black px-1.5 py-0.2 rounded-full">
                     {tab.badge}
                   </span>
                 )}
@@ -425,8 +555,74 @@ export default function EntrepriseHomePage({
       <main className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 pt-3 space-y-3.5 sm:space-y-4">
 
         {/* 1. VUE GÉNÉRALE / ACCUEIL */}
-        {activeTab === 'accueil' && (
+        {activeTab === 'accueil' && (() => {
+          const currentCategory = ACTIVITY_CATEGORIES.find(c => c.id === (profile.activityType || 'restaurant')) || ACTIVITY_CATEGORIES[0];
+          return (
           <div className="space-y-3.5 sm:space-y-4">
+            {/* HERO ENTERPRISE PROFILE BANNER */}
+            <div className="bg-gradient-to-r from-slate-900 via-slate-800 to-[#0F172A] p-4 sm:p-5 rounded-2xl sm:rounded-3xl border border-slate-700/80 shadow-md text-white space-y-3">
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-3.5">
+                <div className="flex items-start gap-3">
+                  <div className="w-11 h-11 rounded-2xl bg-[#16A34A]/20 border border-[#16A34A]/40 flex items-center justify-center text-2xl shrink-0">
+                    {currentCategory.emoji}
+                  </div>
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <h1 className="text-lg sm:text-xl font-black text-white">{profile.companyName}</h1>
+                      <span className={`text-[10px] font-black px-2.5 py-0.5 rounded-full border ${currentCategory.badgeBg} uppercase tracking-wider flex items-center gap-1`}>
+                        <span>{currentCategory.emoji}</span>
+                        <span>{currentCategory.title}</span>
+                      </span>
+                      {profile.activityType === 'pharmacie' && profile.isPharmacyOnDuty && (
+                        <span className="text-[10px] font-black px-2.5 py-0.5 rounded-full bg-emerald-500 text-white animate-pulse">
+                          💊 En Garde 24h/7d
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-xs text-slate-300">
+                      {profile.description || `${currentCategory.subtitle} • ${contact.address || 'Bafoussam'}`}
+                    </p>
+                  </div>
+                </div>
+
+                <button
+                  onClick={openCreateEnterpriseWizard}
+                  className="px-4 py-2.5 bg-[#16A34A] hover:bg-[#15803D] text-white font-extrabold text-xs rounded-2xl transition shadow-lg flex items-center justify-center gap-2 shrink-0 cursor-pointer"
+                >
+                  <Plus className="w-4 h-4 stroke-[3]" />
+                  <span>Changer le type d'activité / Profil</span>
+                </button>
+              </div>
+
+              {/* Activity Context Specs Bar */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-2 border-t border-slate-800 text-xs text-slate-300">
+                <div>
+                  <span className="text-[10px] font-bold text-slate-400 block uppercase">
+                    {profile.activityType === 'restaurant' ? 'Menu & Plats' : 
+                     profile.activityType === 'boulangerie' ? 'Pains & Pâtisseries' :
+                     profile.activityType === 'pharmacie' ? 'Produits Santé' :
+                     profile.activityType === 'boutique' ? 'Articles & Stock' :
+                     profile.activityType === 'services' ? 'Services Pro' : 'Secteur'}
+                  </span>
+                  <span className="font-extrabold text-white truncate block">
+                    {profile.specialtiesOrMenu || profile.productTypes || profile.industry || 'Non renseigné'}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-[10px] font-bold text-slate-400 block uppercase">Horaires</span>
+                  <span className="font-extrabold text-white truncate block">{profile.openingHours || '08h00 - 20h00'}</span>
+                </div>
+                <div>
+                  <span className="text-[10px] font-bold text-slate-400 block uppercase">Adresse</span>
+                  <span className="font-extrabold text-white truncate block">{contact.address || 'Bafoussam'}</span>
+                </div>
+                <div>
+                  <span className="text-[10px] font-bold text-slate-400 block uppercase">Contact Direct</span>
+                  <span className="font-extrabold text-emerald-400 truncate block">{contact.primaryPhone || '+237 ...'}</span>
+                </div>
+              </div>
+            </div>
+
             {/* KPI Cards */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3">
               <div className="bg-white p-3 sm:p-3.5 rounded-xl sm:rounded-2xl border border-slate-200/80 shadow-2xs space-y-1">
@@ -489,16 +685,225 @@ export default function EntrepriseHomePage({
 
                 <button
                   onClick={() => { setActiveTab('campagnes'); setIsCampModalOpen(true); }}
-                  className="p-4 rounded-2xl bg-amber-950/60 hover:bg-amber-900/60 text-amber-200 border border-amber-800/40 text-left space-y-1 transition cursor-pointer"
+                  className="p-3 rounded-xl bg-amber-950/60 hover:bg-amber-900/60 text-amber-200 border border-amber-800/40 text-left space-y-0.5 transition cursor-pointer min-h-[48px] flex flex-col justify-center"
                 >
-                  <Megaphone className="w-5 h-5 text-amber-400" />
+                  <Megaphone className="w-4 h-4 text-amber-400" />
                   <p className="text-xs font-black">Créer Campagne</p>
-                  <p className="text-[10px] text-amber-300">Marketing & Publicité</p>
+                  <p className="text-[9.5px] text-amber-300">Marketing & Publicité</p>
                 </button>
               </div>
             </div>
+
+            {/* 3. MODULE DE GESTION SPÉCIFIQUE AU TYPE D'ACTIVITÉ */}
+            <div className="bg-white p-4 sm:p-5 rounded-2xl sm:rounded-3xl border border-slate-200/80 shadow-2xs space-y-3">
+              <div className="flex items-center justify-between border-b border-slate-100 pb-3 flex-wrap gap-2">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-9 h-9 rounded-xl bg-slate-100 flex items-center justify-center text-lg">
+                    {currentCategory.emoji}
+                  </div>
+                  <div>
+                    <h3 className="font-black text-sm text-[#0F172A]">
+                      {profile.activityType === 'restaurant' && "🍽️ Espace Restaurant & Menus à la Carte"}
+                      {profile.activityType === 'boulangerie' && "🥖 Espace Boulangerie, Fournées & Pâtisserie"}
+                      {profile.activityType === 'pharmacie' && "💊 Espace Pharmacie & Service de Garde Santé"}
+                      {profile.activityType === 'boutique' && "🏬 Espace Boutique, Ventes & Stocks"}
+                      {profile.activityType === 'services' && "🛠️ Espace Prestations de Services & Devis"}
+                      {profile.activityType === 'autre' && "🏢 Espace Entreprise ERP & Opérations B2B"}
+                    </h3>
+                    <p className="text-[11px] text-slate-500">
+                      Interface personnalisée pour votre métier à Bafoussam
+                    </p>
+                  </div>
+                </div>
+
+                {profile.activityType === 'pharmacie' && (
+                  <button
+                    onClick={() => {
+                      const nextDuty = !profile.isPharmacyOnDuty;
+                      setProfile({ ...profile, isPharmacyOnDuty: nextDuty });
+                      showToast(nextDuty ? 'Pharmacie marquée comme DE GARDE (Nuit/WE).' : 'Pharmacie hors garde.');
+                    }}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-black cursor-pointer transition ${
+                      profile.isPharmacyOnDuty
+                        ? 'bg-emerald-600 text-white shadow-xs'
+                        : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                    }`}
+                  >
+                    {profile.isPharmacyOnDuty ? '💊 Statut: EN GARDE (Actif)' : 'Activer Statut de Garde'}
+                  </button>
+                )}
+              </div>
+
+              {/* Dynamic Content Display per Activity Type */}
+              {profile.activityType === 'restaurant' && (
+                <div className="space-y-3">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                    <div className="p-3 bg-amber-50/60 border border-amber-200/80 rounded-2xl space-y-1">
+                      <span className="text-[10px] font-black text-amber-800 uppercase">Spécialité du Chef</span>
+                      <p className="text-xs font-extrabold text-[#0F172A]">{profile.specialtiesOrMenu || 'Ndolé Royal & Poulet DG'}</p>
+                      <p className="text-[10px] text-slate-500">Disponible au restaurant et en livraison</p>
+                    </div>
+                    <div className="p-3 bg-slate-50 border border-slate-200 rounded-2xl space-y-1">
+                      <span className="text-[10px] font-black text-slate-600 uppercase">Horaires des Repas</span>
+                      <p className="text-xs font-extrabold text-[#0F172A]">{profile.openingHours || '11h30 - 23h00'}</p>
+                      <p className="text-[10px] text-slate-500">Service continu & emporter</p>
+                    </div>
+                    <div className="p-3 bg-emerald-50/60 border border-emerald-200/80 rounded-2xl space-y-1">
+                      <span className="text-[10px] font-black text-emerald-800 uppercase">Commandes Repas Reçues</span>
+                      <p className="text-xs font-extrabold text-[#0F172A]">{b2bOrders.length} commandes enregistrées</p>
+                      <p className="text-[10px] text-emerald-700 font-bold">Livreurs AfriNova disponibles</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 pt-1 flex-wrap">
+                    <button onClick={onOpenAddModal} className="px-3.5 py-2 bg-[#16A34A] text-white font-extrabold text-xs rounded-xl hover:bg-[#15803D] transition cursor-pointer">
+                      + Ajouter un plat / boisson au menu
+                    </button>
+                    <button onClick={() => setActiveTab('commandes')} className="px-3.5 py-2 bg-slate-100 text-slate-800 font-extrabold text-xs rounded-xl hover:bg-slate-200 transition cursor-pointer">
+                      Voir les commandes de repas
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {profile.activityType === 'boulangerie' && (
+                <div className="space-y-3">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                    <div className="p-3 bg-orange-50/60 border border-orange-200/80 rounded-2xl space-y-1">
+                      <span className="text-[10px] font-black text-orange-800 uppercase">Pains & Pâtisseries</span>
+                      <p className="text-xs font-extrabold text-[#0F172A]">{profile.specialtiesOrMenu || 'Pain de mie, Viennoiseries, Croissants'}</p>
+                      <p className="text-[10px] text-slate-500">Cuisson au feu de bois</p>
+                    </div>
+                    <div className="p-3 bg-slate-50 border border-slate-200 rounded-2xl space-y-1">
+                      <span className="text-[10px] font-black text-slate-600 uppercase">Heures des Fournées</span>
+                      <p className="text-xs font-extrabold text-[#0F172A]">{profile.openingHours || '06h00, 12h00, 17h00'}</p>
+                      <p className="text-[10px] text-slate-500">Pains chauds toute la journée</p>
+                    </div>
+                    <div className="p-3 bg-emerald-50/60 border border-emerald-200/80 rounded-2xl space-y-1">
+                      <span className="text-[10px] font-black text-emerald-800 uppercase">Commandes Gâteaux & Événements</span>
+                      <p className="text-xs font-extrabold text-[#0F172A]">Réservation 24h à l'avance</p>
+                      <p className="text-[10px] text-emerald-700 font-bold">Livraison sécurisée</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 pt-1 flex-wrap">
+                    <button onClick={onOpenAddModal} className="px-3.5 py-2 bg-[#16A34A] text-white font-extrabold text-xs rounded-xl hover:bg-[#15803D] transition cursor-pointer">
+                      + Ajouter un produit de boulangerie
+                    </button>
+                    <button onClick={() => setActiveTab('commandes')} className="px-3.5 py-2 bg-slate-100 text-slate-800 font-extrabold text-xs rounded-xl hover:bg-slate-200 transition cursor-pointer">
+                      Gérer les commandes
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {profile.activityType === 'pharmacie' && (
+                <div className="space-y-3">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                    <div className="p-3 bg-emerald-50/60 border border-emerald-200/80 rounded-2xl space-y-1">
+                      <span className="text-[10px] font-black text-emerald-800 uppercase">Disponibilité Santé</span>
+                      <p className="text-xs font-extrabold text-[#0F172A]">{profile.isPharmacyOnDuty ? 'PHARMACIE DE GARDE (OUVERT 24H)' : 'Ouverture normale'}</p>
+                      <p className="text-[10px] text-slate-500">{profile.openingHours || '08h00 - 20h00'}</p>
+                    </div>
+                    <div className="p-3 bg-blue-50/60 border border-blue-200/80 rounded-2xl space-y-1">
+                      <span className="text-[10px] font-black text-blue-800 uppercase">Rayons & Parapharmacie</span>
+                      <p className="text-xs font-extrabold text-[#0F172A]">{profile.specialtiesOrMenu || 'Médicaments, Premiers Soins, Bébé'}</p>
+                      <p className="text-[10px] text-slate-500">Stock vérifié par pharmacien diplômé</p>
+                    </div>
+                    <div className="p-3 bg-amber-50/60 border border-amber-200/80 rounded-2xl space-y-1">
+                      <span className="text-[10px] font-black text-amber-800 uppercase">Numéro d'Urgence Pharmaceutique</span>
+                      <p className="text-xs font-extrabold text-[#0F172A]">{contact.primaryPhone || '+237 ...'}</p>
+                      <p className="text-[10px] text-slate-500">Assistance rapide Bafoussam</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 pt-1 flex-wrap">
+                    <button onClick={onOpenAddModal} className="px-3.5 py-2 bg-[#16A34A] text-white font-extrabold text-xs rounded-xl hover:bg-[#15803D] transition cursor-pointer">
+                      + Ajouter un produit de santé
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {profile.activityType === 'boutique' && (
+                <div className="space-y-3">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                    <div className="p-3 bg-blue-50/60 border border-blue-200/80 rounded-2xl space-y-1">
+                      <span className="text-[10px] font-black text-blue-800 uppercase">Gamme de Produits</span>
+                      <p className="text-xs font-extrabold text-[#0F172A]">{profile.specialtiesOrMenu || 'Articles en magasin, Vêtements, Tech'}</p>
+                      <p className="text-[10px] text-slate-500">Vente au détail & gros</p>
+                    </div>
+                    <div className="p-3 bg-slate-50 border border-slate-200 rounded-2xl space-y-1">
+                      <span className="text-[10px] font-black text-slate-600 uppercase">Conditions de Vente & Prix</span>
+                      <p className="text-xs font-extrabold text-[#0F172A]">{profile.priceRange || 'Prix fixes & promos'}</p>
+                      <p className="text-[10px] text-slate-500">Facture délivrée à chaque achat</p>
+                    </div>
+                    <div className="p-3 bg-emerald-50/60 border border-emerald-200/80 rounded-2xl space-y-1">
+                      <span className="text-[10px] font-black text-emerald-800 uppercase">Expédition & Livraison</span>
+                      <p className="text-xs font-extrabold text-[#0F172A]">{profile.interventionZone || 'Bafoussam & Ouest Cameroon'}</p>
+                      <p className="text-[10px] text-emerald-700 font-bold">Point retrait dispo</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 pt-1 flex-wrap">
+                    <button onClick={onOpenAddModal} className="px-3.5 py-2 bg-[#16A34A] text-white font-extrabold text-xs rounded-xl hover:bg-[#15803D] transition cursor-pointer">
+                      + Ajouter un produit au catalogue
+                    </button>
+                    <button onClick={() => setActiveTab('commandes')} className="px-3.5 py-2 bg-slate-100 text-slate-800 font-extrabold text-xs rounded-xl hover:bg-slate-200 transition cursor-pointer">
+                      Gérer le stock & commandes
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {profile.activityType === 'services' && (
+                <div className="space-y-3">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                    <div className="p-3 bg-indigo-50/60 border border-indigo-200/80 rounded-2xl space-y-1">
+                      <span className="text-[10px] font-black text-indigo-800 uppercase">Prestations Pro</span>
+                      <p className="text-xs font-extrabold text-[#0F172A]">{profile.specialtiesOrMenu || 'Dépannage, Installation, Maintenance'}</p>
+                      <p className="text-[10px] text-slate-500">Techniciens qualifiés</p>
+                    </div>
+                    <div className="p-3 bg-slate-50 border border-slate-200 rounded-2xl space-y-1">
+                      <span className="text-[10px] font-black text-slate-600 uppercase">Zone d'Intervention</span>
+                      <p className="text-xs font-extrabold text-[#0F172A]">{profile.interventionZone || 'Bafoussam Ville, Mbouda, Dschang'}</p>
+                      <p className="text-[10px] text-slate-500">Déplacement rapide</p>
+                    </div>
+                    <div className="p-3 bg-emerald-50/60 border border-emerald-200/80 rounded-2xl space-y-1">
+                      <span className="text-[10px] font-black text-emerald-800 uppercase">Tarification & Devis</span>
+                      <p className="text-xs font-extrabold text-[#0F172A]">{profile.priceRange || 'Devis gratuit sur demande'}</p>
+                      <p className="text-[10px] text-emerald-700 font-bold">Garantie service rendu</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 pt-1 flex-wrap">
+                    <button onClick={() => { setActiveTab('offres'); setIsOfferModalOpen(true); }} className="px-3.5 py-2 bg-[#16A34A] text-white font-extrabold text-xs rounded-xl hover:bg-[#15803D] transition cursor-pointer">
+                      + Publier une offre de service / Devis
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {profile.activityType === 'autre' && (
+                <div className="space-y-3">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                    <div className="p-3 bg-slate-50 border border-slate-200 rounded-2xl space-y-1">
+                      <span className="text-[10px] font-black text-slate-600 uppercase">Forme Juridique & NIU</span>
+                      <p className="text-xs font-extrabold text-[#0F172A]">{profile.legalForm || 'SARL'} • {profile.niu || 'NIU en cours'}</p>
+                      <p className="text-[10px] text-slate-500">RCCM: {profile.rccm || 'Non renseigné'}</p>
+                    </div>
+                    <div className="p-3 bg-slate-50 border border-slate-200 rounded-2xl space-y-1">
+                      <span className="text-[10px] font-black text-slate-600 uppercase">Secteur d'Activité B2B</span>
+                      <p className="text-xs font-extrabold text-[#0F172A]">{profile.industry || 'Corporate'}</p>
+                      <p className="text-[10px] text-slate-500">Capital: {profile.capital || '10 000 000 FCFA'}</p>
+                    </div>
+                    <div className="p-3 bg-emerald-50/60 border border-emerald-200/80 rounded-2xl space-y-1">
+                      <span className="text-[10px] font-black text-emerald-800 uppercase">Comptabilité & ERP</span>
+                      <p className="text-xs font-extrabold text-[#0F172A]">Factures, Salaires, Appels d'offres</p>
+                      <p className="text-[10px] text-emerald-700 font-bold">Système actif</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
-        )}
+          );
+        })()}
 
         {/* 2. GÉRER LES EMPLOYÉS (Ajouter, Modifier, Supprimer) */}
         {activeTab === 'employes' && (
@@ -1443,6 +1848,158 @@ export default function EntrepriseHomePage({
           </div>
         )}
 
+        {/* 21. MENU PLUS & CONFIGURATION HUB */}
+        {activeTab === 'plus' && (
+          <div className="space-y-6">
+            <div className="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-xs space-y-1">
+              <h2 className="text-lg font-black text-[#0F172A] flex items-center gap-2">
+                <Settings className="w-5 h-5 text-[#16A34A]" />
+                <span>Plus & Options Entreprise</span>
+              </h2>
+              <p className="text-xs text-slate-500">
+                Accédez à toutes vos fonctionnalités avancées : catalogue, campagnes, bilans financiers, profil et support VIP.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {/* Card 1: Catalogue & Services */}
+              <div className="bg-white p-5 rounded-3xl border border-slate-200/80 shadow-xs space-y-4 hover:border-blue-300 transition">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center font-black">
+                    <Package className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h3 className="font-black text-sm text-[#0F172A]">Catalogue & Services</h3>
+                    <p className="text-[11px] text-slate-500">Offres B2B, produits et prestations</p>
+                  </div>
+                </div>
+                <div className="space-y-1.5 pt-1">
+                  <button onClick={() => setActiveTab('produits')} className="w-full text-left px-3 py-2 bg-slate-50 hover:bg-slate-100 rounded-xl text-xs font-extrabold text-slate-700 flex items-center justify-between cursor-pointer transition">
+                    <span>Produits Entreprise ({corpProducts.length})</span>
+                    <ChevronRight className="w-4 h-4 text-slate-400" />
+                  </button>
+                  <button onClick={() => setActiveTab('services')} className="w-full text-left px-3 py-2 bg-slate-50 hover:bg-slate-100 rounded-xl text-xs font-extrabold text-slate-700 flex items-center justify-between cursor-pointer transition">
+                    <span>Services Prestations ({corpServices.length})</span>
+                    <ChevronRight className="w-4 h-4 text-slate-400" />
+                  </button>
+                  <button onClick={() => setActiveTab('offres')} className="w-full text-left px-3 py-2 bg-slate-50 hover:bg-slate-100 rounded-xl text-xs font-extrabold text-slate-700 flex items-center justify-between cursor-pointer transition">
+                    <span>Appels d'Offres & Offres ({offers.length})</span>
+                    <ChevronRight className="w-4 h-4 text-slate-400" />
+                  </button>
+                </div>
+              </div>
+
+              {/* Card 2: Finances & Comptabilité */}
+              <div className="bg-white p-5 rounded-3xl border border-slate-200/80 shadow-xs space-y-4 hover:border-emerald-300 transition">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-2xl bg-emerald-50 text-[#16A34A] flex items-center justify-center font-black">
+                    <FileText className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h3 className="font-black text-sm text-[#0F172A]">Finances & Facturation</h3>
+                    <p className="text-[11px] text-slate-500">Factures, paiements et bénéfices</p>
+                  </div>
+                </div>
+                <div className="space-y-1.5 pt-1">
+                  <button onClick={() => setActiveTab('factures')} className="w-full text-left px-3 py-2 bg-slate-50 hover:bg-slate-100 rounded-xl text-xs font-extrabold text-slate-700 flex items-center justify-between cursor-pointer transition">
+                    <span>Factures B2B ({invoices.length})</span>
+                    <ChevronRight className="w-4 h-4 text-slate-400" />
+                  </button>
+                  <button onClick={() => setActiveTab('paiements')} className="w-full text-left px-3 py-2 bg-slate-50 hover:bg-slate-100 rounded-xl text-xs font-extrabold text-slate-700 flex items-center justify-between cursor-pointer transition">
+                    <span>Historique des Paiements</span>
+                    <ChevronRight className="w-4 h-4 text-slate-400" />
+                  </button>
+                  <button onClick={() => setActiveTab('benefices')} className="w-full text-left px-3 py-2 bg-slate-50 hover:bg-slate-100 rounded-xl text-xs font-extrabold text-slate-700 flex items-center justify-between cursor-pointer transition">
+                    <span>Bénéfices & Rentabilité</span>
+                    <ChevronRight className="w-4 h-4 text-slate-400" />
+                  </button>
+                </div>
+              </div>
+
+              {/* Card 3: Marketing & Communication */}
+              <div className="bg-white p-5 rounded-3xl border border-slate-200/80 shadow-xs space-y-4 hover:border-indigo-300 transition">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center font-black">
+                    <Megaphone className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h3 className="font-black text-sm text-[#0F172A]">Marketing & Com</h3>
+                    <p className="text-[11px] text-slate-500">Campagnes, promotions, messages</p>
+                  </div>
+                </div>
+                <div className="space-y-1.5 pt-1">
+                  <button onClick={() => setActiveTab('campagnes')} className="w-full text-left px-3 py-2 bg-slate-50 hover:bg-slate-100 rounded-xl text-xs font-extrabold text-slate-700 flex items-center justify-between cursor-pointer transition">
+                    <span>Campagnes Sponsoring ({campaigns.length})</span>
+                    <ChevronRight className="w-4 h-4 text-slate-400" />
+                  </button>
+                  <button onClick={() => setActiveTab('promotions')} className="w-full text-left px-3 py-2 bg-slate-50 hover:bg-slate-100 rounded-xl text-xs font-extrabold text-slate-700 flex items-center justify-between cursor-pointer transition">
+                    <span>Promotions B2B ({promotions.length})</span>
+                    <ChevronRight className="w-4 h-4 text-slate-400" />
+                  </button>
+                  <button onClick={() => setActiveTab('messagerie')} className="w-full text-left px-3 py-2 bg-slate-50 hover:bg-slate-100 rounded-xl text-xs font-extrabold text-slate-700 flex items-center justify-between cursor-pointer transition">
+                    <span>Messagerie B2B</span>
+                    <ChevronRight className="w-4 h-4 text-slate-400" />
+                  </button>
+                </div>
+              </div>
+
+              {/* Card 4: Rapports & Statistiques */}
+              <div className="bg-white p-5 rounded-3xl border border-slate-200/80 shadow-xs space-y-4 hover:border-purple-300 transition">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-2xl bg-purple-50 text-purple-600 flex items-center justify-center font-black">
+                    <BarChart3 className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h3 className="font-black text-sm text-[#0F172A]">Analyses & PDF</h3>
+                    <p className="text-[11px] text-slate-500">Statistiques et téléchargements</p>
+                  </div>
+                </div>
+                <div className="space-y-1.5 pt-1">
+                  <button onClick={() => setActiveTab('stats')} className="w-full text-left px-3 py-2 bg-slate-50 hover:bg-slate-100 rounded-xl text-xs font-extrabold text-slate-700 flex items-center justify-between cursor-pointer transition">
+                    <span>Statistiques Globales</span>
+                    <ChevronRight className="w-4 h-4 text-slate-400" />
+                  </button>
+                  <button onClick={() => setActiveTab('rapports')} className="w-full text-left px-3 py-2 bg-slate-50 hover:bg-slate-100 rounded-xl text-xs font-extrabold text-slate-700 flex items-center justify-between cursor-pointer transition">
+                    <span>Rapports Exportables PDF</span>
+                    <ChevronRight className="w-4 h-4 text-slate-400" />
+                  </button>
+                  <button onClick={() => setActiveTab('performances')} className="w-full text-left px-3 py-2 bg-slate-50 hover:bg-slate-100 rounded-xl text-xs font-extrabold text-slate-700 flex items-center justify-between cursor-pointer transition">
+                    <span>Performances Équipes</span>
+                    <ChevronRight className="w-4 h-4 text-slate-400" />
+                  </button>
+                </div>
+              </div>
+
+              {/* Card 5: Profil & Support VIP */}
+              <div className="bg-white p-5 rounded-3xl border border-slate-200/80 shadow-xs space-y-4 hover:border-amber-300 transition">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center font-black">
+                    <Building2 className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h3 className="font-black text-sm text-[#0F172A]">Profil & Support VIP</h3>
+                    <p className="text-[11px] text-slate-500">Coordonnées légales & Assistance</p>
+                  </div>
+                </div>
+                <div className="space-y-1.5 pt-1">
+                  <button onClick={() => setActiveTab('profil')} className="w-full text-left px-3 py-2 bg-slate-50 hover:bg-slate-100 rounded-xl text-xs font-extrabold text-slate-700 flex items-center justify-between cursor-pointer transition">
+                    <span>Fiche Entreprise & SIRET</span>
+                    <ChevronRight className="w-4 h-4 text-slate-400" />
+                  </button>
+                  <button onClick={() => setActiveTab('coordonnees')} className="w-full text-left px-3 py-2 bg-slate-50 hover:bg-slate-100 rounded-xl text-xs font-extrabold text-slate-700 flex items-center justify-between cursor-pointer transition">
+                    <span>Coordonnées & Siège</span>
+                    <ChevronRight className="w-4 h-4 text-slate-400" />
+                  </button>
+                  <button onClick={() => setActiveTab('support')} className="w-full text-left px-3 py-2 bg-emerald-50 hover:bg-emerald-100 rounded-xl text-xs font-black text-[#15803D] flex items-center justify-between cursor-pointer transition">
+                    <span>Support VIP 24/7 & Hotline</span>
+                    <ChevronRight className="w-4 h-4 text-[#16A34A]" />
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
       </main>
 
       {/* ALL MODALS FOR ADDING / EDITING ITEMS */}
@@ -1752,6 +2309,540 @@ export default function EntrepriseHomePage({
               Activer la Promotion
             </button>
           </div>
+        </div>
+      )}
+
+      {/* ========================================================= */}
+      {/* MODAL CRÉATION D'ENTREPRISE AVEC CHOIX DU TYPE D'ACTIVITÉ */}
+      {/* ========================================================= */}
+      {isCreateEnterpriseModalOpen && (
+        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            className="bg-slate-900 border border-slate-800 rounded-3xl p-5 sm:p-6 w-full max-w-2xl text-white space-y-5 shadow-2xl my-8 max-h-[90vh] overflow-y-auto scrollbar-none"
+          >
+            {/* Header Modal */}
+            <div className="flex justify-between items-start border-b border-slate-800 pb-4">
+              <div>
+                <span className="text-[10px] font-black text-[#16A34A] uppercase bg-emerald-950 border border-emerald-800 px-2.5 py-0.5 rounded-full">
+                  Création & Configuration Entreprise • Étape {wizardStep}/2
+                </span>
+                <h3 className="text-lg font-black text-white mt-1">
+                  {wizardStep === 1 
+                    ? "Quel est le type de votre activité ?" 
+                    : `Informations de votre entreprise : ${ACTIVITY_CATEGORIES.find(c => c.id === selectedActivityType)?.title}`}
+                </h3>
+                <p className="text-xs text-slate-400">
+                  {wizardStep === 1 
+                    ? "Choisissez la catégorie qui correspond le mieux à votre métier pour adapter votre espace d'opérations."
+                    : "Remplissez les informations essentielles pour que vos clients et partenaires vous identifient."}
+                </p>
+              </div>
+              <button 
+                onClick={() => setIsCreateEnterpriseModalOpen(false)}
+                className="p-1.5 text-slate-400 hover:text-white bg-slate-800 hover:bg-slate-700 rounded-full transition cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* ÉTAPE 1 : SELECTION DU TYPE D'ACTIVITÉ */}
+            {wizardStep === 1 && (
+              <div className="space-y-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {ACTIVITY_CATEGORIES.map((cat) => {
+                    const isSelected = selectedActivityType === cat.id;
+                    return (
+                      <div
+                        key={cat.id}
+                        onClick={() => setSelectedActivityType(cat.id)}
+                        className={`p-4 rounded-2xl border-2 transition cursor-pointer flex flex-col justify-between gap-3 relative ${
+                          isSelected
+                            ? 'bg-slate-950 border-[#16A34A] shadow-lg shadow-emerald-950/40'
+                            : 'bg-slate-950/60 border-slate-800 hover:border-slate-700 hover:bg-slate-950'
+                        }`}
+                      >
+                        <div className="flex items-start gap-3">
+                          <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-xl shrink-0 ${
+                            isSelected ? 'bg-[#16A34A] text-white' : 'bg-slate-800 text-slate-300'
+                          }`}>
+                            {cat.emoji}
+                          </div>
+                          <div className="space-y-0.5">
+                            <h4 className="font-extrabold text-sm text-white flex items-center gap-1.5">
+                              <span>{cat.title}</span>
+                            </h4>
+                            <p className="text-[11px] font-semibold text-[#16A34A]">{cat.subtitle}</p>
+                            <p className="text-[10.5px] text-slate-400 leading-snug pt-1">{cat.description}</p>
+                          </div>
+                        </div>
+
+                        {isSelected && (
+                          <div className="self-end bg-[#16A34A] text-white text-[10px] font-black px-2.5 py-0.5 rounded-full flex items-center gap-1">
+                            <Check className="w-3 h-3 stroke-[3]" />
+                            <span>Sélectionné</span>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+
+                <div className="pt-3 border-t border-slate-800 flex justify-end">
+                  <button
+                    onClick={() => {
+                      const chosenCat = ACTIVITY_CATEGORIES.find(c => c.id === selectedActivityType);
+                      if (!wizardForm.companyName) {
+                        setWizardForm(prev => ({ ...prev, companyName: chosenCat?.defaultNamePlaceholder.replace('Ex: ', '') || 'Mon Entreprise Bafoussam' }));
+                      }
+                      setWizardStep(2);
+                    }}
+                    className="px-6 py-3 bg-[#16A34A] hover:bg-[#15803D] text-white font-extrabold text-xs rounded-xl shadow-md transition cursor-pointer flex items-center gap-2"
+                  >
+                    <span>Suivant : Informations de l'Entreprise</span>
+                    <ChevronRight className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* ÉTAPE 2 : DYNAMIC FORM ADAPTED TO SELECTED ACTIVITY TYPE */}
+            {wizardStep === 2 && (
+              <div className="space-y-4">
+                <div className="p-3 rounded-2xl bg-slate-950 border border-slate-800 flex items-center gap-3">
+                  <span className="text-2xl">{ACTIVITY_CATEGORIES.find(c => c.id === selectedActivityType)?.emoji}</span>
+                  <div>
+                    <span className="text-[10px] text-slate-400 font-bold uppercase">Activité choisie :</span>
+                    <p className="text-xs font-black text-white">{ACTIVITY_CATEGORIES.find(c => c.id === selectedActivityType)?.title} — {ACTIVITY_CATEGORIES.find(c => c.id === selectedActivityType)?.subtitle}</p>
+                  </div>
+                </div>
+
+                <div className="space-y-3.5 text-xs">
+                  {/* COMMON FIELD: Nom de l'établissement / entreprise */}
+                  <div>
+                    <label className="font-bold text-slate-300 block mb-1">
+                      {selectedActivityType === 'restaurant' && "Nom du restaurant *"}
+                      {selectedActivityType === 'boulangerie' && "Nom de la boulangerie / pâtisserie *"}
+                      {selectedActivityType === 'pharmacie' && "Nom officiel de la pharmacie *"}
+                      {selectedActivityType === 'boutique' && "Nom de la boutique / commerce *"}
+                      {selectedActivityType === 'services' && "Nom de l'entreprise de services *"}
+                      {selectedActivityType === 'autre' && "Raison sociale / Nom de la société *"}
+                    </label>
+                    <input
+                      type="text"
+                      value={wizardForm.companyName}
+                      onChange={(e) => setWizardForm({ ...wizardForm, companyName: e.target.value })}
+                      placeholder={ACTIVITY_CATEGORIES.find(c => c.id === selectedActivityType)?.defaultNamePlaceholder}
+                      className="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white font-bold focus:border-[#16A34A] outline-none"
+                    />
+                  </div>
+
+                  {/* ADAPTED FIELDS DEPENDING ON ACTIVITY TYPE */}
+
+                  {/* 1. RESTAURANT FIELDS */}
+                  {selectedActivityType === 'restaurant' && (
+                    <div className="space-y-3">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                          <label className="font-bold text-slate-300 block mb-1">Adresse & Quartier Bafoussam *</label>
+                          <input
+                            type="text"
+                            value={wizardForm.address}
+                            onChange={(e) => setWizardForm({ ...wizardForm, address: e.target.value })}
+                            placeholder="Ex: Entrée Ville, Face Stade Omnisport"
+                            className="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white outline-none focus:border-[#16A34A]"
+                          />
+                        </div>
+                        <div>
+                          <label className="font-bold text-slate-300 block mb-1">Horaires de service des repas *</label>
+                          <input
+                            type="text"
+                            value={wizardForm.openingHours}
+                            onChange={(e) => setWizardForm({ ...wizardForm, openingHours: e.target.value })}
+                            placeholder="Ex: 11h30 - 23h00 (Tous les jours)"
+                            className="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white outline-none focus:border-[#16A34A]"
+                          />
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="font-bold text-slate-300 block mb-1">Menu principal & Plats spécialités *</label>
+                        <input
+                          type="text"
+                          value={wizardForm.specialtiesOrMenu}
+                          onChange={(e) => setWizardForm({ ...wizardForm, specialtiesOrMenu: e.target.value })}
+                          placeholder="Ex: Ndolé Royal, Poulet DG, Soya de Boeuf, Poisson Braisé"
+                          className="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white outline-none focus:border-[#16A34A]"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="font-bold text-slate-300 block mb-1">Téléphone Direct / Réservations & Livraisons *</label>
+                        <input
+                          type="text"
+                          value={wizardForm.phone}
+                          onChange={(e) => setWizardForm({ ...wizardForm, phone: e.target.value })}
+                          placeholder="Ex: +237 699 00 11 22"
+                          className="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white outline-none focus:border-[#16A34A]"
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  {/* 2. BOULANGERIE FIELDS */}
+                  {selectedActivityType === 'boulangerie' && (
+                    <div className="space-y-3">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                          <label className="font-bold text-slate-300 block mb-1">Adresse de la Boulangerie *</label>
+                          <input
+                            type="text"
+                            value={wizardForm.address}
+                            onChange={(e) => setWizardForm({ ...wizardForm, address: e.target.value })}
+                            placeholder="Ex: Carrefour Shell, Bafoussam"
+                            className="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white outline-none focus:border-[#16A34A]"
+                          />
+                        </div>
+                        <div>
+                          <label className="font-bold text-slate-300 block mb-1">Horaires des fournées quotidiennes *</label>
+                          <input
+                            type="text"
+                            value={wizardForm.openingHours}
+                            onChange={(e) => setWizardForm({ ...wizardForm, openingHours: e.target.value })}
+                            placeholder="Ex: 06h00, 12h00, 17h30"
+                            className="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white outline-none focus:border-[#16A34A]"
+                          />
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="font-bold text-slate-300 block mb-1">Produits disponibles & Spécialités pâtissières *</label>
+                        <input
+                          type="text"
+                          value={wizardForm.specialtiesOrMenu}
+                          onChange={(e) => setWizardForm({ ...wizardForm, specialtiesOrMenu: e.target.value })}
+                          placeholder="Ex: Baguettes viennoises, Croissants, Pain complet, Gâteaux d'anniversaire"
+                          className="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white outline-none focus:border-[#16A34A]"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="font-bold text-slate-300 block mb-1">Téléphone Commandes *</label>
+                        <input
+                          type="text"
+                          value={wizardForm.phone}
+                          onChange={(e) => setWizardForm({ ...wizardForm, phone: e.target.value })}
+                          placeholder="Ex: +237 677 22 33 44"
+                          className="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white outline-none focus:border-[#16A34A]"
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  {/* 3. PHARMACIE FIELDS */}
+                  {selectedActivityType === 'pharmacie' && (
+                    <div className="space-y-3">
+                      <div className="p-3 bg-emerald-950/60 border border-emerald-800/80 rounded-2xl flex items-center justify-between gap-3">
+                        <div>
+                          <span className="font-extrabold text-emerald-400 text-xs block">💊 Service de Garde (Nuit & Week-end)</span>
+                          <span className="text-[10.5px] text-slate-400">Marquez votre pharmacie de garde si active à Bafoussam.</span>
+                        </div>
+                        <input
+                          type="checkbox"
+                          checked={wizardForm.isPharmacyOnDuty}
+                          onChange={(e) => setWizardForm({ ...wizardForm, isPharmacyOnDuty: e.target.checked })}
+                          className="w-5 h-5 accent-[#16A34A] cursor-pointer"
+                        />
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                          <label className="font-bold text-slate-300 block mb-1">Localisation & Quartier *</label>
+                          <input
+                            type="text"
+                            value={wizardForm.address}
+                            onChange={(e) => setWizardForm({ ...wizardForm, address: e.target.value })}
+                            placeholder="Ex: Marché A, Face Banque BICEC"
+                            className="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white outline-none focus:border-[#16A34A]"
+                          />
+                        </div>
+                        <div>
+                          <label className="font-bold text-slate-300 block mb-1">Horaires d'Ouverture *</label>
+                          <input
+                            type="text"
+                            value={wizardForm.openingHours}
+                            onChange={(e) => setWizardForm({ ...wizardForm, openingHours: e.target.value })}
+                            placeholder="Ex: 24h/24 (Garde) - 08h00/20h00"
+                            className="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white outline-none focus:border-[#16A34A]"
+                          />
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="font-bold text-slate-300 block mb-1">Rayons & Produits de Santé disponibles *</label>
+                        <input
+                          type="text"
+                          value={wizardForm.specialtiesOrMenu}
+                          onChange={(e) => setWizardForm({ ...wizardForm, specialtiesOrMenu: e.target.value })}
+                          placeholder="Ex: Médicaments prescrits, Parapharmacie, Soins Bébé, Matériel médical"
+                          className="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white outline-none focus:border-[#16A34A]"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="font-bold text-slate-300 block mb-1">Téléphone d'Urgence Pharmaceutique *</label>
+                        <input
+                          type="text"
+                          value={wizardForm.emergencyPhone || wizardForm.phone}
+                          onChange={(e) => setWizardForm({ ...wizardForm, emergencyPhone: e.target.value, phone: e.target.value })}
+                          placeholder="Ex: +237 670 11 22 33"
+                          className="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white outline-none focus:border-[#16A34A]"
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  {/* 4. BOUTIQUE / COMMERCE FIELDS */}
+                  {selectedActivityType === 'boutique' && (
+                    <div className="space-y-3">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                          <label className="font-bold text-slate-300 block mb-1">Type de commerce / Rayon *</label>
+                          <input
+                            type="text"
+                            value={wizardForm.productTypes}
+                            onChange={(e) => setWizardForm({ ...wizardForm, productTypes: e.target.value })}
+                            placeholder="Ex: Prêt-à-porter, Électronique, Alimentation"
+                            className="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white outline-none focus:border-[#16A34A]"
+                          />
+                        </div>
+                        <div>
+                          <label className="font-bold text-slate-300 block mb-1">Adresse de la Boutique *</label>
+                          <input
+                            type="text"
+                            value={wizardForm.address}
+                            onChange={(e) => setWizardForm({ ...wizardForm, address: e.target.value })}
+                            placeholder="Ex: Marché B, Boutique N° 42"
+                            className="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white outline-none focus:border-[#16A34A]"
+                          />
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="font-bold text-slate-300 block mb-1">Exemples d'articles en stock & Prix *</label>
+                        <input
+                          type="text"
+                          value={wizardForm.specialtiesOrMenu}
+                          onChange={(e) => setWizardForm({ ...wizardForm, specialtiesOrMenu: e.target.value })}
+                          placeholder="Ex: Téléphones, Chaussures, Sacs, Robes, Accessoires"
+                          className="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white outline-none focus:border-[#16A34A]"
+                        />
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                          <label className="font-bold text-slate-300 block mb-1">Horaires de vente *</label>
+                          <input
+                            type="text"
+                            value={wizardForm.openingHours}
+                            onChange={(e) => setWizardForm({ ...wizardForm, openingHours: e.target.value })}
+                            placeholder="Ex: 08h00 - 19h30, Lundi à Samedi"
+                            className="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white outline-none focus:border-[#16A34A]"
+                          />
+                        </div>
+                        <div>
+                          <label className="font-bold text-slate-300 block mb-1">Téléphone Contact *</label>
+                          <input
+                            type="text"
+                            value={wizardForm.phone}
+                            onChange={(e) => setWizardForm({ ...wizardForm, phone: e.target.value })}
+                            placeholder="Ex: +237 690 44 55 66"
+                            className="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white outline-none focus:border-[#16A34A]"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* 5. SERVICES FIELDS */}
+                  {selectedActivityType === 'services' && (
+                    <div className="space-y-3">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                          <label className="font-bold text-slate-300 block mb-1">Domaine de service *</label>
+                          <input
+                            type="text"
+                            value={wizardForm.specialtiesOrMenu}
+                            onChange={(e) => setWizardForm({ ...wizardForm, specialtiesOrMenu: e.target.value })}
+                            placeholder="Ex: Électricité, Plomberie, Froid, Climatisation"
+                            className="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white outline-none focus:border-[#16A34A]"
+                          />
+                        </div>
+                        <div>
+                          <label className="font-bold text-slate-300 block mb-1">Zone d'intervention *</label>
+                          <input
+                            type="text"
+                            value={wizardForm.interventionZone}
+                            onChange={(e) => setWizardForm({ ...wizardForm, interventionZone: e.target.value })}
+                            placeholder="Ex: Bafoussam Ville, Mbouda, Dschang, Foumbot"
+                            className="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white outline-none focus:border-[#16A34A]"
+                          />
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="font-bold text-slate-300 block mb-1">Tarifs / Conditions *</label>
+                        <input
+                          type="text"
+                          value={wizardForm.priceRange}
+                          onChange={(e) => setWizardForm({ ...wizardForm, priceRange: e.target.value })}
+                          placeholder="Ex: Devis gratuit, Dépannage à partir de 5 000 FCFA"
+                          className="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white outline-none focus:border-[#16A34A]"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="font-bold text-slate-300 block mb-1">Téléphone Devis *</label>
+                        <input
+                          type="text"
+                          value={wizardForm.phone}
+                          onChange={(e) => setWizardForm({ ...wizardForm, phone: e.target.value })}
+                          placeholder="Ex: +237 677 88 99 00"
+                          className="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white outline-none focus:border-[#16A34A]"
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  {/* 6. AUTRE ENTREPRISE / CORPORATE FIELDS */}
+                  {selectedActivityType === 'autre' && (
+                    <div className="space-y-3">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                          <label className="font-bold text-slate-300 block mb-1">Forme Juridique</label>
+                          <input
+                            type="text"
+                            value={wizardForm.legalForm}
+                            onChange={(e) => setWizardForm({ ...wizardForm, legalForm: e.target.value })}
+                            placeholder="SARL, SA, ETS, GIC, Coopérative"
+                            className="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white outline-none focus:border-[#16A34A]"
+                          />
+                        </div>
+                        <div>
+                          <label className="font-bold text-slate-300 block mb-1">Secteur d'Activité</label>
+                          <input
+                            type="text"
+                            value={wizardForm.productTypes}
+                            onChange={(e) => setWizardForm({ ...wizardForm, productTypes: e.target.value })}
+                            placeholder="Ex: BTP, Industrie, Informatique"
+                            className="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white outline-none focus:border-[#16A34A]"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                          <label className="font-bold text-slate-300 block mb-1">N° RCCM (Registre du Commerce)</label>
+                          <input
+                            type="text"
+                            value={wizardForm.rccm}
+                            onChange={(e) => setWizardForm({ ...wizardForm, rccm: e.target.value })}
+                            placeholder="Ex: RC/BFM/2026/B/124"
+                            className="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white outline-none focus:border-[#16A34A]"
+                          />
+                        </div>
+                        <div>
+                          <label className="font-bold text-slate-300 block mb-1">N° NIU (Identifiant Fiscal)</label>
+                          <input
+                            type="text"
+                            value={wizardForm.niu}
+                            onChange={(e) => setWizardForm({ ...wizardForm, niu: e.target.value })}
+                            placeholder="Ex: M0518123984A"
+                            className="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white outline-none focus:border-[#16A34A]"
+                          />
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="font-bold text-slate-300 block mb-1">Adresse du Siège Social & Téléphone</label>
+                        <input
+                          type="text"
+                          value={wizardForm.address}
+                          onChange={(e) => setWizardForm({ ...wizardForm, address: e.target.value })}
+                          placeholder="Ex: Quartier Tougang, Bafoussam"
+                          className="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white outline-none focus:border-[#16A34A]"
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  {/* COMMON FIELD: Short Description */}
+                  <div>
+                    <label className="font-bold text-slate-300 block mb-1">Description / Slogan de l'établissement</label>
+                    <textarea
+                      rows={2}
+                      value={wizardForm.description}
+                      onChange={(e) => setWizardForm({ ...wizardForm, description: e.target.value })}
+                      placeholder="Une brève présentation pour vos clients à Bafoussam..."
+                      className="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white outline-none focus:border-[#16A34A]"
+                    />
+                  </div>
+                </div>
+
+                <div className="pt-3 border-t border-slate-800 flex items-center justify-between gap-3">
+                  <button
+                    onClick={() => setWizardStep(1)}
+                    className="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs rounded-xl transition cursor-pointer flex items-center gap-1.5"
+                  >
+                    <ChevronLeft className="w-4 h-4" />
+                    <span>← Changer de catégorie</span>
+                  </button>
+
+                  <button
+                    onClick={() => {
+                      const updatedProfile = {
+                        ...profile,
+                        companyName: wizardForm.companyName || 'Mon Entreprise Bafoussam',
+                        activityType: selectedActivityType,
+                        legalForm: wizardForm.legalForm,
+                        rccm: wizardForm.rccm || 'En cours',
+                        niu: wizardForm.niu || 'En cours',
+                        industry: wizardForm.productTypes || ACTIVITY_CATEGORIES.find(c => c.id === selectedActivityType)?.subtitle || 'Entreprise',
+                        description: wizardForm.description || `Bienvenue chez ${wizardForm.companyName || 'nous'} à Bafoussam !`,
+                        address: wizardForm.address,
+                        openingHours: wizardForm.openingHours,
+                        specialtiesOrMenu: wizardForm.specialtiesOrMenu,
+                        interventionZone: wizardForm.interventionZone,
+                        isPharmacyOnDuty: wizardForm.isPharmacyOnDuty,
+                        emergencyPhone: wizardForm.emergencyPhone || wizardForm.phone,
+                        priceRange: wizardForm.priceRange,
+                        productTypes: wizardForm.productTypes,
+                        logoUrl: wizardForm.logoUrl
+                      };
+
+                      const updatedContact = {
+                        ...contact,
+                        address: wizardForm.address || contact.address,
+                        primaryPhone: wizardForm.phone || contact.primaryPhone,
+                        email: wizardForm.email || contact.email
+                      };
+
+                      setProfile(updatedProfile);
+                      setContact(updatedContact);
+                      setIsCreateEnterpriseModalOpen(false);
+                      showToast(`Entreprise "${updatedProfile.companyName}" créée avec le profil ${ACTIVITY_CATEGORIES.find(c => c.id === selectedActivityType)?.title} !`);
+                    }}
+                    className="px-6 py-3 bg-[#16A34A] hover:bg-[#15803D] text-white font-extrabold text-xs rounded-xl shadow-lg transition cursor-pointer flex items-center gap-2"
+                  >
+                    <Check className="w-4 h-4 stroke-[3]" />
+                    <span>Valider & Créer mon Entreprise</span>
+                  </button>
+                </div>
+              </div>
+            )}
+          </motion.div>
         </div>
       )}
 

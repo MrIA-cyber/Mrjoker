@@ -157,7 +157,7 @@ export default function PrestataireHomePage({
   const [activeTab, setActiveTab] = useState<
     'accueil' | 'carte' | 'calendrier' | 'services' | 'disponibilites' | 'reservations' | 
     'finances' | 'stats' | 'messages' | 'avis' | 
-    'profil' | 'abonnement' | 'support'
+    'profil' | 'abonnement' | 'support' | 'plus'
   >('accueil');
 
   // Quick Action Modals State
@@ -880,40 +880,30 @@ export default function PrestataireHomePage({
         )}
       </AnimatePresence>
 
-      {/* NAVIGATION TABS BAR PRESTATAIRE */}
-      <div className="bg-white border-b border-slate-200/80 sticky top-[57px] z-30 shadow-2xs mb-6">
-        <div className="max-w-7xl mx-auto px-4 overflow-x-auto scrollbar-none flex items-center gap-1.5 py-2">
+      {/* PRESTATAIRE PRIMARY NAVIGATION (4 ESSENTIAL TABS) */}
+      <div className="bg-white border-b border-slate-200 sticky top-[57px] z-30 shadow-2xs mb-6">
+        <div className="max-w-7xl mx-auto px-4 py-2 flex items-center justify-between sm:justify-start gap-2 sm:gap-3 overflow-x-auto scrollbar-none">
           {[
-            { id: 'accueil', label: 'Vue Générale', icon: Briefcase },
-            { id: 'carte', label: 'Carte Interventions', icon: Navigation, badge: 'GPS' },
-            { id: 'calendrier', label: 'Calendrier Planning', icon: CalendarIcon },
-            { id: 'services', label: `Services (${servicesList.length})`, icon: Wrench },
-            { id: 'disponibilites', label: 'Horaires & Zones', icon: Clock },
-            { id: 'reservations', label: `Réservations (${bookingsList.filter(b => b.status === 'pending').length})`, icon: CalendarDays, badge: bookingsList.filter(b => b.status === 'pending').length || undefined },
-            { id: 'finances', label: 'Paiements & Revenus', icon: DollarSign },
-            { id: 'stats', label: 'Graphiques Performance', icon: BarChart3 },
-            { id: 'messages', label: 'Messagerie', icon: MessageSquare, badge: 1 },
-            { id: 'avis', label: `Avis (${reviewsList.length})`, icon: Star },
-            { id: 'profil', label: 'Profil', icon: UserIcon },
-            { id: 'abonnement', label: 'Abonnement VIP', icon: ShieldCheck },
-            { id: 'support', label: 'Support 24/7', icon: HelpCircle },
+            { id: 'accueil', label: 'Vue Générale', icon: Briefcase, isSelected: activeTab === 'accueil' },
+            { id: 'reservations', label: `Demandes & Planning (${bookingsList.filter(b => b.status === 'pending').length})`, icon: CalendarDays, badge: bookingsList.filter(b => b.status === 'pending').length || undefined, isSelected: ['reservations', 'carte', 'calendrier'].includes(activeTab) },
+            { id: 'services', label: `Services & Tarifs (${servicesList.length})`, icon: Wrench, isSelected: ['services', 'disponibilites'].includes(activeTab) },
+            { id: 'plus', label: 'Plus / Mon Compte', icon: UserIcon, isSelected: !['accueil', 'reservations', 'carte', 'calendrier', 'services', 'disponibilites'].includes(activeTab) || activeTab === 'plus' },
           ].map((tab) => {
             const IconComp = tab.icon;
-            const isActive = activeTab === tab.id;
             return (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id as any)}
-                className={`px-3 py-1.5 rounded-xl text-xs font-extrabold flex items-center gap-1.5 shrink-0 transition cursor-pointer relative ${
-                  isActive
-                    ? 'bg-[#0F172A] text-white shadow-xs'
-                    : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
+                className={`px-3.5 py-2 rounded-2xl text-xs font-extrabold flex items-center gap-2 shrink-0 transition cursor-pointer relative ${
+                  tab.isSelected
+                    ? 'bg-[#0F172A] text-white shadow-sm'
+                    : 'bg-slate-50 text-slate-700 hover:bg-slate-100'
                 }`}
               >
-                <IconComp className={`w-3.5 h-3.5 ${isActive ? 'text-[#16A34A]' : 'text-slate-400'}`} />
+                <IconComp className={`w-4 h-4 ${tab.isSelected ? 'text-[#16A34A]' : 'text-slate-400'}`} />
                 <span>{tab.label}</span>
                 {tab.badge && (
-                  <span className="bg-[#16A34A] text-white text-[9px] font-black px-1.5 py-0.2 rounded-full ml-0.5">
+                  <span className="bg-[#16A34A] text-white text-[10px] font-black px-1.5 py-0.2 rounded-full">
                     {tab.badge}
                   </span>
                 )}
@@ -1846,6 +1836,115 @@ export default function PrestataireHomePage({
               <a href="tel:+237677894512" className="inline-block px-4 py-2.5 bg-[#2563EB] text-white text-xs font-black rounded-xl">
                 Appeler +237 677 89 45 12
               </a>
+            </div>
+          </div>
+        )}
+
+        {/* MENU PLUS & CONFIGURATION PRESTATAIRE */}
+        {activeTab === 'plus' && (
+          <div className="space-y-6 max-w-5xl">
+            <div className="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-xs space-y-1">
+              <h2 className="text-lg font-black text-[#0F172A] flex items-center gap-2">
+                <Settings className="w-5 h-5 text-[#16A34A]" />
+                <span>Plus & Configuration Prestataire</span>
+              </h2>
+              <p className="text-xs text-slate-500">
+                Gérez vos finances, vos avis clients, votre carte d'intervention, votre profil et le support réactif.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Card 1: Finances & Performance */}
+              <div className="bg-white p-5 rounded-3xl border border-slate-200/80 shadow-xs space-y-4 hover:border-emerald-300 transition">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-2xl bg-emerald-50 text-[#16A34A] flex items-center justify-center font-black">
+                    <DollarSign className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h3 className="font-black text-sm text-[#0F172A]">Finances & Revenus</h3>
+                    <p className="text-[11px] text-slate-500">Paiements et statistiques de prestation</p>
+                  </div>
+                </div>
+                <div className="space-y-1.5 pt-1">
+                  <button onClick={() => setActiveTab('finances')} className="w-full text-left px-3 py-2 bg-slate-50 hover:bg-slate-100 rounded-xl text-xs font-extrabold text-slate-700 flex items-center justify-between cursor-pointer transition">
+                    <span>Paiements & Historique des Encaissements</span>
+                    <ChevronRight className="w-4 h-4 text-slate-400" />
+                  </button>
+                  <button onClick={() => setActiveTab('stats')} className="w-full text-left px-3 py-2 bg-slate-50 hover:bg-slate-100 rounded-xl text-xs font-extrabold text-slate-700 flex items-center justify-between cursor-pointer transition">
+                    <span>Graphiques & Performance d'Activité</span>
+                    <ChevronRight className="w-4 h-4 text-slate-400" />
+                  </button>
+                </div>
+              </div>
+
+              {/* Card 2: Carte & Messagerie */}
+              <div className="bg-white p-5 rounded-3xl border border-slate-200/80 shadow-xs space-y-4 hover:border-blue-300 transition">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center font-black">
+                    <Navigation className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h3 className="font-black text-sm text-[#0F172A]">Carte Interventions & Avis</h3>
+                    <p className="text-[11px] text-slate-500">Localisation GPS et avis clients</p>
+                  </div>
+                </div>
+                <div className="space-y-1.5 pt-1">
+                  <button onClick={() => setActiveTab('carte')} className="w-full text-left px-3 py-2 bg-slate-50 hover:bg-slate-100 rounded-xl text-xs font-extrabold text-slate-700 flex items-center justify-between cursor-pointer transition">
+                    <span>Carte GPS des Demandes à Bafoussam</span>
+                    <ChevronRight className="w-4 h-4 text-slate-400" />
+                  </button>
+                  <button onClick={() => setActiveTab('messages')} className="w-full text-left px-3 py-2 bg-slate-50 hover:bg-slate-100 rounded-xl text-xs font-extrabold text-slate-700 flex items-center justify-between cursor-pointer transition">
+                    <span>Messagerie Directe Clients</span>
+                    <ChevronRight className="w-4 h-4 text-slate-400" />
+                  </button>
+                  <button onClick={() => setActiveTab('avis')} className="w-full text-left px-3 py-2 bg-slate-50 hover:bg-slate-100 rounded-xl text-xs font-extrabold text-slate-700 flex items-center justify-between cursor-pointer transition">
+                    <span>Notes & Avis Laissés par les Clients</span>
+                    <ChevronRight className="w-4 h-4 text-slate-400" />
+                  </button>
+                </div>
+              </div>
+
+              {/* Card 3: Profil & Abonnement */}
+              <div className="bg-white p-5 rounded-3xl border border-slate-200/80 shadow-xs space-y-4 hover:border-indigo-300 transition">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center font-black">
+                    <UserIcon className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h3 className="font-black text-sm text-[#0F172A]">Mon Profil & Label VIP</h3>
+                    <p className="text-[11px] text-slate-500">Coordonnées et statut certifié</p>
+                  </div>
+                </div>
+                <div className="space-y-1.5 pt-1">
+                  <button onClick={() => setActiveTab('profil')} className="w-full text-left px-3 py-2 bg-slate-50 hover:bg-slate-100 rounded-xl text-xs font-extrabold text-slate-700 flex items-center justify-between cursor-pointer transition">
+                    <span>Profil Professionnel & Galerie Photo</span>
+                    <ChevronRight className="w-4 h-4 text-slate-400" />
+                  </button>
+                  <button onClick={() => setActiveTab('abonnement')} className="w-full text-left px-3 py-2 bg-amber-50 hover:bg-amber-100 rounded-xl text-xs font-black text-[#D97706] flex items-center justify-between cursor-pointer transition">
+                    <span>Abonnement Prestataire VIP</span>
+                    <ChevronRight className="w-4 h-4 text-[#D97706]" />
+                  </button>
+                </div>
+              </div>
+
+              {/* Card 4: Support */}
+              <div className="bg-white p-5 rounded-3xl border border-slate-200/80 shadow-xs space-y-4 hover:border-emerald-300 transition">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-2xl bg-emerald-50 text-[#16A34A] flex items-center justify-center font-black">
+                    <HelpCircle className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h3 className="font-black text-sm text-[#0F172A]">Assistance Technique 24/7</h3>
+                    <p className="text-[11px] text-slate-500">Aide téléphonique et résolution de litiges</p>
+                  </div>
+                </div>
+                <div className="space-y-1.5 pt-1">
+                  <button onClick={() => setActiveTab('support')} className="w-full text-left px-3 py-2.5 bg-emerald-50 hover:bg-emerald-100 rounded-xl text-xs font-black text-[#15803D] flex items-center justify-between cursor-pointer transition">
+                    <span>Contacter le Support Techniciens (+237 677 89 45 12)</span>
+                    <ChevronRight className="w-4 h-4 text-[#16A34A]" />
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
         )}
